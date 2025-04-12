@@ -1,79 +1,49 @@
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { Toaster } from 'sonner';
+import { useAuth } from './contexts/AuthContext';
+import LoginPage from './pages/LoginPage';
+import Dashboard from './pages/Dashboard';
+import UserManagement from './pages/UserManagement';
+import DepartmentsManagement from './pages/DepartmentsManagement';
+import TeamsManagement from './pages/TeamsManagement';
+import LeadManagement from './pages/LeadManagement';
+import NotFound from './pages/NotFound';
+import CreateSuperAdmin from "./pages/CreateSuperAdmin";
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import About from "./pages/About";
-import AboutUs from "./pages/AboutUs";
-import AIAgent from "./pages/AIAgent";
-import TryAIAgent from "./pages/TryAIAgent"; 
-import Channels from "./pages/Channels";
-import Solutions from "./pages/Solutions";
-import Integration from "./pages/Integration";
-import Dashboard from "./pages/Dashboard";
-import LeadManagement from "./pages/LeadManagement";
-import LeadDetails from "./pages/LeadDetails";
-import CompaniesManagement from "./pages/CompaniesManagement";
-import AppointmentsManagement from "./pages/AppointmentsManagement";
-import TasksManagement from "./pages/TasksManagement";
-import TicketsManagement from "./pages/TicketsManagement";
-import DealsManagement from "./pages/DealsManagement";
-import UserManagement from "./pages/UserManagement";
-import DepartmentsManagement from "./pages/DepartmentsManagement";
-import TeamsManagement from "./pages/TeamsManagement";
-import Settings from "./pages/Settings";
-import CMS from "./pages/CMS";
-import NotFound from "./pages/NotFound";
-import Demo from "./pages/Demo";
-import Pricing from "./pages/Pricing";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+function App() {
+  const { isLoggedIn } = useAuth();
 
-const queryClient = new QueryClient();
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }, []);
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
+  return (
+    <div>
+      <Router>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/about-us" element={<AboutUs />} />
-          <Route path="/ai-agent" element={<AIAgent />} />
-          <Route path="/try-ai-agent" element={<TryAIAgent />} />
-          <Route path="/channels" element={<Channels />} />
-          <Route path="/solutions" element={<Solutions />} />
-          <Route path="/integration" element={<Integration />} />
-          <Route path="/demo" element={<Demo />} />
-          <Route path="/pricing" element={<Pricing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/dashboard/leads" element={<LeadManagement />} />
-          <Route path="/dashboard/leads/:id" element={<LeadDetails />} />
-          <Route path="/dashboard/companies" element={<CompaniesManagement />} />
-          <Route path="/dashboard/cms" element={<CMS />} />
-          <Route path="/dashboard/appointments" element={<AppointmentsManagement />} />
-          <Route path="/dashboard/tasks" element={<TasksManagement />} />
-          <Route path="/dashboard/tickets" element={<TicketsManagement />} />
-          <Route path="/dashboard/deals" element={<DealsManagement />} />
-          <Route path="/dashboard/users" element={<UserManagement />} />
-          <Route path="/dashboard/departments" element={<DepartmentsManagement />} />
-          <Route path="/dashboard/teams" element={<TeamsManagement />} />
-          <Route path="/dashboard/settings" element={<Settings />} />
-          <Route path="/dashboard/chats" element={<Dashboard />} />
-          <Route path="/dashboard/reports" element={<Dashboard />} />
-          <Route path="/dashboard//*" element={<Dashboard />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+          <Route path="/login" element={!isLoggedIn ? <LoginPage /> : <Navigate to="/dashboard" />} />
+          <Route path="/" element={<Navigate to="/login" />} />
+          <Route path="/dashboard" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/leads" element={isLoggedIn ? <LeadManagement /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/companies" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/deals" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/appointments" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/tickets" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/tasks" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/chats" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/reports" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/cms" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
+        <Route path="/dashboard/users" element={<UserManagement />} />
+        <Route path="/dashboard/departments" element={<DepartmentsManagement />} />
+        <Route path="/dashboard/teams" element={<TeamsManagement />} />
+        <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Router>
+    <Toaster />
+  </div>
 );
+}
 
 export default App;
