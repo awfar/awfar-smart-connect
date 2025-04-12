@@ -83,6 +83,17 @@ const Login = () => {
                 
                 <Button type="submit" className="w-full">تسجيل الدخول</Button>
                 
+                {/* رابط جديد لصفحة لوحة التحكم */}
+                <div className="text-center">
+                  <Link 
+                    to="/dashboard" 
+                    className="inline-flex items-center text-primary hover:underline font-medium"
+                  >
+                    تسجيل الدخول إلى لوحة التحكم
+                    <ArrowRight size={16} className="mr-1" />
+                  </Link>
+                </div>
+                
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <span className="w-full border-t" />
