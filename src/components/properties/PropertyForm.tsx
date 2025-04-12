@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -95,14 +94,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({ property, type, onSubmit, o
 
   const handleSubmit = (values: z.infer<typeof formSchema>) => {
     const propertyData: Omit<Property, 'id' | 'created_at' | 'updated_at'> = {
-      type,
-      isSystem: property?.isSystem || false,
       name: values.name,
       label: values.label,
+      type,
       fieldType: values.fieldType as FieldType,
       description: values.description,
       isRequired: values.isRequired,
       isDefault: values.isDefault,
+      isSystem: property?.isSystem || false,
       placeholder: values.placeholder,
       defaultValue: values.defaultValue,
       group: values.group,
