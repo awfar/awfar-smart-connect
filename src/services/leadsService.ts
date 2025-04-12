@@ -6,18 +6,18 @@ export interface Lead {
   id: string;
   first_name: string;
   last_name: string;
-  company: string;
+  company: string | null;
   email: string;
-  phone: string;
+  phone: string | null;
   country: string;
   industry: string;
   stage: string;
-  source: string;
-  notes: string;
+  source: string | null;
+  notes: string | null;
   created_at: string;
   updated_at: string;
   assigned_to?: string;
-  position?: string;
+  position?: string | null;
   owner?: {
     name: string;
     avatar: string;
@@ -32,8 +32,8 @@ export interface LeadActivity {
   description: string;
   created_at: string;
   created_by?: string;
-  scheduled_at?: string;
-  completed_at?: string;
+  scheduled_at?: string | null;
+  completed_at?: string | null;
 }
 
 export interface LeadFilters {
@@ -44,6 +44,62 @@ export interface LeadFilters {
   assigned_to?: string;
   date_range?: string;
 }
+
+// Type definition for database lead row
+interface LeadRow {
+  id: string;
+  first_name: string;
+  last_name: string;
+  company: string | null;
+  email: string;
+  phone: string | null;
+  country?: string;
+  industry?: string;
+  status: string; // This is mapped to 'stage' in our interface
+  source: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  assigned_to?: string | null;
+  position?: string | null;
+  profiles?: {
+    first_name: string | null;
+    last_name: string | null;
+  } | null;
+}
+
+// Helper function to map database row to Lead interface
+const mapRowToLead = (row: LeadRow): Lead => {
+  const ownerFirstName = row.profiles?.first_name || '';
+  const ownerLastName = row.profiles?.last_name || '';
+  const ownerName = `${ownerFirstName} ${ownerLastName}`.trim();
+  const ownerInitials = 
+    (ownerFirstName ? ownerFirstName[0] : '') + 
+    (ownerLastName ? ownerLastName[0] : '');
+  
+  return {
+    id: row.id,
+    first_name: row.first_name,
+    last_name: row.last_name,
+    company: row.company,
+    email: row.email,
+    phone: row.phone,
+    country: row.country || '',
+    industry: row.industry || '',
+    stage: row.status, // Map status to stage
+    source: row.source,
+    notes: row.notes,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    assigned_to: row.assigned_to || undefined,
+    position: row.position,
+    owner: ownerName ? {
+      name: ownerName,
+      avatar: '/placeholder.svg',
+      initials: ownerInitials || 'مس'
+    } : undefined
+  };
+};
 
 export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
   try {
@@ -104,23 +160,9 @@ export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
     
     if (error) throw error;
     
-    return (data || []).map(lead => {
-      const ownerFirstName = lead.profiles?.first_name || '';
-      const ownerLastName = lead.profiles?.last_name || '';
-      const ownerName = `${ownerFirstName} ${ownerLastName}`.trim();
-      const ownerInitials = 
-        (ownerFirstName ? ownerFirstName[0] : '') + 
-        (ownerLastName ? ownerLastName[0] : '');
-      
-      return {
-        ...lead,
-        owner: ownerName ? {
-          name: ownerName,
-          avatar: '/placeholder.svg',
-          initials: ownerInitials || 'مس'
-        } : undefined
-      };
-    });
+    // Map database rows to Lead objects
+    return (data || []).map(row => mapRowToLead(row as LeadRow));
+    
   } catch (error) {
     console.error("Error fetching leads:", error);
     toast.error("فشل في جلب بيانات العملاء المحتملين");
@@ -145,21 +187,9 @@ export const fetchLeadById = async (id: string): Promise<Lead | null> => {
     if (error) throw error;
     if (!data) return null;
     
-    const ownerFirstName = data.profiles?.first_name || '';
-    const ownerLastName = data.profiles?.last_name || '';
-    const ownerName = `${ownerFirstName} ${ownerLastName}`.trim();
-    const ownerInitials = 
-      (ownerFirstName ? ownerFirstName[0] : '') + 
-      (ownerLastName ? ownerLastName[0] : '');
+    // Map the row to a Lead object
+    return mapRowToLead(data as LeadRow);
     
-    return {
-      ...data,
-      owner: ownerName ? {
-        name: ownerName,
-        avatar: '/placeholder.svg',
-        initials: ownerInitials || 'مس'
-      } : undefined
-    };
   } catch (error) {
     console.error("Error fetching lead by ID:", error);
     toast.error("فشل في جلب بيانات العميل المحتمل");
@@ -187,29 +217,28 @@ export const fetchLeadActivities = async (leadId: string): Promise<LeadActivity[
 
 export const createLead = async (lead: Partial<Lead>): Promise<Lead | null> => {
   try {
+    // Convert stage to status for DB
+    const leadData: any = { ...lead };
+    if (lead.stage) {
+      leadData.status = lead.stage;
+      delete leadData.stage;
+    }
+    
+    // Remove owner property as it's not in the database
+    delete leadData.owner;
+    
     const { data, error } = await supabase
       .from('leads')
-      .insert([{
-        first_name: lead.first_name,
-        last_name: lead.last_name,
-        company: lead.company,
-        email: lead.email,
-        phone: lead.phone,
-        country: lead.country,
-        industry: lead.industry,
-        status: lead.stage || 'new',
-        source: lead.source,
-        position: lead.position,
-        notes: lead.notes,
-        assigned_to: lead.assigned_to
-      }])
+      .insert([leadData])
       .select()
       .single();
     
     if (error) throw error;
     
     toast.success("تم إضافة العميل المحتمل بنجاح");
-    return data;
+    
+    // Return the created lead with proper mapping
+    return data ? mapRowToLead(data as LeadRow) : null;
   } catch (error) {
     console.error("Error creating lead:", error);
     toast.error("فشل في إضافة العميل المحتمل");
@@ -226,6 +255,7 @@ export const updateLead = async (id: string, lead: Partial<Lead>): Promise<Lead 
       delete updateData.stage;
     }
     
+    // Remove properties that should not be sent to the database
     delete updateData.id;
     delete updateData.created_at;
     delete updateData.updated_at;
@@ -241,7 +271,9 @@ export const updateLead = async (id: string, lead: Partial<Lead>): Promise<Lead 
     if (error) throw error;
     
     toast.success("تم تحديث بيانات العميل المحتمل بنجاح");
-    return data;
+    
+    // Return the updated lead with proper mapping
+    return data ? mapRowToLead(data as LeadRow) : null;
   } catch (error) {
     console.error("Error updating lead:", error);
     toast.error("فشل في تحديث بيانات العميل المحتمل");
