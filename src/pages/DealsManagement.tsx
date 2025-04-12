@@ -8,19 +8,70 @@ import DashboardNav from "@/components/dashboard/DashboardNav";
 import DealsList from "@/components/deals/DealsList";
 import DealForm from "@/components/deals/DealForm";
 import DealFilters from "@/components/deals/DealFilters";
+import { fetchDeals, filterDeals, Deal } from "@/services/dealsService";
 import { toast } from "sonner";
-import { fetchDeals, filterDeals } from "@/services/dealsService";
 
 const DealsManagement = () => {
   const [view, setView] = useState<"all" | "active" | "won" | "lost">("all");
   const [isCreating, setIsCreating] = useState(false);
   const [filterStage, setFilterStage] = useState<string>("all");
   const [filterValue, setFilterValue] = useState<string>("all");
+  const [filteredDeals, setFilteredDeals] = useState<Deal[]>([]);
   
-  const { data: deals, isLoading, refetch } = useQuery({
-    queryKey: ['deals', view],
+  const { data: allDeals, isLoading, refetch } = useQuery({
+    queryKey: ['deals'],
     queryFn: () => fetchDeals(),
   });
+
+  useEffect(() => {
+    if (allDeals) {
+      // فلترة بناءً على العرض (الكل، النشطة، المربوحة، المفقودة)
+      let dealsToShow = [...allDeals];
+      
+      if (view === "active") {
+        dealsToShow = allDeals.filter(deal => deal.status === "active");
+      } else if (view === "won") {
+        dealsToShow = allDeals.filter(deal => deal.status === "won");
+      } else if (view === "lost") {
+        dealsToShow = allDeals.filter(deal => deal.status === "lost");
+      }
+
+      // تطبيق فلترة المرحلة والقيمة إن وجدت
+      if (filterStage !== "all" || filterValue !== "all") {
+        applyFilters(dealsToShow);
+      } else {
+        setFilteredDeals(dealsToShow);
+      }
+    }
+  }, [allDeals, view, filterStage, filterValue]);
+
+  const applyFilters = async (deals: Deal[]) => {
+    let filtered = [...deals];
+    
+    // فلترة حسب المرحلة
+    if (filterStage !== "all") {
+      filtered = filtered.filter(deal => deal.stage === filterStage);
+    }
+    
+    // فلترة حسب القيمة
+    if (filterValue !== "all") {
+      const value = filterValue === "low" 
+        ? { maxValue: 10000 }
+        : filterValue === "medium"
+        ? { minValue: 10000, maxValue: 50000 }
+        : { minValue: 50000 };
+        
+      if (filterValue === "low") {
+        filtered = filtered.filter(deal => (deal.value || 0) < 10000);
+      } else if (filterValue === "medium") {
+        filtered = filtered.filter(deal => (deal.value || 0) >= 10000 && (deal.value || 0) <= 50000);
+      } else if (filterValue === "high") {
+        filtered = filtered.filter(deal => (deal.value || 0) > 50000);
+      }
+    }
+    
+    setFilteredDeals(filtered);
+  };
 
   const handleCreateDeal = () => {
     setIsCreating(true);
@@ -37,6 +88,14 @@ const DealsManagement = () => {
 
   const handleViewChange = (newView: "all" | "active" | "won" | "lost") => {
     setView(newView);
+  };
+
+  const handleStageChange = (value: string) => {
+    setFilterStage(value);
+  };
+
+  const handleValueChange = (value: string) => {
+    setFilterValue(value);
   };
 
   return (
@@ -90,8 +149,8 @@ const DealsManagement = () => {
                           <CardDescription>إدارة ومتابعة صفقات المبيعات</CardDescription>
                         </div>
                         <DealFilters 
-                          onStageChange={setFilterStage}
-                          onValueChange={setFilterValue}
+                          onStageChange={handleStageChange}
+                          onValueChange={handleValueChange}
                         />
                       </div>
                     </CardHeader>
@@ -103,7 +162,7 @@ const DealsManagement = () => {
                           view={view} 
                           filterStage={filterStage}
                           filterValue={filterValue}
-                          deals={deals || []}
+                          deals={filteredDeals}
                           onRefresh={refetch}
                         />
                       )}

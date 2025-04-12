@@ -30,7 +30,9 @@ export const fetchDeals = async (): Promise<Deal[]> => {
     
     if (error) throw error;
     
-    // تنسيق البيانات
+    console.log("Fetched deals:", data);
+    
+    // تنسيق البيانات مع التحقق من وجود companies
     return (data || []).map(deal => ({
       ...deal,
       company_name: deal.companies?.name
@@ -80,7 +82,10 @@ export const createDeal = async (dealData: Omit<Deal, 'id' | 'created_at' | 'upd
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error details:", error);
+      throw error;
+    }
     
     toast.success("تم إنشاء الصفقة بنجاح");
     return data;
