@@ -12,6 +12,7 @@ import LeadManagement from "./pages/LeadManagement";
 import CompaniesManagement from "./pages/CompaniesManagement";
 import AppointmentsManagement from "./pages/AppointmentsManagement";
 import TasksManagement from "./pages/TasksManagement";
+import TicketsManagement from "./pages/TicketsManagement";
 import CMS from "./pages/CMS";
 import NotFound from "./pages/NotFound";
 import Demo from "./pages/Demo";
@@ -37,7 +38,7 @@ const App = () => (
           <Route path="/dashboard/cms" element={<CMS />} />
           <Route path="/dashboard/appointments" element={<AppointmentsManagement />} />
           <Route path="/dashboard/tasks" element={<TasksManagement />} />
-          <Route path="/dashboard/tickets" element={<Dashboard />} />
+          <Route path="/dashboard/tickets" element={<TicketsManagement />} />
           <Route path="/dashboard/chats" element={<Dashboard />} />
           <Route path="/dashboard/reports" element={<Dashboard />} />
           <Route path="/dashboard/settings" element={<Dashboard />} />
