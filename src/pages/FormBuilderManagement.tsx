@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Tabs, 
@@ -56,8 +55,7 @@ import {
 import { getTypeLabel } from '@/components/properties/PropertyList';
 import FormBuilder from '@/components/forms/FormBuilder';
 import DynamicForm from '@/components/forms/DynamicForm';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import DashboardNav from '@/components/dashboard/DashboardNav';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
 const FormBuilderManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState<PropertyType>('lead');
@@ -168,7 +166,6 @@ const FormBuilderManagement: React.FC = () => {
   const handleFormSubmit = async (formData: any) => {
     try {
       if (formData.id) {
-        // Update existing form
         await updateForm(formData.id, {
           name: formData.name,
           description: formData.description,
@@ -183,7 +180,6 @@ const FormBuilderManagement: React.FC = () => {
           description: `تم تحديث النموذج "${formData.name}" بنجاح`,
         });
       } else {
-        // Create new form
         await createForm({
           name: formData.name,
           description: formData.description,
@@ -232,108 +228,102 @@ const FormBuilderManagement: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50 rtl">
-      <DashboardHeader />
-      <div className="flex">
-        <DashboardNav />
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto pt-16 lg:pt-0">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">بناء النماذج</h1>
-            <Button onClick={handleAddForm} className="gap-1">
-              <Plus className="h-4 w-4" /> إنشاء نموذج جديد
-            </Button>
-          </div>
+    <DashboardLayout>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">بناء النماذج</h1>
+        <Button onClick={handleAddForm} className="gap-1">
+          <Plus className="h-4 w-4" /> إنشاء نموذج جديد
+        </Button>
+      </div>
 
-          <Tabs defaultValue={activeTab} onValueChange={(value) => setActiveTab(value as PropertyType)}>
-            <TabsList className="mb-6 overflow-auto flex w-full border-b pb-px">
-              {propertyTypes.map((type) => (
-                <TabsTrigger 
-                  key={type} 
-                  value={type} 
-                  className="flex-1 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
-                >
-                  نماذج {getTypeLabel(type)}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+      <Tabs defaultValue={activeTab} onValueChange={(value) => setActiveTab(value as PropertyType)}>
+        <TabsList className="mb-6 overflow-auto flex w-full border-b pb-px">
+          {propertyTypes.map((type) => (
+            <TabsTrigger 
+              key={type} 
+              value={type} 
+              className="flex-1 data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+            >
+              نماذج {getTypeLabel(type)}
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-            {propertyTypes.map((type) => (
-              <TabsContent key={type} value={type}>
-                {isLoading ? (
-                  <div className="flex justify-center items-center h-64">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {forms.length > 0 ? (
-                      forms.map((form) => (
-                        <Card key={form.id}>
-                          <CardHeader>
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <CardTitle>{form.name}</CardTitle>
-                                <CardDescription className="mt-1">
-                                  {form.description || 'لا يوجد وصف'}
-                                </CardDescription>
-                              </div>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" className="h-8 w-8 p-0">
-                                    <span className="sr-only">فتح القائمة</span>
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => handleEditForm(form.id)}>
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    <span>تعديل</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handlePreviewForm(form.id)}>
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    <span>معاينة</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => copyFormEmbedCode(form.id)}>
-                                    <Link2 className="mr-2 h-4 w-4" />
-                                    <span>نسخ كود التضمين</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleDeleteForm(form.id)}>
-                                    <Trash2 className="mr-2 h-4 w-4 text-red-500" />
-                                    <span className="text-red-500">حذف</span>
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="text-sm text-muted-foreground">
-                              تم إنشاؤه في {new Date(form.created_at!).toLocaleDateString('ar-SA')}
-                            </div>
-                          </CardContent>
-                          <CardFooter className="flex justify-between">
-                            <Badge variant={form.isActive ? "default" : "outline"}>
-                              {form.isActive ? 'مفعل' : 'غير مفعل'}
-                            </Badge>
-                            <Button variant="outline" size="sm" onClick={() => handlePreviewForm(form.id)}>
-                              معاينة النموذج
-                            </Button>
-                          </CardFooter>
-                        </Card>
-                      ))
-                    ) : (
-                      <div className="col-span-3 py-10 text-center">
-                        <p className="text-muted-foreground mb-4">لا توجد نماذج مضافة لهذا النوع</p>
-                        <Button onClick={handleAddForm} className="gap-1">
-                          <Plus className="h-4 w-4" /> إنشاء نموذج جديد
+        {propertyTypes.map((type) => (
+          <TabsContent key={type} value={type}>
+            {isLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {forms.length > 0 ? (
+                  forms.map((form) => (
+                    <Card key={form.id}>
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle>{form.name}</CardTitle>
+                            <CardDescription className="mt-1">
+                              {form.description || 'لا يوجد وصف'}
+                            </CardDescription>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">فتح القائمة</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditForm(form.id)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                <span>تعديل</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handlePreviewForm(form.id)}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                <span>معاينة</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => copyFormEmbedCode(form.id)}>
+                                <Link2 className="mr-2 h-4 w-4" />
+                                <span>نسخ كود التضمين</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleDeleteForm(form.id)}>
+                                <Trash2 className="mr-2 h-4 w-4 text-red-500" />
+                                <span className="text-red-500">حذف</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-sm text-muted-foreground">
+                          تم إنشاؤه في {new Date(form.created_at!).toLocaleDateString('ar-SA')}
+                        </div>
+                      </CardContent>
+                      <CardFooter className="flex justify-between">
+                        <Badge variant={form.isActive ? "default" : "outline"}>
+                          {form.isActive ? 'مفعل' : 'غير مفعل'}
+                        </Badge>
+                        <Button variant="outline" size="sm" onClick={() => handlePreviewForm(form.id)}>
+                          معاينة النموذج
                         </Button>
-                      </div>
-                    )}
+                      </CardFooter>
+                    </Card>
+                  ))
+                ) : (
+                  <div className="col-span-3 py-10 text-center">
+                    <p className="text-muted-foreground mb-4">لا توجد نماذج مضافة لهذا النوع</p>
+                    <Button onClick={handleAddForm} className="gap-1">
+                      <Plus className="h-4 w-4" /> إنشاء نموذج جديد
+                    </Button>
                   </div>
                 )}
-              </TabsContent>
-            ))}
-          </Tabs>
-        </main>
-      </div>
+              </div>
+            )}
+          </TabsContent>
+        ))}
+      </Tabs>
 
       {/* Form Builder Dialog */}
       <Dialog 
@@ -393,7 +383,7 @@ const FormBuilderManagement: React.FC = () => {
           ) : null}
         </DialogContent>
       </Dialog>
-    </div>
+    </DashboardLayout>
   );
 };
 

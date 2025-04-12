@@ -125,7 +125,7 @@ const DashboardNav = ({ mobileOpen = false, onClose }: DashboardNavProps) => {
     );
   }
 
-  // For mobile view - fix to ensure proper functioning
+  // For mobile view - improved implementation
   return (
     <Sheet open={mobileOpen} onOpenChange={onClose ? () => onClose() : undefined}>
       <SheetContent side="right" className="rtl p-0 w-[80%] sm:max-w-sm">
