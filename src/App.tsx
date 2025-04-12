@@ -16,6 +16,9 @@ import RolesManagement from './pages/RolesManagement';
 import CompaniesManagement from './pages/CompaniesManagement';
 import DealsManagement from './pages/DealsManagement';
 import CMS from './pages/CMS';
+import Settings from './pages/Settings';
+import TasksManagement from './pages/TasksManagement';
+import TicketsManagement from './pages/TicketsManagement';
 
 function AppRoutes() {
   const { isLoggedIn } = useAuth();
@@ -36,11 +39,12 @@ function AppRoutes() {
           <Route path="/dashboard/companies" element={isLoggedIn ? <CompaniesManagement /> : <Navigate to="/login" />} />
           <Route path="/dashboard/deals" element={isLoggedIn ? <DealsManagement /> : <Navigate to="/login" />} />
           <Route path="/dashboard/appointments" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/tickets" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/tasks" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/tickets" element={isLoggedIn ? <TicketsManagement /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/tasks" element={isLoggedIn ? <TasksManagement /> : <Navigate to="/login" />} />
           <Route path="/dashboard/chats" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
           <Route path="/dashboard/reports" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
           <Route path="/dashboard/cms" element={isLoggedIn ? <CMS /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/settings" element={isLoggedIn ? <Settings /> : <Navigate to="/login" />} />
           <Route path="/dashboard/users" element={<UserManagement />} />
           <Route path="/dashboard/departments" element={<DepartmentsManagement />} />
           <Route path="/dashboard/teams" element={<TeamsManagement />} />
