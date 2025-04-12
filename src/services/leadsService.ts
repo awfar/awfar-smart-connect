@@ -161,7 +161,7 @@ export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
     if (error) throw error;
     
     // Map database rows to Lead objects
-    return (data || []).map(row => mapRowToLead(row as LeadRow));
+    return (data || []).map(mapRowToLead);
     
   } catch (error) {
     console.error("Error fetching leads:", error);
@@ -230,7 +230,13 @@ export const createLead = async (lead: Partial<Lead>): Promise<Lead | null> => {
     const { data, error } = await supabase
       .from('leads')
       .insert([leadData])
-      .select()
+      .select(`
+        *,
+        profiles:assigned_to (
+          first_name,
+          last_name
+        )
+      `)
       .single();
     
     if (error) throw error;
@@ -265,7 +271,13 @@ export const updateLead = async (id: string, lead: Partial<Lead>): Promise<Lead 
       .from('leads')
       .update(updateData)
       .eq('id', id)
-      .select()
+      .select(`
+        *,
+        profiles:assigned_to (
+          first_name,
+          last_name
+        )
+      `)
       .single();
     
     if (error) throw error;
