@@ -12,6 +12,8 @@ import LeadManagement from "./pages/LeadManagement";
 import CompaniesManagement from "./pages/CompaniesManagement";
 import CMS from "./pages/CMS";
 import NotFound from "./pages/NotFound";
+import Demo from "./pages/Demo";
+import Pricing from "./pages/Pricing";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +27,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<About />} />
           <Route path="/ai-agent" element={<AIAgent />} />
+          <Route path="/demo" element={<Demo />} />
+          <Route path="/pricing" element={<Pricing />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/leads" element={<LeadManagement />} />
           <Route path="/dashboard/companies" element={<CompaniesManagement />} />
