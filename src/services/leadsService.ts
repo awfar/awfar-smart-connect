@@ -103,45 +103,45 @@ const mapRowToLead = (row: LeadRow): Lead => {
 
 export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
   try {
-    // Create a base query without chaining too many methods at once
-    const baseQuery = supabase
-      .from('leads')
-      .select(`
-        *,
-        profiles:assigned_to (
-          first_name,
-          last_name
-        )
-      `);
+    // Start with the base query string
+    const queryString = `
+      *,
+      profiles:assigned_to (
+        first_name,
+        last_name
+      )
+    `;
+    
+    // Create the initial query
+    let query = supabase.from('leads').select(queryString);
     
     // Apply filters if provided
     if (filters) {
       if (filters.stage && filters.stage !== 'all') {
-        baseQuery.eq('status', filters.stage);
+        query = query.eq('status', filters.stage);
       }
       
       if (filters.source && filters.source !== 'all') {
-        baseQuery.eq('source', filters.source);
+        query = query.eq('source', filters.source);
       }
       
       if (filters.country && filters.country !== 'all') {
-        baseQuery.eq('country', filters.country);
+        query = query.eq('country', filters.country);
       }
       
       if (filters.industry && filters.industry !== 'all') {
-        baseQuery.eq('industry', filters.industry);
+        query = query.eq('industry', filters.industry);
       }
       
       if (filters.assigned_to && filters.assigned_to !== 'all') {
-        baseQuery.eq('assigned_to', filters.assigned_to);
+        query = query.eq('assigned_to', filters.assigned_to);
       }
       
-      // Date range filter would need more complex logic
-      // This is a simplified example
+      // Date range filter
       if (filters.date_range === 'today') {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        baseQuery.gte('created_at', today.toISOString());
+        query = query.gte('created_at', today.toISOString());
       } else if (filters.date_range === 'yesterday') {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
@@ -150,19 +150,20 @@ export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        baseQuery
+        query = query
           .gte('created_at', yesterday.toISOString())
           .lt('created_at', today.toISOString());
       }
     }
 
-    // Execute the query with ordering at the end
-    const { data, error } = await baseQuery.order('created_at', { ascending: false });
+    // Execute the query with ordering
+    query = query.order('created_at', { ascending: false });
+    const { data, error } = await query;
     
     if (error) throw error;
     
-    // Map database rows to Lead objects
-    return (data as LeadRow[] || []).map(mapRowToLead);
+    // Cast data to ensure proper typing and map to Lead objects
+    return (data as unknown as LeadRow[] || []).map(mapRowToLead);
     
   } catch (error) {
     console.error("Error fetching leads:", error);
