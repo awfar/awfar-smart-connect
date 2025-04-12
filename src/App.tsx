@@ -45,11 +45,11 @@ function AppRoutes() {
           <Route path="/dashboard/reports" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
           <Route path="/dashboard/cms" element={isLoggedIn ? <CMS /> : <Navigate to="/login" />} />
           <Route path="/dashboard/settings" element={isLoggedIn ? <Settings /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/users" element={<UserManagement />} />
-          <Route path="/dashboard/departments" element={<DepartmentsManagement />} />
-          <Route path="/dashboard/teams" element={<TeamsManagement />} />
-          <Route path="/dashboard/permissions" element={<PermissionsManagement />} />
-          <Route path="/dashboard/roles" element={<RolesManagement />} />
+          <Route path="/dashboard/users" element={isLoggedIn ? <UserManagement /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/departments" element={isLoggedIn ? <DepartmentsManagement /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/teams" element={isLoggedIn ? <TeamsManagement /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/permissions" element={isLoggedIn ? <PermissionsManagement /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/roles" element={isLoggedIn ? <RolesManagement /> : <Navigate to="/login" />} />
           <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
