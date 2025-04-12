@@ -15,6 +15,8 @@ import {
   Settings,
   Users,
   X,
+  UserCog,
+  Building2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -87,6 +89,16 @@ const DashboardNav: React.FC = () => {
       title: 'إدارة المحتوى',
       href: '/dashboard/cms',
       icon: Settings,
+    },
+    {
+      title: 'إدارة المستخدمين',
+      href: '/dashboard/users',
+      icon: UserCog,
+    },
+    {
+      title: 'الأقسام والفرق',
+      href: '/dashboard/departments',
+      icon: Building2,
     },
     {
       title: 'الإعدادات',
