@@ -9,20 +9,26 @@ import {
   X, Mail, Phone, Globe, MapPin, Building, Users, 
   Calendar, MessageCircle, FileText, PieChart, PlusCircle, Edit
 } from "lucide-react";
-import { Company } from "@/services/companiesService";
+import type { Company } from "@/services/companiesService";
 import { toast } from "sonner";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
-interface AccountManager {
-  name: string;
-  avatar: string;
-  initials: string;
+// Define a more complete Company type that includes all needed properties
+interface EnhancedCompany extends Company {
+  account_manager: {
+    name: string;
+    avatar: string;
+    initials: string;
+  };
+  subscription?: string;
+  city?: string;
+  size?: string;
 }
 
 interface CompanyDetailsProps {
-  company: Company;
+  company: EnhancedCompany;
   onClose: () => void;
-  onEdit: (company: Company) => void;
+  onEdit: (company: EnhancedCompany) => void;
 }
 
 const CompanyDetails: React.FC<CompanyDetailsProps> = ({ company, onClose, onEdit }) => {

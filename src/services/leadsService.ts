@@ -1,6 +1,9 @@
 
 import { Lead, LeadActivity } from "../types/leads";
 
+// Re-export the Lead type
+export type { Lead, LeadActivity };
+
 // Mock lead data
 const mockLeads: Lead[] = [
   {
@@ -51,6 +54,9 @@ export const getLeadById = async (id: string): Promise<Lead | null> => {
   const lead = mockLeads.find((lead) => lead.id === id);
   return Promise.resolve(lead || null);
 };
+
+// Add an alias for fetchLeadById to maintain compatibility
+export const fetchLeadById = getLeadById;
 
 // Get activities for a lead
 export const getLeadActivities = async (leadId: string): Promise<LeadActivity[]> => {

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Check, Clock, List, Mail, Phone, User } from "lucide-react";
 import { toast } from "sonner";
-import { fetchLeadById, Lead } from "@/services/leadsService";
+import { getLeadById } from "@/services/leadsService";
+import type { Lead } from "@/types/leads";
 import ActivityForm from "@/components/leads/ActivityForm";
 import { LeadActivity } from "@/services/types/leadTypes";
 
@@ -47,7 +49,7 @@ const LeadDetails = () => {
       
       setIsLoading(true);
       try {
-        const data = await fetchLeadById(id);
+        const data = await getLeadById(id);
         if (data) {
           setLead(data);
         } else {
