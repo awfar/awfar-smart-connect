@@ -1,5 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import React from 'react';
+import { Package, FileDigit, BarChart2, Store } from 'lucide-react';
 
 export type ProductType = 'physical' | 'digital' | 'service' | 'subscription';
 
@@ -17,6 +19,22 @@ export interface Product {
   createdAt: string;
   updatedAt: string;
 }
+
+// Type-specific icons
+export const productTypeIcons = {
+  physical: <Package className="h-5 w-5" />,
+  digital: <FileDigit className="h-5 w-5" />,
+  service: <BarChart2 className="h-5 w-5" />,
+  subscription: <Store className="h-5 w-5" />
+};
+
+// Type-specific labels
+export const productTypeLabels = {
+  physical: 'منتج مادي',
+  digital: 'منتج رقمي',
+  service: 'خدمة',
+  subscription: 'اشتراك'
+};
 
 export interface Category {
   id: string;

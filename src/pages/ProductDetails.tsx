@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -11,32 +10,12 @@ import {
   Edit, 
   Trash2, 
   Clock, 
-  Package, 
-  Tag, 
-  FileDigit,
-  BarChart2,
-  Store
+  Tag 
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
-
-// Type-specific icons
-const productTypeIcons = {
-  physical: <Package className="h-5 w-5" />,
-  digital: <FileDigit className="h-5 w-5" />,
-  service: <BarChart2 className="h-5 w-5" />,
-  subscription: <Store className="h-5 w-5" />
-};
-
-// Type-specific labels
-const productTypeLabels = {
-  physical: 'منتج مادي',
-  digital: 'منتج رقمي',
-  service: 'خدمة',
-  subscription: 'اشتراك'
-};
 
 const ProductDetails: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();

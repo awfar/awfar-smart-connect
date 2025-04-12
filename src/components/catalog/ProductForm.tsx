@@ -1,61 +1,47 @@
 
-import React from 'react';
+import React, { useState } from 'react';
+import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import * as z from 'zod';
+import { Product, ProductType, createProduct } from '@/services/catalogService';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Form,
-  FormControl,
   FormField,
   FormItem,
   FormLabel,
+  FormControl,
+  FormDescription,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
-import { createProduct, ProductType } from '@/services/catalogService';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: 'اسم المنتج يجب أن يتكون من حرفين على الأقل',
-  }),
-  description: z.string().min(10, {
-    message: 'وصف المنتج يجب أن يتكون من 10 أحرف على الأقل',
-  }),
-  price: z.number().min(0, {
-    message: 'السعر لا يمكن أن يكون سالباً',
-  }),
+const productSchema = z.object({
+  name: z.string().min(3, { message: 'اسم المنتج يجب أن يكون على الأقل 3 أحرف' }),
+  description: z.string().min(10, { message: 'وصف المنتج يجب أن يكون على الأقل 10 أحرف' }),
+  price: z.coerce.number().min(0, { message: 'يجب أن يكون السعر 0 أو أكثر' }),
   type: z.enum(['physical', 'digital', 'service', 'subscription']),
-  sku: z.string().min(3, {
-    message: 'رمز المنتج يجب أن يتكون من 3 أحرف على الأقل',
-  }),
+  sku: z.string().min(3, { message: 'رمز المنتج يجب أن يكون على الأقل 3 أحرف' }),
   isActive: z.boolean().default(true),
-  inventory: z.number().optional(),
-  imageUrl: z.string().url().optional().or(z.literal('')),
+  imageUrl: z.string().optional(),
+  inventory: z.coerce.number().min(0).optional(),
 });
 
-type ProductFormValues = z.infer<typeof formSchema>;
+type ProductFormData = z.infer<typeof productSchema>;
 
 interface ProductFormProps {
   onSuccess?: () => void;
 }
 
 const ProductForm: React.FC<ProductFormProps> = ({ onSuccess }) => {
-  const queryClient = useQueryClient();
-
-  const form = useForm<ProductFormValues>({
-    resolver: zodResolver(formSchema),
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const form = useForm<ProductFormData>({
+    resolver: zodResolver(productSchema),
     defaultValues: {
       name: '',
       description: '',
@@ -63,34 +49,48 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess }) => {
       type: 'physical',
       sku: '',
       isActive: true,
-      inventory: 0,
       imageUrl: '',
     },
   });
 
-  const mutation = useMutation({
-    mutationFn: createProduct,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+  const showInventory = form.watch('type') === 'physical';
+
+  const onSubmit = async (data: ProductFormData) => {
+    try {
+      setIsSubmitting(true);
+      
+      // Ensure we have all required fields before submission
+      const productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'> = {
+        name: data.name,
+        description: data.description,
+        price: data.price,
+        type: data.type as ProductType,
+        sku: data.sku,
+        isActive: data.isActive,
+      };
+      
+      // Add optional fields if they exist
+      if (data.imageUrl) productData.imageUrl = data.imageUrl;
+      if (showInventory && data.inventory !== undefined) productData.inventory = data.inventory;
+      
+      await createProduct(productData);
+      
       toast.success('تم إنشاء المنتج بنجاح');
-      form.reset();
-      if (onSuccess) onSuccess();
-    },
-    onError: () => {
+      
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      console.error('Error creating product:', error);
       toast.error('حدث خطأ أثناء إنشاء المنتج');
-    },
-  });
-
-  const onSubmit = (values: ProductFormValues) => {
-    mutation.mutate(values);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-
-  const productType = form.watch('type');
-  const showInventory = productType === 'physical';
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 rtl">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="name"
@@ -104,6 +104,7 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess }) => {
             </FormItem>
           )}
         />
+        
         <FormField
           control={form.control}
           name="description"
@@ -111,13 +112,14 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess }) => {
             <FormItem>
               <FormLabel>وصف المنتج</FormLabel>
               <FormControl>
-                <Textarea placeholder="أدخل وصفاً للمنتج" {...field} className="min-h-[100px]" />
+                <Textarea placeholder="أدخل وصفاً للمنتج" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        
+        <div className="grid grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="price"
@@ -125,17 +127,13 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess }) => {
               <FormItem>
                 <FormLabel>السعر (ر.س)</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
-                    placeholder="0" 
-                    {...field} 
-                    onChange={(e) => field.onChange(Number(e.target.value))}
-                  />
+                  <Input type="number" min="0" step="0.01" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+          
           <FormField
             control={form.control}
             name="sku"
@@ -143,39 +141,57 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess }) => {
               <FormItem>
                 <FormLabel>رمز المنتج (SKU)</FormLabel>
                 <FormControl>
-                  <Input placeholder="مثال: PRD-001" {...field} />
+                  <Input placeholder="PRD-001" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
         </div>
+        
         <FormField
           control={form.control}
           name="type"
           render={({ field }) => (
             <FormItem>
               <FormLabel>نوع المنتج</FormLabel>
-              <Select 
-                onValueChange={field.onChange} 
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="اختر نوع المنتج" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="physical">منتج مادي</SelectItem>
-                  <SelectItem value="digital">منتج رقمي</SelectItem>
-                  <SelectItem value="service">خدمة</SelectItem>
-                  <SelectItem value="subscription">اشتراك</SelectItem>
-                </SelectContent>
-              </Select>
+              <FormControl>
+                <RadioGroup 
+                  className="grid grid-cols-2 gap-4"
+                  value={field.value} 
+                  onValueChange={field.onChange}
+                >
+                  <FormItem className="flex items-center space-x-3 space-y-0 rtl:space-x-reverse">
+                    <FormControl>
+                      <RadioGroupItem value="physical" />
+                    </FormControl>
+                    <FormLabel className="font-normal cursor-pointer">منتج مادي</FormLabel>
+                  </FormItem>
+                  <FormItem className="flex items-center space-x-3 space-y-0 rtl:space-x-reverse">
+                    <FormControl>
+                      <RadioGroupItem value="digital" />
+                    </FormControl>
+                    <FormLabel className="font-normal cursor-pointer">منتج رقمي</FormLabel>
+                  </FormItem>
+                  <FormItem className="flex items-center space-x-3 space-y-0 rtl:space-x-reverse">
+                    <FormControl>
+                      <RadioGroupItem value="service" />
+                    </FormControl>
+                    <FormLabel className="font-normal cursor-pointer">خدمة</FormLabel>
+                  </FormItem>
+                  <FormItem className="flex items-center space-x-3 space-y-0 rtl:space-x-reverse">
+                    <FormControl>
+                      <RadioGroupItem value="subscription" />
+                    </FormControl>
+                    <FormLabel className="font-normal cursor-pointer">اشتراك</FormLabel>
+                  </FormItem>
+                </RadioGroup>
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+        
         {showInventory && (
           <FormField
             control={form.control}
@@ -186,16 +202,22 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess }) => {
                 <FormControl>
                   <Input 
                     type="number" 
-                    placeholder="0" 
+                    min="0" 
+                    step="1" 
                     {...field} 
-                    onChange={(e) => field.onChange(Number(e.target.value))}
+                    value={field.value || 0}
+                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
                   />
                 </FormControl>
+                <FormDescription>
+                  عدد الوحدات المتوفرة في المخزون
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
         )}
+        
         <FormField
           control={form.control}
           name="imageUrl"
@@ -209,16 +231,17 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess }) => {
             </FormItem>
           )}
         />
+        
         <FormField
           control={form.control}
           name="isActive"
           render={({ field }) => (
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
-                <FormLabel className="text-base">حالة المنتج</FormLabel>
-                <div className="text-sm text-muted-foreground">
-                  هل المنتج متاح للبيع؟
-                </div>
+                <FormLabel className="text-base">تفعيل المنتج</FormLabel>
+                <FormDescription>
+                  سيظهر المنتج في الكتالوج إذا كان مفعلاً
+                </FormDescription>
               </div>
               <FormControl>
                 <Switch
@@ -229,9 +252,10 @@ const ProductForm: React.FC<ProductFormProps> = ({ onSuccess }) => {
             </FormItem>
           )}
         />
-        <div className="flex justify-end gap-2">
-          <Button type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? 'جاري الإنشاء...' : 'إنشاء المنتج'}
+
+        <div className="flex justify-end gap-2 pt-4">
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'جاري الإنشاء...' : 'إنشاء المنتج'}
           </Button>
         </div>
       </form>
