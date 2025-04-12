@@ -1,24 +1,11 @@
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
+import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
-import { ImageUpload } from "./ImageUpload";
-
-interface ContentSection {
-  id: string;
-  title: string;
-  description: string;
-  content: any;
-}
+import ContentEditor from "./ContentEditor";
+import { useContentManager } from "@/hooks/use-content-manager";
 
 const ContentManager = () => {
-  const { toast } = useToast();
-  const [sections, setSections] = useState<ContentSection[]>([
+  const initialSections = [
     {
       id: "hero",
       title: "Hero Section",
@@ -63,69 +50,38 @@ const ContentManager = () => {
         buttonText: "تعرف على المزيد من قصص النجاح",
         image: "/lovable-uploads/193f53ad-1a0c-4c7b-9d7d-bdda35106e9f.png"
       }
+    },
+    {
+      id: "pricingPlans",
+      title: "Pricing Plans",
+      description: "Pricing plans section of the pricing page",
+      content: {
+        heading: "خطط أسعار بسيطة وشفافة",
+        subheading: "اختر الخطة المناسبة لاحتياجات عملك",
+        plansHeading: "باقات أوفر",
+        plansSubheading: "اختر الباقة المناسبة لعملك",
+        customSolutionsHeading: "تحتاج إلى حل مخصص؟",
+        customSolutionsText: "نقدم حلولًا مخصصة للشركات الكبيرة مع متطلبات فريدة. تواصل مع فريق المبيعات لمعرفة كيف يمكننا مساعدتك.",
+        customSolutionsButtonText: "تواصل مع فريق المبيعات"
+      }
     }
-  ]);
+  ];
 
-  const [currentSection, setCurrentSection] = useState<ContentSection>(sections[0]);
-
-  const handleSave = () => {
-    const updatedSections = sections.map((section) => 
-      section.id === currentSection.id ? currentSection : section
-    );
-    
-    setSections(updatedSections);
-    
-    toast({
-      title: "Content saved",
-      description: `${currentSection.title} has been updated successfully.`,
-    });
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    
-    setCurrentSection({
-      ...currentSection,
-      content: {
-        ...currentSection.content,
-        [name]: value
-      }
-    });
-  };
-
-  const handleFeatureChange = (index: number, value: string) => {
-    const features = [...currentSection.content.features];
-    features[index] = value;
-    
-    setCurrentSection({
-      ...currentSection,
-      content: {
-        ...currentSection.content,
-        features
-      }
-    });
-  };
-
-  const handleImageChange = (url: string) => {
-    setCurrentSection({
-      ...currentSection,
-      content: {
-        ...currentSection.content,
-        image: url
-      }
-    });
-  };
+  const {
+    sections,
+    currentSection,
+    selectSection,
+    handleSave,
+    handleChange,
+    handleArrayChange,
+    handleImageChange
+  } = useContentManager(initialSections);
 
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Content Management System</h1>
       
-      <Tabs defaultValue="hero" onValueChange={(value) => {
-        const selectedSection = sections.find(section => section.id === value);
-        if (selectedSection) {
-          setCurrentSection(selectedSection);
-        }
-      }}>
+      <Tabs defaultValue="hero" onValueChange={selectSection}>
         <TabsList className="mb-6">
           {sections.map((section) => (
             <TabsTrigger key={section.id} value={section.id}>
@@ -136,117 +92,13 @@ const ContentManager = () => {
         
         {sections.map((section) => (
           <TabsContent key={section.id} value={section.id}>
-            <Card>
-              <CardHeader>
-                <CardTitle>{section.title}</CardTitle>
-                <CardDescription>{section.description}</CardDescription>
-              </CardHeader>
-              
-              <CardContent className="space-y-6">
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="heading">Heading</Label>
-                    <Input
-                      id="heading"
-                      name="heading"
-                      value={currentSection.content.heading}
-                      onChange={handleChange}
-                    />
-                  </div>
-                  
-                  {currentSection.content.subheading !== undefined && (
-                    <div>
-                      <Label htmlFor="subheading">Subheading</Label>
-                      <Input
-                        id="subheading"
-                        name="subheading"
-                        value={currentSection.content.subheading}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  )}
-                  
-                  {currentSection.content.description !== undefined && (
-                    <div>
-                      <Label htmlFor="description">Description</Label>
-                      <Textarea
-                        id="description"
-                        name="description"
-                        value={currentSection.content.description}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  )}
-                  
-                  {currentSection.content.primaryButtonText !== undefined && (
-                    <div>
-                      <Label htmlFor="primaryButtonText">Primary Button Text</Label>
-                      <Input
-                        id="primaryButtonText"
-                        name="primaryButtonText"
-                        value={currentSection.content.primaryButtonText}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  )}
-                  
-                  {currentSection.content.secondaryButtonText !== undefined && (
-                    <div>
-                      <Label htmlFor="secondaryButtonText">Secondary Button Text</Label>
-                      <Input
-                        id="secondaryButtonText"
-                        name="secondaryButtonText"
-                        value={currentSection.content.secondaryButtonText}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  )}
-                  
-                  {currentSection.content.buttonText !== undefined && (
-                    <div>
-                      <Label htmlFor="buttonText">Button Text</Label>
-                      <Input
-                        id="buttonText"
-                        name="buttonText"
-                        value={currentSection.content.buttonText}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  )}
-                  
-                  {currentSection.content.features !== undefined && (
-                    <div className="space-y-3">
-                      <Label>Features</Label>
-                      {currentSection.content.features.map((feature: string, index: number) => (
-                        <Input
-                          key={index}
-                          value={feature}
-                          onChange={(e) => handleFeatureChange(index, e.target.value)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-                
-                {currentSection.content.image !== undefined && (
-                  <div>
-                    <Label className="block mb-2">Image</Label>
-                    <div className="mb-4">
-                      <img 
-                        src={currentSection.content.image} 
-                        alt="Current" 
-                        className="w-40 h-auto rounded-md border object-cover"
-                      />
-                    </div>
-                    <ImageUpload onImageUploaded={handleImageChange} />
-                  </div>
-                )}
-              </CardContent>
-              
-              <CardFooter>
-                <Button onClick={handleSave} className="w-full">Save Changes</Button>
-              </CardFooter>
-            </Card>
+            <ContentEditor
+              section={currentSection}
+              onSave={handleSave}
+              onChange={handleChange}
+              onArrayChange={handleArrayChange}
+              onImageChange={(fieldName, url) => handleImageChange(fieldName, url)}
+            />
           </TabsContent>
         ))}
       </Tabs>

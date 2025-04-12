@@ -1,15 +1,19 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Check } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import PricingComparison from '@/components/pricing/PricingComparison';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Pricing = () => {
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+
   const pricingPlans = [
     {
       name: "Free",
-      price: "0",
+      price: billingCycle === 'monthly' ? "0" : "0",
       description: "للشركات الناشئة",
       features: [
         "محادثة واحدة فقط",
@@ -22,7 +26,7 @@ const Pricing = () => {
     },
     {
       name: "Plus",
-      price: "199",
+      price: billingCycle === 'monthly' ? "199" : "1990",
       description: "للشركات الصغيرة",
       popular: true,
       features: [
@@ -38,7 +42,7 @@ const Pricing = () => {
     },
     {
       name: "Pro",
-      price: "499",
+      price: billingCycle === 'monthly' ? "499" : "4990",
       description: "للشركات المتوسطة والكبيرة",
       features: [
         "محادثات غير محدودة",
@@ -63,10 +67,15 @@ const Pricing = () => {
           <div className="container mx-auto max-w-4xl">
             <h1 className="text-4xl font-bold mb-4">خطط أسعار بسيطة وشفافة</h1>
             <p className="text-xl mb-8">اختر الخطة المناسبة لاحتياجات عملك</p>
-            <div className="inline-flex bg-white/10 backdrop-blur-sm p-2 rounded-full">
-              <button className="px-6 py-2 rounded-full bg-white text-awfar-primary">شهري</button>
-              <button className="px-6 py-2 rounded-full text-white">سنوي (خصم 20%)</button>
-            </div>
+            
+            <Tabs defaultValue="monthly" className="w-fit mx-auto" onValueChange={(value) => setBillingCycle(value as 'monthly' | 'yearly')}>
+              <TabsList className="grid w-full grid-cols-2 bg-white/10 backdrop-blur-sm">
+                <TabsTrigger value="monthly" className="data-[state=active]:bg-white data-[state=active]:text-awfar-primary">شهري</TabsTrigger>
+                <TabsTrigger value="yearly" className="data-[state=active]:bg-white data-[state=active]:text-awfar-primary">
+                  سنوي <span className="text-xs bg-awfar-accent text-white rounded-full px-2 py-0.5 ml-2">خصم 20%</span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
         </section>
         
@@ -76,9 +85,9 @@ const Pricing = () => {
               {pricingPlans.map((plan, index) => (
                 <div 
                   key={index}
-                  className={`rounded-xl overflow-hidden ${
+                  className={`rounded-xl overflow-hidden transform transition-all duration-300 hover:translate-y-[-5px] ${
                     plan.popular 
-                      ? 'shadow-xl border-2 border-awfar-accent relative -mt-6 bg-white' 
+                      ? 'shadow-xl border-2 border-awfar-accent relative md:-mt-6 bg-white' 
                       : 'shadow-md bg-white'
                   }`}
                 >
@@ -94,7 +103,7 @@ const Pricing = () => {
                     
                     <div className="text-center mb-6">
                       <span className="text-5xl font-bold">{plan.price}</span>
-                      <span className="text-gray-600 ml-2">ريال / شهرياً</span>
+                      <span className="text-gray-600 ml-2">ريال / {billingCycle === 'monthly' ? 'شهرياً' : 'سنوياً'}</span>
                     </div>
                     
                     <ul className="space-y-3 mb-8">
@@ -128,6 +137,8 @@ const Pricing = () => {
             </div>
           </div>
         </section>
+        
+        <PricingComparison />
         
         <section className="py-20 bg-white">
           <div className="container mx-auto">
