@@ -1,35 +1,30 @@
 
-import { LeadRow, Lead } from "../types/leadTypes";
+import { Lead, LeadRow } from "../types/leadTypes";
 
-// Helper function to map database row to Lead interface
+// This function maps database rows (LeadRow) to our application model (Lead)
 export const mapRowToLead = (row: LeadRow): Lead => {
-  const ownerFirstName = row.profiles?.first_name || '';
-  const ownerLastName = row.profiles?.last_name || '';
-  const ownerName = `${ownerFirstName} ${ownerLastName}`.trim();
-  const ownerInitials = 
-    (ownerFirstName ? ownerFirstName[0] : '') + 
-    (ownerLastName ? ownerLastName[0] : '');
+  const { profiles, ...leadData } = row;
   
+  // Create the owner object if profile data exists
+  const owner = profiles ? {
+    name: `${profiles.first_name || ''} ${profiles.last_name || ''}`.trim() || 'Unknown',
+    avatar: "/placeholder.svg",
+    initials: getInitials(profiles.first_name, profiles.last_name)
+  } : undefined;
+  
+  // Return mapped lead with renamed fields
   return {
-    id: row.id,
-    first_name: row.first_name,
-    last_name: row.last_name,
-    company: row.company,
-    email: row.email,
-    phone: row.phone,
-    country: row.country || '',
-    industry: row.industry || '',
-    stage: row.status, // Map status to stage
-    source: row.source,
-    notes: row.notes,
-    created_at: row.created_at,
-    updated_at: row.updated_at,
-    assigned_to: row.assigned_to || undefined,
-    position: row.position,
-    owner: ownerName ? {
-      name: ownerName,
-      avatar: '/placeholder.svg',
-      initials: ownerInitials || 'مس'
-    } : undefined
+    ...leadData,
+    stage: leadData.status, // Map status to stage
+    country: leadData.country || '',
+    industry: leadData.industry || '',
+    owner
   };
 };
+
+// Helper function to get initials from name parts
+function getInitials(firstName?: string | null, lastName?: string | null): string {
+  const first = firstName?.charAt(0) || '';
+  const last = lastName?.charAt(0) || '';
+  return (first + last) || 'UN';
+}

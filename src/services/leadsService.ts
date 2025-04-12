@@ -72,8 +72,8 @@ export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
     
     if (error) throw error;
     
-    // Use a simple array map to avoid deep type recursion
-    return (data || []).map((row) => mapRowToLead(row));
+    // Use simple mapping to avoid deep type recursion
+    return (data || []).map(mapRowToLead);
     
   } catch (error) {
     console.error("Error fetching leads:", error);
@@ -99,7 +99,7 @@ export const fetchLeadById = async (id: string): Promise<Lead | null> => {
     if (error) throw error;
     if (!data) return null;
     
-    // Use simple casting to avoid deep type recursion
+    // Use simple mapping to avoid deep type recursion
     return mapRowToLead(data);
     
   } catch (error) {

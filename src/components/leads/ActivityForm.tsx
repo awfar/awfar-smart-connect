@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { X, CalendarClock, FileText } from "lucide-react";
 import { toast } from "sonner";
-import { LeadActivity, createLeadActivity } from "@/services/leadsService";
+import { createLeadActivity } from "@/services/leadActivitiesService";
+import { LeadActivity } from "@/services/types/leadTypes";
 
 interface ActivityFormProps {
   onClose: () => void;
