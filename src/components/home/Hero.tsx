@@ -1,8 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { WhatsappLogoIcon } from "@radix-ui/react-icons";
-import { MessageSquare, Facebook, Instagram } from "lucide-react";
+import { MessageSquare, Facebook, Instagram, MessageCircle } from "lucide-react";
 
 const Hero = () => {
   const features = [
@@ -45,7 +44,7 @@ const Hero = () => {
             <div className="flex flex-wrap gap-4 justify-center lg:justify-end">
               <Button asChild className="bg-green-500 hover:bg-green-600 text-white flex gap-2">
                 <Link to="/demo">
-                  <WhatsappLogoIcon className="h-5 w-5" />
+                  <MessageCircle className="h-5 w-5" />
                   <span>قم بتجربة الموظف الذكي</span>
                 </Link>
               </Button>
@@ -70,7 +69,7 @@ const Hero = () => {
                       <MessageSquare size={18} className="text-white" />
                     </div>
                     <div className="bg-green-500 p-2 rounded">
-                      <WhatsappLogoIcon className="h-5 w-5 text-white" />
+                      <MessageCircle size={18} className="text-white" />
                     </div>
                     <div className="bg-blue-600 p-2 rounded">
                       <Facebook size={18} className="text-white" />
