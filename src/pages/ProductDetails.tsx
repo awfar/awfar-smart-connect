@@ -1,8 +1,9 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { getProductById, productTypeIcons, productTypeLabels } from '@/services/catalogService';
+import { getProductById, productTypeIconMap, productTypeLabels } from '@/services/catalogService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
@@ -62,6 +63,9 @@ const ProductDetails: React.FC = () => {
 
   const createdDate = new Date(product.createdAt);
   const timeAgo = formatDistanceToNow(createdDate, { addSuffix: true, locale: ar });
+  
+  // Get the correct icon component based on the product type
+  const IconComponent = productTypeIconMap[product.type];
 
   return (
     <DashboardLayout>
@@ -90,7 +94,7 @@ const ProductDetails: React.FC = () => {
             <CardContent className="p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Badge variant="outline" className="flex items-center gap-1">
-                  {productTypeIcons[product.type]}
+                  <IconComponent className="h-5 w-5" />
                   {productTypeLabels[product.type]}
                 </Badge>
                 <Badge variant={product.isActive ? 'success' : 'destructive'}>
