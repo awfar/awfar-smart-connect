@@ -261,6 +261,30 @@ export type Database = {
           },
         ]
       }
+      departments: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       landing_pages: {
         Row: {
           content: Json
@@ -419,6 +443,27 @@ export type Database = {
           },
         ]
       }
+      permissions: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       pricing_plans: {
         Row: {
           billing_period: string | null
@@ -473,31 +518,84 @@ export type Database = {
         Row: {
           company: string | null
           created_at: string | null
+          department_id: string | null
           first_name: string | null
           id: string
+          is_active: boolean | null
           last_name: string | null
           position: string | null
           role: string
+          team_id: string | null
         }
         Insert: {
           company?: string | null
           created_at?: string | null
+          department_id?: string | null
           first_name?: string | null
           id: string
+          is_active?: boolean | null
           last_name?: string | null
           position?: string | null
           role?: string
+          team_id?: string | null
         }
         Update: {
           company?: string | null
           created_at?: string | null
+          department_id?: string | null
           first_name?: string | null
           id?: string
+          is_active?: boolean | null
           last_name?: string | null
           position?: string | null
           role?: string
+          team_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_permissions: {
+        Row: {
+          created_at: string | null
+          id: string
+          permission_id: string | null
+          role: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          permission_id?: string | null
+          role: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          permission_id?: string | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tasks: {
         Row: {
@@ -537,6 +635,41 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      teams: {
+        Row: {
+          created_at: string | null
+          department_id: string | null
+          id: string
+          manager_id: string | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          department_id?: string | null
+          id?: string
+          manager_id?: string | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          department_id?: string | null
+          id?: string
+          manager_id?: string | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tickets: {
         Row: {
@@ -601,9 +734,26 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      has_permission: {
+        Args: { user_id: string; permission_name: string }
+        Returns: boolean
+      }
+      is_super_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      is_team_manager: {
+        Args: { user_id: string; team_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role:
+        | "super_admin"
+        | "team_manager"
+        | "sales"
+        | "customer_service"
+        | "technical_support"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -718,6 +868,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: [
+        "super_admin",
+        "team_manager",
+        "sales",
+        "customer_service",
+        "technical_support",
+      ],
+    },
   },
 } as const
