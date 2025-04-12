@@ -143,7 +143,7 @@ const DashboardNav = ({ mobileOpen = false, onClose }: DashboardNavProps) => {
             <div className="space-y-1">
               {navItems.map((item) => (
                 <SheetClose key={item.href} asChild>
-                  <Link to={item.href}>
+                  <Link to={item.href} onClick={onClose}>
                     <Button
                       variant={pathname === item.href ? "secondary" : "ghost"}
                       className={cn(
