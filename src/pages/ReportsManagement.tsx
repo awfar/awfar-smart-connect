@@ -1,8 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CalendarIcon, CaretSortIcon, DotsHorizontalIcon, PlusCircledIcon } from "@radix-ui/react-icons"
-import {
+import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -21,18 +21,6 @@ import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { useToast } from "@/hooks/use-toast"
-import {
-  ColumnDef,
-  ColumnFiltersState,
-  SortingState,
-  VisibilityState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table"
 import {
   Table,
   TableBody,
@@ -68,19 +56,12 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { CircleDollarSign, CreditCard, LayoutDashboard, PiggyBank, Users } from "lucide-react"
+import { CircleDollarSign, CreditCard, LayoutDashboard, PiggyBank, Users, CalendarIcon, ChevronDown, DotsHorizontalIcon, PlusIcon } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
-import { LeadsTable } from "@/components/dashboard/LeadsTable"
-import { RecentSales } from "@/components/dashboard/RecentSales"
-import { Tasks } from "@/components/dashboard/Tasks"
-import { Activity } from "lucide-react"
-import { ActivityTimeline } from "@/components/dashboard/ActivityTimeline"
-import { TeamPerformanceReport } from "@/components/dashboard/TeamPerformanceReport"
-import { ProductsPerformanceChart } from "@/components/dashboard/ProductsPerformanceChart"
-import { LeadSourcesChart } from "@/components/dashboard/LeadSourcesChart"
-import { SalesComparisonChart } from "@/components/dashboard/SalesComparisonChart"
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardNav from '@/components/dashboard/DashboardNav';
+import { ActivityTimeline } from '@/components/reports/ActivityTimeline';
+import { LeadSourcesChart } from '@/components/reports/LeadSourcesChart';
 
 interface SalesData {
   name: string;
@@ -96,29 +77,6 @@ interface LeadsGrowthData {
   date: string;
   count: number;
 }
-
-const columns: ColumnDef<any>[] = [
-  {
-    accessorKey: "name",
-    header: "Name",
-  },
-  {
-    accessorKey: "email",
-    header: "Email",
-  },
-  {
-    accessorKey: "phone",
-    header: "Phone",
-  },
-  {
-    accessorKey: "position",
-    header: "Position",
-  },
-  {
-    accessorKey: "company",
-    header: "Company",
-  },
-]
 
 const data = [
   {
@@ -191,34 +149,59 @@ const teamPerformanceData = [
 
 const recentActivitiesData = [
   {
+    id: '1',
     time: '9:00 AM',
     subject: 'Meeting with John Doe',
     description: 'Discuss project requirements',
     type: 'meeting',
+    user: { name: 'John Doe', initials: 'JD' },
+    timestamp: '2023-04-10T09:00:00',
+    entity: { name: 'Tech Corp' },
+    result: 'Successful'
   },
   {
+    id: '2',
     time: '10:00 AM',
     subject: 'Call with Jane Smith',
     description: 'Follow up on proposal',
     type: 'call',
+    user: { name: 'Jane Smith', initials: 'JS' },
+    timestamp: '2023-04-10T10:00:00',
+    entity: { name: 'Global Solutions' },
+    result: 'Pending'
   },
   {
+    id: '3',
     time: '11:00 AM',
     subject: 'Email to Bob Williams',
     description: 'Send project update',
     type: 'email',
+    user: { name: 'Bob Williams', initials: 'BW' },
+    timestamp: '2023-04-10T11:00:00',
+    entity: { name: 'ProjectPro Ltd.' },
+    result: 'Sent'
   },
   {
+    id: '4',
     time: '12:00 PM',
     subject: 'Lunch Break',
     description: 'Take a break and recharge',
     type: 'break',
+    user: { name: 'Emily Brown', initials: 'EB' },
+    timestamp: '2023-04-10T12:00:00',
+    entity: null,
+    result: null
   },
   {
+    id: '5',
     time: '1:00 PM',
     subject: 'Meeting with Emily Brown',
     description: 'Review data analysis results',
     type: 'meeting',
+    user: { name: 'Emily Brown', initials: 'EB' },
+    timestamp: '2023-04-10T13:00:00',
+    entity: { name: 'Data Insights Corp' },
+    result: 'Successful'
   },
 ];
 
@@ -236,24 +219,74 @@ const leadsGrowthData: LeadsGrowthData[] = [
   { date: 'Apr', count: 90 },
 ];
 
+// Transform data for charts
+const salesByIndustry: SalesData[] = industrySalesData.map(item => ({
+  name: item.industry,
+  value: item.sales,
+}));
+
+const leadsGrowth: SalesData[] = leadsGrowthData.map(item => ({
+  name: item.date,
+  value: item.count,
+}));
+
+// Simple chart components for demo
+const SalesComparisonChart = ({ data, isLoading }: { data: SalesData[], isLoading: boolean }) => {
+  if (isLoading) return <div className="h-[300px] flex items-center justify-center">Loading...</div>;
+  
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" />
+        <YAxis />
+        <Tooltip />
+        <Legend />
+        <Bar dataKey="value" fill="#8884d8" name="المبيعات" />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+};
+
+const ProductsPerformanceChart = ({ data, isLoading }: { data: SalesData[], isLoading: boolean }) => {
+  if (isLoading) return <div className="h-[300px] flex items-center justify-center">Loading...</div>;
+  
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" />
+        <YAxis />
+        <Tooltip />
+        <Legend />
+        <Bar dataKey="value" fill="#82ca9d" name="المبيعات" />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+};
+
+const TeamPerformanceReport = ({ data, isLoading }: { data: any[], isLoading: boolean }) => {
+  if (isLoading) return <div className="h-[300px] flex items-center justify-center">Loading...</div>;
+  
+  return (
+    <ResponsiveContainer width="100%" height={300}>
+      <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" />
+        <YAxis />
+        <Tooltip />
+        <Legend />
+        <Bar dataKey="sales" fill="#8884d8" name="المبيعات" />
+        <Bar dataKey="leads" fill="#82ca9d" name="العملاء المتوقعين" />
+      </BarChart>
+    </ResponsiveContainer>
+  );
+};
+
 const ReportsManagement: React.FC = () => {
   const [date, setDate] = useState<Date | undefined>(new Date())
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false);
-
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    initialState: {
-      pagination: {
-        pageSize: 5,
-      },
-    },
-  })
 
   const handleCopy = () => {
     navigator.clipboard.writeText(JSON.stringify(data))
@@ -262,16 +295,6 @@ const ReportsManagement: React.FC = () => {
       description: "تم نسخ بيانات المستخدم إلى الحافظة.",
     })
   }
-
-  const salesByIndustry = industrySalesData.map(item => ({
-    name: item.industry,
-    value: item.sales,
-  }));
-
-  const leadsGrowth = leadsGrowthData.map(item => ({
-    name: item.date,
-    value: item.count,
-  }));
 
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50 rtl">
@@ -437,7 +460,7 @@ const ReportsManagement: React.FC = () => {
                   <CardTitle>الجدول الزمني للنشاط الأخير</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ActivityTimeline activities={recentActivitiesData} isLoading={isLoading} />
+                  <ActivityTimeline data={recentActivitiesData} isLoading={isLoading} />
                 </CardContent>
               </Card>
             </div>

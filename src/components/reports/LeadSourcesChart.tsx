@@ -1,17 +1,14 @@
 
 import React from 'react';
 import { 
-  PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, FunnelChart, Funnel, FunnelProps, LabelList
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend
 } from 'recharts';
 import { Skeleton } from '@/components/ui/skeleton';
-import { LeadSourceData, LeadFunnelData } from '@/services/reportsService';
+import { LeadSourceData } from '@/services/reportsService';
 
 interface LeadSourcesChartProps {
-  data?: LeadSourceData[] | LeadFunnelData[];
+  data?: LeadSourceData[];
   isLoading: boolean;
-  showDetailed?: boolean;
-  showFunnel?: boolean;
 }
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A569BD', '#3498DB', '#E74C3C'];
@@ -30,12 +27,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-const LeadSourcesChart: React.FC<LeadSourcesChartProps> = ({ 
-  data, 
-  isLoading, 
-  showDetailed = false,
-  showFunnel = false 
-}) => {
+const LeadSourcesChart: React.FC<LeadSourcesChartProps> = ({ data, isLoading }) => {
   if (isLoading) {
     return <Skeleton className="h-[300px] w-full" />;
   }
@@ -48,65 +40,12 @@ const LeadSourcesChart: React.FC<LeadSourcesChartProps> = ({
     );
   }
 
-  // Show funnel chart for lead conversion stages
-  if (showFunnel) {
-    return (
-      <ResponsiveContainer width="100%" height="100%">
-        <FunnelChart>
-          <Tooltip content={<CustomTooltip />} />
-          <Funnel
-            dataKey="count"
-            data={data as LeadFunnelData[]}
-            isAnimationActive
-            nameKey="stage"
-          >
-            <LabelList position="right" fill="#000" stroke="none" dataKey="stage" />
-            {
-              data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))
-            }
-          </Funnel>
-        </FunnelChart>
-      </ResponsiveContainer>
-    );
-  }
-
-  // Show detailed bar chart
-  if (showDetailed) {
-    return (
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          data={data as LeadSourceData[]}
-          margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="name" />
-          <YAxis />
-          <Tooltip content={<CustomTooltip />} />
-          <Legend />
-          <Bar 
-            dataKey="value" 
-            name="عدد العملاء" 
-            fill="#8884d8"
-          >
-            {
-              data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))
-            }  
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
-    );
-  }
-
   // Default pie chart
   return (
     <ResponsiveContainer width="100%" height="100%">
       <PieChart>
         <Pie
-          data={data as LeadSourceData[]}
+          data={data}
           cx="50%"
           cy="50%"
           labelLine={false}
@@ -128,4 +67,4 @@ const LeadSourcesChart: React.FC<LeadSourcesChartProps> = ({
   );
 };
 
-export default LeadSourcesChart;
+export { LeadSourcesChart };

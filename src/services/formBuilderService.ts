@@ -286,18 +286,25 @@ export const submitFormData = async (formId: string, data: Record<string, any>) 
     throw formError;
   }
   
-  const tableName = formData.type + 's'; // Append 's' to make it plural (e.g., lead -> leads)
+  const formType = formData.type;
+  const tableName = formType + 's'; // Append 's' to make it plural (e.g., lead -> leads)
   
-  // Insert data into the appropriate table based on form type
-  const { data: result, error } = await supabase
-    .from(tableName)
-    .insert([data])
-    .select();
-  
-  if (error) {
-    console.error(`Error submitting ${formData.type} data:`, error);
+  // We need to ensure the data matches the expected schema for the target table
+  // This is a simplified approach - in production, you'd want to validate the data more thoroughly
+  try {
+    const { data: result, error } = await supabase
+      .from(tableName)
+      .insert([data])
+      .select();
+    
+    if (error) {
+      console.error(`Error submitting ${formType} data:`, error);
+      throw error;
+    }
+    
+    return result?.[0];
+  } catch (error) {
+    console.error(`Error inserting into table ${tableName}:`, error);
     throw error;
   }
-  
-  return result?.[0];
 };
