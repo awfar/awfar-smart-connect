@@ -18,13 +18,13 @@ const Dashboard = () => {
       <DashboardHeader />
       <div className="flex">
         <DashboardNav />
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-6 overflow-y-auto pt-16 lg:pt-0">
           <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold tracking-tight">لوحة التحكم</h1>
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">لوحة التحكم</h1>
               <div className="flex items-center gap-2">
                 <select 
-                  className="px-3 py-2 border rounded-md text-sm"
+                  className="px-2 py-1 md:px-3 md:py-2 border rounded-md text-sm"
                   value={selectedRegion}
                   onChange={(e) => setSelectedRegion(e.target.value)}
                 >
@@ -39,7 +39,7 @@ const Dashboard = () => {
             <StatsCards />
             
             <Tabs defaultValue="overview">
-              <TabsList className="mb-4">
+              <TabsList className="mb-4 overflow-x-auto flex-nowrap">
                 <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
                 <TabsTrigger value="leads">العملاء المحتملين</TabsTrigger>
                 <TabsTrigger value="sales">المبيعات</TabsTrigger>

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   BarChartHorizontal,
@@ -10,11 +10,21 @@ import {
   CreditCard,
   Home,
   LayoutDashboard,
+  Menu,
   MessageSquare,
   Settings,
   Users,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetClose,
+} from '@/components/ui/sheet';
 
 type NavItem = {
   title: string;
@@ -25,6 +35,7 @@ type NavItem = {
 
 const DashboardNav: React.FC = () => {
   const location = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const navItems: NavItem[] = [
     {
@@ -73,6 +84,11 @@ const DashboardNav: React.FC = () => {
       icon: BarChartHorizontal,
     },
     {
+      title: 'إدارة المحتوى',
+      href: '/dashboard/cms',
+      icon: Settings,
+    },
+    {
       title: 'الإعدادات',
       href: '/dashboard/settings',
       icon: Settings,
@@ -87,44 +103,107 @@ const DashboardNav: React.FC = () => {
   };
 
   return (
-    <div className="hidden lg:flex h-screen w-64 flex-col border-l bg-white rtl">
-      <div className="flex h-14 items-center border-b px-4">
-        <Link to="/" className="flex items-center gap-2 font-semibold">
-          <Home className="h-5 w-5" />
-          <span>Awfar.com</span>
-        </Link>
+    <>
+      {/* Mobile Menu Button */}
+      <div className="lg:hidden fixed top-4 right-4 z-40">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setIsMobileMenuOpen(true)}
+          aria-label="قائمة التنقل"
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
       </div>
-      <div className="flex-1 overflow-auto py-2">
-        <nav className="grid items-start px-2 text-sm">
-          {navItems.map((item, index) => (
-            <Link
-              key={index}
-              to={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground",
-                isActive(item.href) && "bg-muted font-medium text-foreground"
-              )}
-            >
-              <item.icon className="h-4 w-4" />
-              <span>{item.title}</span>
-            </Link>
-          ))}
-        </nav>
-      </div>
-      <div className="mt-auto p-4 border-t">
-        <div className="flex items-center gap-3 rounded-md px-3 py-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
-            <Users className="h-4 w-4 text-primary" />
+
+      {/* Mobile Menu Sheet */}
+      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+        <SheetContent side="right" className="w-[280px] p-0 rtl">
+          <SheetHeader className="border-b h-14 px-4 flex items-center justify-between">
+            <SheetTitle className="flex items-center gap-2 font-semibold mr-2">
+              <Home className="h-5 w-5" />
+              <span>Awfar.com</span>
+            </SheetTitle>
+            <SheetClose asChild>
+              <Button variant="ghost" size="icon" aria-label="إغلاق">
+                <X className="h-5 w-5" />
+              </Button>
+            </SheetClose>
+          </SheetHeader>
+          <div className="overflow-auto py-4">
+            <nav className="grid items-start px-2 text-sm">
+              {navItems.map((item, index) => (
+                <Link
+                  key={index}
+                  to={item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-md px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground",
+                    isActive(item.href) && "bg-muted font-medium text-foreground"
+                  )}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <item.icon className="h-4 w-4" />
+                  <span>{item.title}</span>
+                </Link>
+              ))}
+            </nav>
           </div>
-          <div>
-            <p className="text-sm font-medium">فريق أوفر</p>
-            <p className="text-xs text-muted-foreground">
-              مصر | الفريق الإداري
-            </p>
+          <div className="mt-auto p-4 border-t">
+            <div className="flex items-center gap-3 rounded-md px-3 py-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+                <Users className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium">فريق أوفر</p>
+                <p className="text-xs text-muted-foreground">
+                  مصر | الفريق الإداري
+                </p>
+              </div>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:flex h-screen w-64 flex-col border-l bg-white rtl">
+        <div className="flex h-14 items-center border-b px-4">
+          <Link to="/" className="flex items-center gap-2 font-semibold">
+            <Home className="h-5 w-5" />
+            <span>Awfar.com</span>
+          </Link>
+        </div>
+        <div className="flex-1 overflow-auto py-2">
+          <nav className="grid items-start px-2 text-sm">
+            {navItems.map((item, index) => (
+              <Link
+                key={index}
+                to={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground",
+                  isActive(item.href) && "bg-muted font-medium text-foreground"
+                )}
+              >
+                <item.icon className="h-4 w-4" />
+                <span>{item.title}</span>
+              </Link>
+            ))}
+          </nav>
+        </div>
+        <div className="mt-auto p-4 border-t">
+          <div className="flex items-center gap-3 rounded-md px-3 py-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+              <Users className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">فريق أوفر</p>
+              <p className="text-xs text-muted-foreground">
+                مصر | الفريق الإداري
+              </p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
