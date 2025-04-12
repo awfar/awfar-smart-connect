@@ -1,5 +1,6 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
@@ -8,6 +9,7 @@ import DealsList from "@/components/deals/DealsList";
 import DealForm from "@/components/deals/DealForm";
 import DealFilters from "@/components/deals/DealFilters";
 import { toast } from "sonner";
+import { fetchDeals, filterDeals } from "@/services/dealsService";
 
 const DealsManagement = () => {
   const [view, setView] = useState<"all" | "active" | "won" | "lost">("all");
@@ -15,6 +17,11 @@ const DealsManagement = () => {
   const [filterStage, setFilterStage] = useState<string>("all");
   const [filterValue, setFilterValue] = useState<string>("all");
   
+  const { data: deals, isLoading, refetch } = useQuery({
+    queryKey: ['deals', view],
+    queryFn: () => fetchDeals(),
+  });
+
   const handleCreateDeal = () => {
     setIsCreating(true);
   };
@@ -24,8 +31,12 @@ const DealsManagement = () => {
   };
 
   const handleSaveDeal = () => {
-    toast.success("تم حفظ الصفقة بنجاح");
+    refetch(); // إعادة تحميل البيانات بعد الحفظ
     setIsCreating(false);
+  };
+
+  const handleViewChange = (newView: "all" | "active" | "won" | "lost") => {
+    setView(newView);
   };
 
   return (
@@ -63,7 +74,7 @@ const DealsManagement = () => {
               </Card>
             ) : (
               <>
-                <Tabs defaultValue="all" value={view} onValueChange={(v) => setView(v as "all" | "active" | "won" | "lost")}>
+                <Tabs defaultValue="all" value={view} onValueChange={(v) => handleViewChange(v as any)}>
                   <TabsList className="mb-4">
                     <TabsTrigger value="all">جميع الصفقات</TabsTrigger>
                     <TabsTrigger value="active">الصفقات النشطة</TabsTrigger>
@@ -85,11 +96,17 @@ const DealsManagement = () => {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <DealsList 
-                        view={view} 
-                        filterStage={filterStage}
-                        filterValue={filterValue}
-                      />
+                      {isLoading ? (
+                        <div className="text-center py-10">جاري تحميل البيانات...</div>
+                      ) : (
+                        <DealsList 
+                          view={view} 
+                          filterStage={filterStage}
+                          filterValue={filterValue}
+                          deals={deals || []}
+                          onRefresh={refetch}
+                        />
+                      )}
                     </CardContent>
                   </Card>
                 </Tabs>

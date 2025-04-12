@@ -22,6 +22,8 @@ import {
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
+import { createDeal } from "@/services/dealsService";
+import type { Deal } from "@/services/dealsService";
 
 interface DealFormProps {
   onCancel: () => void;
@@ -30,10 +32,49 @@ interface DealFormProps {
 
 const DealForm: React.FC<DealFormProps> = ({ onCancel, onSave }) => {
   const [expectedCloseDate, setExpectedCloseDate] = useState<Date | undefined>();
+  const [formData, setFormData] = useState<Partial<Deal>>({
+    name: '',
+    company_id: null,
+    contact_id: null,
+    value: null,
+    stage: '',
+    description: null,
+    status: 'active'
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleInputChange = (field: keyof Deal, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave();
+    
+    if (!formData.name || !formData.stage) {
+      return; // وقف التقديم إذا كانت الحقول المطلوبة غير مملوءة
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      const dealToCreate = {
+        ...formData,
+        expected_close_date: expectedCloseDate ? expectedCloseDate.toISOString() : null
+      } as Omit<Deal, 'id' | 'created_at' | 'updated_at'>;
+      
+      const result = await createDeal(dealToCreate);
+      
+      if (result) {
+        onSave();
+      }
+    } catch (error) {
+      console.error("خطأ في إنشاء الصفقة:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -41,13 +82,23 @@ const DealForm: React.FC<DealFormProps> = ({ onCancel, onSave }) => {
       <div className="space-y-4">
         <div>
           <Label htmlFor="name">اسم الصفقة</Label>
-          <Input id="name" placeholder="أدخل اسم الصفقة" className="mt-1" />
+          <Input 
+            id="name" 
+            placeholder="أدخل اسم الصفقة" 
+            className="mt-1" 
+            value={formData.name || ''}
+            onChange={(e) => handleInputChange('name', e.target.value)}
+            required
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="company">الشركة</Label>
-            <Select>
+            <Select 
+              value={formData.company_id || ''}
+              onValueChange={(value) => handleInputChange('company_id', value)}
+            >
               <SelectTrigger className="mt-1" id="company">
                 <SelectValue placeholder="اختر الشركة" />
               </SelectTrigger>
@@ -64,7 +115,10 @@ const DealForm: React.FC<DealFormProps> = ({ onCancel, onSave }) => {
 
           <div>
             <Label htmlFor="contact">جهة الاتصال</Label>
-            <Select>
+            <Select
+              value={formData.contact_id || ''}
+              onValueChange={(value) => handleInputChange('contact_id', value)}
+            >
               <SelectTrigger className="mt-1" id="contact">
                 <SelectValue placeholder="اختر جهة الاتصال" />
               </SelectTrigger>
@@ -88,7 +142,9 @@ const DealForm: React.FC<DealFormProps> = ({ onCancel, onSave }) => {
                 id="value" 
                 type="number" 
                 placeholder="0" 
-                className="pl-16 pr-4" 
+                className="pl-16 pr-4"
+                value={formData.value || ''}
+                onChange={(e) => handleInputChange('value', parseFloat(e.target.value) || null)}
               />
               <div className="absolute inset-y-0 left-0 flex items-center px-3 pointer-events-none border-l">
                 <span className="text-gray-500">ر.س</span>
@@ -98,7 +154,11 @@ const DealForm: React.FC<DealFormProps> = ({ onCancel, onSave }) => {
 
           <div>
             <Label htmlFor="stage">مرحلة الصفقة</Label>
-            <Select>
+            <Select 
+              required
+              value={formData.stage || ''}
+              onValueChange={(value) => handleInputChange('stage', value)}
+            >
               <SelectTrigger className="mt-1" id="stage">
                 <SelectValue placeholder="اختر المرحلة" />
               </SelectTrigger>
@@ -164,13 +224,19 @@ const DealForm: React.FC<DealFormProps> = ({ onCancel, onSave }) => {
             placeholder="أدخل تفاصيل الصفقة والملاحظات"
             className="mt-1"
             rows={3}
+            value={formData.description || ''}
+            onChange={(e) => handleInputChange('description', e.target.value)}
           />
         </div>
       </div>
 
       <div className="flex justify-end gap-4">
-        <Button variant="outline" onClick={onCancel}>إلغاء</Button>
-        <Button type="submit">حفظ الصفقة</Button>
+        <Button variant="outline" onClick={onCancel} type="button" disabled={isSubmitting}>
+          إلغاء
+        </Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'جاري الحفظ...' : 'حفظ الصفقة'}
+        </Button>
       </div>
     </form>
   );

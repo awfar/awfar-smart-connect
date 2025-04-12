@@ -9,82 +9,26 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, ExternalLink } from "lucide-react";
-import { format } from "date-fns";
+import { Edit, Trash2, ExternalLink, RefreshCw } from "lucide-react";
+import { format, parseISO } from "date-fns";
 import { ar } from "date-fns/locale";
-
-// تعريف أنواع مراحل الصفقة
-type DealStage = "qualified" | "proposal" | "negotiation" | "closed_won" | "closed_lost";
-type DealStatus = "active" | "won" | "lost";
-
-// البيانات التجريبية للصفقات
-const MOCK_DEALS = [
-  { 
-    id: 1, 
-    name: "ترقية أنظمة تكنولوجيا المعلومات", 
-    company: "شركة التقنية الحديثة",
-    stage: "proposal" as DealStage, 
-    status: "active" as DealStatus,
-    value: 75000,
-    owner: "محمد أحمد",
-    expectedCloseDate: new Date(2025, 3, 25),
-    createdAt: new Date(2025, 2, 10),
-  },
-  { 
-    id: 2, 
-    name: "تطوير نظام إدارة المستشفى", 
-    company: "مستشفى النور",
-    stage: "negotiation" as DealStage, 
-    status: "active" as DealStatus,
-    value: 120000,
-    owner: "سارة خالد",
-    expectedCloseDate: new Date(2025, 4, 15),
-    createdAt: new Date(2025, 2, 5),
-  },
-  { 
-    id: 3, 
-    name: "توريد أجهزة حاسب آلي", 
-    company: "مدارس المستقبل",
-    stage: "closed_won" as DealStage, 
-    status: "won" as DealStatus,
-    value: 45000,
-    owner: "فهد العمري",
-    expectedCloseDate: new Date(2025, 3, 10),
-    createdAt: new Date(2025, 1, 20),
-  },
-  { 
-    id: 4, 
-    name: "تطبيق إدارة علاقات العملاء", 
-    company: "شركة البركة للتجارة",
-    stage: "closed_lost" as DealStage, 
-    status: "lost" as DealStatus,
-    value: 60000,
-    owner: "محمد أحمد",
-    expectedCloseDate: new Date(2025, 3, 30),
-    createdAt: new Date(2025, 2, 1),
-  },
-  { 
-    id: 5, 
-    name: "تطوير الموقع الإلكتروني", 
-    company: "مجموعة الخليج",
-    stage: "qualified" as DealStage, 
-    status: "active" as DealStatus,
-    value: 25000,
-    owner: "سارة خالد",
-    expectedCloseDate: new Date(2025, 5, 10),
-    createdAt: new Date(2025, 3, 5),
-  },
-];
+import { Deal, deleteDeal } from "@/services/dealsService";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface DealsListProps {
   view: "all" | "active" | "won" | "lost";
   filterStage: string;
   filterValue: string;
+  deals: Deal[];
+  onRefresh: () => void;
 }
 
-const DealsList = ({ view, filterStage, filterValue }: DealsListProps) => {
+const DealsList = ({ view, filterStage, filterValue, deals, onRefresh }: DealsListProps) => {
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  
   // فلترة الصفقات بناءً على العرض والفلاتر
-  const filteredDeals = MOCK_DEALS.filter(deal => {
+  const filteredDeals = deals.filter(deal => {
     // فلترة حسب العرض (الكل، النشطة، المربوحة، المفقودة)
     if (view !== "all" && deal.status !== view) return false;
     
@@ -93,15 +37,16 @@ const DealsList = ({ view, filterStage, filterValue }: DealsListProps) => {
     
     // فلترة حسب القيمة
     if (filterValue !== "all") {
-      if (filterValue === "low" && deal.value >= 10000) return false;
-      if (filterValue === "medium" && (deal.value < 10000 || deal.value > 50000)) return false;
-      if (filterValue === "high" && deal.value <= 50000) return false;
+      const value = deal.value || 0;
+      if (filterValue === "low" && value >= 10000) return false;
+      if (filterValue === "medium" && (value < 10000 || value > 50000)) return false;
+      if (filterValue === "high" && value <= 50000) return false;
     }
     
     return true;
   });
 
-  const getStageBadge = (stage: DealStage) => {
+  const getStageBadge = (stage: string) => {
     switch (stage) {
       case "qualified": 
         return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">مؤهل</Badge>;
@@ -118,87 +63,128 @@ const DealsList = ({ view, filterStage, filterValue }: DealsListProps) => {
     }
   };
 
-  const formatDate = (date: Date) => {
-    return format(date, "d MMMM yyyy", { locale: ar });
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "-";
+    try {
+      return format(parseISO(dateStr), "d MMMM yyyy", { locale: ar });
+    } catch (e) {
+      return dateStr;
+    }
   };
 
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: number | null) => {
+    if (value === null || value === undefined) return "-";
     return new Intl.NumberFormat('ar-SA', { style: 'currency', currency: 'SAR' }).format(value);
   };
 
-  const handleEdit = (dealId: number) => {
+  const handleEdit = (dealId: string) => {
     console.log("تعديل الصفقة", dealId);
+    // هنا سيتم تنفيذ منطق تعديل الصفقة
   };
 
-  const handleDelete = (dealId: number) => {
-    console.log("حذف الصفقة", dealId);
+  const handleDelete = async (dealId: string) => {
+    setDeletingId(dealId);
+    
+    try {
+      const isDeleted = await deleteDeal(dealId);
+      if (isDeleted) {
+        onRefresh(); // إعادة تحميل البيانات بعد الحذف
+      }
+    } catch (error) {
+      console.error("خطأ في حذف الصفقة:", error);
+      toast.error("فشل في حذف الصفقة");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleRefresh = () => {
+    onRefresh();
   };
 
   return (
-    <div className="w-full overflow-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>الصفقة</TableHead>
-            <TableHead>الشركة</TableHead>
-            <TableHead>المرحلة</TableHead>
-            <TableHead>القيمة</TableHead>
-            <TableHead>المسؤول</TableHead>
-            <TableHead>تاريخ الإغلاق المتوقع</TableHead>
-            <TableHead className="text-left">الإجراءات</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredDeals.length === 0 ? (
+    <div className="w-full">
+      <div className="flex justify-end mb-4">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleRefresh}
+          className="flex items-center gap-1"
+        >
+          <RefreshCw className="h-4 w-4" /> تحديث
+        </Button>
+      </div>
+      
+      <div className="overflow-auto">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-10">
-                لا توجد صفقات تطابق المعايير المحددة
-              </TableCell>
+              <TableHead>الصفقة</TableHead>
+              <TableHead>الشركة</TableHead>
+              <TableHead>المرحلة</TableHead>
+              <TableHead>القيمة</TableHead>
+              <TableHead>تاريخ الإغلاق المتوقع</TableHead>
+              <TableHead className="text-left">الإجراءات</TableHead>
             </TableRow>
-          ) : (
-            filteredDeals.map((deal) => (
-              <TableRow key={deal.id} className={deal.stage === "closed_lost" ? "bg-muted/40" : ""}>
-                <TableCell className="font-medium">
-                  <div className="flex items-center">
-                    {deal.name}
-                    {deal.stage === "closed_won" && (
-                      <span className="mr-2 bg-green-500 h-2 w-2 rounded-full" title="مربوح"></span>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>{deal.company}</TableCell>
-                <TableCell>
-                  {getStageBadge(deal.stage)}
-                </TableCell>
-                <TableCell dir="ltr" className="text-right">
-                  {formatCurrency(deal.value)}
-                </TableCell>
-                <TableCell>{deal.owner}</TableCell>
-                <TableCell>
-                  <div className="flex items-center">
-                    <span>{formatDate(deal.expectedCloseDate)}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex space-x-2 rtl:space-x-reverse">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(deal.id)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(deal.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" asChild>
-                      <a href={`/deal/${deal.id}`}>
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
-                    </Button>
-                  </div>
+          </TableHeader>
+          <TableBody>
+            {filteredDeals.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-10">
+                  لا توجد صفقات تطابق المعايير المحددة
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ) : (
+              filteredDeals.map((deal) => (
+                <TableRow key={deal.id} className={deal.stage === "closed_lost" ? "bg-muted/40" : ""}>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center">
+                      {deal.name}
+                      {deal.stage === "closed_won" && (
+                        <span className="mr-2 bg-green-500 h-2 w-2 rounded-full" title="مربوح"></span>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>{deal.company_name || "-"}</TableCell>
+                  <TableCell>
+                    {getStageBadge(deal.stage)}
+                  </TableCell>
+                  <TableCell dir="ltr" className="text-right">
+                    {formatCurrency(deal.value)}
+                  </TableCell>
+                  <TableCell>
+                    {formatDate(deal.expected_close_date)}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex space-x-2 rtl:space-x-reverse">
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(deal.id)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleDelete(deal.id)}
+                        disabled={deletingId === deal.id}
+                      >
+                        {deletingId === deal.id ? (
+                          <span className="h-4 w-4 border-2 border-t-transparent border-primary rounded-full animate-spin block"></span>
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button variant="ghost" size="icon" asChild>
+                        <a href={`/dashboard/deals/${deal.id}`}>
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
 };

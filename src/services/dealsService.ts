@@ -66,13 +66,16 @@ export const fetchDealById = async (id: string): Promise<Deal | null> => {
   }
 };
 
-export const createDeal = async (deal: Omit<Deal, 'id' | 'created_at' | 'updated_at'>): Promise<Deal | null> => {
+export const createDeal = async (dealData: Omit<Deal, 'id' | 'created_at' | 'updated_at'>): Promise<Deal | null> => {
   try {
+    // إزالة الحقول الغير مطلوبة قبل الإرسال
+    const { company_name, ...dealToInsert } = dealData as any;
+
     const { data, error } = await supabase
       .from('deals')
       .insert([{
-        ...deal,
-        owner_id: (await supabase.auth.getUser()).data.user?.id
+        ...dealToInsert,
+        owner_id: (await supabase.auth.getUser()).data.user?.id || null
       }])
       .select()
       .single();
@@ -90,10 +93,13 @@ export const createDeal = async (deal: Omit<Deal, 'id' | 'created_at' | 'updated
 
 export const updateDeal = async (deal: Partial<Deal> & { id: string }): Promise<Deal | null> => {
   try {
+    // إزالة الحقول الغير مطلوبة قبل الإرسال
+    const { company_name, companies, ...dealToUpdate } = deal as any;
+
     const { data, error } = await supabase
       .from('deals')
       .update({
-        ...deal,
+        ...dealToUpdate,
         updated_at: new Date().toISOString()
       })
       .eq('id', deal.id)

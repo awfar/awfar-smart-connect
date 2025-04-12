@@ -1,5 +1,4 @@
 
-import { useState } from 'react';
 import { 
   Select,
   SelectContent,
@@ -34,9 +33,10 @@ const DealFilters: React.FC<DealFiltersProps> = ({ onStageChange, onValueChange 
           <SelectContent>
             <SelectItem value="all">جميع المراحل</SelectItem>
             <SelectItem value="qualified">مؤهل</SelectItem>
-            <SelectItem value="proposal">العرض</SelectItem>
-            <SelectItem value="negotiation">التفاوض</SelectItem>
-            <SelectItem value="closed">مغلق</SelectItem>
+            <SelectItem value="proposal">تم تقديم عرض</SelectItem>
+            <SelectItem value="negotiation">تفاوض</SelectItem>
+            <SelectItem value="closed_won">مغلق (مربوح)</SelectItem>
+            <SelectItem value="closed_lost">مغلق (خسارة)</SelectItem>
           </SelectContent>
         </Select>
       </div>
