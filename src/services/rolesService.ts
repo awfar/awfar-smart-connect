@@ -18,7 +18,7 @@ export const fetchRoles = async (): Promise<Role[]> => {
     
     if (error) throw error;
     
-    // إضافة الأدوار المحددة مسبقًا في النظام إذا لم تكن موجودة في النتائج
+    // Define the system roles
     const systemRoles = [
       { name: 'super_admin', description: 'مدير النظام مع كامل الصلاحيات' },
       { name: 'team_manager', description: 'مدير فريق' },
@@ -27,11 +27,11 @@ export const fetchRoles = async (): Promise<Role[]> => {
       { name: 'technical_support', description: 'موظف دعم فني' }
     ];
     
-    const existingRoleNames = data.map(role => role.name);
+    const existingRoleNames = data?.map(role => role.name) || [];
     
-    const allRoles = [...data];
+    const allRoles = [...(data || [])];
     
-    // إضافة الأدوار المحددة مسبقًا التي لم تكن موجودة في النتائج
+    // Add system roles that don't exist in the database
     systemRoles.forEach(role => {
       if (!existingRoleNames.includes(role.name)) {
         allRoles.push({
@@ -52,7 +52,7 @@ export const fetchRoles = async (): Promise<Role[]> => {
 
 export const fetchRoleById = async (id: string): Promise<Role | null> => {
   try {
-    // التحقق من إذا كان الدور من الأدوار المحددة مسبقًا في النظام
+    // Check if it's a system role
     const systemRoles: Record<string, { name: string, description: string }> = {
       'super_admin': { name: 'super_admin', description: 'مدير النظام مع كامل الصلاحيات' },
       'team_manager': { name: 'team_manager', description: 'مدير فريق' },
@@ -69,7 +69,7 @@ export const fetchRoleById = async (id: string): Promise<Role | null> => {
       };
     }
     
-    // إذا لم يكن من الأدوار المحددة مسبقًا، نبحث عنه في قاعدة البيانات
+    // If not a system role, look up in the database
     const { data, error } = await supabase
       .from('roles')
       .select('*')
@@ -113,7 +113,7 @@ export const createRole = async (role: Omit<Role, 'id' | 'created_at'>): Promise
 
 export const updateRole = async (role: Partial<Role> & { id: string }): Promise<Role | null> => {
   try {
-    // التحقق من إذا كان الدور من الأدوار المحددة مسبقًا في النظام
+    // Check if it's a system role
     const systemRoles = ['super_admin', 'team_manager', 'sales', 'customer_service', 'technical_support'];
     
     if (systemRoles.includes(role.id)) {
@@ -150,7 +150,7 @@ export const updateRole = async (role: Partial<Role> & { id: string }): Promise<
 
 export const deleteRole = async (id: string): Promise<boolean> => {
   try {
-    // التحقق من إذا كان الدور من الأدوار المحددة مسبقًا في النظام
+    // Check if it's a system role
     const systemRoles = ['super_admin', 'team_manager', 'sales', 'customer_service', 'technical_support'];
     
     if (systemRoles.includes(id)) {
@@ -174,7 +174,7 @@ export const deleteRole = async (id: string): Promise<boolean> => {
 
 export const updateRolePermissions = async (roleId: string, permissionIds: string[]): Promise<boolean> => {
   try {
-    // أولاً نحذف كل الصلاحيات الحالية للدور
+    // Delete all current role permissions
     const { error: deleteError } = await supabase
       .from('role_permissions')
       .delete()
@@ -182,7 +182,7 @@ export const updateRolePermissions = async (roleId: string, permissionIds: strin
     
     if (deleteError) throw deleteError;
     
-    // ثم نضيف الصلاحيات الجديدة
+    // Add new role permissions
     if (permissionIds.length > 0) {
       const rolePermissions = permissionIds.map(permissionId => ({
         role: roleId,
