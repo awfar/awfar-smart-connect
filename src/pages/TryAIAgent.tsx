@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { toast } from "sonner";
-import { Check, Send, ArrowRight, Bot, Buildings, User } from "lucide-react";
+import { Check, Send, ArrowRight, Bot, Building, User } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -33,31 +32,31 @@ const industries: Industry[] = [
     id: "ecommerce", 
     name: "التجارة الإلكترونية", 
     description: "مساعدة العملاء في التسوق، وإجراء عمليات الشراء، واستفسارات المنتجات",
-    icon: <Buildings className="h-5 w-5" />
+    icon: <Building className="h-5 w-5" />
   },
   { 
     id: "realestate", 
     name: "العقارات", 
     description: "مساعدة العملاء في البحث عن العقارات وحجز المعاينات",
-    icon: <Buildings className="h-5 w-5" />
+    icon: <Building className="h-5 w-5" />
   },
   { 
     id: "healthcare", 
     name: "الرعاية الصحية", 
     description: "حجز المواعيد والإجابة على الاستفسارات الطبية العامة",
-    icon: <Buildings className="h-5 w-5" />
+    icon: <Building className="h-5 w-5" />
   },
   { 
     id: "education", 
     name: "التعليم", 
     description: "دعم الطلاب والمدرسين والإجابة على الاستفسارات العامة",
-    icon: <Buildings className="h-5 w-5" />
+    icon: <Building className="h-5 w-5" />
   },
   { 
     id: "hospitality", 
     name: "الضيافة والفنادق", 
     description: "حجز الغرف والاستفسارات وخدمة العملاء",
-    icon: <Buildings className="h-5 w-5" />
+    icon: <Building className="h-5 w-5" />
   },
 ];
 
@@ -95,7 +94,7 @@ const getInitialMessage = (industry: string, role: string): string => {
   const roleData = agentRoles.find(r => r.id === role);
   
   if (industry === "ecommerce" && role === "sales") {
-    return `مرحبًا! أنا مساعدك الافتراضي المتخصص في ${industryData?.name}. بصفتي ${roleData?.name}، يمكنني مساعدتك في العثور على المنتجات المناسبة، وتقديم العروض والخصومات، والإجابة على أسئلتك حول منتجاتنا. كيف يمكنني مساعدتك اليوم؟`;
+    return `مرحبًا! أنا مساعدك الافتراضي المتخصص في ${industryData?.name}. بصفتي ${roleData?.name}، يمكنني مساعدتك في العثور على المنتجات المناسبة، وتقديم العروض ��الخصومات، والإجابة على أسئلتك حول منتجاتنا. كيف يمكنني مساعدتك اليوم؟`;
   } 
   else if (industry === "realestate" && role === "advisor") {
     return `مرحبًا! أنا مستشارك العقاري. يمكنني مساعدتك في البحث عن العقارات المناسبة، وتحديد موعد للمعاينة، وتقديم المشورة بشأن الاستثمار العقاري. ما هي متطلباتك العقارية؟`;

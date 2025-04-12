@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Buildings } from "lucide-react";
+import { Building } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface AgentIndustryConfigProps {
@@ -29,7 +29,7 @@ const AgentIndustryConfig: React.FC<AgentIndustryConfigProps> = ({
     >
       <CardContent className="pt-6">
         <div className="flex items-center gap-3 mb-2">
-          <Buildings className="h-5 w-5" />
+          <Building className="h-5 w-5" />
           <h3 className="font-medium">{industry.name}</h3>
           {selected && (
             <div className="ml-auto h-5 w-5 rounded-full bg-primary flex items-center justify-center">

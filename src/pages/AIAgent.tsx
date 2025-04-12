@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { toast } from "sonner";
 import { Check, ArrowRight, Bot } from "lucide-react";
@@ -150,7 +149,7 @@ const AIAgent = () => {
   };
 
   const getRoleName = (id: string) => {
-    return agentRoles.find(r => r.id === role)?.name || id;
+    return agentRoles.find(r => r.id === id)?.name || id;
   };
 
   return (
