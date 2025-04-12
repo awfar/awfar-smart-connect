@@ -103,8 +103,8 @@ const mapRowToLead = (row: LeadRow): Lead => {
 
 export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
   try {
-    // Define a more specific query type to avoid infinite type instantiation
-    let query = supabase
+    // Create a base query without chaining too many methods at once
+    const baseQuery = supabase
       .from('leads')
       .select(`
         *,
@@ -117,23 +117,23 @@ export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
     // Apply filters if provided
     if (filters) {
       if (filters.stage && filters.stage !== 'all') {
-        query = query.eq('status', filters.stage);
+        baseQuery.eq('status', filters.stage);
       }
       
       if (filters.source && filters.source !== 'all') {
-        query = query.eq('source', filters.source);
+        baseQuery.eq('source', filters.source);
       }
       
       if (filters.country && filters.country !== 'all') {
-        query = query.eq('country', filters.country);
+        baseQuery.eq('country', filters.country);
       }
       
       if (filters.industry && filters.industry !== 'all') {
-        query = query.eq('industry', filters.industry);
+        baseQuery.eq('industry', filters.industry);
       }
       
       if (filters.assigned_to && filters.assigned_to !== 'all') {
-        query = query.eq('assigned_to', filters.assigned_to);
+        baseQuery.eq('assigned_to', filters.assigned_to);
       }
       
       // Date range filter would need more complex logic
@@ -141,7 +141,7 @@ export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
       if (filters.date_range === 'today') {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        query = query.gte('created_at', today.toISOString());
+        baseQuery.gte('created_at', today.toISOString());
       } else if (filters.date_range === 'yesterday') {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
@@ -150,14 +150,14 @@ export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        query = query
+        baseQuery
           .gte('created_at', yesterday.toISOString())
           .lt('created_at', today.toISOString());
       }
     }
 
-    // Add order after all filters are applied to avoid deep type instantiation
-    const { data, error } = await query.order('created_at', { ascending: false });
+    // Execute the query with ordering at the end
+    const { data, error } = await baseQuery.order('created_at', { ascending: false });
     
     if (error) throw error;
     
