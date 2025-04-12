@@ -55,18 +55,18 @@ const Navbar = () => {
             ))}
             <div className="mr-4 rtl:ml-4 rtl:mr-0">
               <Button asChild variant="outline" size="sm">
-                <Link to="/auth/login">تسجيل الدخول</Link>
+                <Link to="/login">تسجيل الدخول</Link>
               </Button>
             </div>
             <Button asChild size="sm">
-              <Link to="/auth/register">تسجيل</Link>
+              <Link to="/register">تسجيل</Link>
             </Button>
           </nav>
 
           {/* Mobile Navigation */}
           <div className="flex items-center gap-4 md:hidden">
             <Button asChild variant="outline" size="sm" className="ml-2 rtl:mr-2 rtl:ml-0">
-              <Link to="/auth/login">تسجيل الدخول</Link>
+              <Link to="/login">تسجيل الدخول</Link>
             </Button>
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
@@ -108,7 +108,7 @@ const Navbar = () => {
                   <div className="pt-4 pb-6 border-t">
                     <div className="flex flex-col gap-4 px-4">
                       <Button asChild size="sm">
-                        <Link to="/auth/register">تسجيل</Link>
+                        <Link to="/register">تسجيل</Link>
                       </Button>
                       <div className="flex items-center gap-2 text-sm text-gray-500">
                         <Globe className="h-4 w-4" />

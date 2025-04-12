@@ -24,6 +24,8 @@ import CMS from "./pages/CMS";
 import NotFound from "./pages/NotFound";
 import Demo from "./pages/Demo";
 import Pricing from "./pages/Pricing";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +46,8 @@ const App = () => (
           <Route path="/integration" element={<Integration />} />
           <Route path="/demo" element={<Demo />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/leads" element={<LeadManagement />} />
           <Route path="/dashboard/leads/:id" element={<LeadDetails />} />
