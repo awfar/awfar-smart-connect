@@ -56,7 +56,7 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { CircleDollarSign, CreditCard, LayoutDashboard, PiggyBank, Users, CalendarIcon, ChevronDown, DotsHorizontalIcon, PlusIcon } from "lucide-react"
+import { CircleDollarSign, CreditCard, LayoutDashboard, PiggyBank, Users, CalendarIcon, ChevronDown, MoreHorizontal } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardNav from '@/components/dashboard/DashboardNav';

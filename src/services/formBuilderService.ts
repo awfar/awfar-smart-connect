@@ -30,52 +30,83 @@ export interface FormWithFields extends Form {
 
 // Fetch all forms
 export const fetchForms = async (): Promise<Form[]> => {
-  const { data, error } = await supabase
-    .from('forms')
-    .select('*')
-    .order('created_at', { ascending: false });
-  
-  if (error) {
-    console.error('Error fetching forms:', error);
+  try {
+    const { data, error } = await supabase
+      .from('forms')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching forms:', error);
+      return [];
+    }
+
+    // Map database column names to our TypeScript interface properties
+    return data.map(item => ({
+      id: item.id,
+      name: item.name,
+      description: item.description,
+      type: item.type as PropertyType,
+      isActive: item.isactive,
+      submitButtonText: item.submitbuttontext,
+      successMessage: item.successmessage,
+      redirectUrl: item.redirecturl,
+      created_at: item.created_at,
+      updated_at: item.updated_at
+    }));
+  } catch (error) {
+    console.error('Error in fetchForms:', error);
     return [];
   }
-
-  // Map database column names to our TypeScript interface properties
-  return data.map(item => ({
-    id: item.id,
-    name: item.name,
-    description: item.description,
-    type: item.type as PropertyType,
-    isActive: item.isactive,
-    submitButtonText: item.submitbuttontext,
-    successMessage: item.successmessage,
-    redirectUrl: item.redirecturl,
-    created_at: item.created_at,
-    updated_at: item.updated_at
-  }));
 };
 
 // Fetch a single form with its fields
 export const fetchFormWithFields = async (formId: string): Promise<FormWithFields | null> => {
-  const { data: form, error: formError } = await supabase
-    .from('forms')
-    .select('*')
-    .eq('id', formId)
-    .single();
-  
-  if (formError) {
-    console.error('Error fetching form:', formError);
-    return null;
-  }
+  try {
+    const { data: form, error: formError } = await supabase
+      .from('forms')
+      .select('*')
+      .eq('id', formId)
+      .single();
+    
+    if (formError) {
+      console.error('Error fetching form:', formError);
+      return null;
+    }
 
-  const { data: fields, error: fieldsError } = await supabase
-    .from('form_fields')
-    .select('*')
-    .eq('formid', formId)
-    .order('order', { ascending: true });
-  
-  if (fieldsError) {
-    console.error('Error fetching form fields:', fieldsError);
+    const { data: fields, error: fieldsError } = await supabase
+      .from('form_fields')
+      .select('*')
+      .eq('formid', formId)
+      .order('order', { ascending: true });
+    
+    if (fieldsError) {
+      console.error('Error fetching form fields:', fieldsError);
+      return {
+        id: form.id,
+        name: form.name,
+        description: form.description,
+        type: form.type as PropertyType,
+        isActive: form.isactive,
+        submitButtonText: form.submitbuttontext,
+        successMessage: form.successmessage,
+        redirectUrl: form.redirecturl,
+        created_at: form.created_at,
+        updated_at: form.updated_at,
+        fields: []
+      };
+    }
+
+    // Map database column names to our TypeScript interface properties
+    const mappedFields = fields.map(field => ({
+      id: field.id,
+      propertyId: field.propertyid,
+      formId: field.formid,
+      order: field.order,
+      isRequired: field.isrequired,
+      isVisible: field.isvisible
+    }));
+
     return {
       id: form.id,
       name: form.name,
@@ -87,224 +118,229 @@ export const fetchFormWithFields = async (formId: string): Promise<FormWithField
       redirectUrl: form.redirecturl,
       created_at: form.created_at,
       updated_at: form.updated_at,
-      fields: []
+      fields: mappedFields
     };
+  } catch (error) {
+    console.error('Error in fetchFormWithFields:', error);
+    return null;
   }
-
-  // Map database column names to our TypeScript interface properties
-  const mappedFields = fields.map(field => ({
-    id: field.id,
-    propertyId: field.propertyid,
-    formId: field.formid,
-    order: field.order,
-    isRequired: field.isrequired,
-    isVisible: field.isvisible
-  }));
-
-  return {
-    id: form.id,
-    name: form.name,
-    description: form.description,
-    type: form.type as PropertyType,
-    isActive: form.isactive,
-    submitButtonText: form.submitbuttontext,
-    successMessage: form.successmessage,
-    redirectUrl: form.redirecturl,
-    created_at: form.created_at,
-    updated_at: form.updated_at,
-    fields: mappedFields
-  };
 };
 
 // Create a new form
 export const createForm = async (form: Omit<Form, 'id' | 'created_at' | 'updated_at'>, fields?: Omit<FormField, 'id' | 'formId'>[]) => {
-  // Convert our TypeScript interface properties to database column names
-  const dbForm = {
-    name: form.name,
-    description: form.description,
-    type: form.type,
-    isactive: form.isActive,
-    submitbuttontext: form.submitButtonText,
-    successmessage: form.successMessage,
-    redirecturl: form.redirectUrl
-  };
-  
-  const { data: formData, error: formError } = await supabase
-    .from('forms')
-    .insert([dbForm])
-    .select();
-  
-  if (formError || !formData) {
-    console.error('Error creating form:', formError);
-    throw formError;
-  }
-  
-  const newForm = {
-    id: formData[0].id,
-    name: formData[0].name,
-    description: formData[0].description,
-    type: formData[0].type as PropertyType,
-    isActive: formData[0].isactive,
-    submitButtonText: formData[0].submitbuttontext,
-    successMessage: formData[0].successmessage,
-    redirectUrl: formData[0].redirecturl,
-    created_at: formData[0].created_at,
-    updated_at: formData[0].updated_at
-  };
-  
-  if (fields && fields.length > 0) {
-    const formattedFields = fields.map(field => ({
-      formid: newForm.id,
-      propertyid: field.propertyId,
-      order: field.order,
-      isrequired: field.isRequired,
-      isvisible: field.isVisible
-    }));
+  try {
+    // Convert our TypeScript interface properties to database column names
+    const dbForm = {
+      name: form.name,
+      description: form.description,
+      type: form.type,
+      isactive: form.isActive,
+      submitbuttontext: form.submitButtonText,
+      successmessage: form.successMessage,
+      redirecturl: form.redirectUrl
+    };
     
-    const { error: fieldsError } = await supabase
-      .from('form_fields')
-      .insert(formattedFields);
+    const { data: formData, error: formError } = await supabase
+      .from('forms')
+      .insert([dbForm])
+      .select();
     
-    if (fieldsError) {
-      console.error('Error creating form fields:', fieldsError);
-      throw fieldsError;
+    if (formError || !formData) {
+      console.error('Error creating form:', formError);
+      throw formError;
     }
+    
+    const newForm = {
+      id: formData[0].id,
+      name: formData[0].name,
+      description: formData[0].description,
+      type: formData[0].type as PropertyType,
+      isActive: formData[0].isactive,
+      submitButtonText: formData[0].submitbuttontext,
+      successMessage: formData[0].successmessage,
+      redirectUrl: formData[0].redirecturl,
+      created_at: formData[0].created_at,
+      updated_at: formData[0].updated_at
+    };
+    
+    if (fields && fields.length > 0) {
+      const formattedFields = fields.map(field => ({
+        formid: newForm.id,
+        propertyid: field.propertyId,
+        order: field.order,
+        isrequired: field.isRequired,
+        isvisible: field.isVisible
+      }));
+      
+      const { error: fieldsError } = await supabase
+        .from('form_fields')
+        .insert(formattedFields);
+      
+      if (fieldsError) {
+        console.error('Error creating form fields:', fieldsError);
+        throw fieldsError;
+      }
+    }
+    
+    return newForm;
+  } catch (error) {
+    console.error('Error in createForm:', error);
+    throw error;
   }
-  
-  return newForm;
 };
 
 // Update an existing form
 export const updateForm = async (formId: string, form: Partial<Form>, fields?: FormField[]) => {
-  // Convert our TypeScript interface properties to database column names
-  const dbForm: any = {};
-  
-  if (form.name !== undefined) dbForm.name = form.name;
-  if (form.description !== undefined) dbForm.description = form.description;
-  if (form.type !== undefined) dbForm.type = form.type;
-  if (form.isActive !== undefined) dbForm.isactive = form.isActive;
-  if (form.submitButtonText !== undefined) dbForm.submitbuttontext = form.submitButtonText;
-  if (form.successMessage !== undefined) dbForm.successmessage = form.successMessage;
-  if (form.redirectUrl !== undefined) dbForm.redirecturl = form.redirectUrl;
-  
-  const { data: formData, error: formError } = await supabase
-    .from('forms')
-    .update(dbForm)
-    .eq('id', formId)
-    .select();
-  
-  if (formError) {
-    console.error('Error updating form:', formError);
-    throw formError;
-  }
+  try {
+    // Convert our TypeScript interface properties to database column names
+    const dbForm: any = {};
+    
+    if (form.name !== undefined) dbForm.name = form.name;
+    if (form.description !== undefined) dbForm.description = form.description;
+    if (form.type !== undefined) dbForm.type = form.type;
+    if (form.isActive !== undefined) dbForm.isactive = form.isActive;
+    if (form.submitButtonText !== undefined) dbForm.submitbuttontext = form.submitButtonText;
+    if (form.successMessage !== undefined) dbForm.successmessage = form.successMessage;
+    if (form.redirectUrl !== undefined) dbForm.redirecturl = form.redirectUrl;
+    
+    const { data: formData, error: formError } = await supabase
+      .from('forms')
+      .update(dbForm)
+      .eq('id', formId)
+      .select();
+    
+    if (formError) {
+      console.error('Error updating form:', formError);
+      throw formError;
+    }
 
-  let updatedForm: Form = {
-    id: formData[0].id,
-    name: formData[0].name,
-    description: formData[0].description,
-    type: formData[0].type as PropertyType,
-    isActive: formData[0].isactive,
-    submitButtonText: formData[0].submitbuttontext,
-    successMessage: formData[0].successmessage,
-    redirectUrl: formData[0].redirecturl,
-    created_at: formData[0].created_at,
-    updated_at: formData[0].updated_at
-  };
-  
-  if (fields && fields.length > 0) {
-    // First delete existing fields
-    const { error: deleteError } = await supabase
-      .from('form_fields')
-      .delete()
-      .eq('formid', formId);
+    let updatedForm: Form = {
+      id: formData[0].id,
+      name: formData[0].name,
+      description: formData[0].description,
+      type: formData[0].type as PropertyType,
+      isActive: formData[0].isactive,
+      submitButtonText: formData[0].submitbuttontext,
+      successMessage: formData[0].successmessage,
+      redirectUrl: formData[0].redirecturl,
+      created_at: formData[0].created_at,
+      updated_at: formData[0].updated_at
+    };
     
-    if (deleteError) {
-      console.error('Error deleting existing form fields:', deleteError);
-      throw deleteError;
+    if (fields && fields.length > 0) {
+      // First delete existing fields
+      const { error: deleteError } = await supabase
+        .from('form_fields')
+        .delete()
+        .eq('formid', formId);
+      
+      if (deleteError) {
+        console.error('Error deleting existing form fields:', deleteError);
+        throw deleteError;
+      }
+      
+      // Insert the new fields
+      const formattedFields = fields.map(field => ({
+        formid: formId,
+        propertyid: field.propertyId,
+        order: field.order,
+        isrequired: field.isRequired,
+        isvisible: field.isVisible
+      }));
+      
+      const { error: fieldsError } = await supabase
+        .from('form_fields')
+        .insert(formattedFields);
+      
+      if (fieldsError) {
+        console.error('Error updating form fields:', fieldsError);
+        throw fieldsError;
+      }
     }
     
-    // Insert the new fields
-    const formattedFields = fields.map(field => ({
-      formid: formId,
-      propertyid: field.propertyId,
-      order: field.order,
-      isrequired: field.isRequired,
-      isvisible: field.isVisible
-    }));
-    
-    const { error: fieldsError } = await supabase
-      .from('form_fields')
-      .insert(formattedFields);
-    
-    if (fieldsError) {
-      console.error('Error updating form fields:', fieldsError);
-      throw fieldsError;
-    }
+    return updatedForm;
+  } catch (error) {
+    console.error('Error in updateForm:', error);
+    throw error;
   }
-  
-  return updatedForm;
 };
 
 // Delete a form and its fields
 export const deleteForm = async (formId: string) => {
-  // Delete fields first (due to foreign key constraints)
-  const { error: fieldsError } = await supabase
-    .from('form_fields')
-    .delete()
-    .eq('formid', formId);
-  
-  if (fieldsError) {
-    console.error('Error deleting form fields:', fieldsError);
-    throw fieldsError;
+  try {
+    // Delete fields first (due to foreign key constraints)
+    const { error: fieldsError } = await supabase
+      .from('form_fields')
+      .delete()
+      .eq('formid', formId);
+    
+    if (fieldsError) {
+      console.error('Error deleting form fields:', fieldsError);
+      throw fieldsError;
+    }
+    
+    // Then delete the form
+    const { error: formError } = await supabase
+      .from('forms')
+      .delete()
+      .eq('id', formId);
+    
+    if (formError) {
+      console.error('Error deleting form:', formError);
+      throw formError;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error in deleteForm:', error);
+    throw error;
   }
-  
-  // Then delete the form
-  const { error: formError } = await supabase
-    .from('forms')
-    .delete()
-    .eq('id', formId);
-  
-  if (formError) {
-    console.error('Error deleting form:', formError);
-    throw formError;
-  }
-  
-  return true;
 };
 
 // Submit form data
 export const submitFormData = async (formId: string, data: Record<string, any>) => {
-  // Get form type
-  const { data: formData, error: formError } = await supabase
-    .from('forms')
-    .select('type')
-    .eq('id', formId)
-    .single();
-  
-  if (formError || !formData) {
-    console.error('Error fetching form type:', formError);
-    throw formError;
-  }
-  
-  const formType = formData.type;
-  const tableName = formType + 's'; // Append 's' to make it plural (e.g., lead -> leads)
-  
-  // We need to ensure the data matches the expected schema for the target table
-  // This is a simplified approach - in production, you'd want to validate the data more thoroughly
   try {
-    const { data: result, error } = await supabase
-      .from(tableName)
-      .insert([data])
-      .select();
+    // Get form type
+    const { data: formData, error: formError } = await supabase
+      .from('forms')
+      .select('type')
+      .eq('id', formId)
+      .single();
     
-    if (error) {
-      console.error(`Error submitting ${formType} data:`, error);
-      throw error;
+    if (formError || !formData) {
+      console.error('Error fetching form type:', formError);
+      throw formError;
     }
     
-    return result?.[0];
+    const formType = formData.type;
+    // Make sure formType is a valid table name
+    if (typeof formType !== 'string' || !formType) {
+      throw new Error('Invalid form type');
+    }
+    
+    const tableName = formType + 's'; // Append 's' to make it plural (e.g., lead -> leads)
+    
+    // We need to ensure the data matches the expected schema for the target table
+    // Using any type for simplicity and handling via try-catch
+    try {
+      // Cast the data to any to bypass TypeScript type checking
+      const { data: result, error } = await supabase
+        .from(tableName as any)
+        .insert([data as any])
+        .select();
+      
+      if (error) {
+        console.error(`Error submitting ${formType} data:`, error);
+        throw error;
+      }
+      
+      return result?.[0];
+    } catch (error) {
+      console.error(`Error inserting into table ${tableName}:`, error);
+      throw error;
+    }
   } catch (error) {
-    console.error(`Error inserting into table ${tableName}:`, error);
+    console.error('Error in submitFormData:', error);
     throw error;
   }
 };
