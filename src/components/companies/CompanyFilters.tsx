@@ -1,24 +1,35 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 
 export interface CompanyFiltersProps {
-  onApplyFilters: (filters: any) => void;
+  onApplyFilters: (filters: {
+    industry?: string;
+    country?: string;
+    type?: string;
+  }) => void;
 }
 
 const CompanyFilters: React.FC<CompanyFiltersProps> = ({ onApplyFilters }) => {
+  const [industry, setIndustry] = useState<string>('all');
+  const [country, setCountry] = useState<string>('all');
+  const [type, setType] = useState<string>('all');
+
   const handleApplyFilters = () => {
-    // Mock filter application
-    onApplyFilters({});
+    onApplyFilters({
+      industry,
+      country,
+      type
+    });
   };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
       <div>
         <Label htmlFor="industry">القطاع</Label>
-        <Select>
+        <Select value={industry} onValueChange={setIndustry}>
           <SelectTrigger id="industry">
             <SelectValue placeholder="كل القطاعات" />
           </SelectTrigger>
@@ -34,7 +45,7 @@ const CompanyFilters: React.FC<CompanyFiltersProps> = ({ onApplyFilters }) => {
       
       <div>
         <Label htmlFor="country">الدولة</Label>
-        <Select>
+        <Select value={country} onValueChange={setCountry}>
           <SelectTrigger id="country">
             <SelectValue placeholder="كل الدول" />
           </SelectTrigger>
@@ -51,7 +62,7 @@ const CompanyFilters: React.FC<CompanyFiltersProps> = ({ onApplyFilters }) => {
       
       <div>
         <Label htmlFor="type">النوع</Label>
-        <Select>
+        <Select value={type} onValueChange={setType}>
           <SelectTrigger id="type">
             <SelectValue placeholder="كل الأنواع" />
           </SelectTrigger>

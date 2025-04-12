@@ -1,285 +1,319 @@
 
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import DashboardNav from "@/components/dashboard/DashboardNav";
-import { toast } from "sonner";
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Plus } from "lucide-react";
-import CompanyForm from "@/components/companies/CompanyForm";
-import CompanyDetails from "@/components/companies/CompanyDetails";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Eye, Plus, Search, Filter, Building2, Trash2, Edit, Users2, Globe, Phone, MapPin } from "lucide-react";
 import CompanyFilters from "@/components/companies/CompanyFilters";
-
-// Define the Company interface to match what's expected
-interface Company {
-  id: string;
-  name: string;
-  industry: string;
-  country: string;
-  website: string;
-  phone: string;
-  address: string;
-  type: string;
-  status: string;
-  contacts: { name: string; position: string; email: string; }[];
-  created_at: string;
-  // Add the missing properties
-  size: string;
-  city: string;
-  subscription: string;
-}
+import CompanyForm from "@/components/companies/CompanyForm";
+import { Company, getCompanies, filterCompanies, createCompany, deleteCompany } from '@/services/companiesService';
+import { toast } from "sonner";
 
 const CompaniesManagement = () => {
-  const [view, setView] = useState<"all" | "customers" | "vendors">("all");
-  const [isCreating, setIsCreating] = useState(false);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [activeTab, setActiveTab] = useState<string>("all");
   const [showFilters, setShowFilters] = useState<boolean>(false);
-  const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
+  const [showAddForm, setShowAddForm] = useState<boolean>(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  
-  // Mock data for companies with required fields
-  const companies: Company[] = [
-    {
-      id: "comp-001",
-      name: "شركة التقنية الحديثة",
-      industry: "تكنولوجيا المعلومات",
-      country: "مصر",
-      website: "www.tech-modern.com",
-      phone: "+20 123 456 7890",
-      address: "القاهرة، مصر",
-      type: "عميل",
-      status: "نشط",
-      size: "متوسطة",
-      city: "القاهرة",
-      subscription: "أساسية",
-      contacts: [
-        { name: "محمد سعيد", position: "مدير تقني", email: "m.saeed@tech-modern.com" }
-      ],
-      created_at: "2023-05-12"
-    },
-    {
-      id: "comp-002",
-      name: "مطاعم الذواقة",
-      industry: "مطاعم ومقاهي",
-      country: "السعودية",
-      website: "www.gourmet-restaurants.com",
-      phone: "+966 55 444 5555",
-      address: "الرياض، السعودية",
-      type: "مورد",
-      status: "نشط",
-      size: "كبيرة",
-      city: "الرياض",
-      subscription: "متقدمة",
-      contacts: [
-        { name: "عمر يوسف", position: "مدير عام", email: "omar@gourmet-restaurants.com" }
-      ],
-      created_at: "2023-05-22"
-    },
-    {
-      id: "comp-003",
-      name: "صيدليات الشفاء",
-      industry: "الرعاية الصحية",
-      country: "الإمارات",
-      website: "www.alshifa-pharm.com",
-      phone: "+971 55 987 6543",
-      address: "دبي، الإمارات",
-      type: "عميل",
-      status: "نشط",
-      size: "كبيرة",
-      city: "دبي",
-      subscription: "مجانية",
-      contacts: [
-        { name: "خالد عبدالرحمن", position: "مدير تنفيذي", email: "khalid@alshifa-pharm.com" }
-      ],
-      created_at: "2023-05-18"
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
+
+  const fetchCompanies = async () => {
+    setLoading(true);
+    try {
+      const data = await getCompanies();
+      setCompanies(data);
+    } catch (error) {
+      toast.error("حدث خطأ أثناء جلب بيانات الشركات");
+    } finally {
+      setLoading(false);
     }
-  ];
-
-  const handleCreateCompany = () => {
-    setIsCreating(true);
   };
 
-  const handleCancelCreate = () => {
-    setIsCreating(false);
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    filterCompaniesByTab(value);
   };
 
-  const handleSaveCompany = () => {
-    toast.success("تم حفظ بيانات الشركة بنجاح");
-    setIsCreating(false);
+  const filterCompaniesByTab = async (tab: string) => {
+    setLoading(true);
+    try {
+      if (tab === "all") {
+        await fetchCompanies();
+      } else {
+        const data = await filterCompanies({ type: tab });
+        setCompanies(data);
+      }
+    } catch (error) {
+      toast.error("حدث خطأ أثناء تصفية الشركات");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleCompanyClick = (companyId: string) => {
-    setSelectedCompany(companyId === selectedCompany ? null : companyId);
-  };
-
-  const toggleFilters = () => {
-    setShowFilters(!showFilters);
+  const handleApplyFilters = async (filters: { industry?: string; country?: string; type?: string }) => {
+    setLoading(true);
+    try {
+      const data = await filterCompanies(filters);
+      setCompanies(data);
+      setShowFilters(false);
+    } catch (error) {
+      toast.error("حدث خطأ أثناء تطبيق الفلترة");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  const handleApplyFilters = (filters: any) => {
-    console.log("Applied filters:", filters);
-    toast.success("تم تطبيق الفلتر بنجاح");
+  const filteredCompanies = companies.filter((company) =>
+    company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    company.industry.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    company.country.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleAddCompany = async (companyData: Omit<Company, "id" | "createdAt" | "status" | "contacts">) => {
+    try {
+      const newCompany = await createCompany({
+        ...companyData,
+        status: "نشط",
+        contacts: []
+      });
+      setCompanies([...companies, newCompany]);
+      setShowAddForm(false);
+      toast.success("تم إضافة الشركة بنجاح");
+    } catch (error) {
+      toast.error("حدث خطأ أثناء إضافة الشركة");
+    }
   };
 
-  // Filter companies based on search term and view
-  const filteredCompanies = companies.filter(company => {
-    const matchesSearch = company.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesView = 
-      view === "all" || 
-      (view === "customers" && company.type === "عميل") || 
-      (view === "vendors" && company.type === "مورد");
+  const handleDeleteCompany = async () => {
+    if (!selectedCompany) return;
     
-    return matchesSearch && matchesView;
-  });
+    try {
+      await deleteCompany(selectedCompany.id);
+      setCompanies(companies.filter(company => company.id !== selectedCompany.id));
+      setSelectedCompany(null);
+      setShowDeleteDialog(false);
+      toast.success("تم حذف الشركة بنجاح");
+    } catch (error) {
+      toast.error("حدث خطأ أثناء حذف الشركة");
+    }
+  };
+
+  const confirmDelete = (company: Company) => {
+    setSelectedCompany(company);
+    setShowDeleteDialog(true);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50 rtl">
-      <DashboardHeader />
-      <div className="flex">
-        <DashboardNav />
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto pt-16 lg:pt-0">
-          <div className="flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">إدارة الشركات</h1>
-              
-              {!isCreating && (
-                <Button 
-                  onClick={handleCreateCompany}
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  إضافة شركة جديدة
-                </Button>
-              )}
+    <div className="p-6 rtl">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">إدارة الشركات</h1>
+          <p className="text-gray-600">قم بإدارة الشركات والعملاء والموردين</p>
+        </div>
+        <div className="flex items-center gap-2 mt-4 md:mt-0">
+          <Button onClick={() => setShowAddForm(true)} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            <span>إضافة شركة</span>
+          </Button>
+        </div>
+      </div>
+      
+      <Tabs defaultValue="all" value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+          <TabsList className="mb-4 md:mb-0">
+            <TabsTrigger value="all">جميع الشركات</TabsTrigger>
+            <TabsTrigger value="customer">العملاء</TabsTrigger>
+            <TabsTrigger value="vendor">الموردين</TabsTrigger>
+          </TabsList>
+          
+          <div className="flex flex-col md:flex-row md:items-center gap-4">
+            <div className="relative">
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="بحث عن شركة..."
+                className="w-full md:w-80 pr-10"
+                value={searchTerm}
+                onChange={handleSearch}
+              />
             </div>
-
-            {isCreating ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle>شركة جديدة</CardTitle>
-                  <CardDescription>أدخل بيانات الشركة الجديدة</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <CompanyForm 
-                    onCancel={handleCancelCreate}
-                    onSave={handleSaveCompany}
-                  />
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <Card>
-                    <CardHeader className="pb-3">
+            <Button
+              variant="outline"
+              className="flex items-center gap-2"
+              onClick={() => setShowFilters(!showFilters)}
+            >
+              <Filter className="h-4 w-4" />
+              <span>فلترة</span>
+            </Button>
+          </div>
+        </div>
+        
+        {showFilters && (
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <CompanyFilters onApplyFilters={handleApplyFilters} />
+            </CardContent>
+          </Card>
+        )}
+        
+        <TabsContent value="all" className="mt-0">
+          {loading ? (
+            <div className="text-center py-8">جاري التحميل...</div>
+          ) : filteredCompanies.length === 0 ? (
+            <div className="text-center py-8">
+              <Building2 className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+              <h3 className="text-lg font-medium">لا توجد شركات</h3>
+              <p className="text-gray-600 mt-1">لم يتم العثور على أي شركات مطابقة للفلتر الحالي</p>
+              <Button onClick={() => setShowAddForm(true)} variant="outline" className="mt-4">
+                إضافة شركة جديدة
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredCompanies.map((company) => (
+                <Card key={company.id} className="overflow-hidden">
+                  <CardHeader className="bg-gray-50 pb-2">
+                    <div className="flex justify-between items-start">
                       <div>
-                        <CardTitle>الشركات</CardTitle>
-                        <CardDescription className="mt-1">
-                          إدارة الشركات والعملاء والموردين
-                        </CardDescription>
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="text-lg">{company.name}</CardTitle>
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            company.type === "customer" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"
+                          }`}>
+                            {company.type === "customer" ? "عميل" : "مورد"}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-500 mt-1">
+                          {company.industry === "tech" && "تقنية المعلومات"}
+                          {company.industry === "healthcare" && "الرعاية الصحية"}
+                          {company.industry === "retail" && "التجزئة"}
+                          {company.industry === "education" && "التعليم"}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => confirmDelete(company)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-4">
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-2">
+                        <Globe className="h-4 w-4 text-gray-400 mt-1" />
+                        <div>
+                          <div className="text-sm font-medium">الموقع الإلكتروني</div>
+                          <div className="text-sm text-gray-600">{company.website || "غير متوفر"}</div>
+                        </div>
                       </div>
                       
-                      <div className="mt-4 space-y-4">
-                        <div className="flex flex-col md:flex-row gap-4">
-                          <div className="relative flex-1">
-                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input
-                              type="search"
-                              placeholder="بحث في الشركات..."
-                              className="pl-8"
-                              value={searchTerm}
-                              onChange={handleSearch}
-                            />
+                      <div className="flex items-start gap-2">
+                        <MapPin className="h-4 w-4 text-gray-400 mt-1" />
+                        <div>
+                          <div className="text-sm font-medium">البلد</div>
+                          <div className="text-sm text-gray-600">
+                            {company.country === "sa" && "السعودية"}
+                            {company.country === "ae" && "الإمارات"}
+                            {company.country === "kw" && "الكويت"}
+                            {company.country === "bh" && "البحرين"}
+                            {company.country === "qa" && "قطر"}
                           </div>
-                          
-                          <Tabs defaultValue="all" value={view} onValueChange={(v) => setView(v as "all" | "customers" | "vendors")}>
-                            <TabsList>
-                              <TabsTrigger value="all">الكل</TabsTrigger>
-                              <TabsTrigger value="customers">العملاء</TabsTrigger>
-                              <TabsTrigger value="vendors">الموردين</TabsTrigger>
-                            </TabsList>
-                          </Tabs>
-                          
-                          <Button 
-                            variant="outline" 
-                            onClick={toggleFilters}
-                            className="w-full md:w-auto"
-                          >
-                            <Filter className="h-4 w-4 ml-2" />
-                            فلترة
-                          </Button>
                         </div>
-                        
-                        {showFilters && <CompanyFilters onApplyFilters={handleApplyFilters} />}
                       </div>
-                    </CardHeader>
-                    
-                    <CardContent>
-                      <div className="rounded-md border">
-                        <table className="w-full text-sm">
-                          <thead>
-                            <tr className="border-b bg-muted/50">
-                              <th className="h-10 px-4 text-right font-medium">الشركة</th>
-                              <th className="h-10 px-4 text-right font-medium">القطاع</th>
-                              <th className="h-10 px-4 text-right font-medium">الدولة</th>
-                              <th className="h-10 px-4 text-right font-medium">النوع</th>
-                              <th className="h-10 px-4 text-right font-medium">الحالة</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {filteredCompanies.map((company) => (
-                              <tr 
-                                key={company.id} 
-                                className={`border-b hover:bg-muted/50 cursor-pointer ${company.id === selectedCompany ? 'bg-muted/50' : ''}`}
-                                onClick={() => handleCompanyClick(company.id)}
-                              >
-                                <td className="p-4">{company.name}</td>
-                                <td className="p-4">{company.industry}</td>
-                                <td className="p-4">{company.country}</td>
-                                <td className="p-4">
-                                  <span className={`px-2 py-1 rounded text-xs ${company.type === 'عميل' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
-                                    {company.type}
-                                  </span>
-                                </td>
-                                <td className="p-4">
-                                  <span className="px-2 py-1 rounded bg-green-100 text-green-700 text-xs">
-                                    {company.status}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
-                            
-                            {filteredCompanies.length === 0 && (
-                              <tr>
-                                <td colSpan={5} className="p-8 text-center text-muted-foreground">
-                                  لا توجد شركات متطابقة مع معايير البحث
-                                </td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
+                      
+                      <div className="flex items-start gap-2">
+                        <Phone className="h-4 w-4 text-gray-400 mt-1" />
+                        <div>
+                          <div className="text-sm font-medium">رقم الهاتف</div>
+                          <div className="text-sm text-gray-600">{company.phone || "غير متوفر"}</div>
+                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {selectedCompany && (
-                  <div className="w-[400px]">
-                    <CompanyDetails 
-                      company={companies.find(c => c.id === selectedCompany)!} 
-                      onClose={() => setSelectedCompany(null)} 
-                    />
-                  </div>
-                )}
-              </div>
-            )}
+                      
+                      <div className="flex items-start gap-2">
+                        <Users2 className="h-4 w-4 text-gray-400 mt-1" />
+                        <div>
+                          <div className="text-sm font-medium">جهات الاتصال</div>
+                          <div className="text-sm text-gray-600">
+                            {company.contacts && company.contacts.length > 0 
+                              ? company.contacts.map((contact, index) => (
+                                <div key={index} className="mt-1">
+                                  <div>{contact.name} - {contact.position}</div>
+                                  <div className="text-xs text-gray-500">{contact.email}</div>
+                                </div>
+                              ))
+                              : "لا توجد جهات اتصال"
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="customer" className="mt-0">
+          {/* Same content structure as "all" tab but filtered for customers */}
+        </TabsContent>
+        
+        <TabsContent value="vendor" className="mt-0">
+          {/* Same content structure as "all" tab but filtered for vendors */}
+        </TabsContent>
+      </Tabs>
+      
+      {/* Add Company Dialog */}
+      <Dialog open={showAddForm} onOpenChange={setShowAddForm}>
+        <DialogContent className="max-w-2xl rtl">
+          <DialogTitle>إضافة شركة جديدة</DialogTitle>
+          <CompanyForm 
+            onCancel={() => setShowAddForm(false)} 
+            onSave={handleAddCompany}
+          />
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="max-w-md rtl">
+          <DialogTitle>تأكيد الحذف</DialogTitle>
+          <div className="py-4">
+            <p>هل أنت متأكد من رغبتك في حذف شركة "{selectedCompany?.name}"؟</p>
+            <p className="text-gray-500 text-sm mt-2">هذا الإجراء لا يمكن التراجع عنه.</p>
           </div>
-        </main>
-      </div>
+          <div className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              إلغاء
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteCompany}>
+              حذف
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
