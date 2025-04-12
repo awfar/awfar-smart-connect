@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -191,9 +190,11 @@ export const getUserPermissions = async (userId: string): Promise<string[]> => {
   }
 };
 
-// إضافة دالة جديدة لإنشاء مستخدم سوبر أدمن
+// Update createSuperAdmin function to include the site URL
 export const createSuperAdmin = async (email: string, password: string, firstName: string, lastName: string): Promise<boolean> => {
   try {
+    const siteUrl = window.location.origin; // Get the current site URL
+    
     // إنشاء المستخدم في نظام المصادقة
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -202,7 +203,8 @@ export const createSuperAdmin = async (email: string, password: string, firstNam
         data: {
           first_name: firstName,
           last_name: lastName
-        }
+        },
+        emailRedirectTo: `${siteUrl}/login` // Redirect to login page after email confirmation
       }
     });
 

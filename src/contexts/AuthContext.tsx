@@ -82,8 +82,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const resetPassword = async (email: string) => {
     try {
       setLoading(true);
+      const siteUrl = window.location.origin; // Get the current site URL
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${siteUrl}/reset-password`,
       });
       if (error) throw error;
       toast.success('تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني');
@@ -98,9 +100,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const resendConfirmationEmail = async (email: string): Promise<boolean> => {
     try {
       setLoading(true);
+      const siteUrl = window.location.origin; // Get the current site URL
+      
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: email,
+        options: {
+          emailRedirectTo: `${siteUrl}/login`
+        }
       });
       
       if (error) throw error;
