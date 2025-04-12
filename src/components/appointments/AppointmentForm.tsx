@@ -1,160 +1,188 @@
 
-import { useState } from "react";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Calendar as CalendarIcon, Clock } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { format } from "date-fns";
-import { ar } from "date-fns/locale";
+import { X, CalendarClock, User, Clock } from "lucide-react";
+import { toast } from "sonner";
 
-interface AppointmentFormProps {
-  onCancel: () => void;
-  onSave: () => void;
+export interface Appointment {
+  id: number;
+  title: string;
+  date: Date;
+  clientName: string;
+  time: string;
+  type: string;
+  status: string;
+  description?: string;
 }
 
-const AppointmentForm: React.FC<AppointmentFormProps> = ({ onCancel, onSave }) => {
-  const [date, setDate] = useState<Date | undefined>();
-  
-  // Time slots for selection
-  const timeSlots = [
-    "09:00 ص", "09:30 ص", "10:00 ص", "10:30 ص", "11:00 ص", "11:30 ص",
-    "12:00 م", "12:30 م", "01:00 م", "01:30 م", "02:00 م", "02:30 م",
-    "03:00 م", "03:30 م", "04:00 م", "04:30 م", "05:00 م"
-  ];
+interface AppointmentFormProps {
+  onClose: () => void;
+  onSubmit: (appointment: Partial<Appointment>) => void;
+  initialData?: Appointment;
+  title: string;
+}
+
+const AppointmentForm: React.FC<AppointmentFormProps> = ({ onClose, onSubmit, initialData, title }) => {
+  const [formData, setFormData] = useState<Partial<Appointment>>({
+    title: initialData?.title || "",
+    clientName: initialData?.clientName || "",
+    date: initialData?.date || new Date(),
+    time: initialData?.time || "10:00",
+    type: initialData?.type || "اجتماع",
+    status: initialData?.status || "مؤكد",
+    description: initialData?.description || "",
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (field: keyof Partial<Appointment>, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      onSubmit(formData);
+      toast.success(initialData ? "تم تحديث الموعد بنجاح" : "تم إضافة الموعد بنجاح");
+      onClose();
+    } catch (error) {
+      console.error("Error submitting appointment:", error);
+      toast.error(initialData ? "فشل تحديث الموعد" : "فشل إضافة الموعد");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); onSave(); }}>
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="title">عنوان الموعد</Label>
-          <Input id="title" placeholder="أدخل عنوان الموعد" className="mt-1" />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="client">العميل</Label>
-            <Select>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="اختر العميل" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>العملاء</SelectLabel>
-                  <SelectItem value="ahmed">أحمد محمد</SelectItem>
-                  <SelectItem value="sara">سارة خالد</SelectItem>
-                  <SelectItem value="mohammed">محمد علي</SelectItem>
-                  <SelectItem value="khalid">خالد عبدالله</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+    <Card className="w-full">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+        <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onClose}>
+          <X className="h-4 w-4" />
+        </Button>
+      </CardHeader>
+      <form onSubmit={handleSubmit}>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">عنوان الموعد</Label>
+            <Input 
+              id="title" 
+              value={formData.title} 
+              onChange={(e) => handleChange("title", e.target.value)} 
+              required 
+            />
           </div>
 
-          <div>
-            <Label htmlFor="type">نوع الموعد</Label>
-            <Select>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="اختر النوع" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="meeting">اجتماع</SelectItem>
-                <SelectItem value="call">مكالمة</SelectItem>
-                <SelectItem value="presentation">عرض تقديمي</SelectItem>
-                <SelectItem value="review">مراجعة</SelectItem>
-                <SelectItem value="other">أخرى</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="space-y-2">
+            <Label htmlFor="clientName">اسم العميل</Label>
+            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+              <User className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+              <Input 
+                id="clientName" 
+                value={formData.clientName} 
+                onChange={(e) => handleChange("clientName", e.target.value)} 
+                required 
+              />
+            </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label>تاريخ الموعد</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full mt-1 justify-start text-right"
-                >
-                  <CalendarIcon className="ml-2 h-4 w-4" />
-                  {date ? (
-                    format(date, "PPP", { locale: ar })
-                  ) : (
-                    <span>اختر تاريخاً</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  initialFocus
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="date">التاريخ</Label>
+              <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                <CalendarClock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <Input 
+                  id="date" 
+                  type="date"
+                  value={formData.date instanceof Date ? formData.date.toISOString().split('T')[0] : ''} 
+                  onChange={(e) => {
+                    const dateValue = e.target.value ? new Date(e.target.value) : new Date();
+                    handleChange("date", dateValue);
+                  }} 
+                  required 
                 />
-              </PopoverContent>
-            </Popover>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="time">الوقت</Label>
+              <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <Input 
+                  id="time" 
+                  type="time"
+                  value={formData.time} 
+                  onChange={(e) => handleChange("time", e.target.value)} 
+                  required 
+                />
+              </div>
+            </div>
           </div>
 
-          <div>
-            <Label>وقت الموعد</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full mt-1 justify-start text-right"
-                >
-                  <Clock className="ml-2 h-4 w-4" />
-                  <span>اختر وقتاً</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-48" align="start">
-                <div className="grid grid-cols-2 gap-2 py-2">
-                  {timeSlots.map((time) => (
-                    <Button
-                      key={time}
-                      variant="ghost"
-                      className="justify-start font-normal"
-                    >
-                      {time}
-                    </Button>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="type">نوع الموعد</Label>
+              <Select 
+                value={formData.type} 
+                onValueChange={(value) => handleChange("type", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر النوع" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="اجتماع">اجتماع</SelectItem>
+                  <SelectItem value="مكالمة">مكالمة</SelectItem>
+                  <SelectItem value="عرض">عرض</SelectItem>
+                  <SelectItem value="مراجعة">مراجعة</SelectItem>
+                  <SelectItem value="آخر">آخر</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">الحالة</Label>
+              <Select 
+                value={formData.status} 
+                onValueChange={(value) => handleChange("status", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر الحالة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="مؤكد">مؤكد</SelectItem>
+                  <SelectItem value="معلق">معلق</SelectItem>
+                  <SelectItem value="ملغي">ملغي</SelectItem>
+                  <SelectItem value="مكتمل">مكتمل</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </div>
 
-        <div>
-          <Label htmlFor="notes">ملاحظات</Label>
-          <Textarea
-            id="notes"
-            placeholder="أدخل أي ملاحظات إضافية هنا"
-            className="mt-1"
-            rows={4}
-          />
-        </div>
-      </div>
-
-      <div className="flex justify-end gap-4">
-        <Button variant="outline" onClick={onCancel}>إلغاء</Button>
-        <Button type="submit">حفظ الموعد</Button>
-      </div>
-    </form>
+          <div className="space-y-2">
+            <Label htmlFor="description">التفاصيل</Label>
+            <Textarea 
+              id="description" 
+              rows={3}
+              value={formData.description || ""} 
+              onChange={(e) => handleChange("description", e.target.value)} 
+            />
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-between pt-4 border-t">
+          <Button variant="outline" onClick={onClose} disabled={loading}>إلغاء</Button>
+          <Button type="submit" disabled={loading}>
+            {loading ? "جاري الحفظ..." : initialData ? "تحديث" : "إضافة"}
+          </Button>
+        </CardFooter>
+      </form>
+    </Card>
   );
 };
 

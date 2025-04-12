@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -7,8 +7,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { 
   X, Mail, Phone, Globe, MapPin, Building, Users, 
-  Calendar, MessageCircle, FileText, PieChart, PlusCircle
+  Calendar, MessageCircle, FileText, PieChart, PlusCircle, Edit
 } from "lucide-react";
+import { Company } from "@/services/companiesService";
+import { toast } from "sonner";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface AccountManager {
   name: string;
@@ -16,27 +19,15 @@ interface AccountManager {
   initials: string;
 }
 
-interface Company {
-  id: string;
-  name: string;
-  industry: string;
-  size: string;
-  country: string;
-  city: string;
-  website: string;
-  status: string;
-  subscription: string;
-  contacts: number;
-  account_manager: AccountManager;
-  created_at: string;
-}
-
 interface CompanyDetailsProps {
   company: Company;
   onClose: () => void;
+  onEdit: (company: Company) => void;
 }
 
-const CompanyDetails: React.FC<CompanyDetailsProps> = ({ company, onClose }) => {
+const CompanyDetails: React.FC<CompanyDetailsProps> = ({ company, onClose, onEdit }) => {
+  const [activeContactId, setActiveContactId] = useState<number | null>(null);
+  
   // Mock contacts for this company
   const contacts = [
     {
@@ -101,13 +92,45 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ company, onClose }) => 
     },
   ];
 
+  const handleAddContact = () => {
+    toast.info("ستتمكن قريبا من إضافة جهات اتصال للشركات");
+  };
+
+  const handleAddDeal = () => {
+    toast.info("ستتمكن قريبا من إضافة صفقات للشركات");
+  };
+
+  const handleAddActivity = () => {
+    toast.info("ستتمكن قريبا من إضافة أنشطة للشركات");
+  };
+
+  const handleEditCompany = () => {
+    onEdit(company);
+  };
+
+  const handleContactAction = (contactId: number, action: 'email' | 'call') => {
+    const contact = contacts.find(c => c.id === contactId);
+    if (contact) {
+      if (action === 'email') {
+        toast.info(`سيتم فتح نافذة إرسال بريد إلكتروني إلى ${contact.name}`);
+      } else {
+        toast.info(`سيتم الاتصال بـ ${contact.name}`);
+      }
+    }
+  };
+
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
         <CardTitle className="text-lg font-semibold">تفاصيل الشركة</CardTitle>
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="h-8 w-8 p-0" onClick={handleEditCompany}>
+            <Edit className="h-4 w-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8 p-0" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </CardHeader>
 
       <CardContent className="py-2">
@@ -196,10 +219,20 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ company, onClose }) => 
                       <p className="text-xs text-muted-foreground">{contact.position}</p>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="icon" className="h-7 w-7">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7"
+                        onClick={() => handleContactAction(contact.id, 'email')}
+                      >
                         <Mail className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7"
+                        onClick={() => handleContactAction(contact.id, 'call')}
+                      >
                         <Phone className="h-3.5 w-3.5" />
                       </Button>
                     </div>
@@ -216,7 +249,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ company, onClose }) => 
                   </div>
                 </div>
               ))}
-              <Button size="sm" variant="outline" className="w-full">
+              <Button size="sm" variant="outline" className="w-full" onClick={handleAddContact}>
                 <PlusCircle className="h-4 w-4 ml-2" />
                 إضافة جهة اتصال
               </Button>
@@ -246,7 +279,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ company, onClose }) => 
                   </div>
                 </div>
               ))}
-              <Button size="sm" variant="outline" className="w-full">
+              <Button size="sm" variant="outline" className="w-full" onClick={handleAddDeal}>
                 <PlusCircle className="h-4 w-4 ml-2" />
                 إضافة صفقة جديدة
               </Button>
@@ -270,7 +303,7 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ company, onClose }) => 
                   <p className="text-xs text-muted-foreground">{activity.date}</p>
                 </div>
               ))}
-              <Button size="sm" variant="outline" className="w-full">
+              <Button size="sm" variant="outline" className="w-full" onClick={handleAddActivity}>
                 <PlusCircle className="h-4 w-4 ml-2" />
                 إضافة نشاط جديد
               </Button>
@@ -303,7 +336,8 @@ const CompanyDetails: React.FC<CompanyDetailsProps> = ({ company, onClose }) => 
           <Calendar className="h-4 w-4" />
           موعد
         </Button>
-        <Button size="sm" className="gap-1">
+        <Button size="sm" className="gap-1" onClick={handleEditCompany}>
+          <Edit className="h-4 w-4 ml-1" />
           تحديث
         </Button>
       </CardFooter>
