@@ -102,14 +102,14 @@ const DashboardNav = ({ mobileOpen = false, onClose }: DashboardNavProps) => {
   // For desktop view
   if (!isMobile) {
     return (
-      <div className="hidden lg:block min-h-screen w-64 border-l p-4 bg-white dark:bg-gray-900">
+      <div className="h-full w-64 border-l p-4 bg-white dark:bg-gray-900">
         <div className="space-y-1">
           {navItems.map((item) => (
             <Link key={item.href} to={item.href}>
               <Button
                 variant={pathname === item.href ? "secondary" : "ghost"}
                 className={cn(
-                  "w-full justify-start gap-2",
+                  "w-full justify-start gap-2 text-right",
                   pathname === item.href
                     ? "bg-muted hover:bg-muted"
                     : "hover:bg-transparent hover:underline"
@@ -125,40 +125,37 @@ const DashboardNav = ({ mobileOpen = false, onClose }: DashboardNavProps) => {
     );
   }
 
-  // For mobile view
+  // For mobile view - fix to ensure proper functioning
   return (
-    <Sheet open={mobileOpen} onOpenChange={onClose}>
+    <Sheet open={mobileOpen} onOpenChange={onClose ? () => onClose() : undefined}>
       <SheetContent side="right" className="rtl p-0 w-[80%] sm:max-w-sm">
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-4 border-b">
             <h2 className="font-semibold">القائمة</h2>
-            <SheetClose asChild>
+            {onClose && (
               <Button variant="ghost" size="icon" onClick={onClose}>
                 <X className="h-4 w-4" />
               </Button>
-            </SheetClose>
+            )}
           </div>
           
           <div className="flex-1 overflow-y-auto p-4">
             <div className="space-y-1">
               {navItems.map((item) => (
-                <SheetClose key={item.href} asChild>
-                  <Link to={item.href}>
-                    <Button
-                      variant={pathname === item.href ? "secondary" : "ghost"}
-                      className={cn(
-                        "w-full justify-start gap-2",
-                        pathname === item.href
-                          ? "bg-muted hover:bg-muted"
-                          : "hover:bg-transparent hover:underline"
-                      )}
-                      onClick={onClose}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {item.label}
-                    </Button>
-                  </Link>
-                </SheetClose>
+                <Link key={item.href} to={item.href} onClick={onClose}>
+                  <Button
+                    variant={pathname === item.href ? "secondary" : "ghost"}
+                    className={cn(
+                      "w-full justify-start gap-2 text-right",
+                      pathname === item.href
+                        ? "bg-muted hover:bg-muted"
+                        : "hover:bg-transparent hover:underline"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.label}
+                  </Button>
+                </Link>
               ))}
             </div>
           </div>

@@ -16,19 +16,23 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     setMobileNavOpen(!mobileNavOpen);
   };
   
+  const closeMobileNav = () => {
+    setMobileNavOpen(false);
+  };
+  
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col rtl">
       <DashboardHeader onMenuToggle={toggleMobileNav} />
       
       <div className="flex flex-1">
-        {/* Desktop sidebar is always rendered but hidden on mobile */}
+        {/* Desktop sidebar */}
         {!isMobile && <DashboardNav />}
         
-        {/* Mobile sidebar is conditionally rendered */}
+        {/* Mobile sidebar */}
         {isMobile && (
           <DashboardNav 
             mobileOpen={mobileNavOpen} 
-            onClose={() => setMobileNavOpen(false)} 
+            onClose={closeMobileNav} 
           />
         )}
         
