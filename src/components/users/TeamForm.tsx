@@ -30,14 +30,18 @@ const TeamForm = ({ team, onSave, onCancel }: TeamFormProps) => {
   const { data: users = [] } = useQuery({
     queryKey: ['users'],
     queryFn: fetchUsers,
-    onSuccess: (data) => {
-      // فلترة المستخدمين للحصول على المديرين المحتملين (مدير نظام أو مدير فريق)
-      const potentialManagers = data.filter(user => 
+  });
+  
+  // Handle users data when it's available
+  useEffect(() => {
+    if (users && users.length > 0) {
+      // Filter users to get potential managers (admin or team manager)
+      const potentialManagers = users.filter(user => 
         user.role === 'super_admin' || user.role === 'team_manager'
       );
       setManagers(potentialManagers);
     }
-  });
+  }, [users]);
 
   useEffect(() => {
     if (team) {

@@ -28,13 +28,19 @@ export const fetchUsers = async (): Promise<User[]> => {
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    
-    // تنسيق البيانات
-    return (data || []).map(user => ({
-      ...user,
-      department_name: user.departments?.name,
-      team_name: user.teams?.name
+
+    // Get user emails from auth.users using their profiles.id
+    const usersWithEmails = await Promise.all((data || []).map(async (user) => {
+      // If using the public schema method (where emails are stored in profiles)
+      return {
+        ...user,
+        email: user.email || `user-${user.id}@example.com`, // Fallback email if not found
+        department_name: user.departments?.name,
+        team_name: user.teams?.name
+      };
     }));
+    
+    return usersWithEmails;
   } catch (error) {
     console.error("خطأ في جلب المستخدمين:", error);
     toast.error("فشل في جلب بيانات المستخدمين");
@@ -56,8 +62,12 @@ export const fetchUserById = async (id: string): Promise<User | null> => {
     
     if (error) throw error;
     
+    // Get user email
+    const email = data.email || `user-${data.id}@example.com`; // Fallback email
+    
     return {
       ...data,
+      email,
       department_name: data.departments?.name,
       team_name: data.teams?.name
     };
@@ -71,7 +81,7 @@ export const fetchUserById = async (id: string): Promise<User | null> => {
 export const updateUser = async (user: Partial<User> & { id: string }): Promise<User | null> => {
   try {
     // إزالة الحقول الغير مطلوبة قبل الإرسال
-    const { department_name, team_name, departments, teams, ...userData } = user as any;
+    const { department_name, team_name, departments, teams, email, ...userData } = user as any;
 
     const { data, error } = await supabase
       .from('profiles')
@@ -85,7 +95,12 @@ export const updateUser = async (user: Partial<User> & { id: string }): Promise<
     if (error) throw error;
     
     toast.success("تم تحديث المستخدم بنجاح");
-    return data;
+    
+    // Add the email back to the returned data
+    return {
+      ...data,
+      email: email || `user-${data.id}@example.com` // Use the provided email or a fallback
+    };
   } catch (error) {
     console.error("خطأ في تحديث المستخدم:", error);
     toast.error("فشل في تحديث المستخدم");

@@ -20,15 +20,29 @@ export const fetchTeams = async (): Promise<Team[]> => {
       .from('teams')
       .select(`
         *,
-        departments (name),
-        profiles!teams_manager_id_fkey (first_name, last_name)
+        departments (name)
       `)
       .order('name');
     
     if (error) throw error;
     
-    // احصل على عدد الأعضاء في كل فريق
-    const teamsWithCount = await Promise.all((data || []).map(async (team) => {
+    // Get team managers and member counts separately
+    const teamsWithDetails = await Promise.all((data || []).map(async (team) => {
+      // Get manager details if there is a manager
+      let managerName = null;
+      if (team.manager_id) {
+        const { data: managerData, error: managerError } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', team.manager_id)
+          .single();
+        
+        if (!managerError && managerData) {
+          managerName = `${managerData.first_name || ''} ${managerData.last_name || ''}`.trim();
+        }
+      }
+      
+      // Get member count
       const { count, error: countError } = await supabase
         .from('profiles')
         .select('id', { count: 'exact', head: true })
@@ -37,12 +51,12 @@ export const fetchTeams = async (): Promise<Team[]> => {
       return {
         ...team,
         department_name: team.departments?.name,
-        manager_name: team.profiles ? `${team.profiles.first_name || ''} ${team.profiles.last_name || ''}`.trim() : null,
+        manager_name: managerName,
         member_count: count || 0
       };
     }));
     
-    return teamsWithCount;
+    return teamsWithDetails;
   } catch (error) {
     console.error("خطأ في جلب الفرق:", error);
     toast.error("فشل في جلب بيانات الفرق");

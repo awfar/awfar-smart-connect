@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -25,15 +25,19 @@ const UserFilters = ({ onApplyFilters }: UserFiltersProps) => {
   const { data: teams = [] } = useQuery({
     queryKey: ['teams'],
     queryFn: fetchTeams,
-    onSuccess: (data) => {
+  });
+  
+  // Handle teams data when it changes or department changes
+  useEffect(() => {
+    if (teams) {
       if (department) {
-        const filtered = data.filter(t => t.department_id === department);
+        const filtered = teams.filter(t => t.department_id === department);
         setFilteredTeams(filtered);
       } else {
-        setFilteredTeams(data);
+        setFilteredTeams(teams);
       }
     }
-  });
+  }, [teams, department]);
 
   const handleDepartmentChange = (value: string) => {
     const departmentId = value || null;
