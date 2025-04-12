@@ -67,13 +67,13 @@ export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
       }
     }
     
-    // Execute the final query with ordering
+    // Execute the query
     const { data, error } = await query.order('created_at', { ascending: false });
     
     if (error) throw error;
     
-    // Convert to array if null and use direct mapping function reference
-    return (data || []).map(row => mapRowToLead(row));
+    // Use type assertion to avoid deep recursion
+    return Array.isArray(data) ? data.map(row => mapRowToLead(row)) : [];
     
   } catch (error) {
     console.error("Error fetching leads:", error);
@@ -99,7 +99,7 @@ export const fetchLeadById = async (id: string): Promise<Lead | null> => {
     if (error) throw error;
     if (!data) return null;
     
-    // Direct use of mapRowToLead function
+    // Use explicit typing to avoid deep recursion
     return mapRowToLead(data);
     
   } catch (error) {

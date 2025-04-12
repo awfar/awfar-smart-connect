@@ -12,6 +12,25 @@ import CompanyForm from "@/components/companies/CompanyForm";
 import CompanyDetails from "@/components/companies/CompanyDetails";
 import CompanyFilters from "@/components/companies/CompanyFilters";
 
+// Define the Company interface to match what's expected
+interface Company {
+  id: string;
+  name: string;
+  industry: string;
+  country: string;
+  website: string;
+  phone: string;
+  address: string;
+  type: string;
+  status: string;
+  contacts: { name: string; position: string; email: string; }[];
+  created_at: string;
+  // Add the missing properties
+  size: string;
+  city: string;
+  subscription: string;
+}
+
 const CompaniesManagement = () => {
   const [view, setView] = useState<"all" | "customers" | "vendors">("all");
   const [isCreating, setIsCreating] = useState(false);
@@ -19,8 +38,8 @@ const CompaniesManagement = () => {
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
   
-  // Mock data for companies
-  const companies = [
+  // Mock data for companies with required fields
+  const companies: Company[] = [
     {
       id: "comp-001",
       name: "شركة التقنية الحديثة",
@@ -31,6 +50,9 @@ const CompaniesManagement = () => {
       address: "القاهرة، مصر",
       type: "عميل",
       status: "نشط",
+      size: "متوسطة",
+      city: "القاهرة",
+      subscription: "أساسية",
       contacts: [
         { name: "محمد سعيد", position: "مدير تقني", email: "m.saeed@tech-modern.com" }
       ],
@@ -46,6 +68,9 @@ const CompaniesManagement = () => {
       address: "الرياض، السعودية",
       type: "مورد",
       status: "نشط",
+      size: "كبيرة",
+      city: "الرياض",
+      subscription: "متقدمة",
       contacts: [
         { name: "عمر يوسف", position: "مدير عام", email: "omar@gourmet-restaurants.com" }
       ],
@@ -61,6 +86,9 @@ const CompaniesManagement = () => {
       address: "دبي، الإمارات",
       type: "عميل",
       status: "نشط",
+      size: "كبيرة",
+      city: "دبي",
+      subscription: "مجانية",
       contacts: [
         { name: "خالد عبدالرحمن", position: "مدير تنفيذي", email: "khalid@alshifa-pharm.com" }
       ],
@@ -91,6 +119,11 @@ const CompaniesManagement = () => {
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
+  };
+
+  const handleApplyFilters = (filters: any) => {
+    console.log("Applied filters:", filters);
+    toast.success("تم تطبيق الفلتر بنجاح");
   };
 
   // Filter companies based on search term and view
@@ -181,7 +214,7 @@ const CompaniesManagement = () => {
                           </Button>
                         </div>
                         
-                        {showFilters && <CompanyFilters />}
+                        {showFilters && <CompanyFilters onApplyFilters={handleApplyFilters} />}
                       </div>
                     </CardHeader>
                     

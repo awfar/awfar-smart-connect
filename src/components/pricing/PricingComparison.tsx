@@ -4,9 +4,9 @@ import { Check, X } from "lucide-react";
 
 interface FeatureItem {
   name: string;
-  free: boolean;
-  basic: boolean;
-  premium: boolean;
+  free: boolean | string;
+  basic: boolean | string;
+  premium: boolean | string;
 }
 
 const PricingComparison = () => {

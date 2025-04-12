@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,7 +25,7 @@ const LeadDetails = () => {
       type: "note",
       description: "تم الاتصال بالعميل لمناقشة احتياجاته",
       scheduled_at: "2023-05-15",
-      completed: true,
+      completed_at: "2023-05-15",
       created_at: "2023-05-14",
       created_by: "أحمد محمد"
     },
@@ -36,7 +35,7 @@ const LeadDetails = () => {
       type: "call",
       description: "مكالمة متابعة للتحقق من رضا العميل",
       scheduled_at: "2023-05-20",
-      completed: false,
+      completed_at: null,
       created_at: "2023-05-14",
       created_by: "سارة أحمد"
     }
@@ -80,7 +79,7 @@ const LeadDetails = () => {
     setActivities(prev =>
       prev.map(activity =>
         activity.id === activityId
-          ? { ...activity, completed: true }
+          ? { ...activity, completed_at: new Date().toISOString() }
           : activity
       )
     );
@@ -303,7 +302,7 @@ const LeadDetails = () => {
                                         </div>
                                       </div>
                                       
-                                      {!activity.completed && (
+                                      {!activity.completed_at && (
                                         <Button 
                                           size="sm" 
                                           variant="ghost"
