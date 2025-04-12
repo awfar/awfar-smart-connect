@@ -19,6 +19,9 @@ import CMS from './pages/CMS';
 import Settings from './pages/Settings';
 import TasksManagement from './pages/TasksManagement';
 import TicketsManagement from './pages/TicketsManagement';
+import AppointmentsManagement from './pages/AppointmentsManagement';
+import ChatsManagement from './pages/ChatsManagement';
+import ReportsManagement from './pages/ReportsManagement';
 
 function AppRoutes() {
   const { isLoggedIn } = useAuth();
@@ -38,11 +41,11 @@ function AppRoutes() {
           <Route path="/dashboard/leads" element={isLoggedIn ? <LeadManagement /> : <Navigate to="/login" />} />
           <Route path="/dashboard/companies" element={isLoggedIn ? <CompaniesManagement /> : <Navigate to="/login" />} />
           <Route path="/dashboard/deals" element={isLoggedIn ? <DealsManagement /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/appointments" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/appointments" element={isLoggedIn ? <AppointmentsManagement /> : <Navigate to="/login" />} />
           <Route path="/dashboard/tickets" element={isLoggedIn ? <TicketsManagement /> : <Navigate to="/login" />} />
           <Route path="/dashboard/tasks" element={isLoggedIn ? <TasksManagement /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/chats" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/reports" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/chats" element={isLoggedIn ? <ChatsManagement /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/reports" element={isLoggedIn ? <ReportsManagement /> : <Navigate to="/login" />} />
           <Route path="/dashboard/cms" element={isLoggedIn ? <CMS /> : <Navigate to="/login" />} />
           <Route path="/dashboard/settings" element={isLoggedIn ? <Settings /> : <Navigate to="/login" />} />
           <Route path="/dashboard/users" element={isLoggedIn ? <UserManagement /> : <Navigate to="/login" />} />
