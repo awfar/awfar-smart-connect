@@ -1,7 +1,8 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardNav from "@/components/dashboard/DashboardNav";
 import LeadsOverview from "@/components/dashboard/LeadsOverview";
@@ -9,9 +10,43 @@ import RecentActivities from "@/components/dashboard/RecentActivities";
 import StatsCards from "@/components/dashboard/StatsCards";
 import SalesChart from "@/components/dashboard/SalesChart";
 import TeamPerformance from "@/components/dashboard/TeamPerformance";
+import { fetchDashboardStats, fetchRecentActivities, DashboardStats, RecentActivity } from "@/services/dashboardService";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 const Dashboard = () => {
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
+  
+  const { 
+    data: stats, 
+    isLoading: isStatsLoading, 
+    error: statsError 
+  } = useQuery({
+    queryKey: ['dashboardStats', selectedRegion],
+    queryFn: () => fetchDashboardStats(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+  
+  const { 
+    data: activities, 
+    isLoading: isActivitiesLoading, 
+    error: activitiesError 
+  } = useQuery({
+    queryKey: ['recentActivities'],
+    queryFn: fetchRecentActivities,
+    staleTime: 60 * 1000, // 1 minute
+  });
+
+  useEffect(() => {
+    if (statsError) {
+      toast.error("فشل في تحميل إحصائيات لوحة التحكم");
+    }
+    
+    if (activitiesError) {
+      toast.error("فشل في تحميل الأنشطة الأخيرة");
+    }
+  }, [statsError, activitiesError]);
 
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50 rtl">
@@ -33,10 +68,26 @@ const Dashboard = () => {
                   <option value="ae">الإمارات</option>
                   <option value="eg">مصر</option>
                 </select>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-1"
+                  onClick={() => {
+                    toast.info("جاري تحديث البيانات...");
+                    // We rely on React Query's refetch mechanism
+                  }}
+                >
+                  {isStatsLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "تحديث"
+                  )}
+                </Button>
               </div>
             </div>
             
-            <StatsCards />
+            <StatsCards isLoading={isStatsLoading} stats={stats} />
             
             <Tabs defaultValue="overview">
               <TabsList className="mb-4 overflow-x-auto flex-nowrap">
@@ -108,7 +159,10 @@ const Dashboard = () => {
                 <CardDescription>آخر الإجراءات والتفاعلات مع العملاء</CardDescription>
               </CardHeader>
               <CardContent>
-                <RecentActivities />
+                <RecentActivities 
+                  isLoading={isActivitiesLoading} 
+                  activities={activities || []} 
+                />
               </CardContent>
             </Card>
           </div>
