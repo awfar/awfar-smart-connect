@@ -103,6 +103,7 @@ const mapRowToLead = (row: LeadRow): Lead => {
 
 export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
   try {
+    // Define a more specific query type to avoid infinite type instantiation
     let query = supabase
       .from('leads')
       .select(`
@@ -111,8 +112,7 @@ export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
           first_name,
           last_name
         )
-      `)
-      .order('created_at', { ascending: false });
+      `);
     
     // Apply filters if provided
     if (filters) {
@@ -156,7 +156,8 @@ export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
       }
     }
 
-    const { data, error } = await query;
+    // Add order after all filters are applied to avoid deep type instantiation
+    const { data, error } = await query.order('created_at', { ascending: false });
     
     if (error) throw error;
     
