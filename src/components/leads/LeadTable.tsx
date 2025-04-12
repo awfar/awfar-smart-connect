@@ -1,31 +1,22 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  Table, TableBody, TableCell, 
-  TableHead, TableHeader, TableRow 
-} from "@/components/ui/table";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
-
-interface LeadOwner {
-  name: string;
-  avatar: string;
-  initials: string;
-}
+import { useNavigate } from 'react-router-dom';
 
 interface Lead {
   id: string;
-  name: string;
-  company: string;
-  email: string;
-  phone: string;
-  country: string;
-  industry: string;
+  name?: string;
+  first_name?: string;
+  last_name?: string;
+  company?: string;
+  email?: string;
+  phone?: string;
   stage: string;
-  source: string;
-  owner: LeadOwner;
+  source?: string;
+  owner?: {
+    name: string;
+    avatar: string;
+    initials: string;
+  };
   created_at: string;
 }
 
@@ -36,106 +27,101 @@ interface LeadTableProps {
 }
 
 const LeadTable: React.FC<LeadTableProps> = ({ leads, selectedLead, onLeadSelect }) => {
-  const getStageBadge = (stage: string) => {
-    switch(stage) {
-      case "جديد":
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">جديد</Badge>;
-      case "مؤهل":
-        return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">مؤهل</Badge>;
-      case "فرصة":
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">فرصة</Badge>;
-      case "عرض سعر":
-        return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">عرض سعر</Badge>;
-      case "تفاوض":
-        return <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-200">تفاوض</Badge>;
-      case "مغلق ناجح":
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">مغلق ناجح</Badge>;
-      case "مغلق خاسر":
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">مغلق خاسر</Badge>;
+  const navigate = useNavigate();
+
+  const handleRowClick = (leadId: string) => {
+    onLeadSelect(leadId);
+  };
+
+  const handleRowDoubleClick = (leadId: string) => {
+    navigate(`/dashboard/leads/${leadId}`);
+  };
+
+  const getStageColorClass = (stage: string): string => {
+    switch (stage.toLowerCase()) {
+      case 'جديد':
+      case 'new':
+        return 'bg-blue-100 text-blue-800';
+      case 'مؤهل':
+      case 'qualified':
+        return 'bg-green-100 text-green-800';
+      case 'فرصة':
+      case 'opportunity':
+        return 'bg-purple-100 text-purple-800';
+      case 'عرض سعر':
+      case 'quotation':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'تفاوض':
+      case 'negotiation':
+        return 'bg-orange-100 text-orange-800';
+      case 'مغلق':
+      case 'closed':
+        return 'bg-red-100 text-red-800';
       default:
-        return <Badge variant="outline">{stage}</Badge>;
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[300px]">
-            <Button variant="ghost" className="flex items-center gap-1 p-0">
-              الاسم / الشركة
-              <ArrowUpDown className="h-3 w-3" />
-            </Button>
-          </TableHead>
-          <TableHead>
-            <Button variant="ghost" className="flex items-center gap-1 p-0">
-              المرحلة
-              <ArrowUpDown className="h-3 w-3" />
-            </Button>
-          </TableHead>
-          <TableHead>
-            <Button variant="ghost" className="flex items-center gap-1 p-0">
-              الدولة
-            </Button>
-          </TableHead>
-          <TableHead>
-            <Button variant="ghost" className="flex items-center gap-1 p-0">
-              المصدر
-            </Button>
-          </TableHead>
-          <TableHead>
-            <Button variant="ghost" className="flex items-center gap-1 p-0">
-              المسؤول
-            </Button>
-          </TableHead>
-          <TableHead>
-            <Button variant="ghost" className="flex items-center gap-1 p-0">
-              التاريخ
-              <ArrowUpDown className="h-3 w-3" />
-            </Button>
-          </TableHead>
-          <TableHead></TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {leads.map((lead) => (
-          <TableRow 
-            key={lead.id} 
-            className={`cursor-pointer ${selectedLead === lead.id ? "bg-gray-100" : ""}`}
-            onClick={() => onLeadSelect(lead.id)}
-          >
-            <TableCell className="font-medium">
-              <div className="flex flex-col">
-                <span>{lead.name}</span>
-                <span className="text-sm text-muted-foreground">{lead.company}</span>
-              </div>
-            </TableCell>
-            <TableCell>{getStageBadge(lead.stage)}</TableCell>
-            <TableCell>{lead.country}</TableCell>
-            <TableCell>
-              <Badge variant="outline" className="bg-gray-50">
-                {lead.source}
-              </Badge>
-            </TableCell>
-            <TableCell>
-              <div className="flex items-center gap-2">
-                <Avatar className="h-6 w-6">
-                  <AvatarImage src={lead.owner.avatar} />
-                  <AvatarFallback>{lead.owner.initials}</AvatarFallback>
-                </Avatar>
-                <span className="text-sm">{lead.owner.name}</span>
-              </div>
-            </TableCell>
-            <TableCell>{lead.created_at}</TableCell>
-            <TableCell>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <div className="rounded-md border">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b bg-muted/50">
+            <th className="h-10 px-4 text-right font-medium">الاسم</th>
+            <th className="h-10 px-4 text-right font-medium">الشركة</th>
+            <th className="h-10 px-4 text-right font-medium">المرحلة</th>
+            <th className="h-10 px-4 text-right font-medium">المصدر</th>
+            <th className="h-10 px-4 text-right font-medium">المسؤول</th>
+          </tr>
+        </thead>
+        <tbody>
+          {leads.map((lead) => {
+            const fullName = lead.name || `${lead.first_name || ''} ${lead.last_name || ''}`.trim();
+            
+            return (
+              <tr 
+                key={lead.id} 
+                className={`border-b hover:bg-muted/50 cursor-pointer ${lead.id === selectedLead ? 'bg-muted/50' : ''}`}
+                onClick={() => handleRowClick(lead.id)}
+                onDoubleClick={() => handleRowDoubleClick(lead.id)}
+              >
+                <td className="p-4">
+                  <div className="font-medium">{fullName}</div>
+                  <div className="text-xs text-muted-foreground">{lead.email}</div>
+                </td>
+                <td className="p-4">{lead.company || '-'}</td>
+                <td className="p-4">
+                  <span className={`px-2 py-1 rounded text-xs ${getStageColorClass(lead.stage)}`}>
+                    {lead.stage}
+                  </span>
+                </td>
+                <td className="p-4">{lead.source || '-'}</td>
+                <td className="p-4">
+                  {lead.owner ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs">
+                        {lead.owner.initials}
+                      </div>
+                      <span>{lead.owner.name}</span>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+          
+          {leads.length === 0 && (
+            <tr>
+              <td colSpan={5} className="p-8 text-center text-muted-foreground">
+                لا توجد بيانات متاحة
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 };
 

@@ -9,6 +9,7 @@ import About from "./pages/About";
 import AIAgent from "./pages/AIAgent";
 import Dashboard from "./pages/Dashboard";
 import LeadManagement from "./pages/LeadManagement";
+import LeadDetails from "./pages/LeadDetails";
 import CompaniesManagement from "./pages/CompaniesManagement";
 import AppointmentsManagement from "./pages/AppointmentsManagement";
 import TasksManagement from "./pages/TasksManagement";
@@ -35,6 +36,7 @@ const App = () => (
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/leads" element={<LeadManagement />} />
+          <Route path="/dashboard/leads/:id" element={<LeadDetails />} />
           <Route path="/dashboard/companies" element={<CompaniesManagement />} />
           <Route path="/dashboard/cms" element={<CMS />} />
           <Route path="/dashboard/appointments" element={<AppointmentsManagement />} />
