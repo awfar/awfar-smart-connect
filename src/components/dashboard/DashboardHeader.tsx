@@ -14,14 +14,23 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const DashboardHeader: React.FC = () => {
+interface DashboardHeaderProps {
+  onMenuToggle?: () => void;
+}
+
+const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuToggle }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const isMobile = useIsMobile();
   
   return (
     <header className="bg-white border-b h-14 px-4 lg:px-6 flex items-center justify-between sticky top-0 z-30">
       {isMobile && !isSearchOpen ? (
-        <Button variant="ghost" size="icon" className="lg:hidden">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="lg:hidden"
+          onClick={onMenuToggle}
+        >
           <Menu className="h-5 w-5" />
         </Button>
       ) : null}
