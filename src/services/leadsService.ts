@@ -53,8 +53,8 @@ interface LeadRow {
   company: string | null;
   email: string;
   phone: string | null;
-  country?: string;
-  industry?: string;
+  country?: string | null;
+  industry?: string | null;
   status: string; // This is mapped to 'stage' in our interface
   source: string | null;
   notes: string | null;
@@ -161,7 +161,7 @@ export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
     if (error) throw error;
     
     // Map database rows to Lead objects
-    return (data || []).map(mapRowToLead);
+    return (data as LeadRow[] || []).map(mapRowToLead);
     
   } catch (error) {
     console.error("Error fetching leads:", error);
@@ -223,6 +223,10 @@ export const createLead = async (lead: Partial<Lead>): Promise<Lead | null> => {
       leadData.status = lead.stage;
       delete leadData.stage;
     }
+    
+    // Add default values for required fields
+    if (!leadData.country) leadData.country = '';
+    if (!leadData.industry) leadData.industry = '';
     
     // Remove owner property as it's not in the database
     delete leadData.owner;
