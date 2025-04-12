@@ -1,6 +1,8 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { WhatsappLogoIcon } from "@radix-ui/react-icons";
+import { MessageSquare, Facebook, Instagram } from "lucide-react";
 
 const Hero = () => {
   const features = [
@@ -13,11 +15,18 @@ const Hero = () => {
   ];
 
   return (
-    <section className="bg-gradient-to-r from-awfar-primary to-awfar-secondary text-white py-20 overflow-hidden relative">
+    <section className="bg-gradient-to-r from-awfar-primary to-awfar-secondary text-white py-16 overflow-hidden relative">
       <div className="container mx-auto relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-          <div className="text-center lg:text-right">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">من دلوقتي يقدر يبقى عندك موظف</h1>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <div className="lg:col-span-7 text-center lg:text-right">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">تأخرك في الرد يُفقدك <span className="text-awfar-accent">66%</span> من عملائك المحتملين!</h1>
+            <p className="text-xl mb-6">
+              بطء الاستجابة يؤدي لخسارتك يومياً لأكثر من 10 فرص بيع
+            </p>
+            <p className="text-lg mb-8">
+              الموظف الذكي من Awfar Chat Commerce يتعامل معك مع عملائك 24 ساعة بكل اللغات واللهجات!
+            </p>
+            
             <div className="mb-8">
               <ul className="space-y-3 text-lg">
                 {features.map((feature, index) => (
@@ -32,31 +41,56 @@ const Hero = () => {
                 ))}
               </ul>
             </div>
-            <p className="text-xl mb-8 text-gray-100">
-              كل ده في نفس اللحظة … بأقل من مرتب موظف خدمة عملاء
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
-              <Button asChild size="lg" className="bg-awfar-accent text-awfar-primary hover:opacity-90">
-                <Link to="/demo">طلب تجربة مجانية</Link>
+            
+            <div className="flex flex-wrap gap-4 justify-center lg:justify-end">
+              <Button asChild className="bg-green-500 hover:bg-green-600 text-white flex gap-2">
+                <Link to="/demo">
+                  <WhatsappLogoIcon className="h-5 w-5" />
+                  <span>قم بتجربة الموظف الذكي</span>
+                </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="border-white text-white hover:bg-white/10">
+              <Button asChild variant="outline" className="border-white text-white hover:bg-white/10">
                 <Link to="/ai-agent">تعرف على خدماتنا</Link>
               </Button>
             </div>
           </div>
-          <div className="flex justify-center lg:justify-end">
+          
+          <div className="lg:col-span-5">
             <div className="relative">
               <img 
-                src="/lovable-uploads/4ae3a89c-aad3-4d1e-9beb-3890147a56ae.png" 
-                alt="Awfar AI Agent" 
-                className="w-full max-w-md rounded-lg shadow-lg animate-float"
+                src="/lovable-uploads/d0e8da8f-bc27-437d-9d5e-681870721ef9.png" 
+                alt="Awfar Chat Platform" 
+                className="w-full rounded-lg"
               />
-              <div className="absolute -bottom-4 -right-4 bg-awfar-accent rounded-full p-4 shadow-lg">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-awfar-primary">
-                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                  <line x1="12" x2="12" y1="19" y2="22"></line>
-                </svg>
+              
+              <div className="absolute -top-4 -right-4 bg-white/10 backdrop-blur-sm border border-white/20 p-4 rounded-lg max-w-xs">
+                <div className="flex items-center gap-2">
+                  <div className="grid grid-cols-2 gap-1">
+                    <div className="bg-blue-500 p-2 rounded">
+                      <MessageSquare size={18} className="text-white" />
+                    </div>
+                    <div className="bg-green-500 p-2 rounded">
+                      <WhatsappLogoIcon className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="bg-blue-600 p-2 rounded">
+                      <Facebook size={18} className="text-white" />
+                    </div>
+                    <div className="bg-pink-500 p-2 rounded">
+                      <Instagram size={18} className="text-white" />
+                    </div>
+                  </div>
+                  <span className="text-sm text-white">تواصل عبر كل المنصات بمكان واحد</span>
+                </div>
+              </div>
+              
+              <div className="absolute bottom-4 left-4 bg-white/10 backdrop-blur-sm border border-white/20 p-3 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <img src="/lovable-uploads/18411ffb-259b-4ff4-b30a-dd6dcdcc63e5.png" alt="AI Assistant" className="h-10 w-10 rounded-full" />
+                  <div className="text-sm text-white">
+                    <p className="font-medium">الموظف الذكي</p>
+                    <p className="text-xs">متاح 24/7</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

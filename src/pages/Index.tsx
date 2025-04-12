@@ -5,9 +5,16 @@ import Hero from '@/components/home/Hero';
 import Features from '@/components/home/Features';
 import AIFeature from '@/components/home/AIFeature';
 import ChannelsSection from '@/components/home/ChannelsSection';
+import AiEmployee from '@/components/home/AiEmployee';
+import CaseStudy from '@/components/home/CaseStudy';
 import ComparisonTable from '@/components/home/ComparisonTable';
 import Testimonials from '@/components/home/Testimonials';
+import TestimonialSlider from '@/components/home/TestimonialSlider';
+import IndustryHelp from '@/components/home/IndustryHelp';
 import CCommerce from '@/components/home/CCommerce';
+import BotComparison from '@/components/home/BotComparison';
+import WorkHoursComparison from '@/components/home/WorkHoursComparison';
+import FAQ from '@/components/home/FAQ';
 import Partners from '@/components/home/Partners';
 import CallToAction from '@/components/home/CallToAction';
 import ContactForm from '@/components/home/ContactForm';
@@ -33,12 +40,19 @@ const Index = () => {
       </div>
       <Hero />
       <Features />
+      <AiEmployee />
       <AIFeature />
+      <CaseStudy />
       <ChannelsSection />
+      <TestimonialSlider />
+      <IndustryHelp />
       <ComparisonTable />
-      <Testimonials />
       <CCommerce />
+      <BotComparison />
+      <WorkHoursComparison />
+      <Testimonials />
       <Partners />
+      <FAQ />
       <CallToAction />
       <ContactForm />
       <Footer />
