@@ -85,9 +85,9 @@ const FormEmbed: React.FC = () => {
   return (
     <div className="container max-w-2xl mx-auto p-4 md:p-6 rtl">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
-        <h1 className="text-2xl font-bold mb-2">{form.name}</h1>
-        {form.description && (
-          <p className="text-muted-foreground mb-4">{form.description}</p>
+        <h1 className="text-2xl font-bold mb-2">{form?.name}</h1>
+        {form?.description && (
+          <p className="text-muted-foreground mb-4">{form?.description}</p>
         )}
         
         <DynamicForm 
