@@ -12,6 +12,7 @@ import { fetchDepartments } from "@/services/departmentsService";
 import { fetchTeams } from "@/services/teamsService";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface UserFormProps {
   userId?: string;
@@ -131,7 +132,7 @@ const UserForm = ({ userId, isEditing = false, onSave }: UserFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+    <form onSubmit={handleSubmit} className="space-y-6 pt-4 pb-2">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="first_name">الاسم الأول</Label>
@@ -161,7 +162,7 @@ const UserForm = ({ userId, isEditing = false, onSave }: UserFormProps) => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            readOnly={isEditing} // لا يمكن تغيير البريد الإلكتروني للمستخدمين الموجودين
+            readOnly={isEditing} 
           />
         </div>
         
@@ -173,7 +174,7 @@ const UserForm = ({ userId, isEditing = false, onSave }: UserFormProps) => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required={!isEditing} // مطلوبة فقط عند إنشاء مستخدم جديد
+              required={!isEditing} 
             />
           </div>
         )}
@@ -184,7 +185,7 @@ const UserForm = ({ userId, isEditing = false, onSave }: UserFormProps) => {
             <SelectTrigger id="role">
               <SelectValue placeholder="اختر دوراً" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="popper">
               <SelectItem value="super_admin">مدير النظام</SelectItem>
               <SelectItem value="team_manager">مدير فريق</SelectItem>
               <SelectItem value="sales">مبيعات</SelectItem>
@@ -200,7 +201,7 @@ const UserForm = ({ userId, isEditing = false, onSave }: UserFormProps) => {
             <SelectTrigger id="department">
               <SelectValue placeholder="اختر قسماً" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="popper">
               <SelectItem value="none">بدون قسم</SelectItem>
               {departments.map((dept) => (
                 <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
@@ -215,7 +216,7 @@ const UserForm = ({ userId, isEditing = false, onSave }: UserFormProps) => {
             <SelectTrigger id="team">
               <SelectValue placeholder={departmentId ? "اختر فريقاً" : "اختر قسماً أولا"} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent position="popper">
               <SelectItem value="none">بدون فريق</SelectItem>
               {filteredTeams.map((team) => (
                 <SelectItem key={team.id} value={team.id}>{team.name}</SelectItem>

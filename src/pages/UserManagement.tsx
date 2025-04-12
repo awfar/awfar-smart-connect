@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -38,29 +37,24 @@ const UserManagement = () => {
     if (users) {
       let filtered = [...users];
       
-      // فلترة حسب التاب النشط
       if (activeTab === "active") {
         filtered = filtered.filter(user => user.is_active);
       } else if (activeTab === "inactive") {
         filtered = filtered.filter(user => !user.is_active);
       }
       
-      // فلترة حسب الدور
       if (filterRole) {
         filtered = filtered.filter(user => user.role === filterRole);
       }
       
-      // فلترة حسب القسم
       if (filterDepartment) {
         filtered = filtered.filter(user => user.department_id === filterDepartment);
       }
       
-      // فلترة حسب الفريق
       if (filterTeam) {
         filtered = filtered.filter(user => user.team_id === filterTeam);
       }
       
-      // فلترة حسب البحث
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
         filtered = filtered.filter(user => 
@@ -222,9 +216,8 @@ const UserManagement = () => {
         </main>
       </div>
       
-      {/* إضافة مستخدم جديد */}
       <Dialog open={showAddUser} onOpenChange={setShowAddUser}>
-        <DialogContent className="max-w-2xl rtl">
+        <DialogContent className="max-w-2xl rtl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>إضافة مستخدم جديد</DialogTitle>
           </DialogHeader>
@@ -232,7 +225,6 @@ const UserManagement = () => {
         </DialogContent>
       </Dialog>
       
-      {/* عرض تفاصيل المستخدم */}
       <Sheet open={showUserDetails} onOpenChange={setShowUserDetails}>
         <SheetContent className="w-full md:max-w-xl rtl overflow-y-auto">
           <SheetHeader>
