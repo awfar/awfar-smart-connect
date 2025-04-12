@@ -13,7 +13,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const isMobile = useIsMobile();
 
   const toggleMobileNav = () => {
-    setMobileNavOpen(!mobileNavOpen);
+    setMobileNavOpen(prev => !prev);
   };
   
   const closeMobileNav = () => {
