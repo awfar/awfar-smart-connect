@@ -33,13 +33,14 @@ export const fetchUsers = async (): Promise<User[]> => {
     const usersWithEmails = (data || []).map(user => {
       return {
         ...user,
+        // The email property is added here as it may not exist in the original data
         email: user.email || `user-${user.id}@example.com`, // Fallback email
         department_name: user.departments?.name,
         team_name: user.teams?.name
-      };
+      } as User;  // Explicitly cast to User type
     });
     
-    return usersWithEmails as User[];
+    return usersWithEmails;
   } catch (error) {
     console.error("خطأ في جلب المستخدمين:", error);
     toast.error("فشل في جلب بيانات المستخدمين");
@@ -64,6 +65,7 @@ export const fetchUserById = async (id: string): Promise<User | null> => {
     // Add email and other properties
     const userData: User = {
       ...data,
+      // Add the email property with a fallback
       email: data.email || `user-${data.id}@example.com`, // Fallback email
       department_name: data.departments?.name,
       team_name: data.teams?.name
