@@ -4,7 +4,8 @@ import { toast } from "sonner";
 import { Lead, LeadFilters } from "./types/leadTypes";
 import { mapRowToLead } from "./utils/leadMappers";
 
-export { Lead, LeadFilters } from "./types/leadTypes";
+// Type re-exports using 'export type' to fix isolatedModules issues
+export type { Lead, LeadFilters } from "./types/leadTypes";
 export { fetchLeadActivities, createLeadActivity, completeLeadActivity } from "./leadActivitiesService";
 
 export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
@@ -71,8 +72,8 @@ export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
     
     if (error) throw error;
     
-    // Avoid type recursion by using simple casting
-    return (data || []).map(row => mapRowToLead(row as any));
+    // Use a simple array map to avoid deep type recursion
+    return (data || []).map((row) => mapRowToLead(row));
     
   } catch (error) {
     console.error("Error fetching leads:", error);
@@ -98,7 +99,8 @@ export const fetchLeadById = async (id: string): Promise<Lead | null> => {
     if (error) throw error;
     if (!data) return null;
     
-    return mapRowToLead(data as any);
+    // Use simple casting to avoid deep type recursion
+    return mapRowToLead(data);
     
   } catch (error) {
     console.error("Error fetching lead by ID:", error);
@@ -136,7 +138,7 @@ export const createLead = async (lead: Partial<Lead>): Promise<Lead | null> => {
     
     toast.success("تم إضافة العميل المحتمل بنجاح");
     
-    return data ? mapRowToLead(data as any) : null;
+    return data ? mapRowToLead(data) : null;
   } catch (error) {
     console.error("Error creating lead:", error);
     toast.error("فشل في إضافة العميل المحتمل");
@@ -174,7 +176,7 @@ export const updateLead = async (id: string, lead: Partial<Lead>): Promise<Lead 
     
     toast.success("تم تحديث بيانات العميل المحتمل بنجاح");
     
-    return data ? mapRowToLead(data as any) : null;
+    return data ? mapRowToLead(data) : null;
   } catch (error) {
     console.error("Error updating lead:", error);
     toast.error("فشل في تحديث بيانات العميل المحتمل");
