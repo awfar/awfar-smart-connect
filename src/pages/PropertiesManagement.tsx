@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { Property, PropertyType, fetchProperties, addProperty, updateProperty, deleteProperty } from '@/services/propertiesService';
+import { Property, PropertyType, fetchPropertiesByType, createProperty, updateProperty, deleteProperty } from '@/services/propertiesService';
 import { toast } from 'sonner';
 
 const PropertiesManagement: React.FC = () => {
@@ -18,12 +18,12 @@ const PropertiesManagement: React.FC = () => {
   
   const { data: properties = [], isLoading, refetch } = useQuery({
     queryKey: ['properties', propertyType],
-    queryFn: () => fetchProperties(propertyType),
+    queryFn: () => fetchPropertiesByType(propertyType),
   });
   
   const handleAddProperty = async (property: Omit<Property, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      await addProperty(property);
+      await createProperty(property);
       toast.success('تم إضافة الخاصية بنجاح');
       refetch();
       setIsDialogOpen(false);
