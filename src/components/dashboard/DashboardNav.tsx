@@ -15,6 +15,10 @@ import {
   FileEdit, 
   DatabaseZap,
   FormInput,
+  ShoppingBag,
+  Package,
+  Receipt,
+  Bookmark,
   X
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
@@ -76,6 +80,26 @@ const DashboardNav = ({ mobileOpen = false, onClose }: DashboardNavProps) => {
       href: '/users',
       label: 'المستخدمين',
       icon: Contact,
+    },
+    {
+      href: '/catalog',
+      label: 'إدارة الكتالوج',
+      icon: ShoppingBag,
+    },
+    {
+      href: '/subscriptions',
+      label: 'إدارة الاشتراكات',
+      icon: Bookmark,
+    },
+    {
+      href: '/packages',
+      label: 'إدارة الباقات',
+      icon: Package,
+    },
+    {
+      href: '/invoices',
+      label: 'الفواتير',
+      icon: Receipt,
     },
     {
       href: '/properties',
