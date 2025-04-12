@@ -1,12 +1,13 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Globe, X } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Navbar = () => {
+  const location = useLocation();
   const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
   const [language, setLanguage] = useState<'ar' | 'en'>('ar');
@@ -21,6 +22,7 @@ const Navbar = () => {
   const navLinks = [
     { href: '/', label: language === 'ar' ? 'الرئيسية' : 'Home' },
     { href: '/ai-agent', label: language === 'ar' ? 'الذكاء الاصطناعي' : 'AI Agent' },
+    { href: '/try-ai-agent', label: language === 'ar' ? 'جرّب الوكيل الذكي' : 'Try AI Agent' },
     { href: '/channels', label: language === 'ar' ? 'قنوات التواصل' : 'Channels' },
     { href: '/solutions', label: language === 'ar' ? 'الحلول الشاملة' : 'Solutions' },
     { href: '/integration', label: language === 'ar' ? 'التكامل' : 'Integration' },
@@ -43,7 +45,11 @@ const Navbar = () => {
                 <Link 
                   key={link.href} 
                   to={link.href}
-                  className="text-sm font-medium text-gray-700 hover:text-awfar-primary transition-colors"
+                  className={`text-sm font-medium transition-colors ${
+                    location.pathname === link.href
+                      ? 'text-awfar-primary' 
+                      : 'text-gray-700 hover:text-awfar-primary'
+                  }`}
                 >
                   {link.label}
                 </Link>
@@ -85,7 +91,9 @@ const Navbar = () => {
                     <Link
                       key={link.href}
                       to={link.href}
-                      className="text-lg font-medium"
+                      className={`text-lg font-medium ${
+                        location.pathname === link.href ? 'text-awfar-primary' : ''
+                      }`}
                       onClick={() => setIsOpen(false)}
                     >
                       {link.label}

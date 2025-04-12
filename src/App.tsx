@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import AIAgent from "./pages/AIAgent";
+import TryAIAgent from "./pages/TryAIAgent"; 
 import Dashboard from "./pages/Dashboard";
 import LeadManagement from "./pages/LeadManagement";
 import LeadDetails from "./pages/LeadDetails";
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/about" element={<About />} />
           <Route path="/ai-agent" element={<AIAgent />} />
+          <Route path="/try-ai-agent" element={<TryAIAgent />} />
           <Route path="/demo" element={<Demo />} />
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/dashboard" element={<Dashboard />} />
