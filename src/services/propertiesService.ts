@@ -1,30 +1,23 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-export type PropertyType = 
-  | 'lead'
-  | 'company'
-  | 'contact'
-  | 'deal'
-  | 'user'
-  | 'product'
-  | 'invoice';
+export type PropertyType = 'lead' | 'company' | 'contact' | 'deal' | 'user' | 'product' | 'invoice';
 
 export type FieldType = 
-  | 'text'
-  | 'number'
-  | 'email'
-  | 'phone'
-  | 'date'
-  | 'datetime'
-  | 'select'
-  | 'multiselect'
-  | 'checkbox'
-  | 'radio'
-  | 'textarea'
+  | 'text' 
+  | 'textarea' 
+  | 'number' 
+  | 'email' 
+  | 'phone' 
+  | 'date' 
+  | 'datetime' 
+  | 'select' 
+  | 'multiselect' 
+  | 'checkbox' 
+  | 'radio' 
   | 'url';
 
-export interface PropertyOption {
+export interface FieldOption {
   label: string;
   value: string;
 }
@@ -39,217 +32,334 @@ export interface Property {
   isRequired: boolean;
   isDefault: boolean;
   isSystem: boolean;
-  options?: PropertyOption[];
   placeholder?: string;
-  defaultValue?: any;
+  defaultValue?: string;
+  options?: FieldOption[];
+  group?: string;
   created_at?: string;
   updated_at?: string;
-  order?: number;
-  group?: string;
 }
 
-export interface PropertyGroup {
-  name: string;
-  label: string;
-  type: PropertyType;
-  properties: Property[];
-}
-
-// Type for JSON data from database
-type Json = string | number | boolean | { [key: string]: Json } | Json[];
-
-// Fetch properties by type
-export const fetchPropertiesByType = async (type: PropertyType): Promise<Property[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('properties')
-      .select('*')
-      .eq('type', type)
-      .order('order', { ascending: true });
-    
-    if (error) {
-      console.error('Error fetching properties:', error);
-      return [];
-    }
-
-    // Map database column names to our TypeScript interface properties
-    return data.map(item => ({
-      id: item.id,
-      name: item.name,
-      label: item.label,
-      type: item.type as PropertyType,
-      fieldType: item.fieldtype as FieldType,
-      description: item.description,
-      isRequired: item.isrequired,
-      isDefault: item.isdefault,
-      isSystem: item.issystem,
-      options: item.options ? (item.options as unknown as PropertyOption[]) : undefined,
-      placeholder: item.placeholder,
-      defaultValue: item.defaultvalue,
-      created_at: item.created_at,
-      updated_at: item.updated_at,
-      order: item.order,
-      group: item.group
-    }));
-  } catch (error) {
-    console.error('Error in fetchPropertiesByType:', error);
-    return [];
+// Default company properties
+const defaultCompanyProperties: Property[] = [
+  {
+    id: "comp-name",
+    name: "name",
+    label: "اسم الشركة",
+    type: "company",
+    fieldType: "text",
+    description: "الاسم الرسمي للشركة",
+    isRequired: true,
+    isDefault: true,
+    isSystem: true
+  },
+  {
+    id: "comp-industry",
+    name: "industry",
+    label: "القطاع",
+    type: "company",
+    fieldType: "select",
+    isRequired: true,
+    isDefault: true,
+    isSystem: true,
+    options: [
+      { label: "تقنية المعلومات", value: "tech" },
+      { label: "الرعاية الصحية", value: "healthcare" },
+      { label: "التجزئة", value: "retail" },
+      { label: "التعليم", value: "education" },
+      { label: "التمويل", value: "finance" },
+      { label: "السياحة", value: "tourism" },
+      { label: "العقارات", value: "real_estate" },
+      { label: "الصناعة", value: "manufacturing" },
+      { label: "أخرى", value: "other" }
+    ]
+  },
+  {
+    id: "comp-type",
+    name: "type",
+    label: "نوع الشركة",
+    type: "company",
+    fieldType: "select",
+    isRequired: true,
+    isDefault: true,
+    isSystem: true,
+    options: [
+      { label: "عميل", value: "customer" },
+      { label: "مورد", value: "vendor" },
+      { label: "شريك", value: "partner" },
+      { label: "منافس", value: "competitor" }
+    ]
+  },
+  {
+    id: "comp-country",
+    name: "country",
+    label: "الدولة",
+    type: "company",
+    fieldType: "select",
+    isRequired: true,
+    isDefault: true,
+    isSystem: true,
+    options: [
+      { label: "السعودية", value: "sa" },
+      { label: "الإمارات", value: "ae" },
+      { label: "قطر", value: "qa" },
+      { label: "البحرين", value: "bh" },
+      { label: "الكويت", value: "kw" },
+      { label: "عمان", value: "om" },
+      { label: "مصر", value: "eg" },
+      { label: "الأردن", value: "jo" }
+    ]
+  },
+  {
+    id: "comp-city",
+    name: "city",
+    label: "المدينة",
+    type: "company",
+    fieldType: "text",
+    isRequired: false,
+    isDefault: true,
+    isSystem: false
+  },
+  {
+    id: "comp-address",
+    name: "address",
+    label: "العنوان",
+    type: "company",
+    fieldType: "textarea",
+    isRequired: false,
+    isDefault: true,
+    isSystem: false
+  },
+  {
+    id: "comp-phone",
+    name: "phone",
+    label: "رقم الهاتف",
+    type: "company",
+    fieldType: "phone",
+    isRequired: false,
+    isDefault: true,
+    isSystem: false
+  },
+  {
+    id: "comp-email",
+    name: "email",
+    label: "البريد الإلكتروني",
+    type: "company",
+    fieldType: "email",
+    isRequired: false,
+    isDefault: true,
+    isSystem: false
+  },
+  {
+    id: "comp-website",
+    name: "website",
+    label: "الموقع الإلكتروني",
+    type: "company",
+    fieldType: "url",
+    isRequired: false,
+    isDefault: true,
+    isSystem: false
+  },
+  {
+    id: "comp-size",
+    name: "size",
+    label: "حجم الشركة",
+    type: "company",
+    fieldType: "select",
+    isRequired: false,
+    isDefault: false,
+    isSystem: false,
+    options: [
+      { label: "1-10 موظفين", value: "1-10" },
+      { label: "11-50 موظف", value: "11-50" },
+      { label: "51-200 موظف", value: "51-200" },
+      { label: "201-500 موظف", value: "201-500" },
+      { label: "501-1000 موظف", value: "501-1000" },
+      { label: "1001+ موظف", value: "1001+" }
+    ]
   }
+];
+
+// Default lead properties
+const defaultLeadProperties: Property[] = [
+  {
+    id: "lead-name",
+    name: "name",
+    label: "الاسم",
+    type: "lead",
+    fieldType: "text",
+    isRequired: true,
+    isDefault: true,
+    isSystem: true
+  },
+  {
+    id: "lead-email",
+    name: "email",
+    label: "البريد الإلكتروني",
+    type: "lead",
+    fieldType: "email",
+    isRequired: true,
+    isDefault: true,
+    isSystem: true
+  },
+  {
+    id: "lead-phone",
+    name: "phone",
+    label: "رقم الهاتف",
+    type: "lead",
+    fieldType: "phone",
+    isRequired: false,
+    isDefault: true,
+    isSystem: true
+  }
+];
+
+// Default contact properties
+const defaultContactProperties: Property[] = [
+  {
+    id: "contact-name",
+    name: "name",
+    label: "الاسم",
+    type: "contact",
+    fieldType: "text",
+    isRequired: true,
+    isDefault: true,
+    isSystem: true
+  },
+  {
+    id: "contact-position",
+    name: "position",
+    label: "المسمى الوظيفي",
+    type: "contact",
+    fieldType: "text",
+    isRequired: false,
+    isDefault: true,
+    isSystem: true
+  },
+  {
+    id: "contact-email",
+    name: "email",
+    label: "البريد الإلكتروني",
+    type: "contact",
+    fieldType: "email",
+    isRequired: true,
+    isDefault: true,
+    isSystem: true
+  },
+  {
+    id: "contact-phone",
+    name: "phone",
+    label: "رقم الهاتف",
+    type: "contact",
+    fieldType: "phone",
+    isRequired: false,
+    isDefault: true,
+    isSystem: true
+  }
+];
+
+// Mock data for all properties by type
+const mockProperties: Record<PropertyType, Property[]> = {
+  company: defaultCompanyProperties,
+  lead: defaultLeadProperties,
+  contact: defaultContactProperties,
+  deal: [],
+  user: [],
+  product: [],
+  invoice: []
+};
+
+// Custom properties storage
+const customProperties: Property[] = [];
+
+// Get all properties by type
+export const getPropertiesByType = async (type: PropertyType): Promise<Property[]> => {
+  return [...mockProperties[type], ...customProperties.filter(prop => prop.type === type)];
 };
 
 // Create a new property
-export const createProperty = async (property: Omit<Property, 'id' | 'created_at' | 'updated_at'>) => {
-  try {
-    // Convert our TypeScript interface properties to database column names
-    const dbProperty = {
-      name: property.name,
-      label: property.label,
-      type: property.type,
-      fieldtype: property.fieldType,
-      description: property.description,
-      isrequired: property.isRequired,
-      isdefault: property.isDefault,
-      issystem: property.isSystem,
-      options: property.options as unknown as Json,
-      placeholder: property.placeholder,
-      defaultvalue: property.defaultValue,
-      group: property.group,
-      order: property.order
-    };
-    
-    const { data, error } = await supabase
-      .from('properties')
-      .insert([dbProperty])
-      .select();
-    
-    if (error) {
-      console.error('Error creating property:', error);
-      throw error;
-    }
-    
-    // Map database response back to our TypeScript interface
-    if (!data || data.length === 0) return null;
-    
-    return {
-      id: data[0].id,
-      name: data[0].name,
-      label: data[0].label,
-      type: data[0].type as PropertyType,
-      fieldType: data[0].fieldtype as FieldType,
-      description: data[0].description,
-      isRequired: data[0].isrequired,
-      isDefault: data[0].isdefault,
-      isSystem: data[0].issystem,
-      options: data[0].options ? (data[0].options as unknown as PropertyOption[]) : undefined,
-      placeholder: data[0].placeholder,
-      defaultValue: data[0].defaultvalue,
-      created_at: data[0].created_at,
-      updated_at: data[0].updated_at,
-      order: data[0].order,
-      group: data[0].group
-    } as Property;
-  } catch (error) {
-    console.error('Error in createProperty:', error);
-    throw error;
-  }
+export const createProperty = async (property: Omit<Property, 'id' | 'created_at' | 'updated_at'>): Promise<Property> => {
+  const now = new Date().toISOString();
+  const newProperty: Property = {
+    id: `${property.type}-${property.name}-${Date.now()}`,
+    ...property,
+    created_at: now,
+    updated_at: now
+  };
+
+  customProperties.push(newProperty);
+  return newProperty;
 };
 
-// Update an existing property
-export const updateProperty = async (id: string, property: Partial<Property>) => {
-  try {
-    // Convert our TypeScript interface properties to database column names
-    const dbProperty: any = {};
-    
-    if (property.name !== undefined) dbProperty.name = property.name;
-    if (property.label !== undefined) dbProperty.label = property.label;
-    if (property.type !== undefined) dbProperty.type = property.type;
-    if (property.fieldType !== undefined) dbProperty.fieldtype = property.fieldType;
-    if (property.description !== undefined) dbProperty.description = property.description;
-    if (property.isRequired !== undefined) dbProperty.isrequired = property.isRequired;
-    if (property.isDefault !== undefined) dbProperty.isdefault = property.isDefault;
-    if (property.isSystem !== undefined) dbProperty.issystem = property.isSystem;
-    if (property.options !== undefined) dbProperty.options = property.options as unknown as Json;
-    if (property.placeholder !== undefined) dbProperty.placeholder = property.placeholder;
-    if (property.defaultValue !== undefined) dbProperty.defaultvalue = property.defaultValue;
-    if (property.group !== undefined) dbProperty.group = property.group;
-    if (property.order !== undefined) dbProperty.order = property.order;
-
-    const { data, error } = await supabase
-      .from('properties')
-      .update(dbProperty)
-      .eq('id', id)
-      .select();
-    
-    if (error) {
-      console.error('Error updating property:', error);
-      throw error;
+// Update a property
+export const updateProperty = async (id: string, updates: Partial<Omit<Property, 'id' | 'created_at' | 'updated_at'>>): Promise<Property> => {
+  const index = customProperties.findIndex(prop => prop.id === id);
+  
+  if (index === -1) {
+    const defaultIndex = Object.values(mockProperties).flat().findIndex(prop => prop.id === id);
+    if (defaultIndex === -1) {
+      throw new Error('الخاصية غير موجودة');
     }
-    
-    // Map database response back to our TypeScript interface
-    if (!data || data.length === 0) return null;
-    
-    return {
-      id: data[0].id,
-      name: data[0].name,
-      label: data[0].label,
-      type: data[0].type as PropertyType,
-      fieldType: data[0].fieldtype as FieldType,
-      description: data[0].description,
-      isRequired: data[0].isrequired,
-      isDefault: data[0].isdefault,
-      isSystem: data[0].issystem,
-      options: data[0].options ? (data[0].options as unknown as PropertyOption[]) : undefined,
-      placeholder: data[0].placeholder,
-      defaultValue: data[0].defaultvalue,
-      created_at: data[0].created_at,
-      updated_at: data[0].updated_at,
-      order: data[0].order,
-      group: data[0].group
-    } as Property;
-  } catch (error) {
-    console.error('Error in updateProperty:', error);
-    throw error;
+    // Cannot update system properties
+    throw new Error('لا يمكن تعديل الخصائص النظامية');
   }
+  
+  customProperties[index] = {
+    ...customProperties[index],
+    ...updates,
+    updated_at: new Date().toISOString()
+  };
+  
+  return customProperties[index];
 };
 
 // Delete a property
-export const deleteProperty = async (id: string) => {
-  try {
-    const { error } = await supabase
-      .from('properties')
-      .delete()
-      .eq('id', id);
-    
-    if (error) {
-      console.error('Error deleting property:', error);
-      throw error;
+export const deleteProperty = async (id: string): Promise<boolean> => {
+  const index = customProperties.findIndex(prop => prop.id === id);
+  
+  if (index === -1) {
+    // Check if trying to delete a system property
+    const systemProperty = Object.values(mockProperties).flat().find(prop => prop.id === id);
+    if (systemProperty?.isSystem) {
+      throw new Error('لا يمكن حذف الخصائص النظامية');
     }
-    
-    return true;
-  } catch (error) {
-    console.error('Error in deleteProperty:', error);
-    throw error;
+    throw new Error('الخاصية غير موجودة');
   }
+  
+  customProperties.splice(index, 1);
+  return true;
 };
 
-// Group properties by their groups
-export const groupProperties = (properties: Property[]): PropertyGroup[] => {
-  const groups: Record<string, PropertyGroup> = {};
+// Get property by ID
+export const getPropertyById = async (id: string): Promise<Property | null> => {
+  // Check custom properties first
+  const customProperty = customProperties.find(prop => prop.id === id);
+  if (customProperty) {
+    return customProperty;
+  }
   
-  properties.forEach(property => {
-    const groupName = property.group || 'default';
-    
-    if (!groups[groupName]) {
-      groups[groupName] = {
-        name: groupName,
-        label: groupName === 'default' ? 'عام' : groupName,
-        type: property.type,
-        properties: []
-      };
-    }
-    
-    groups[groupName].properties.push(property);
-  });
+  // Check system properties
+  const systemProperty = Object.values(mockProperties).flat().find(prop => prop.id === id);
+  return systemProperty || null;
+};
+
+// Add a field option to a property
+export const addFieldOption = async (propertyId: string, option: FieldOption): Promise<Property> => {
+  const property = await getPropertyById(propertyId);
   
-  return Object.values(groups);
+  if (!property) {
+    throw new Error('الخاصية غير موجودة');
+  }
+  
+  if (!property.options) {
+    property.options = [];
+  }
+  
+  property.options.push(option);
+  
+  if (customProperties.some(prop => prop.id === propertyId)) {
+    return await updateProperty(propertyId, { options: property.options });
+  } else {
+    throw new Error('لا يمكن تعديل الخصائص النظامية');
+  }
 };

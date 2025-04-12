@@ -1,15 +1,18 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Eye, Plus, Search, Filter, Building2, Trash2, Edit, Users2, Globe, Phone, MapPin } from "lucide-react";
+import { Eye, Plus, Search, Filter, Building2, Trash2, Edit, Users2, Globe, Phone, MapPin, Settings } from "lucide-react";
 import CompanyFilters from "@/components/companies/CompanyFilters";
 import CompanyForm from "@/components/companies/CompanyForm";
+import CompanyDetails from "@/components/companies/CompanyDetails";
 import { Company, getCompanies, filterCompanies, createCompany, deleteCompany } from '@/services/companiesService';
 import { toast } from "sonner";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Link } from 'react-router-dom';
 
 const CompaniesManagement = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -17,6 +20,7 @@ const CompaniesManagement = () => {
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [showAddForm, setShowAddForm] = useState<boolean>(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false);
+  const [showCompanyDetails, setShowCompanyDetails] = useState<boolean>(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
@@ -115,6 +119,16 @@ const CompaniesManagement = () => {
     setShowDeleteDialog(true);
   };
 
+  const viewCompanyDetails = (company: Company) => {
+    setSelectedCompany(company);
+    setShowCompanyDetails(true);
+  };
+
+  const handleEditCompany = (company: any) => {
+    toast.info("سيتم تنفيذ تعديل الشركة قريباً");
+    setShowCompanyDetails(false);
+  };
+
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
@@ -124,6 +138,12 @@ const CompaniesManagement = () => {
             <p className="text-gray-600">قم بإدارة الشركات والعملاء والموردين</p>
           </div>
           <div className="flex items-center gap-2 mt-4 md:mt-0">
+            <Link to="/company-properties">
+              <Button variant="outline" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                <span>إدارة الخصائص</span>
+              </Button>
+            </Link>
             <Button onClick={() => setShowAddForm(true)} className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
               <span>إضافة شركة</span>
@@ -311,6 +331,28 @@ const CompaniesManagement = () => {
                 حذف
               </Button>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showCompanyDetails} onOpenChange={setShowCompanyDetails} className="max-w-3xl">
+          <DialogContent className="max-w-3xl rtl p-0 overflow-hidden">
+            {selectedCompany && (
+              <CompanyDetails 
+                company={{
+                  ...selectedCompany,
+                  account_manager: {
+                    name: "محمد عبدالله",
+                    avatar: "/avatar.png",
+                    initials: "م ع"
+                  },
+                  subscription: "متقدمة",
+                  city: "الرياض",
+                  size: "11-50 موظف"
+                }} 
+                onClose={() => setShowCompanyDetails(false)} 
+                onEdit={handleEditCompany}
+              />
+            )}
           </DialogContent>
         </Dialog>
       </div>
