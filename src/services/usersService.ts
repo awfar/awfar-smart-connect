@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -32,6 +33,12 @@ interface SupabaseUserData {
   teams?: { name: string } | null;
 }
 
+// Define an interface for the auth user data structure
+interface AuthUser {
+  id: string;
+  email?: string;
+}
+
 export const fetchUsers = async (): Promise<User[]> => {
   try {
     // First, fetch all auth users to get their emails
@@ -64,10 +71,12 @@ export const fetchUsers = async (): Promise<User[]> => {
     console.log("بيانات الملفات الشخصية:", profilesData);
     
     // Create an email map from auth users
-    const emailMap = new Map();
+    const emailMap = new Map<string, string>();
     if (authUsers?.users) {
-      authUsers.users.forEach(user => {
-        emailMap.set(user.id, user.email);
+      authUsers.users.forEach((user: AuthUser) => {
+        if (user.id && user.email) {
+          emailMap.set(user.id, user.email);
+        }
       });
     }
 
