@@ -9,7 +9,7 @@ type AuthContextType = {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ user: User | null; session: Session | null } | void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   resendConfirmationEmail: (email: string) => Promise<boolean>;

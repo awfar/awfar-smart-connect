@@ -65,7 +65,7 @@ const LoginPage: React.FC = () => {
         <CardContent>
           {showConfirmationForm ? (
             <div className="space-y-4">
-              <Alert variant="warning" className="bg-amber-50 text-amber-800 border-amber-200">
+              <Alert variant="destructive" className="bg-amber-50 text-amber-800 border-amber-200">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
                   لم يتم تأكيد بريدك الإلكتروني بعد. يرجى التحقق من بريدك الوارد أو اطلب إعادة إرسال رابط التأكيد.
