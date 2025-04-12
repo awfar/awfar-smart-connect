@@ -57,9 +57,9 @@ const CompanyFilters = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">جميع الأحجام</SelectItem>
-              <SelectItem value="small">صغيرة (>50 موظف)</SelectItem>
+              <SelectItem value="small">صغيرة (&lt;50 موظف)</SelectItem>
               <SelectItem value="medium">متوسطة (50-200 موظف)</SelectItem>
-              <SelectItem value="large">كبيرة (>200 موظف)</SelectItem>
+              <SelectItem value="large">كبيرة (&gt;200 موظف)</SelectItem>
             </SelectContent>
           </Select>
         </div>
