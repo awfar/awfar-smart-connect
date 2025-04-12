@@ -11,6 +11,8 @@ import TeamsManagement from './pages/TeamsManagement';
 import LeadManagement from './pages/LeadManagement';
 import NotFound from './pages/NotFound';
 import CreateSuperAdmin from "./pages/CreateSuperAdmin";
+import PermissionsManagement from './pages/PermissionsManagement';
+import RolesManagement from './pages/RolesManagement';
 
 function AppRoutes() {
   const { isLoggedIn } = useAuth();
@@ -38,6 +40,8 @@ function AppRoutes() {
           <Route path="/dashboard/users" element={<UserManagement />} />
           <Route path="/dashboard/departments" element={<DepartmentsManagement />} />
           <Route path="/dashboard/teams" element={<TeamsManagement />} />
+          <Route path="/dashboard/permissions" element={<PermissionsManagement />} />
+          <Route path="/dashboard/roles" element={<RolesManagement />} />
           <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -23,7 +23,8 @@ export function useDialogScroll(isOpen: boolean, contentId?: string) {
         if (contentElement) {
           contentElement.style.maxHeight = '90vh';
           contentElement.style.overflowY = 'auto';
-          contentElement.style.WebkitOverflowScrolling = 'touch';
+          // Use standard property instead of vendor prefix
+          contentElement.style.cssText += 'overflow-scrolling: touch;';
         }
       }
     }

@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { fetchUserById, updateUser } from "@/services/usersService";
 import { fetchDepartments } from "@/services/departmentsService";
 import { fetchTeams } from "@/services/teamsService";
+import { fetchRoles } from "@/services/rolesService";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -46,6 +47,11 @@ const UserForm = ({ userId, isEditing = false, onSave }: UserFormProps) => {
   const { data: teams = [] } = useQuery({
     queryKey: ['teams'],
     queryFn: fetchTeams,
+  });
+
+  const { data: roles = [] } = useQuery({
+    queryKey: ['roles'],
+    queryFn: fetchRoles,
   });
 
   useEffect(() => {
@@ -186,11 +192,16 @@ const UserForm = ({ userId, isEditing = false, onSave }: UserFormProps) => {
               <SelectValue placeholder="اختر دوراً" />
             </SelectTrigger>
             <SelectContent position="popper">
-              <SelectItem value="super_admin">مدير النظام</SelectItem>
-              <SelectItem value="team_manager">مدير فريق</SelectItem>
-              <SelectItem value="sales">مبيعات</SelectItem>
-              <SelectItem value="customer_service">خدمة عملاء</SelectItem>
-              <SelectItem value="technical_support">دعم فني</SelectItem>
+              {roles.map((roleItem) => (
+                <SelectItem key={roleItem.id || roleItem.name} value={roleItem.name}>
+                  {roleItem.name === 'super_admin' ? 'مدير النظام' :
+                   roleItem.name === 'team_manager' ? 'مدير فريق' :
+                   roleItem.name === 'sales' ? 'مبيعات' :
+                   roleItem.name === 'customer_service' ? 'خدمة عملاء' :
+                   roleItem.name === 'technical_support' ? 'دعم فني' :
+                   roleItem.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
