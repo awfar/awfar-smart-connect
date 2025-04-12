@@ -8,15 +8,24 @@ export type { Lead, LeadActivity };
 const mockLeads: Lead[] = [
   {
     id: "1",
-    name: "أحمد محمد",
+    first_name: "أحمد",
+    last_name: "محمد",
     email: "ahmed@example.com",
     phone: "+966501234567",
     company: "شركة الخليج للتقنية",
     status: "جديد",
+    stage: "جديد",
     source: "معرض تجاري",
     assignedTo: "محمد علي",
-    createdAt: "2023-04-15",
+    created_at: "2023-04-15",
     lastActivity: "2023-05-01",
+    country: "السعودية",
+    industry: "تكنولوجيا المعلومات",
+    owner: {
+      name: "محمد علي",
+      avatar: "/placeholder.svg",
+      initials: "م.ع"
+    }
   },
   // ... more mock leads
 ];
