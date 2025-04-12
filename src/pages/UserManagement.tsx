@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -8,13 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Search, Users, UserPlus, Filter } from "lucide-react";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import DashboardNav from "@/components/dashboard/DashboardNav";
 import { fetchUsers } from "@/services/users";
 import UserForm from "@/components/users/UserForm";
 import UserList from "@/components/users/UserList";
 import UserFilters from "@/components/users/UserFilters";
 import { toast } from "sonner";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -100,120 +98,114 @@ const UserManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50 rtl">
-      <DashboardHeader />
-      <div className="flex">
-        <DashboardNav />
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto pt-16 lg:pt-0">
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold">إدارة المستخدمين</h1>
-                <p className="text-gray-500">إدارة المستخدمين، تعيين الأدوار والصلاحيات</p>
+    <DashboardLayout>
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold">إدارة المستخدمين</h1>
+            <p className="text-gray-500">إدارة المستخدمين، تعيين الأدوار والصلاحيات</p>
+          </div>
+          
+          <Button onClick={() => setShowAddUser(true)} className="flex items-center gap-2">
+            <UserPlus className="h-4 w-4" />
+            <span>إضافة مستخدم</span>
+          </Button>
+        </div>
+        
+        <Tabs defaultValue="all" value={activeTab} onValueChange={handleTabChange}>
+          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
+            <TabsList className="mb-4 md:mb-0">
+              <TabsTrigger value="all">جميع المستخدمين</TabsTrigger>
+              <TabsTrigger value="active">المستخدمين النشطين</TabsTrigger>
+              <TabsTrigger value="inactive">المستخدمين غير النشطين</TabsTrigger>
+            </TabsList>
+            
+            <div className="flex flex-col md:flex-row md:items-center gap-4">
+              <div className="relative">
+                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="بحث عن مستخدم..."
+                  className="w-full md:w-80 pr-10"
+                  value={searchTerm}
+                  onChange={handleSearch}
+                />
               </div>
-              
-              <Button onClick={() => setShowAddUser(true)} className="flex items-center gap-2">
-                <UserPlus className="h-4 w-4" />
-                <span>إضافة مستخدم</span>
+              <Button
+                variant="outline"
+                className="flex items-center gap-2"
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="h-4 w-4" />
+                <span>فلترة</span>
               </Button>
             </div>
-            
-            <Tabs defaultValue="all" value={activeTab} onValueChange={handleTabChange}>
-              <div className="flex flex-col md:flex-row md:items-center justify-between mb-6">
-                <TabsList className="mb-4 md:mb-0">
-                  <TabsTrigger value="all">جميع المستخدمين</TabsTrigger>
-                  <TabsTrigger value="active">المستخدمين النشطين</TabsTrigger>
-                  <TabsTrigger value="inactive">المستخدمين غير النشطين</TabsTrigger>
-                </TabsList>
-                
-                <div className="flex flex-col md:flex-row md:items-center gap-4">
-                  <div className="relative">
-                    <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      placeholder="بحث عن مستخدم..."
-                      className="w-full md:w-80 pr-10"
-                      value={searchTerm}
-                      onChange={handleSearch}
-                    />
-                  </div>
-                  <Button
-                    variant="outline"
-                    className="flex items-center gap-2"
-                    onClick={() => setShowFilters(!showFilters)}
-                  >
-                    <Filter className="h-4 w-4" />
-                    <span>فلترة</span>
-                  </Button>
-                </div>
-              </div>
-              
-              {showFilters && (
-                <Card className="mb-6">
-                  <CardContent className="pt-6">
-                    <UserFilters onApplyFilters={handleFilter} />
-                  </CardContent>
-                </Card>
-              )}
-              
-              <TabsContent value="all" className="mt-0">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle>جميع المستخدمين</CardTitle>
-                    <CardDescription>
-                      إجمالي المستخدمين: {filteredUsers.length}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <UserList 
-                      users={filteredUsers}
-                      isLoading={isLoading}
-                      onShowDetails={handleShowUserDetails}
-                      onRefresh={refetch}
-                    />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="active" className="mt-0">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle>المستخدمين النشطين</CardTitle>
-                    <CardDescription>
-                      إجمالي المستخدمين النشطين: {filteredUsers.length}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <UserList 
-                      users={filteredUsers}
-                      isLoading={isLoading}
-                      onShowDetails={handleShowUserDetails}
-                      onRefresh={refetch}
-                    />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="inactive" className="mt-0">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle>المستخدمين غير النشطين</CardTitle>
-                    <CardDescription>
-                      إجمالي المستخدمين غير النشطين: {filteredUsers.length}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <UserList 
-                      users={filteredUsers}
-                      isLoading={isLoading}
-                      onShowDetails={handleShowUserDetails}
-                      onRefresh={refetch}
-                    />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
           </div>
-        </main>
+          
+          {showFilters && (
+            <Card className="mb-6">
+              <CardContent className="pt-6">
+                <UserFilters onApplyFilters={handleFilter} />
+              </CardContent>
+            </Card>
+          )}
+          
+          <TabsContent value="all" className="mt-0">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle>جميع المستخدمين</CardTitle>
+                <CardDescription>
+                  إجمالي المستخدمين: {filteredUsers.length}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <UserList 
+                  users={filteredUsers}
+                  isLoading={isLoading}
+                  onShowDetails={handleShowUserDetails}
+                  onRefresh={refetch}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="active" className="mt-0">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle>المستخدمين النشطين</CardTitle>
+                <CardDescription>
+                  إجمالي المستخدمين النشطين: {filteredUsers.length}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <UserList 
+                  users={filteredUsers}
+                  isLoading={isLoading}
+                  onShowDetails={handleShowUserDetails}
+                  onRefresh={refetch}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="inactive" className="mt-0">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle>المستخدمين غير النشطين</CardTitle>
+                <CardDescription>
+                  إجمالي المستخدمين غير النشطين: {filteredUsers.length}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <UserList 
+                  users={filteredUsers}
+                  isLoading={isLoading}
+                  onShowDetails={handleShowUserDetails}
+                  onRefresh={refetch}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
       
       <Dialog open={showAddUser} onOpenChange={setShowAddUser}>
@@ -239,7 +231,7 @@ const UserManagement = () => {
           )}
         </SheetContent>
       </Sheet>
-    </div>
+    </DashboardLayout>
   );
 };
 
