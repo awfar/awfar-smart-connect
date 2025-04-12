@@ -1,131 +1,130 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import {
-  BarChart3,
-  Users,
-  Building2,
-  ShoppingCart,
-  TicketCheck,
-  MessageCircle,
-  Settings,
-  FileText,
+  BarChartHorizontal,
+  Building,
+  CalendarClock,
+  CheckSquare,
+  ClipboardList,
+  CreditCard,
+  Home,
   LayoutDashboard,
-} from "lucide-react";
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+  MessageSquare,
+  Settings,
+  Users,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-interface NavItemProps {
-  icon: React.ElementType;
+type NavItem = {
   title: string;
   href: string;
-  active?: boolean;
-  onClick?: () => void;
-}
-
-const NavItem = ({ icon: Icon, title, href, active, onClick }: NavItemProps) => {
-  return (
-    <Link
-      to={href}
-      onClick={onClick}
-      className={cn(
-        "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
-        active ? "bg-accent text-accent-foreground" : "transparent"
-      )}
-    >
-      <Icon className="h-4 w-4" />
-      <span>{title}</span>
-    </Link>
-  );
+  icon: React.ElementType;
+  submenu?: NavItem[];
 };
 
-const DashboardNav = () => {
-  const [activePath, setActivePath] = useState("/dashboard");
-  const [open, setOpen] = useState(false);
-
-  const handleNavClick = (path: string) => {
-    setActivePath(path);
-    setOpen(false);
+const DashboardNav: React.FC = () => {
+  const location = useLocation();
+  
+  const navItems: NavItem[] = [
+    {
+      title: 'لوحة التحكم',
+      href: '/dashboard',
+      icon: LayoutDashboard,
+    },
+    {
+      title: 'العملاء المحتملين',
+      href: '/dashboard/leads',
+      icon: Users,
+    },
+    {
+      title: 'الشركات',
+      href: '/dashboard/companies',
+      icon: Building,
+    },
+    {
+      title: 'الصفقات',
+      href: '/dashboard/deals',
+      icon: CreditCard,
+    },
+    {
+      title: 'المواعيد',
+      href: '/dashboard/appointments',
+      icon: CalendarClock,
+    },
+    {
+      title: 'التذاكر والدعم',
+      href: '/dashboard/tickets',
+      icon: ClipboardList,
+    },
+    {
+      title: 'المهام',
+      href: '/dashboard/tasks',
+      icon: CheckSquare,
+    },
+    {
+      title: 'المحادثات',
+      href: '/dashboard/chats',
+      icon: MessageSquare,
+    },
+    {
+      title: 'التقارير',
+      href: '/dashboard/reports',
+      icon: BarChartHorizontal,
+    },
+    {
+      title: 'الإعدادات',
+      href: '/dashboard/settings',
+      icon: Settings,
+    },
+  ];
+  
+  const isActive = (path: string) => {
+    if (path === '/dashboard') {
+      return location.pathname === '/dashboard';
+    }
+    return location.pathname.startsWith(path);
   };
 
-  const navItems = [
-    { icon: LayoutDashboard, title: "لوحة التحكم", href: "/dashboard" },
-    { icon: Users, title: "العملاء المحتملين", href: "/dashboard/leads" },
-    { icon: Building2, title: "الشركات", href: "/dashboard/companies" },
-    { icon: ShoppingCart, title: "الفرص والصفقات", href: "/dashboard/deals" },
-    { icon: TicketCheck, title: "التذاكر", href: "/dashboard/tickets" },
-    { icon: MessageCircle, title: "المحادثات", href: "/dashboard/chat" },
-    { icon: FileText, title: "المحتوى", href: "/dashboard/content" },
-    { icon: BarChart3, title: "التقارير", href: "/dashboard/reports" },
-    { icon: Settings, title: "الإعدادات", href: "/dashboard/settings" },
-  ];
-
-  // Mobile navigation with sheet
-  const mobileNav = (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="md:hidden">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-5 w-5"
-          >
-            <line x1="4" x2="20" y1="12" y2="12" />
-            <line x1="4" x2="20" y1="6" y2="6" />
-            <line x1="4" x2="20" y1="18" y2="18" />
-          </svg>
-          <span className="sr-only">Toggle Menu</span>
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="right">
-        <nav className="grid gap-2 py-4">
-          {navItems.map((item) => (
-            <NavItem
-              key={item.href}
-              icon={item.icon}
-              title={item.title}
-              href={item.href}
-              active={activePath === item.href}
-              onClick={() => handleNavClick(item.href)}
-            />
+  return (
+    <div className="hidden lg:flex h-screen w-64 flex-col border-l bg-white rtl">
+      <div className="flex h-14 items-center border-b px-4">
+        <Link to="/" className="flex items-center gap-2 font-semibold">
+          <Home className="h-5 w-5" />
+          <span>Awfar.com</span>
+        </Link>
+      </div>
+      <div className="flex-1 overflow-auto py-2">
+        <nav className="grid items-start px-2 text-sm">
+          {navItems.map((item, index) => (
+            <Link
+              key={index}
+              to={item.href}
+              className={cn(
+                "flex items-center gap-3 rounded-md px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground",
+                isActive(item.href) && "bg-muted font-medium text-foreground"
+              )}
+            >
+              <item.icon className="h-4 w-4" />
+              <span>{item.title}</span>
+            </Link>
           ))}
         </nav>
-      </SheetContent>
-    </Sheet>
-  );
-
-  return (
-    <>
-      {mobileNav}
-      <div className="hidden md:flex h-screen w-56 flex-col border-l bg-background">
-        <div className="flex-1 overflow-auto py-6">
-          <nav className="grid gap-2 px-4">
-            {navItems.map((item) => (
-              <NavItem
-                key={item.href}
-                icon={item.icon}
-                title={item.title}
-                href={item.href}
-                active={activePath === item.href}
-                onClick={() => handleNavClick(item.href)}
-              />
-            ))}
-          </nav>
+      </div>
+      <div className="mt-auto p-4 border-t">
+        <div className="flex items-center gap-3 rounded-md px-3 py-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
+            <Users className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">فريق أوفر</p>
+            <p className="text-xs text-muted-foreground">
+              مصر | الفريق الإداري
+            </p>
+          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
