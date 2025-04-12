@@ -25,7 +25,7 @@ export interface SupabaseUserData {
   created_at: string;
   company?: string;
   position?: string;
-  email?: string; // Make email optional since it might not exist in the raw data
+  email?: string; // Make sure email is included in the SupabaseUserData interface
   departments?: { name: string } | null;
   teams?: { name: string } | null;
 }

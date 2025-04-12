@@ -2,45 +2,48 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Update createSuperAdmin function to include the site URL
-export const createSuperAdmin = async (email: string, password: string, firstName: string, lastName: string): Promise<boolean> => {
+export const createSuperAdmin = async (
+  email: string, 
+  password: string, 
+  firstName: string, 
+  lastName: string
+) => {
   try {
-    const siteUrl = window.location.origin; // Get the current site URL
-    
-    // إنشاء المستخدم في نظام المصادقة
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           first_name: firstName,
-          last_name: lastName
-        },
-        emailRedirectTo: `${siteUrl}/login` // Redirect to login page after email confirmation
+          last_name: lastName,
+          role: 'super_admin'
+        }
       }
     });
 
-    if (authError) throw authError;
-    if (!authData.user) throw new Error("فشل في إنشاء المستخدم");
-    
-    // تحديث دور المستخدم في جدول profiles
+    if (error) throw error;
+    if (!data.user) throw new Error("فشل في إنشاء المستخدم");
+
+    // Update profile with the role and other data
     const { error: profileError } = await supabase
       .from('profiles')
       .update({
-        role: 'super_admin',
         first_name: firstName,
         last_name: lastName,
-        is_active: true
+        role: 'super_admin',
+        is_active: true,
+        email: email // Make sure to store email in the profiles table
       })
-      .eq('id', authData.user.id);
-    
+      .eq('id', data.user.id);
+
     if (profileError) throw profileError;
-    
-    toast.success("تم إنشاء المستخدم المسؤول بنجاح");
+
+    // Return success
+    toast.success("تم إنشاء المستخدم بصلاحيات مدير النظام بنجاح");
     return true;
   } catch (error: any) {
-    console.error("خطأ في إنشاء المستخدم المسؤول:", error);
-    toast.error(error.message || "فشل في إنشاء المستخدم المسؤول");
+    console.error("خطأ في إنشاء مستخدم Super Admin:", error);
+    toast.error(error.message || "حدث خطأ أثناء إنشاء المستخدم");
     return false;
   }
 };
