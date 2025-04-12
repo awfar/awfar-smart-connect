@@ -1,8 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { toast } from "sonner";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import DashboardNav from "@/components/dashboard/DashboardNav";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import LeadFilters from "@/components/leads/LeadFilters";
 import LeadDetails from "@/components/leads/LeadDetails";
@@ -15,6 +13,7 @@ import { Lead } from "@/types/leads";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import LeadForm from "@/components/leads/LeadForm";
 import MobileOptimizedContainer from '@/components/ui/mobile-optimized-container';
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 // Define a conversion function to ensure type compatibility
 const convertLeadTypes = (lead: Lead): any => {
@@ -84,61 +83,55 @@ const LeadManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50 rtl">
-      <DashboardHeader />
-      <div className="flex">
-        <DashboardNav />
-        <main className="flex-1 p-6 overflow-y-auto pt-16 lg:pt-6">
-          <div className="flex flex-col gap-6">
-            <LeadHeader 
-              onToggleFilters={toggleFilters}
-              onRefresh={handleRefresh}
-              onAddLead={handleAddLead}
-            />
+    <DashboardLayout>
+      <div className="flex flex-col gap-6">
+        <LeadHeader 
+          onToggleFilters={toggleFilters}
+          onRefresh={handleRefresh}
+          onAddLead={handleAddLead}
+        />
 
-            <div className="flex gap-4 flex-col lg:flex-row">
-              <div className="flex-1">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <LeadCardHeader />
-                    <div className="mt-4">
-                      <LeadSearchBar 
-                        selectedView={selectedView}
-                        onViewChange={setSelectedView}
-                        onSearch={handleSearch}
-                      />
-                    </div>
-                  </CardHeader>
-                  
-                  {showFilters && <LeadFilters />}
-
-                  <CardContent>
-                    {isLoading ? (
-                      <div className="flex justify-center py-8">
-                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-                      </div>
-                    ) : (
-                      <LeadTable 
-                        leads={leads} 
-                        selectedLead={selectedLead}
-                        onLeadSelect={handleLeadClick}
-                      />
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-
-              {selectedLead && (
-                <div className="w-full lg:w-[400px]">
-                  <LeadDetails 
-                    lead={leads.find(l => l.id === selectedLead)!} 
-                    onClose={() => setSelectedLead(null)} 
+        <div className="flex gap-4 flex-col lg:flex-row">
+          <div className="flex-1">
+            <Card>
+              <CardHeader className="pb-3">
+                <LeadCardHeader />
+                <div className="mt-4">
+                  <LeadSearchBar 
+                    selectedView={selectedView}
+                    onViewChange={setSelectedView}
+                    onSearch={handleSearch}
                   />
                 </div>
-              )}
-            </div>
+              </CardHeader>
+              
+              {showFilters && <LeadFilters />}
+
+              <CardContent>
+                {isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                  </div>
+                ) : (
+                  <LeadTable 
+                    leads={leads} 
+                    selectedLead={selectedLead}
+                    onLeadSelect={handleLeadClick}
+                  />
+                )}
+              </CardContent>
+            </Card>
           </div>
-        </main>
+
+          {selectedLead && (
+            <div className="w-full lg:w-[400px]">
+              <LeadDetails 
+                lead={leads.find(l => l.id === selectedLead)!} 
+                onClose={() => setSelectedLead(null)} 
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       <Dialog open={isAddLeadOpen} onOpenChange={setIsAddLeadOpen}>
@@ -154,7 +147,7 @@ const LeadManagement = () => {
           </MobileOptimizedContainer>
         </DialogContent>
       </Dialog>
-    </div>
+    </DashboardLayout>
   );
 };
 

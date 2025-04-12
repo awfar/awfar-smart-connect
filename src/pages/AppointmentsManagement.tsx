@@ -49,9 +49,8 @@ const AppointmentsManagement = () => {
             </CardHeader>
             <CardContent>
               <AppointmentForm 
-                onClose={handleCancelCreate}
-                onSubmit={handleSaveAppointment}
-                title="إضافة موعد جديد"
+                onCancel={handleCancelCreate}
+                onSave={handleSaveAppointment}
               />
             </CardContent>
           </Card>
@@ -59,15 +58,14 @@ const AppointmentsManagement = () => {
           <>
             <Tabs defaultValue="calendar" value={view} onValueChange={(v) => setView(v as "calendar" | "list")}>
               <TabsList className="mb-4">
-                <TabsTrigger value="calendar">عرض التقويم</TabsTrigger>
-                <TabsTrigger value="list">عرض القائمة</TabsTrigger>
+                <TabsTrigger value="calendar">التقويم</TabsTrigger>
+                <TabsTrigger value="list">قائمة المواعيد</TabsTrigger>
               </TabsList>
               
               <TabsContent value="calendar">
                 <Card>
                   <CardHeader>
                     <CardTitle>تقويم المواعيد</CardTitle>
-                    <CardDescription>عرض جميع المواعيد في التقويم</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <AppointmentCalendar />
@@ -79,7 +77,6 @@ const AppointmentsManagement = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle>قائمة المواعيد</CardTitle>
-                    <CardDescription>عرض جميع المواعيد المقبلة</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <AppointmentsList />

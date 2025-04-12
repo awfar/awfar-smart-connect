@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,10 +57,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { CircleDollarSign, CreditCard, LayoutDashboard, PiggyBank, Users, CalendarIcon, ChevronDown, MoreHorizontal } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import DashboardNav from '@/components/dashboard/DashboardNav';
 import { ActivityTimeline } from '@/components/reports/ActivityTimeline';
 import { LeadSourcesChart } from '@/components/reports/LeadSourcesChart';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
 interface SalesData {
   name: string;
@@ -219,7 +217,6 @@ const leadsGrowthData: LeadsGrowthData[] = [
   { date: 'Apr', count: 90 },
 ];
 
-// Transform data for charts
 const salesByIndustry: SalesData[] = industrySalesData.map(item => ({
   name: item.industry,
   value: item.sales,
@@ -230,7 +227,6 @@ const leadsGrowth: SalesData[] = leadsGrowthData.map(item => ({
   value: item.count,
 }));
 
-// Simple chart components for demo
 const SalesComparisonChart = ({ data, isLoading }: { data: SalesData[], isLoading: boolean }) => {
   if (isLoading) return <div className="h-[300px] flex items-center justify-center">Loading...</div>;
   
@@ -297,177 +293,171 @@ const ReportsManagement: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50 rtl">
-      <DashboardHeader />
-      <div className="flex">
-        <DashboardNav />
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto pt-16 lg:pt-0">
-          <div className="container mx-auto py-10">
-            <div className="mb-8 flex items-center justify-between">
-              <h1 className="text-2xl font-bold">نظرة عامة على التقارير</h1>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant={"outline"}
-                    className={cn(
-                      "w-[300px] justify-start text-left font-normal",
-                      !date && "text-muted-foreground"
-                    )}
+    <DashboardLayout>
+      <div className="container mx-auto py-10">
+        <div className="mb-8 flex items-center justify-between">
+          <h1 className="text-2xl font-bold">نظرة عامة على التقارير</h1>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-[300px] justify-start text-left font-normal",
+                  !date && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date ? format(date, "PPP") : <span>اختر تاريخ</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                disabled={(date) =>
+                  date > new Date() || date < new Date("1900-01-01")
+                }
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">إجمالي المبيعات</CardTitle>
+              <CircleDollarSign className="h-4 w-4 text-gray-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">45,231.89 ر.س</div>
+              <p className="text-xs text-gray-500">+20.1% من الشهر الماضي</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">اشتراكات هذا الشهر</CardTitle>
+              <Users className="h-4 w-4 text-gray-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">+2350</div>
+              <p className="text-xs text-gray-500">+180.1% من الشهر الماضي</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">متوسط قيمة الطلب</CardTitle>
+              <CreditCard className="h-4 w-4 text-gray-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">3224 ر.س</div>
+              <p className="text-xs text-gray-500">+19% من الشهر الماضي</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 mt-8">
+          <Card className="col-span-1 lg:col-span-1">
+            <CardHeader>
+              <CardTitle>المبيعات حسب الصناعة</CardTitle>
+            </CardHeader>
+            <CardContent className="pl-2">
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    dataKey="value"
+                    isAnimationActive={false}
+                    data={salesByIndustry}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="#8884d8"
+                    label
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : <span>اختر تاريخ</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="end">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    disabled={(date) =>
-                      date > new Date() || date < new Date("1900-01-01")
-                    }
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+                    {salesByIndustry.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={`#${Math.floor(Math.random() * 16777215).toString(16)}`} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
 
-            <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">إجمالي المبيعات</CardTitle>
-                  <CircleDollarSign className="h-4 w-4 text-gray-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">45,231.89 ر.س</div>
-                  <p className="text-xs text-gray-500">+20.1% من الشهر الماضي</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">اشتراكات هذا الشهر</CardTitle>
-                  <Users className="h-4 w-4 text-gray-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">+2350</div>
-                  <p className="text-xs text-gray-500">+180.1% من الشهر الماضي</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">متوسط قيمة الطلب</CardTitle>
-                  <CreditCard className="h-4 w-4 text-gray-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">3224 ر.س</div>
-                  <p className="text-xs text-gray-500">+19% من الشهر الماضي</p>
-                </CardContent>
-              </Card>
-            </div>
+          <Card className="col-span-1 lg:col-span-1">
+            <CardHeader>
+              <CardTitle>نمو العملاء المتوقعين</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={leadsGrowth} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="value" stroke="#82ca9d" activeDot={{ r: 8 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </div>
 
-            <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 mt-8">
-              <Card className="col-span-1 lg:col-span-1">
-                <CardHeader>
-                  <CardTitle>المبيعات حسب الصناعة</CardTitle>
-                </CardHeader>
-                <CardContent className="pl-2">
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        dataKey="value"
-                        isAnimationActive={false}
-                        data={salesByIndustry}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={80}
-                        fill="#8884d8"
-                        label
-                      >
-                        {salesByIndustry.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={`#${Math.floor(Math.random() * 16777215).toString(16)}`} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
+        <div className="grid gap-4 grid-cols-1 mt-8">
+          <Card className="col-span-1">
+            <CardHeader>
+              <CardTitle>مقارنة المبيعات</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SalesComparisonChart data={salesComparisonData} isLoading={isLoading} />
+            </CardContent>
+          </Card>
+        </div>
 
-              <Card className="col-span-1 lg:col-span-1">
-                <CardHeader>
-                  <CardTitle>نمو العملاء المتوقعين</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={leadsGrowth} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-                      <Line type="monotone" dataKey="value" stroke="#82ca9d" activeDot={{ r: 8 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 mt-8">
+          <Card className="col-span-1">
+            <CardHeader>
+              <CardTitle>مصادر العملاء المتوقعين</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <LeadSourcesChart data={leadSourcesData} isLoading={isLoading} />
+            </CardContent>
+          </Card>
 
-            <div className="grid gap-4 grid-cols-1 mt-8">
-              <Card className="col-span-1">
-                <CardHeader>
-                  <CardTitle>مقارنة المبيعات</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <SalesComparisonChart data={salesComparisonData} isLoading={isLoading} />
-                </CardContent>
-              </Card>
-            </div>
+          <Card className="col-span-1">
+            <CardHeader>
+              <CardTitle>أداء المنتجات</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ProductsPerformanceChart data={productsPerformanceData} isLoading={isLoading} />
+            </CardContent>
+          </Card>
+        </div>
 
-            <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 mt-8">
-              <Card className="col-span-1">
-                <CardHeader>
-                  <CardTitle>مصادر العملاء المتوقعين</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <LeadSourcesChart data={leadSourcesData} isLoading={isLoading} />
-                </CardContent>
-              </Card>
+        <div className="grid gap-4 grid-cols-1 mt-8">
+          <Card className="col-span-1">
+            <CardHeader>
+              <CardTitle>تقرير أداء الفريق</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <TeamPerformanceReport data={teamPerformanceData} isLoading={isLoading} />
+            </CardContent>
+          </Card>
+        </div>
 
-              <Card className="col-span-1">
-                <CardHeader>
-                  <CardTitle>أداء المنتجات</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ProductsPerformanceChart data={productsPerformanceData} isLoading={isLoading} />
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="grid gap-4 grid-cols-1 mt-8">
-              <Card className="col-span-1">
-                <CardHeader>
-                  <CardTitle>تقرير أداء الفريق</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <TeamPerformanceReport data={teamPerformanceData} isLoading={isLoading} />
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="grid gap-4 grid-cols-1 mt-8">
-              <Card className="col-span-1">
-                <CardHeader>
-                  <CardTitle>الجدول الزمني للنشاط الأخير</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ActivityTimeline data={recentActivitiesData} isLoading={isLoading} />
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </main>
+        <div className="grid gap-4 grid-cols-1 mt-8">
+          <Card className="col-span-1">
+            <CardHeader>
+              <CardTitle>الجدول الزمني للنشاط الأخير</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ActivityTimeline data={recentActivitiesData} isLoading={isLoading} />
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
