@@ -1,17 +1,29 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { getProducts, getCategories, Product, ProductType, productTypeIconMap, productTypeLabels } from '@/services/catalogService';
+import { 
+  getProducts, 
+  getCategories, 
+  Product, 
+  ProductType, 
+  productTypeIconMap, 
+  productTypeLabels 
+} from '@/services/catalogService';
 import { 
   Plus,
   Search,
   Filter,
   Tag,
   CircleSlash,
-  ArrowUpDown
+  ArrowUpDown,
+  Package, 
+  FileDigit,
+  BarChart2,
+  Store
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -53,6 +65,12 @@ const CatalogManagement: React.FC = () => {
     const matchesType = filterType === 'all' || product.type === filterType;
     return matchesSearch && matchesType;
   });
+
+  // Get the appropriate icon component based on product type
+  const getIconComponent = (type: ProductType) => {
+    const IconComponent = productTypeIconMap[type];
+    return <IconComponent className="h-4 w-4" />;
+  };
 
   return (
     <DashboardLayout>
@@ -142,6 +160,7 @@ const CatalogManagement: React.FC = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProducts.map((product) => {
+                // Use the getIconComponent function to get the right icon
                 const IconComponent = productTypeIconMap[product.type];
                 
                 return (

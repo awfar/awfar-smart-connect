@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Package, FileDigit, BarChart2, Store } from 'lucide-react';
+import { LucideIcon, Package, FileDigit, BarChart2, Store } from 'lucide-react';
 
 export type ProductType = 'physical' | 'digital' | 'service' | 'subscription';
 
@@ -18,8 +18,8 @@ export interface Product {
   updatedAt: string;
 }
 
-// Type-specific icon mappings (instead of JSX elements)
-export const productTypeIconMap = {
+// Type-specific icon mappings using LucideIcon type
+export const productTypeIconMap: Record<ProductType, LucideIcon> = {
   physical: Package,
   digital: FileDigit,
   service: BarChart2,
@@ -27,7 +27,7 @@ export const productTypeIconMap = {
 };
 
 // Type-specific labels
-export const productTypeLabels = {
+export const productTypeLabels: Record<ProductType, string> = {
   physical: 'منتج مادي',
   digital: 'منتج رقمي',
   service: 'خدمة',
@@ -149,7 +149,7 @@ const mockSubscriptions: Subscription[] = [
   { 
     id: '2', 
     name: 'باقة متقدمة', 
-    description: 'باقة شهرية متقدمة', 
+    description: 'باقة شهرية متق��مة', 
     price: 199, 
     billingCycle: 'monthly',
     features: ['كل مميزات الباقة الأساسية', 'ميزة 4', 'ميزة 5', 'ميزة 6'],
