@@ -16,6 +16,23 @@ export interface User {
   team_name?: string;
 }
 
+// Define an interface for the raw data returned from Supabase
+interface SupabaseUserData {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  role: string;
+  department_id: string | null;
+  team_id: string | null;
+  is_active: boolean;
+  created_at: string;
+  company?: string;
+  position?: string;
+  email?: string; // Make email optional since it might not exist in the raw data
+  departments?: { name: string } | null;
+  teams?: { name: string } | null;
+}
+
 export const fetchUsers = async (): Promise<User[]> => {
   try {
     const { data, error } = await supabase
@@ -30,14 +47,13 @@ export const fetchUsers = async (): Promise<User[]> => {
     if (error) throw error;
 
     // Transform the data to include email and other properties
-    const usersWithEmails = (data || []).map(user => {
+    const usersWithEmails = (data || []).map((user: SupabaseUserData) => {
       return {
         ...user,
-        // The email property is added here as it may not exist in the original data
         email: user.email || `user-${user.id}@example.com`, // Fallback email
         department_name: user.departments?.name,
         team_name: user.teams?.name
-      } as User;  // Explicitly cast to User type
+      } as User;
     });
     
     return usersWithEmails;
@@ -64,11 +80,10 @@ export const fetchUserById = async (id: string): Promise<User | null> => {
     
     // Add email and other properties
     const userData: User = {
-      ...data,
-      // Add the email property with a fallback
-      email: data.email || `user-${data.id}@example.com`, // Fallback email
-      department_name: data.departments?.name,
-      team_name: data.teams?.name
+      ...data as SupabaseUserData, // Cast to our interface
+      email: (data as SupabaseUserData).email || `user-${data.id}@example.com`, // Fallback email
+      department_name: (data as SupabaseUserData).departments?.name,
+      team_name: (data as SupabaseUserData).teams?.name
     };
     
     return userData;
@@ -99,7 +114,7 @@ export const updateUser = async (user: Partial<User> & { id: string }): Promise<
     
     // Add back the email to the returned data
     const updatedUser: User = {
-      ...data,
+      ...(data as SupabaseUserData),
       email: email || `user-${data.id}@example.com` // Use the provided email or a fallback
     };
     
