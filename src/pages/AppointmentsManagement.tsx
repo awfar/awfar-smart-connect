@@ -54,8 +54,9 @@ const AppointmentsManagement = () => {
                 </CardHeader>
                 <CardContent>
                   <AppointmentForm 
-                    onCancel={handleCancelCreate}
-                    onSave={handleSaveAppointment}
+                    onClose={handleCancelCreate}
+                    onSubmit={handleSaveAppointment}
+                    title="إضافة موعد جديد"
                   />
                 </CardContent>
               </Card>

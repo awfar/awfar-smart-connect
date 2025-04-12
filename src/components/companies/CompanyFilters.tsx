@@ -1,12 +1,35 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { X } from 'lucide-react';
+import { CompanyFilters as CompanyFiltersType } from "@/services/companiesService";
 
-const CompanyFilters = () => {
+interface CompanyFiltersProps {
+  onApplyFilters: (filters: CompanyFiltersType) => void;
+}
+
+const CompanyFilters: React.FC<CompanyFiltersProps> = ({ onApplyFilters }) => {
+  const [filters, setFilters] = useState<CompanyFiltersType>({});
+
+  const handleFilterChange = (key: keyof CompanyFiltersType, value: string) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const handleApplyFilters = () => {
+    onApplyFilters(filters);
+  };
+
+  const handleResetFilters = () => {
+    setFilters({});
+    onApplyFilters({});
+  };
+
   return (
     <CardContent className="border-y p-4 bg-gray-50">
       <div className="flex items-center justify-between mb-4">
@@ -18,7 +41,10 @@ const CompanyFilters = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label htmlFor="country">الدولة</Label>
-          <Select>
+          <Select 
+            value={filters.country || "all"}
+            onValueChange={(value) => handleFilterChange("country", value)}
+          >
             <SelectTrigger id="country">
               <SelectValue placeholder="جميع الدول" />
             </SelectTrigger>
@@ -34,7 +60,10 @@ const CompanyFilters = () => {
         
         <div className="space-y-2">
           <Label htmlFor="industry">القطاع</Label>
-          <Select>
+          <Select 
+            value={filters.industry || "all"}
+            onValueChange={(value) => handleFilterChange("industry", value)}
+          >
             <SelectTrigger id="industry">
               <SelectValue placeholder="جميع القطاعات" />
             </SelectTrigger>
@@ -66,7 +95,10 @@ const CompanyFilters = () => {
         
         <div className="space-y-2">
           <Label htmlFor="status">الحالة</Label>
-          <Select>
+          <Select 
+            value={filters.status || "all"}
+            onValueChange={(value) => handleFilterChange("status", value)}
+          >
             <SelectTrigger id="status">
               <SelectValue placeholder="جميع الحالات" />
             </SelectTrigger>
@@ -82,7 +114,10 @@ const CompanyFilters = () => {
         
         <div className="space-y-2">
           <Label htmlFor="subscription">الباقة</Label>
-          <Select>
+          <Select 
+            value={filters.subscription || "all"}
+            onValueChange={(value) => handleFilterChange("subscription", value)}
+          >
             <SelectTrigger id="subscription">
               <SelectValue placeholder="جميع الباقات" />
             </SelectTrigger>
@@ -98,7 +133,10 @@ const CompanyFilters = () => {
         
         <div className="space-y-2">
           <Label htmlFor="manager">مدير الحساب</Label>
-          <Select>
+          <Select 
+            value={filters.manager || "all"}
+            onValueChange={(value) => handleFilterChange("manager", value)}
+          >
             <SelectTrigger id="manager">
               <SelectValue placeholder="جميع المدراء" />
             </SelectTrigger>
@@ -115,8 +153,8 @@ const CompanyFilters = () => {
       </div>
       
       <div className="flex justify-end gap-2 mt-4">
-        <Button variant="outline">إعادة ضبط</Button>
-        <Button>تطبيق الفلتر</Button>
+        <Button variant="outline" onClick={handleResetFilters}>إعادة ضبط</Button>
+        <Button onClick={handleApplyFilters}>تطبيق الفلتر</Button>
       </div>
     </CardContent>
   );

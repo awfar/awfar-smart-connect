@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -103,8 +102,8 @@ const mapRowToLead = (row: LeadRow): Lead => {
 
 export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
   try {
-    // Create base query without chaining
-    const baseQuery = supabase.from('leads').select(`
+    // Create query builder
+    let query = supabase.from('leads').select(`
       *,
       profiles:assigned_to (
         first_name,
@@ -112,34 +111,32 @@ export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
       )
     `);
     
-    // Build filter conditions
-    let finalQuery = baseQuery;
-    
+    // Apply filters if provided
     if (filters) {
       if (filters.stage && filters.stage !== 'all') {
-        finalQuery = finalQuery.eq('status', filters.stage);
+        query = query.eq('status', filters.stage);
       }
       
       if (filters.source && filters.source !== 'all') {
-        finalQuery = finalQuery.eq('source', filters.source);
+        query = query.eq('source', filters.source);
       }
       
       if (filters.country && filters.country !== 'all') {
-        finalQuery = finalQuery.eq('country', filters.country);
+        query = query.eq('country', filters.country);
       }
       
       if (filters.industry && filters.industry !== 'all') {
-        finalQuery = finalQuery.eq('industry', filters.industry);
+        query = query.eq('industry', filters.industry);
       }
       
       if (filters.assigned_to && filters.assigned_to !== 'all') {
-        finalQuery = finalQuery.eq('assigned_to', filters.assigned_to);
+        query = query.eq('assigned_to', filters.assigned_to);
       }
       
       if (filters.date_range === 'today') {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        finalQuery = finalQuery.gte('created_at', today.toISOString());
+        query = query.gte('created_at', today.toISOString());
       } else if (filters.date_range === 'yesterday') {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
@@ -148,20 +145,19 @@ export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        finalQuery = finalQuery
+        query = query
           .gte('created_at', yesterday.toISOString())
           .lt('created_at', today.toISOString());
       }
     }
     
-    // Execute the query with ordering
-    const { data, error } = await finalQuery.order('created_at', { ascending: false });
+    // Execute the final query with ordering
+    const { data, error } = await query.order('created_at', { ascending: false });
     
     if (error) throw error;
     
-    // Safely handle the returned data
-    const leadsData = data ? (data as unknown as LeadRow[]) : [];
-    
+    // Cast data to correct type and map to Lead objects
+    const leadsData = data as LeadRow[];
     return leadsData.map(mapRowToLead);
     
   } catch (error) {
