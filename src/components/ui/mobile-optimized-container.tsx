@@ -16,19 +16,23 @@ const MobileOptimizedContainer = ({
 }: MobileOptimizedContainerProps) => {
   // Prevent body scrolling when modal is open on mobile
   useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = originalOverflow;
     };
   }, []);
 
   return (
     <div 
       className={cn(
-        "w-full max-h-[90vh] overflow-y-auto flex flex-col",
+        "w-full max-h-[85vh] overflow-y-auto flex flex-col scrollbar-thin",
         className
       )}
+      style={{
+        WebkitOverflowScrolling: 'touch'
+      }}
     >
       {children}
     </div>

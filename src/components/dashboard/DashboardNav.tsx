@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   BarChartHorizontal,
@@ -38,6 +38,12 @@ type NavItem = {
 const DashboardNav: React.FC = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure hydration mismatch doesn't happen
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   
   const navItems: NavItem[] = [
     {
@@ -114,6 +120,8 @@ const DashboardNav: React.FC = () => {
     return location.pathname.startsWith(path);
   };
 
+  if (!mounted) return null;
+
   return (
     <>
       {/* Mobile Menu Button */}
@@ -123,6 +131,7 @@ const DashboardNav: React.FC = () => {
           size="icon"
           onClick={() => setIsMobileMenuOpen(true)}
           aria-label="قائمة التنقل"
+          className="bg-white shadow-md"
         >
           <Menu className="h-5 w-5" />
         </Button>
@@ -142,7 +151,7 @@ const DashboardNav: React.FC = () => {
               </Button>
             </SheetClose>
           </SheetHeader>
-          <div className="overflow-auto py-4">
+          <div className="overflow-auto py-4 h-[calc(100vh-3.5rem)]">
             <nav className="grid items-start px-2 text-sm">
               {navItems.map((item, index) => (
                 <Link

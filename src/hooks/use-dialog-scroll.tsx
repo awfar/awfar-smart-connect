@@ -5,7 +5,7 @@ import { useIsMobile } from './use-mobile';
 /**
  * Hook to manage scrolling behavior for dialogs and overlays
  * @param isOpen - Whether the dialog is open
- * @param contentRef - Reference to the dialog content element
+ * @param contentId - Reference to the dialog content element
  */
 export function useDialogScroll(isOpen: boolean, contentId?: string) {
   const isMobile = useIsMobile();
@@ -21,10 +21,10 @@ export function useDialogScroll(isOpen: boolean, contentId?: string) {
       if (contentId) {
         const contentElement = document.getElementById(contentId);
         if (contentElement) {
-          contentElement.style.maxHeight = '90vh';
+          contentElement.style.maxHeight = '80vh';
           contentElement.style.overflowY = 'auto';
-          // Use standard property instead of vendor prefix
-          contentElement.style.cssText += 'overflow-scrolling: touch;';
+          // Use both standard and webkit property for better compatibility
+          contentElement.style.cssText += 'overflow-scrolling: touch; -webkit-overflow-scrolling: touch;';
         }
       }
     }

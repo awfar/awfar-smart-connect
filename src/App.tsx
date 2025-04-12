@@ -13,12 +13,16 @@ import NotFound from './pages/NotFound';
 import CreateSuperAdmin from "./pages/CreateSuperAdmin";
 import PermissionsManagement from './pages/PermissionsManagement';
 import RolesManagement from './pages/RolesManagement';
+import CompaniesManagement from './pages/CompaniesManagement';
+import DealsManagement from './pages/DealsManagement';
+import CMS from './pages/CMS';
 
 function AppRoutes() {
   const { isLoggedIn } = useAuth();
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', 'light');
+    document.documentElement.classList.add('rtl');
   }, []);
 
   return (
@@ -29,14 +33,14 @@ function AppRoutes() {
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="/dashboard" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
           <Route path="/dashboard/leads" element={isLoggedIn ? <LeadManagement /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/companies" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/deals" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/companies" element={isLoggedIn ? <CompaniesManagement /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/deals" element={isLoggedIn ? <DealsManagement /> : <Navigate to="/login" />} />
           <Route path="/dashboard/appointments" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
           <Route path="/dashboard/tickets" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
           <Route path="/dashboard/tasks" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
           <Route path="/dashboard/chats" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
           <Route path="/dashboard/reports" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/cms" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
+          <Route path="/dashboard/cms" element={isLoggedIn ? <CMS /> : <Navigate to="/login" />} />
           <Route path="/dashboard/users" element={<UserManagement />} />
           <Route path="/dashboard/departments" element={<DepartmentsManagement />} />
           <Route path="/dashboard/teams" element={<TeamsManagement />} />
