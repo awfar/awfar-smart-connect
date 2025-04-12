@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -116,11 +115,13 @@ const ChatsManagement = () => {
                 <Card className="h-full flex flex-col">
                   <CardHeader>
                     <div className="flex items-center">
-                      <Input
-                        placeholder="بحث في المحادثات..."
-                        className="flex-1"
-                        startIcon={<Search className="h-4 w-4" />}
-                      />
+                      <div className="relative flex-1">
+                        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="بحث في المحادثات..."
+                          className="flex-1 pr-9"
+                        />
+                      </div>
                     </div>
                     <TabsList className="w-full mt-2">
                       <TabsTrigger value="all" className="flex-1" onClick={() => setActiveTab("all")}>

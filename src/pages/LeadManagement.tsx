@@ -16,12 +16,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import LeadForm from "@/components/leads/LeadForm";
 import MobileOptimizedContainer from '@/components/ui/mobile-optimized-container';
 
+// Define a conversion function to ensure type compatibility
+const convertLeadTypes = (lead: Lead): any => {
+  // Ensure required fields are present
+  return {
+    ...lead,
+    stage: lead.stage || "جديد",
+    name: `${lead.first_name || ''} ${lead.last_name || ''}`.trim(),
+  };
+};
+
 const LeadManagement = () => {
   const [selectedView, setSelectedView] = useState<string>("all");
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [selectedLead, setSelectedLead] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [leads, setLeads] = useState<Lead[]>([]);
+  const [leads, setLeads] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAddLeadOpen, setIsAddLeadOpen] = useState<boolean>(false);
 
@@ -30,7 +40,9 @@ const LeadManagement = () => {
     setIsLoading(true);
     try {
       const fetchedLeads = await getLeads();
-      setLeads(fetchedLeads);
+      // Convert the leads to the expected format
+      const convertedLeads = fetchedLeads.map(convertLeadTypes);
+      setLeads(convertedLeads);
     } catch (error) {
       console.error("Error fetching leads:", error);
       toast.error("حدث خطأ أثناء تحميل بيانات العملاء المحتملين");
