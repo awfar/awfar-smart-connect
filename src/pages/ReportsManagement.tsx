@@ -1,50 +1,32 @@
 
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardNav from "@/components/dashboard/DashboardNav";
 import { Button } from '@/components/ui/button';
-import { Download, Filter } from 'lucide-react';
-
-// Mock data for charts
-const leadsBySource = [
-  { name: 'نموذج موقع', value: 35 },
-  { name: 'إحالة', value: 25 },
-  { name: 'معرض', value: 20 },
-  { name: 'واتساب', value: 15 },
-  { name: 'اتصال مباشر', value: 5 },
-];
-
-const salesData = [
-  { name: 'يناير', total: 10000 },
-  { name: 'فبراير', total: 15000 },
-  { name: 'مارس', total: 12000 },
-  { name: 'أبريل', total: 18000 },
-  { name: 'مايو', total: 22000 },
-  { name: 'يونيو', total: 19000 },
-  { name: 'يوليو', total: 25000 },
-  { name: 'أغسطس', total: 28000 },
-  { name: 'سبتمبر', total: 30000 },
-  { name: 'أكتوبر', total: 35000 },
-  { name: 'نوفمبر', total: 40000 },
-  { name: 'ديسمبر', total: 50000 },
-];
-
-const conversionRateData = [
-  { name: 'جديد', value: 100 },
-  { name: 'مؤهل', value: 75 },
-  { name: 'فرصة', value: 50 },
-  { name: 'عرض سعر', value: 30 },
-  { name: 'مغلق', value: 15 },
-];
-
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A569BD'];
+import { Download, Filter, PlusSquare, FileBarChart, BarChart2, PieChart, Activity } from 'lucide-react';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import SalesPerformanceChart from "@/components/reports/SalesPerformanceChart";
+import LeadSourcesChart from "@/components/reports/LeadSourcesChart";
+import TeamPerformanceReport from "@/components/reports/TeamPerformanceReport";
+import ActivityTimeline from "@/components/reports/ActivityTimeline";
+import ProductsPerformanceChart from "@/components/reports/ProductsPerformanceChart";
+import SalesComparisonChart from "@/components/reports/SalesComparisonChart";
+import { useQuery } from '@tanstack/react-query';
+import { fetchReportData } from '@/services/reportsService';
+import ReportFilters from '@/components/reports/ReportFilters';
 
 const ReportsManagement = () => {
   const [period, setPeriod] = useState('yearly');
+  const [showFilters, setShowFilters] = useState(false);
+  
+  const { data: reportData, isLoading } = useQuery({
+    queryKey: ['reportData', period],
+    queryFn: () => fetchReportData(period),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
   
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50 rtl">
@@ -54,10 +36,13 @@ const ReportsManagement = () => {
         <main className="flex-1 p-4 md:p-6 overflow-y-auto pt-16 lg:pt-0">
           <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">التقارير</h1>
+              <div className="flex items-center gap-2">
+                <FileBarChart className="h-6 w-6 text-primary" />
+                <h1 className="text-2xl md:text-3xl font-bold tracking-tight">التقارير التحليلية</h1>
+              </div>
               
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" className="gap-1">
+                <Button variant="outline" size="sm" className="gap-1" onClick={() => setShowFilters(!showFilters)}>
                   <Filter className="h-4 w-4" />
                   فلترة
                 </Button>
@@ -65,13 +50,19 @@ const ReportsManagement = () => {
                   <Download className="h-4 w-4" />
                   تصدير
                 </Button>
+                <Button variant="default" size="sm" className="gap-1">
+                  <PlusSquare className="h-4 w-4" />
+                  تقرير جديد
+                </Button>
               </div>
             </div>
+            
+            {showFilters && <ReportFilters />}
             
             <div className="flex items-center">
               <Select value={period} onValueChange={setPeriod}>
                 <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="اختر الفترة" />
+                  <SelectValue placeholder="اختر الفترة الزمنية" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="daily">اليوم</SelectItem>
@@ -83,65 +74,104 @@ const ReportsManagement = () => {
               </Select>
             </div>
 
-            <Tabs defaultValue="sales">
-              <TabsList className="mb-4">
+            <Tabs defaultValue="overview">
+              <TabsList className="mb-4 overflow-x-auto flex-nowrap">
+                <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
                 <TabsTrigger value="sales">المبيعات</TabsTrigger>
                 <TabsTrigger value="leads">العملاء المحتملين</TabsTrigger>
                 <TabsTrigger value="performance">الأداء</TabsTrigger>
+                <TabsTrigger value="products">المنتجات</TabsTrigger>
+                <TabsTrigger value="activities">الأنشطة</TabsTrigger>
               </TabsList>
               
+              <TabsContent value="overview">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle>أداء المبيعات</CardTitle>
+                      <BarChart2 className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      <SalesPerformanceChart data={reportData?.salesData} period={period} isLoading={isLoading} />
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle>مصادر العملاء المحتملين</CardTitle>
+                      <PieChart className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      <LeadSourcesChart data={reportData?.leadSources} isLoading={isLoading} />
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle>أداء المنتجات</CardTitle>
+                      <BarChart2 className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      <ProductsPerformanceChart data={reportData?.productsData} isLoading={isLoading} />
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle>أداء الفريق</CardTitle>
+                      <Activity className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      <TeamPerformanceReport data={reportData?.teamData} isLoading={isLoading} />
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
               <TabsContent value="sales">
                 <div className="grid gap-6 md:grid-cols-2">
-                  <Card>
+                  <Card className="col-span-2">
                     <CardHeader>
-                      <CardTitle>إيرادات المبيعات</CardTitle>
+                      <CardTitle>تحليل المبيعات</CardTitle>
+                      <CardDescription>مقارنة المبيعات والإيرادات حسب الفترة</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart
-                            data={salesData}
-                            margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                          >
-                            <defs>
-                              <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-                                <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip />
-                            <Area type="monotone" dataKey="total" stroke="#8884d8" fillOpacity={1} fill="url(#colorTotal)" />
-                          </AreaChart>
-                        </ResponsiveContainer>
+                      <div className="h-[400px]">
+                        <SalesComparisonChart data={reportData?.salesComparisonData} isLoading={isLoading} />
                       </div>
                     </CardContent>
                   </Card>
                   
                   <Card>
                     <CardHeader>
-                      <CardTitle>المبيعات حسب المنتج</CardTitle>
+                      <CardTitle>المبيعات حسب القطاع</CardTitle>
+                      <CardDescription>توزيع المبيعات على القطاعات المختلفة</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={[
-                              { name: 'المنتج أ', value: 400 },
-                              { name: 'المنتج ب', value: 300 },
-                              { name: 'المنتج ج', value: 200 },
-                              { name: 'المنتج د', value: 100 },
-                            ]}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip />
-                            <Bar dataKey="value" fill="#8884d8" />
-                          </BarChart>
-                        </ResponsiveContainer>
+                        {/* Industry-specific sales chart */}
+                        <SalesPerformanceChart 
+                          data={reportData?.industrySalesData} 
+                          period={period} 
+                          isLoading={isLoading}
+                          showByIndustry={true}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>معدل إغلاق الصفقات</CardTitle>
+                      <CardDescription>تحليل معدلات تحويل الفرص إلى صفقات</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px]">
+                        <SalesComparisonChart 
+                          data={reportData?.conversionRateData}
+                          isLoading={isLoading}
+                          showConversionRate={true}
+                        />
                       </div>
                     </CardContent>
                   </Card>
@@ -150,53 +180,47 @@ const ReportsManagement = () => {
               
               <TabsContent value="leads">
                 <div className="grid gap-6 md:grid-cols-2">
-                  <Card>
+                  <Card className="col-span-2">
                     <CardHeader>
-                      <CardTitle>العملاء المحتملين حسب المصدر</CardTitle>
+                      <CardTitle>تحليل العملاء المحتملين</CardTitle>
+                      <CardDescription>مصادر وحالات العملاء المحتملين</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={leadsBySource}
-                              cx="50%"
-                              cy="50%"
-                              labelLine={false}
-                              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                              outerRadius={80}
-                              fill="#8884d8"
-                              dataKey="value"
-                            >
-                              {leadsBySource.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                              ))}
-                            </Pie>
-                            <Tooltip />
-                          </PieChart>
-                        </ResponsiveContainer>
+                        <LeadSourcesChart data={reportData?.leadSources} isLoading={isLoading} showDetailed={true} />
                       </div>
                     </CardContent>
                   </Card>
                   
                   <Card>
                     <CardHeader>
-                      <CardTitle>معدل التحويل</CardTitle>
+                      <CardTitle>مسار تحويل العملاء</CardTitle>
+                      <CardDescription>تحليل مراحل تحويل العملاء المحتملين</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart
-                            data={conversionRateData}
-                            margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip />
-                            <Line type="monotone" dataKey="value" stroke="#8884d8" strokeWidth={2} />
-                          </LineChart>
-                        </ResponsiveContainer>
+                        <LeadSourcesChart 
+                          data={reportData?.leadFunnelData}
+                          isLoading={isLoading}
+                          showFunnel={true}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>نمو العملاء المحتملين</CardTitle>
+                      <CardDescription>تحليل نمو قاعدة العملاء المحتملين</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px]">
+                        <SalesPerformanceChart
+                          data={reportData?.leadsGrowthData}
+                          period={period}
+                          isLoading={isLoading}
+                          showLeadsGrowth={true}
+                        />
                       </div>
                     </CardContent>
                   </Card>
@@ -205,58 +229,142 @@ const ReportsManagement = () => {
               
               <TabsContent value="performance">
                 <div className="grid gap-6 md:grid-cols-2">
-                  <Card>
+                  <Card className="col-span-2">
                     <CardHeader>
-                      <CardTitle>أداء الفريق</CardTitle>
+                      <CardTitle>أداء الفريق التفصيلي</CardTitle>
+                      <CardDescription>تحليل أداء أعضاء فريق المبيعات</CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={[
-                              { name: 'محمد', value: 85 },
-                              { name: 'سارة', value: 90 },
-                              { name: 'أحمد', value: 65 },
-                              { name: 'خالد', value: 78 },
-                              { name: 'منى', value: 72 },
-                            ]}
-                            layout="vertical"
-                          >
-                            <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
-                            <XAxis type="number" />
-                            <YAxis dataKey="name" type="category" />
-                            <Tooltip />
-                            <Bar dataKey="value" fill="#8884d8" />
-                          </BarChart>
-                        </ResponsiveContainer>
+                      <div className="h-[400px]">
+                        <TeamPerformanceReport data={reportData?.teamData} isLoading={isLoading} showDetailed={true} />
                       </div>
                     </CardContent>
                   </Card>
                   
                   <Card>
                     <CardHeader>
-                      <CardTitle>معدل إغلاق الصفقات</CardTitle>
+                      <CardTitle>أهداف الفريق</CardTitle>
+                      <CardDescription>مقارنة الأهداف مع الإنجازات الفعلية</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart
-                            data={[
-                              { name: 'يناير', rate: 35 },
-                              { name: 'فبراير', rate: 40 },
-                              { name: 'مارس', rate: 38 },
-                              { name: 'أبريل', rate: 45 },
-                              { name: 'مايو', rate: 50 },
-                              { name: 'يونيو', rate: 55 },
-                            ]}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="name" />
-                            <YAxis />
-                            <Tooltip />
-                            <Line type="monotone" dataKey="rate" stroke="#82ca9d" strokeWidth={2} />
-                          </LineChart>
-                        </ResponsiveContainer>
+                        <TeamPerformanceReport 
+                          data={reportData?.teamTargetsData}
+                          isLoading={isLoading}
+                          showTargets={true}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>فعالية الفريق</CardTitle>
+                      <CardDescription>تحليل كفاءة أداء الفريق ومعدلات التحويل</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px]">
+                        <TeamPerformanceReport 
+                          data={reportData?.teamEfficiencyData}
+                          isLoading={isLoading}
+                          showEfficiency={true}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="products">
+                <div className="grid gap-6 md:grid-cols-2">
+                  <Card className="col-span-2">
+                    <CardHeader>
+                      <CardTitle>أداء المنتجات</CardTitle>
+                      <CardDescription>تحليل مبيعات المنتجات الرئيسية</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[400px]">
+                        <ProductsPerformanceChart data={reportData?.productsData} isLoading={isLoading} showDetailed={true} />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>مقارنة المنتجات</CardTitle>
+                      <CardDescription>مقارنة أداء المنتجات المختلفة</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px]">
+                        <ProductsPerformanceChart 
+                          data={reportData?.productComparisonData}
+                          isLoading={isLoading}
+                          showComparison={true}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>توزيع المبيعات حسب المنتج</CardTitle>
+                      <CardDescription>تحليل حصة كل منتج من إجمالي المبيعات</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px]">
+                        <ProductsPerformanceChart 
+                          data={reportData?.productDistributionData}
+                          isLoading={isLoading}
+                          showDistribution={true}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="activities">
+                <div className="grid gap-6 md:grid-cols-2">
+                  <Card className="col-span-2">
+                    <CardHeader>
+                      <CardTitle>سجل الأنشطة</CardTitle>
+                      <CardDescription>تحليل أنشطة المبيعات والتواصل مع العملاء</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="min-h-[400px]">
+                        <ActivityTimeline data={reportData?.activitiesData} isLoading={isLoading} />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>أنواع الأنشطة</CardTitle>
+                      <CardDescription>توزيع الأنشطة حسب النوع</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px]">
+                        <ActivityTimeline 
+                          data={reportData?.activityTypesData}
+                          isLoading={isLoading}
+                          showByType={true}
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>كفاءة الأنشطة</CardTitle>
+                      <CardDescription>تحليل فعالية الأنشطة في تحويل الفرص</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[300px]">
+                        <ActivityTimeline 
+                          data={reportData?.activityEfficiencyData}
+                          isLoading={isLoading}
+                          showEfficiency={true}
+                        />
                       </div>
                     </CardContent>
                   </Card>
