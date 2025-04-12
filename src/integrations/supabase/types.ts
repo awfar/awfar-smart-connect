@@ -285,6 +285,93 @@ export type Database = {
         }
         Relationships: []
       }
+      form_fields: {
+        Row: {
+          created_at: string | null
+          formid: string
+          id: string
+          isrequired: boolean
+          isvisible: boolean
+          order: number
+          propertyid: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          formid: string
+          id?: string
+          isrequired?: boolean
+          isvisible?: boolean
+          order: number
+          propertyid: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          formid?: string
+          id?: string
+          isrequired?: boolean
+          isvisible?: boolean
+          order?: number
+          propertyid?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_fields_formid_fkey"
+            columns: ["formid"]
+            isOneToOne: false
+            referencedRelation: "forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "form_fields_propertyid_fkey"
+            columns: ["propertyid"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forms: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          isactive: boolean
+          name: string
+          redirecturl: string | null
+          submitbuttontext: string | null
+          successmessage: string | null
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          isactive?: boolean
+          name: string
+          redirecturl?: string | null
+          submitbuttontext?: string | null
+          successmessage?: string | null
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          isactive?: boolean
+          name?: string
+          redirecturl?: string | null
+          submitbuttontext?: string | null
+          successmessage?: string | null
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       landing_pages: {
         Row: {
           content: Json
@@ -567,6 +654,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      properties: {
+        Row: {
+          created_at: string | null
+          defaultvalue: string | null
+          description: string | null
+          fieldtype: string
+          group: string | null
+          id: string
+          isdefault: boolean
+          isrequired: boolean
+          issystem: boolean
+          label: string
+          name: string
+          options: Json | null
+          order: number | null
+          placeholder: string | null
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          defaultvalue?: string | null
+          description?: string | null
+          fieldtype: string
+          group?: string | null
+          id?: string
+          isdefault?: boolean
+          isrequired?: boolean
+          issystem?: boolean
+          label: string
+          name: string
+          options?: Json | null
+          order?: number | null
+          placeholder?: string | null
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          defaultvalue?: string | null
+          description?: string | null
+          fieldtype?: string
+          group?: string | null
+          id?: string
+          isdefault?: boolean
+          isrequired?: boolean
+          issystem?: boolean
+          label?: string
+          name?: string
+          options?: Json | null
+          order?: number | null
+          placeholder?: string | null
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       role_permissions: {
         Row: {

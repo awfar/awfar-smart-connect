@@ -68,7 +68,7 @@ export const fetchPropertiesByType = async (type: PropertyType): Promise<Propert
     return [];
   }
 
-  return data;
+  return data as Property[];
 };
 
 // Create a new property
@@ -83,7 +83,7 @@ export const createProperty = async (property: Omit<Property, 'id' | 'created_at
     throw error;
   }
   
-  return data?.[0];
+  return data?.[0] as Property;
 };
 
 // Update an existing property
@@ -99,7 +99,7 @@ export const updateProperty = async (id: string, property: Partial<Property>) =>
     throw error;
   }
   
-  return data?.[0];
+  return data?.[0] as Property;
 };
 
 // Delete a property

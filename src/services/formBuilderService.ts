@@ -40,7 +40,7 @@ export const fetchForms = async (): Promise<Form[]> => {
     return [];
   }
 
-  return data;
+  return data as Form[];
 };
 
 // Fetch a single form with its fields
@@ -65,14 +65,14 @@ export const fetchFormWithFields = async (formId: string): Promise<FormWithField
   if (fieldsError) {
     console.error('Error fetching form fields:', fieldsError);
     return {
-      ...form,
+      ...(form as Form),
       fields: []
     };
   }
 
   return {
-    ...form,
-    fields: fields
+    ...(form as Form),
+    fields: fields as FormField[]
   };
 };
 
@@ -88,7 +88,7 @@ export const createForm = async (form: Omit<Form, 'id' | 'created_at' | 'updated
     throw formError;
   }
   
-  const newForm = formData[0];
+  const newForm = formData[0] as Form;
   
   if (fields && fields.length > 0) {
     const formattedFields = fields.map(field => ({
@@ -148,7 +148,7 @@ export const updateForm = async (formId: string, form: Partial<Form>, fields?: F
     }
   }
   
-  return formData?.[0];
+  return formData?.[0] as Form;
 };
 
 // Delete a form and its fields
@@ -192,9 +192,11 @@ export const submitFormData = async (formId: string, data: Record<string, any>) 
     throw formError;
   }
   
+  const tableName = form.type + 's'; // Append 's' to make it plural (e.g., lead -> leads)
+  
   // Insert data into the appropriate table based on form type
   const { data: result, error } = await supabase
-    .from(form.type + 's') // Append 's' to make it plural (e.g., lead -> leads)
+    .from(tableName)
     .insert([data])
     .select();
   
