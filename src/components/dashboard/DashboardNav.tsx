@@ -19,7 +19,6 @@ import {
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Button } from '../ui/button';
-import { Drawer, DrawerContent, DrawerClose } from '@/components/ui/drawer';
 import { Sheet, SheetContent, SheetClose } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -126,7 +125,7 @@ const DashboardNav = ({ mobileOpen = false, onClose }: DashboardNavProps) => {
     );
   }
 
-  // For mobile view - use drawer component instead of sheet for bottom-up menu
+  // For mobile view
   return (
     <Sheet open={mobileOpen} onOpenChange={onClose}>
       <SheetContent side="right" className="rtl p-0 w-[80%] sm:max-w-sm">

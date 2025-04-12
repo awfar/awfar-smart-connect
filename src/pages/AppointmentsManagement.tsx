@@ -2,12 +2,11 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import DashboardNav from "@/components/dashboard/DashboardNav";
 import AppointmentCalendar from "@/components/appointments/AppointmentCalendar";
 import AppointmentsList from "@/components/appointments/AppointmentsList";
 import AppointmentForm from "@/components/appointments/AppointmentForm";
 import { toast } from "sonner";
+import DashboardLayout from "@/components/layout/DashboardLayout";
 
 const AppointmentsManagement = () => {
   const [view, setView] = useState<"calendar" | "list">("calendar");
@@ -27,77 +26,71 @@ const AppointmentsManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50 rtl">
-      <DashboardHeader />
-      <div className="flex">
-        <DashboardNav />
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto pt-16 lg:pt-0">
-          <div className="flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl md:text-3xl font-bold tracking-tight">إدارة المواعيد</h1>
-              
-              {!isCreating && (
-                <button 
-                  onClick={handleCreateAppointment}
-                  className="px-4 py-2 bg-primary text-white rounded-md text-sm font-medium"
-                >
-                  إضافة موعد جديد
-                </button>
-              )}
-            </div>
+    <DashboardLayout>
+      <div className="flex flex-col gap-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">إدارة المواعيد</h1>
+          
+          {!isCreating && (
+            <button 
+              onClick={handleCreateAppointment}
+              className="px-4 py-2 bg-primary text-white rounded-md text-sm font-medium"
+            >
+              إضافة موعد جديد
+            </button>
+          )}
+        </div>
 
-            {isCreating ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle>موعد جديد</CardTitle>
-                  <CardDescription>أدخل تفاصيل الموعد الجديد</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <AppointmentForm 
-                    onClose={handleCancelCreate}
-                    onSubmit={handleSaveAppointment}
-                    title="إضافة موعد جديد"
-                  />
-                </CardContent>
-              </Card>
-            ) : (
-              <>
-                <Tabs defaultValue="calendar" value={view} onValueChange={(v) => setView(v as "calendar" | "list")}>
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="calendar">عرض التقويم</TabsTrigger>
-                    <TabsTrigger value="list">عرض القائمة</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="calendar">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>تقويم المواعيد</CardTitle>
-                        <CardDescription>عرض جميع المواعيد في التقويم</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <AppointmentCalendar />
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                  
-                  <TabsContent value="list">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>قائمة المواعيد</CardTitle>
-                        <CardDescription>عرض جميع المواعيد المقبلة</CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <AppointmentsList />
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                </Tabs>
-              </>
-            )}
-          </div>
-        </main>
+        {isCreating ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>موعد جديد</CardTitle>
+              <CardDescription>أدخل تفاصيل الموعد الجديد</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AppointmentForm 
+                onClose={handleCancelCreate}
+                onSubmit={handleSaveAppointment}
+                title="إضافة موعد جديد"
+              />
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            <Tabs defaultValue="calendar" value={view} onValueChange={(v) => setView(v as "calendar" | "list")}>
+              <TabsList className="mb-4">
+                <TabsTrigger value="calendar">عرض التقويم</TabsTrigger>
+                <TabsTrigger value="list">عرض القائمة</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="calendar">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>تقويم المواعيد</CardTitle>
+                    <CardDescription>عرض جميع المواعيد في التقويم</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <AppointmentCalendar />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="list">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>قائمة المواعيد</CardTitle>
+                    <CardDescription>عرض جميع المواعيد المقبلة</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <AppointmentsList />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </>
+        )}
       </div>
-    </div>
+    </DashboardLayout>
   );
 };
 
