@@ -1,7 +1,8 @@
+
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
-import { useAuth } from './contexts/AuthContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginPage from './pages/LoginPage';
 import Dashboard from './pages/Dashboard';
 import UserManagement from './pages/UserManagement';
@@ -11,7 +12,7 @@ import LeadManagement from './pages/LeadManagement';
 import NotFound from './pages/NotFound';
 import CreateSuperAdmin from "./pages/CreateSuperAdmin";
 
-function App() {
+function AppRoutes() {
   const { isLoggedIn } = useAuth();
 
   useEffect(() => {
@@ -34,16 +35,24 @@ function App() {
           <Route path="/dashboard/chats" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
           <Route path="/dashboard/reports" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
           <Route path="/dashboard/cms" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
-        <Route path="/dashboard/users" element={<UserManagement />} />
-        <Route path="/dashboard/departments" element={<DepartmentsManagement />} />
-        <Route path="/dashboard/teams" element={<TeamsManagement />} />
-        <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </Router>
-    <Toaster />
-  </div>
-);
+          <Route path="/dashboard/users" element={<UserManagement />} />
+          <Route path="/dashboard/departments" element={<DepartmentsManagement />} />
+          <Route path="/dashboard/teams" element={<TeamsManagement />} />
+          <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Router>
+      <Toaster />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
+  );
 }
 
 export default App;
