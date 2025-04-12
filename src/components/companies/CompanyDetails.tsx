@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { 
   X, Mail, Phone, Globe, MapPin, Building, Users, 
-  Calendar, MessageCircle, FileText, PieChart
+  Calendar, MessageCircle, FileText, PieChart, PlusCircle
 } from "lucide-react";
 
 interface AccountManager {
