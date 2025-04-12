@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -102,37 +103,45 @@ const mapRowToLead = (row: LeadRow): Lead => {
 
 export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
   try {
-    // Create query builder
-    let query = supabase.from('leads').select(`
-      *,
-      profiles:assigned_to (
-        first_name,
-        last_name
-      )
-    `);
+    // Create base query
+    let query = supabase
+      .from('leads')
+      .select(`
+        *,
+        profiles:assigned_to (
+          first_name,
+          last_name
+        )
+      `);
     
-    // Apply filters if provided
+    // Apply filters without chaining deeply
     if (filters) {
+      // Handle stage filter
       if (filters.stage && filters.stage !== 'all') {
         query = query.eq('status', filters.stage);
       }
       
+      // Handle source filter
       if (filters.source && filters.source !== 'all') {
         query = query.eq('source', filters.source);
       }
       
+      // Handle country filter
       if (filters.country && filters.country !== 'all') {
         query = query.eq('country', filters.country);
       }
       
+      // Handle industry filter
       if (filters.industry && filters.industry !== 'all') {
         query = query.eq('industry', filters.industry);
       }
       
+      // Handle assigned_to filter
       if (filters.assigned_to && filters.assigned_to !== 'all') {
         query = query.eq('assigned_to', filters.assigned_to);
       }
       
+      // Handle date_range filter
       if (filters.date_range === 'today') {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -156,8 +165,8 @@ export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
     
     if (error) throw error;
     
-    // Cast data to correct type and map to Lead objects
-    const leadsData = data as LeadRow[];
+    // Use a simple type cast to avoid deep recursion
+    const leadsData = data as unknown as LeadRow[];
     return leadsData.map(mapRowToLead);
     
   } catch (error) {
