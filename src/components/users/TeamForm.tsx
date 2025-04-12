@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Team } from "@/services/teamsService";
 import { fetchDepartments } from "@/services/departmentsService";
-import { fetchUsers } from "@/services/usersService";
+import { fetchUsers } from "@/services/users"; // Updated import path
 
 interface TeamFormProps {
   team?: Team | null;
@@ -34,7 +34,7 @@ const TeamForm = ({ team, onSave, onCancel }: TeamFormProps) => {
   
   // Handle users data when it's available
   useEffect(() => {
-    if (users && users.length > 0) {
+    if (users && Array.isArray(users) && users.length > 0) {
       // Filter users to get potential managers (admin or team manager)
       const potentialManagers = users.filter(user => 
         user.role === 'super_admin' || user.role === 'team_manager'
