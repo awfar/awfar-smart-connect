@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -334,7 +333,7 @@ const CompaniesManagement = () => {
           </DialogContent>
         </Dialog>
 
-        <Dialog open={showCompanyDetails} onOpenChange={setShowCompanyDetails} className="max-w-3xl">
+        <Dialog open={showCompanyDetails} onOpenChange={setShowCompanyDetails}>
           <DialogContent className="max-w-3xl rtl p-0 overflow-hidden">
             {selectedCompany && (
               <CompanyDetails 

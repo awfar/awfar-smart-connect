@@ -6,7 +6,7 @@ import {
   FormWithFields 
 } from '@/services/formBuilderService';
 import { 
-  fetchPropertiesByType, 
+  getPropertiesByType, 
   Property 
 } from '@/services/propertiesService';
 import DynamicForm from '@/components/forms/DynamicForm';
@@ -38,7 +38,7 @@ const FormEmbed: React.FC = () => {
         setForm(formData);
         
         // Load properties for this form type
-        const propertiesData = await fetchPropertiesByType(formData.type);
+        const propertiesData = await getPropertiesByType(formData.type);
         setProperties(propertiesData);
         
         setIsLoading(false);

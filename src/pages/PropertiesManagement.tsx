@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { Property, PropertyType, fetchPropertiesByType, createProperty, updateProperty, deleteProperty } from '@/services/propertiesService';
+import { Property, PropertyType, getPropertiesByType, createProperty, updateProperty, deleteProperty } from '@/services/propertiesService';
 import { toast } from 'sonner';
 
 const PropertiesManagement: React.FC = () => {
@@ -18,7 +18,7 @@ const PropertiesManagement: React.FC = () => {
   
   const { data: properties = [], isLoading, refetch } = useQuery({
     queryKey: ['properties', propertyType],
-    queryFn: () => fetchPropertiesByType(propertyType),
+    queryFn: () => getPropertiesByType(propertyType),
   });
   
   const handleAddProperty = async (property: Omit<Property, 'id' | 'created_at' | 'updated_at'>) => {

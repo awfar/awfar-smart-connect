@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Tabs, 
@@ -50,7 +51,7 @@ import {
 import { 
   Property, 
   PropertyType, 
-  fetchPropertiesByType 
+  getPropertiesByType 
 } from '@/services/propertiesService';
 import { getTypeLabel } from '@/components/properties/PropertyList';
 import FormBuilder from '@/components/forms/FormBuilder';
@@ -92,7 +93,7 @@ const FormBuilderManagement: React.FC = () => {
 
   const loadProperties = async (type: PropertyType) => {
     try {
-      const data = await fetchPropertiesByType(type);
+      const data = await getPropertiesByType(type);
       setProperties(data);
     } catch (error) {
       console.error('Error loading properties:', error);
