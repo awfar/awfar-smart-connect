@@ -70,12 +70,12 @@ const UserFilters = ({ onApplyFilters }: UserFiltersProps) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
           <Label htmlFor="role-filter">الدور</Label>
-          <Select value={role || ""} onValueChange={setRole}>
+          <Select value={role || "none"} onValueChange={setRole}>
             <SelectTrigger id="role-filter">
               <SelectValue placeholder="جميع الأدوار" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">جميع الأدوار</SelectItem>
+              <SelectItem value="none">جميع الأدوار</SelectItem>
               <SelectItem value="super_admin">مدير النظام</SelectItem>
               <SelectItem value="team_manager">مدير فريق</SelectItem>
               <SelectItem value="sales">مبيعات</SelectItem>
@@ -87,12 +87,12 @@ const UserFilters = ({ onApplyFilters }: UserFiltersProps) => {
         
         <div className="space-y-2">
           <Label htmlFor="department-filter">القسم</Label>
-          <Select value={department || ""} onValueChange={handleDepartmentChange}>
+          <Select value={department || "none"} onValueChange={handleDepartmentChange}>
             <SelectTrigger id="department-filter">
               <SelectValue placeholder="جميع الأقسام" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">جميع الأقسام</SelectItem>
+              <SelectItem value="none">جميع الأقسام</SelectItem>
               {departments.map((dept) => (
                 <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
               ))}
@@ -103,7 +103,7 @@ const UserFilters = ({ onApplyFilters }: UserFiltersProps) => {
         <div className="space-y-2">
           <Label htmlFor="team-filter">الفريق</Label>
           <Select 
-            value={team || ""} 
+            value={team || "none"} 
             onValueChange={setTeam}
             disabled={!department} // تعطيل اختيار الفريق إذا لم يتم تحديد قسم
           >
@@ -111,7 +111,7 @@ const UserFilters = ({ onApplyFilters }: UserFiltersProps) => {
               <SelectValue placeholder={department ? "جميع الفرق" : "اختر قسمًا أولاً"} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">جميع الفرق</SelectItem>
+              <SelectItem value="none">جميع الفرق</SelectItem>
               {filteredTeams.map((team) => (
                 <SelectItem key={team.id} value={team.id}>{team.name}</SelectItem>
               ))}

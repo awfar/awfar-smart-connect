@@ -98,14 +98,14 @@ const TeamForm = ({ team, onSave, onCancel }: TeamFormProps) => {
       <div className="space-y-2">
         <Label htmlFor="manager">مدير الفريق (اختياري)</Label>
         <Select 
-          value={managerId || ""} 
-          onValueChange={(value) => setManagerId(value || undefined)}
+          value={managerId || "none"} 
+          onValueChange={(value) => setManagerId(value === "none" ? undefined : value)}
         >
           <SelectTrigger id="manager">
             <SelectValue placeholder="اختر مديراً للفريق" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">بدون مدير</SelectItem>
+            <SelectItem value="none">بدون مدير</SelectItem>
             {managers.map((manager) => (
               <SelectItem key={manager.id} value={manager.id}>
                 {manager.first_name} {manager.last_name} ({manager.email})

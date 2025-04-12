@@ -201,7 +201,7 @@ const UserForm = ({ userId, isEditing = false, onSave }: UserFormProps) => {
               <SelectValue placeholder="اختر قسماً" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">بدون قسم</SelectItem>
+              <SelectItem value="none">بدون قسم</SelectItem>
               {departments.map((dept) => (
                 <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
               ))}
@@ -216,7 +216,7 @@ const UserForm = ({ userId, isEditing = false, onSave }: UserFormProps) => {
               <SelectValue placeholder={departmentId ? "اختر فريقاً" : "اختر قسماً أولا"} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">بدون فريق</SelectItem>
+              <SelectItem value="none">بدون فريق</SelectItem>
               {filteredTeams.map((team) => (
                 <SelectItem key={team.id} value={team.id}>{team.name}</SelectItem>
               ))}
