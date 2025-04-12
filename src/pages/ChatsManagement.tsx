@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -123,14 +124,16 @@ const ChatsManagement = () => {
                         />
                       </div>
                     </div>
-                    <TabsList className="w-full mt-2">
-                      <TabsTrigger value="all" className="flex-1" onClick={() => setActiveTab("all")}>
-                        الكل
-                      </TabsTrigger>
-                      <TabsTrigger value="unread" className="flex-1" onClick={() => setActiveTab("unread")}>
-                        غير مقروءة
-                      </TabsTrigger>
-                    </TabsList>
+                    <Tabs value={activeTab} onValueChange={setActiveTab}>
+                      <TabsList className="w-full mt-2">
+                        <TabsTrigger value="all" className="flex-1">
+                          الكل
+                        </TabsTrigger>
+                        <TabsTrigger value="unread" className="flex-1">
+                          غير مقروءة
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
                   </CardHeader>
                   <CardContent className="flex-1 p-0">
                     <ScrollArea className="h-[calc(100vh-300px)]">
