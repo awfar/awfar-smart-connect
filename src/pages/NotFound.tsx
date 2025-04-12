@@ -8,7 +8,7 @@ import { Home, ArrowLeft, Search, HelpCircle } from 'lucide-react';
 
 const NotFound = () => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col rtl">
       <Navbar />
       <div className="flex-grow flex items-center justify-center py-20">
         <div className="container mx-auto px-4 text-center">
@@ -30,7 +30,7 @@ const NotFound = () => {
               </Link>
             </Button>
             <Button asChild variant="outline" className="gap-2">
-              <Link to="/demo">
+              <Link to="/try-ai-agent">
                 <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
                 <span>طلب عرض توضيحي</span>
               </Link>
@@ -55,7 +55,7 @@ const NotFound = () => {
               </div>
               <h3 className="font-bold text-lg mb-2">هل تحتاج للمساعدة؟</h3>
               <p className="text-gray-600 mb-4">فريق الدعم الفني جاهز للإجابة على استفساراتك</p>
-              <Link to="/demo" className="text-awfar-primary font-medium hover:underline">
+              <Link to="/try-ai-agent" className="text-awfar-primary font-medium hover:underline">
                 تواصل معنا
               </Link>
             </div>
@@ -68,7 +68,7 @@ const NotFound = () => {
               </div>
               <h3 className="font-bold text-lg mb-2">جرب الموظف الذكي</h3>
               <p className="text-gray-600 mb-4">احصل على تجربة مجانية لمدة 14 يوم واستمتع بكامل المميزات</p>
-              <Link to="/demo" className="text-awfar-primary font-medium hover:underline">
+              <Link to="/try-ai-agent" className="text-awfar-primary font-medium hover:underline">
                 ابدأ التجربة المجانية
               </Link>
             </div>

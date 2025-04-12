@@ -1,5 +1,5 @@
 
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import About from "./pages/About";
 import LeadManagement from "./pages/LeadManagement";
@@ -25,10 +25,17 @@ import CreateSuperAdmin from "./pages/CreateSuperAdmin";
 import { Toaster } from "./components/ui/toaster";
 import { Toaster as SonnerToaster } from "sonner";
 
-// Import our new pages
+// Import pages
 import PropertiesManagement from "./pages/PropertiesManagement";
 import FormBuilderManagement from "./pages/FormBuilderManagement";
 import FormEmbed from "./pages/FormEmbed";
+import TryAIAgent from "./pages/TryAIAgent";
+import AIAgent from "./pages/AIAgent";
+import AboutUs from "./pages/AboutUs";
+import Channels from "./pages/Channels";
+import Solutions from "./pages/Solutions";
+import Integration from "./pages/Integration";
+import Pricing from "./pages/Pricing";
 
 function App() {
   return (
@@ -56,11 +63,24 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
         
-        {/* Add our new routes */}
+        {/* Properties and Form Management */}
         <Route path="/properties" element={<PropertiesManagement />} />
         <Route path="/form-builder" element={<FormBuilderManagement />} />
         <Route path="/form-embed/:formId" element={<FormEmbed />} />
         
+        {/* Marketing/Public Pages */}
+        <Route path="/ai-agent" element={<AIAgent />} />
+        <Route path="/try-ai-agent" element={<TryAIAgent />} />
+        <Route path="/channels" element={<Channels />} />
+        <Route path="/solutions" element={<Solutions />} />
+        <Route path="/integration" element={<Integration />} />
+        <Route path="/pricing" element={<Pricing />} />
+        <Route path="/about-us" element={<AboutUs />} />
+        
+        {/* Fix for old paths */}
+        <Route path="/demo" element={<Navigate to="/try-ai-agent" replace />} />
+        
+        {/* Catch all not found route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />
