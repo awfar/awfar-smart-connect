@@ -15,6 +15,9 @@ const CallToAction = () => {
           </p>
           <div className="flex flex-wrap gap-6 justify-center">
             <Button asChild size="lg" className="bg-white text-awfar-primary hover:bg-gray-100">
+              <Link to="/dashboard">استخدم لوحة التحكم</Link>
+            </Button>
+            <Button asChild size="lg" className="bg-white text-awfar-primary hover:bg-gray-100">
               <Link to="/demo">ابدأ التجربة المجانية</Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="border-white text-white hover:bg-white/10">
