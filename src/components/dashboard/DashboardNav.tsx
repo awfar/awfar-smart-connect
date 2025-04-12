@@ -1,230 +1,116 @@
 
-import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import {
-  BarChartHorizontal,
-  Building,
-  CalendarClock,
-  CheckSquare,
-  ClipboardList,
-  CreditCard,
-  Home,
-  LayoutDashboard,
-  Menu,
-  MessageSquare,
-  Settings,
-  Users,
-  X,
-  UserCog,
-  Building2,
+import { 
+  BarChart, 
+  Calendar, 
+  Contact, 
+  DollarSign, 
+  FileText, 
+  Home, 
+  LayoutDashboard, 
+  Mail, 
+  Settings, 
+  UserCog, 
+  Users, 
+  FileEdit, 
+  DatabaseZap,
+  FormInput
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetClose,
-} from '@/components/ui/sheet';
+import { cn } from "@/lib/utils";
+import { Button } from '../ui/button';
 
-type NavItem = {
-  title: string;
-  href: string;
-  icon: React.ElementType;
-  submenu?: NavItem[];
-};
+const DashboardNav = () => {
+  const { pathname } = useLocation();
 
-const DashboardNav: React.FC = () => {
-  const location = useLocation();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  // Ensure hydration mismatch doesn't happen
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  
-  const navItems: NavItem[] = [
+  const navItems = [
     {
-      title: 'لوحة التحكم',
       href: '/dashboard',
+      label: 'لوحة التحكم',
       icon: LayoutDashboard,
     },
     {
-      title: 'العملاء المحتملين',
-      href: '/dashboard/leads',
+      href: '/leads',
+      label: 'العملاء المحتملين',
       icon: Users,
     },
     {
-      title: 'الشركات',
-      href: '/dashboard/companies',
-      icon: Building,
+      href: '/deals',
+      label: 'الصفقات',
+      icon: DollarSign,
     },
     {
-      title: 'الصفقات',
-      href: '/dashboard/deals',
-      icon: CreditCard,
+      href: '/companies',
+      label: 'الشركات',
+      icon: Home,
     },
     {
-      title: 'المواعيد',
-      href: '/dashboard/appointments',
-      icon: CalendarClock,
+      href: '/appointments',
+      label: 'المواعيد',
+      icon: Calendar,
     },
     {
-      title: 'التذاكر والدعم',
-      href: '/dashboard/tickets',
-      icon: ClipboardList,
+      href: '/tasks',
+      label: 'المهام',
+      icon: FileText,
     },
     {
-      title: 'المهام',
-      href: '/dashboard/tasks',
-      icon: CheckSquare,
+      href: '/tickets',
+      label: 'تذاكر الدعم',
+      icon: Mail,
     },
     {
-      title: 'المحادثات',
-      href: '/dashboard/chats',
-      icon: MessageSquare,
+      href: '/reports',
+      label: 'التقارير',
+      icon: BarChart,
     },
     {
-      title: 'التقارير',
-      href: '/dashboard/reports',
-      icon: BarChartHorizontal,
+      href: '/users',
+      label: 'المستخدمين',
+      icon: Contact,
     },
     {
-      title: 'إدارة المحتوى',
-      href: '/dashboard/cms',
+      href: '/properties',
+      label: 'إدارة الخصائص',
+      icon: DatabaseZap,
+    },
+    {
+      href: '/form-builder',
+      label: 'بناء النماذج',
+      icon: FormInput,
+    },
+    {
+      href: '/cms',
+      label: 'إدارة المحتوى',
+      icon: FileEdit,
+    },
+    {
+      href: '/settings',
+      label: 'الإعدادات',
       icon: Settings,
-    },
-    {
-      title: 'إدارة المستخدمين',
-      href: '/dashboard/users',
-      icon: UserCog,
-    },
-    {
-      title: 'الأقسام والفرق',
-      href: '/dashboard/departments',
-      icon: Building2,
-    },
-    {
-      title: 'الإعدادات',
-      href: '/dashboard/settings',
-      icon: Settings,
-    },
-  ];
-  
-  const isActive = (path: string) => {
-    if (path === '/dashboard') {
-      return location.pathname === '/dashboard';
     }
-    return location.pathname.startsWith(path);
-  };
-
-  if (!mounted) return null;
+  ];
 
   return (
-    <>
-      {/* Mobile Menu Button */}
-      <div className="lg:hidden fixed top-4 right-4 z-40">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setIsMobileMenuOpen(true)}
-          aria-label="قائمة التنقل"
-          className="bg-white shadow-md"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-      </div>
-
-      {/* Mobile Menu Sheet */}
-      <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-        <SheetContent side="right" className="w-[280px] p-0 rtl">
-          <SheetHeader className="border-b h-14 px-4 flex items-center justify-between">
-            <SheetTitle className="flex items-center gap-2 font-semibold mr-2">
-              <Home className="h-5 w-5" />
-              <span>Awfar.com</span>
-            </SheetTitle>
-            <SheetClose asChild>
-              <Button variant="ghost" size="icon" aria-label="إغلاق">
-                <X className="h-5 w-5" />
-              </Button>
-            </SheetClose>
-          </SheetHeader>
-          <div className="overflow-auto py-4 h-[calc(100vh-3.5rem)]">
-            <nav className="grid items-start px-2 text-sm">
-              {navItems.map((item, index) => (
-                <Link
-                  key={index}
-                  to={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-md px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground",
-                    isActive(item.href) && "bg-muted font-medium text-foreground"
-                  )}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <item.icon className="h-4 w-4" />
-                  <span>{item.title}</span>
-                </Link>
-              ))}
-            </nav>
-          </div>
-          <div className="mt-auto p-4 border-t">
-            <div className="flex items-center gap-3 rounded-md px-3 py-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
-                <Users className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">فريق أوفر</p>
-                <p className="text-xs text-muted-foreground">
-                  مصر | الفريق الإداري
-                </p>
-              </div>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:flex h-screen w-64 flex-col border-l bg-white rtl">
-        <div className="flex h-14 items-center border-b px-4">
-          <Link to="/" className="flex items-center gap-2 font-semibold">
-            <Home className="h-5 w-5" />
-            <span>Awfar.com</span>
+    <div className="hidden lg:block min-h-screen w-64 border-l p-4 bg-white dark:bg-gray-900">
+      <div className="space-y-1">
+        {navItems.map((item) => (
+          <Link key={item.href} to={item.href}>
+            <Button
+              variant={pathname === item.href ? "secondary" : "ghost"}
+              className={cn(
+                "w-full justify-start gap-2",
+                pathname === item.href
+                  ? "bg-muted hover:bg-muted"
+                  : "hover:bg-transparent hover:underline"
+              )}
+            >
+              <item.icon className="h-4 w-4" />
+              {item.label}
+            </Button>
           </Link>
-        </div>
-        <div className="flex-1 overflow-auto py-2">
-          <nav className="grid items-start px-2 text-sm">
-            {navItems.map((item, index) => (
-              <Link
-                key={index}
-                to={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-muted-foreground hover:bg-muted hover:text-foreground",
-                  isActive(item.href) && "bg-muted font-medium text-foreground"
-                )}
-              >
-                <item.icon className="h-4 w-4" />
-                <span>{item.title}</span>
-              </Link>
-            ))}
-          </nav>
-        </div>
-        <div className="mt-auto p-4 border-t">
-          <div className="flex items-center gap-3 rounded-md px-3 py-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10">
-              <Users className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm font-medium">فريق أوفر</p>
-              <p className="text-xs text-muted-foreground">
-                مصر | الفريق الإداري
-              </p>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
-    </>
+    </div>
   );
 };
 

@@ -1,72 +1,71 @@
 
-import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
-import { Toaster } from 'sonner';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import LoginPage from './pages/LoginPage';
-import Dashboard from './pages/Dashboard';
-import UserManagement from './pages/UserManagement';
-import DepartmentsManagement from './pages/DepartmentsManagement';
-import TeamsManagement from './pages/TeamsManagement';
-import LeadManagement from './pages/LeadManagement';
-import NotFound from './pages/NotFound';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Dashboard from "./pages/Dashboard";
+import About from "./pages/About";
+import LeadManagement from "./pages/LeadManagement";
+import LeadDetails from "./pages/LeadDetails";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Index from "./pages/Index";
+import NotFound from "./pages/NotFound";
+import AppointmentsManagement from "./pages/AppointmentsManagement";
+import TicketsManagement from "./pages/TicketsManagement";
+import TasksManagement from "./pages/TasksManagement";
+import CompaniesManagement from "./pages/CompaniesManagement";
+import DealsManagement from "./pages/DealsManagement";
+import UserManagement from "./pages/UserManagement";
+import TeamsManagement from "./pages/TeamsManagement";
+import DepartmentsManagement from "./pages/DepartmentsManagement";
+import RolesManagement from "./pages/RolesManagement";
+import PermissionsManagement from "./pages/PermissionsManagement";
+import ReportsManagement from "./pages/ReportsManagement";
+import Settings from "./pages/Settings";
+import CMS from "./pages/CMS";
 import CreateSuperAdmin from "./pages/CreateSuperAdmin";
-import PermissionsManagement from './pages/PermissionsManagement';
-import RolesManagement from './pages/RolesManagement';
-import CompaniesManagement from './pages/CompaniesManagement';
-import DealsManagement from './pages/DealsManagement';
-import CMS from './pages/CMS';
-import Settings from './pages/Settings';
-import TasksManagement from './pages/TasksManagement';
-import TicketsManagement from './pages/TicketsManagement';
-import AppointmentsManagement from './pages/AppointmentsManagement';
-import ChatsManagement from './pages/ChatsManagement';
-import ReportsManagement from './pages/ReportsManagement';
+import { Toaster } from "./components/ui/toaster";
+import { Toaster as SonnerToaster } from "sonner";
 
-function AppRoutes() {
-  const { isLoggedIn } = useAuth();
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', 'light');
-    document.documentElement.classList.add('rtl');
-  }, []);
-
-  return (
-    <div>
-      <Router>
-        <Routes>
-          <Route path="/login" element={!isLoggedIn ? <LoginPage /> : <Navigate to="/dashboard" />} />
-          <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="/dashboard" element={isLoggedIn ? <Dashboard /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/leads" element={isLoggedIn ? <LeadManagement /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/companies" element={isLoggedIn ? <CompaniesManagement /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/deals" element={isLoggedIn ? <DealsManagement /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/appointments" element={isLoggedIn ? <AppointmentsManagement /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/tickets" element={isLoggedIn ? <TicketsManagement /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/tasks" element={isLoggedIn ? <TasksManagement /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/chats" element={isLoggedIn ? <ChatsManagement /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/reports" element={isLoggedIn ? <ReportsManagement /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/cms" element={isLoggedIn ? <CMS /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/settings" element={isLoggedIn ? <Settings /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/users" element={isLoggedIn ? <UserManagement /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/departments" element={isLoggedIn ? <DepartmentsManagement /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/teams" element={isLoggedIn ? <TeamsManagement /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/permissions" element={isLoggedIn ? <PermissionsManagement /> : <Navigate to="/login" />} />
-          <Route path="/dashboard/roles" element={isLoggedIn ? <RolesManagement /> : <Navigate to="/login" />} />
-          <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Router>
-      <Toaster />
-    </div>
-  );
-}
+// Import our new pages
+import PropertiesManagement from "./pages/PropertiesManagement";
+import FormBuilderManagement from "./pages/FormBuilderManagement";
+import FormEmbed from "./pages/FormEmbed";
 
 function App() {
   return (
-    <AuthProvider>
-      <AppRoutes />
-    </AuthProvider>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/leads" element={<LeadManagement />} />
+        <Route path="/leads/:id" element={<LeadDetails />} />
+        <Route path="/appointments" element={<AppointmentsManagement />} />
+        <Route path="/tickets" element={<TicketsManagement />} />
+        <Route path="/tasks" element={<TasksManagement />} />
+        <Route path="/companies" element={<CompaniesManagement />} />
+        <Route path="/deals" element={<DealsManagement />} />
+        <Route path="/users" element={<UserManagement />} />
+        <Route path="/teams" element={<TeamsManagement />} />
+        <Route path="/departments" element={<DepartmentsManagement />} />
+        <Route path="/roles" element={<RolesManagement />} />
+        <Route path="/permissions" element={<PermissionsManagement />} />
+        <Route path="/reports" element={<ReportsManagement />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/cms" element={<CMS />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
+        
+        {/* Add our new routes */}
+        <Route path="/properties" element={<PropertiesManagement />} />
+        <Route path="/form-builder" element={<FormBuilderManagement />} />
+        <Route path="/form-embed/:formId" element={<FormEmbed />} />
+        
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+      <Toaster />
+      <SonnerToaster position="top-center" expand closeButton richColors />
+    </Router>
   );
 }
 
