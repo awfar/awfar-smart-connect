@@ -1,105 +1,11 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Lead, LeadFilters } from "./types/leadTypes";
+import { mapRowToLead } from "./utils/leadMappers";
 
-export interface Lead {
-  id: string;
-  first_name: string;
-  last_name: string;
-  company: string | null;
-  email: string;
-  phone: string | null;
-  country: string;
-  industry: string;
-  stage: string;
-  source: string | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-  assigned_to?: string;
-  position?: string | null;
-  owner?: {
-    name: string;
-    avatar: string;
-    initials: string;
-  };
-}
-
-export interface LeadActivity {
-  id: string;
-  lead_id: string;
-  type: string;
-  description: string;
-  created_at: string;
-  created_by?: string;
-  scheduled_at?: string | null;
-  completed_at?: string | null;
-}
-
-export interface LeadFilters {
-  stage?: string;
-  source?: string;
-  country?: string;
-  industry?: string;
-  assigned_to?: string;
-  date_range?: string;
-}
-
-// Type definition for database lead row
-interface LeadRow {
-  id: string;
-  first_name: string;
-  last_name: string;
-  company: string | null;
-  email: string;
-  phone: string | null;
-  country?: string | null;
-  industry?: string | null;
-  status: string; // This is mapped to 'stage' in our interface
-  source: string | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-  assigned_to?: string | null;
-  position?: string | null;
-  profiles?: {
-    first_name: string | null;
-    last_name: string | null;
-  } | null;
-}
-
-// Helper function to map database row to Lead interface
-const mapRowToLead = (row: LeadRow): Lead => {
-  const ownerFirstName = row.profiles?.first_name || '';
-  const ownerLastName = row.profiles?.last_name || '';
-  const ownerName = `${ownerFirstName} ${ownerLastName}`.trim();
-  const ownerInitials = 
-    (ownerFirstName ? ownerFirstName[0] : '') + 
-    (ownerLastName ? ownerLastName[0] : '');
-  
-  return {
-    id: row.id,
-    first_name: row.first_name,
-    last_name: row.last_name,
-    company: row.company,
-    email: row.email,
-    phone: row.phone,
-    country: row.country || '',
-    industry: row.industry || '',
-    stage: row.status, // Map status to stage
-    source: row.source,
-    notes: row.notes,
-    created_at: row.created_at,
-    updated_at: row.updated_at,
-    assigned_to: row.assigned_to || undefined,
-    position: row.position,
-    owner: ownerName ? {
-      name: ownerName,
-      avatar: '/placeholder.svg',
-      initials: ownerInitials || 'مس'
-    } : undefined
-  };
-};
+export { Lead, LeadFilters } from "./types/leadTypes";
+export { fetchLeadActivities, createLeadActivity, completeLeadActivity } from "./leadActivitiesService";
 
 export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
   try {
@@ -165,9 +71,8 @@ export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
     
     if (error) throw error;
     
-    // Use a simple type cast to avoid deep recursion
-    const leadsData = data as unknown as LeadRow[];
-    return leadsData.map(mapRowToLead);
+    // Avoid type recursion by using simple casting
+    return (data || []).map(row => mapRowToLead(row as any));
     
   } catch (error) {
     console.error("Error fetching leads:", error);
@@ -193,30 +98,12 @@ export const fetchLeadById = async (id: string): Promise<Lead | null> => {
     if (error) throw error;
     if (!data) return null;
     
-    return mapRowToLead(data as LeadRow);
+    return mapRowToLead(data as any);
     
   } catch (error) {
     console.error("Error fetching lead by ID:", error);
     toast.error("فشل في جلب بيانات العميل المحتمل");
     return null;
-  }
-};
-
-export const fetchLeadActivities = async (leadId: string): Promise<LeadActivity[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('lead_activities')
-      .select('*')
-      .eq('lead_id', leadId)
-      .order('created_at', { ascending: false });
-    
-    if (error) throw error;
-    
-    return data || [];
-  } catch (error) {
-    console.error("Error fetching lead activities:", error);
-    toast.error("فشل في جلب أنشطة العميل المحتمل");
-    return [];
   }
 };
 
@@ -249,7 +136,7 @@ export const createLead = async (lead: Partial<Lead>): Promise<Lead | null> => {
     
     toast.success("تم إضافة العميل المحتمل بنجاح");
     
-    return data ? mapRowToLead(data as LeadRow) : null;
+    return data ? mapRowToLead(data as any) : null;
   } catch (error) {
     console.error("Error creating lead:", error);
     toast.error("فشل في إضافة العميل المحتمل");
@@ -287,57 +174,10 @@ export const updateLead = async (id: string, lead: Partial<Lead>): Promise<Lead 
     
     toast.success("تم تحديث بيانات العميل المحتمل بنجاح");
     
-    return data ? mapRowToLead(data as LeadRow) : null;
+    return data ? mapRowToLead(data as any) : null;
   } catch (error) {
     console.error("Error updating lead:", error);
     toast.error("فشل في تحديث بيانات العميل المحتمل");
-    return null;
-  }
-};
-
-export const createLeadActivity = async (activity: Partial<LeadActivity>): Promise<LeadActivity | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('lead_activities')
-      .insert([{
-        lead_id: activity.lead_id,
-        type: activity.type,
-        description: activity.description,
-        scheduled_at: activity.scheduled_at,
-        created_by: (await supabase.auth.getUser()).data.user?.id
-      }])
-      .select()
-      .single();
-    
-    if (error) throw error;
-    
-    toast.success("تم إضافة النشاط بنجاح");
-    return data;
-  } catch (error) {
-    console.error("Error creating lead activity:", error);
-    toast.error("فشل في إضافة النشاط");
-    return null;
-  }
-};
-
-export const completeLeadActivity = async (activityId: string): Promise<LeadActivity | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('lead_activities')
-      .update({
-        completed_at: new Date().toISOString()
-      })
-      .eq('id', activityId)
-      .select()
-      .single();
-    
-    if (error) throw error;
-    
-    toast.success("تم إكمال النشاط بنجاح");
-    return data;
-  } catch (error) {
-    console.error("Error completing lead activity:", error);
-    toast.error("فشل في إكمال النشاط");
     return null;
   }
 };
