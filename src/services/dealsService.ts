@@ -24,7 +24,7 @@ export const fetchDeals = async (): Promise<Deal[]> => {
       .from('deals')
       .select(`
         *,
-        companies:company_id (name)
+        companies (name)
       `)
       .order('created_at', { ascending: false });
     
@@ -48,7 +48,7 @@ export const fetchDealById = async (id: string): Promise<Deal | null> => {
       .from('deals')
       .select(`
         *,
-        companies:company_id (name)
+        companies (name)
       `)
       .eq('id', id)
       .single();
@@ -140,7 +140,7 @@ export const filterDeals = async (filters: {
       .from('deals')
       .select(`
         *,
-        companies:company_id (name)
+        companies (name)
       `);
     
     if (filters.status && filters.status !== 'all') {

@@ -201,6 +201,66 @@ export type Database = {
           },
         ]
       }
+      deals: {
+        Row: {
+          company_id: string | null
+          contact_id: string | null
+          created_at: string | null
+          description: string | null
+          expected_close_date: string | null
+          id: string
+          name: string
+          owner_id: string | null
+          stage: string
+          status: string
+          updated_at: string | null
+          value: number | null
+        }
+        Insert: {
+          company_id?: string | null
+          contact_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          expected_close_date?: string | null
+          id?: string
+          name: string
+          owner_id?: string | null
+          stage: string
+          status?: string
+          updated_at?: string | null
+          value?: number | null
+        }
+        Update: {
+          company_id?: string | null
+          contact_id?: string | null
+          created_at?: string | null
+          description?: string | null
+          expected_close_date?: string | null
+          id?: string
+          name?: string
+          owner_id?: string | null
+          stage?: string
+          status?: string
+          updated_at?: string | null
+          value?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "company_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       landing_pages: {
         Row: {
           content: Json
