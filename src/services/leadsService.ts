@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -103,8 +102,7 @@ const mapRowToLead = (row: LeadRow): Lead => {
 
 export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
   try {
-    // Create the base query as a string, not as a chain of method calls
-    const query = supabase.from('leads').select(`
+    let query = supabase.from('leads').select(`
       *,
       profiles:assigned_to (
         first_name,
@@ -112,34 +110,31 @@ export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
       )
     `);
     
-    // Apply filters without reassigning the query variable
-    let filteredQuery = query;
-    
     if (filters) {
       if (filters.stage && filters.stage !== 'all') {
-        filteredQuery = filteredQuery.eq('status', filters.stage);
+        query = query.eq('status', filters.stage);
       }
       
       if (filters.source && filters.source !== 'all') {
-        filteredQuery = filteredQuery.eq('source', filters.source);
+        query = query.eq('source', filters.source);
       }
       
       if (filters.country && filters.country !== 'all') {
-        filteredQuery = filteredQuery.eq('country', filters.country);
+        query = query.eq('country', filters.country);
       }
       
       if (filters.industry && filters.industry !== 'all') {
-        filteredQuery = filteredQuery.eq('industry', filters.industry);
+        query = query.eq('industry', filters.industry);
       }
       
       if (filters.assigned_to && filters.assigned_to !== 'all') {
-        filteredQuery = filteredQuery.eq('assigned_to', filters.assigned_to);
+        query = query.eq('assigned_to', filters.assigned_to);
       }
       
       if (filters.date_range === 'today') {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        filteredQuery = filteredQuery.gte('created_at', today.toISOString());
+        query = query.gte('created_at', today.toISOString());
       } else if (filters.date_range === 'yesterday') {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
@@ -148,21 +143,19 @@ export const fetchLeads = async (filters?: LeadFilters): Promise<Lead[]> => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        filteredQuery = filteredQuery
+        query = query
           .gte('created_at', yesterday.toISOString())
           .lt('created_at', today.toISOString());
       }
     }
     
-    // Execute the final query with ordering
-    const { data, error } = await filteredQuery.order('created_at', { ascending: false });
+    query = query.order('created_at', { ascending: false });
+    const { data, error } = await query;
     
     if (error) throw error;
     
-    // Use explicit type casting to avoid deep instantiation
-    const leadsData = data as LeadRow[];
+    const leadsData = (data || []) as unknown as LeadRow[];
     
-    // Map the data to our Lead interface
     return leadsData.map(mapRowToLead);
     
   } catch (error) {
@@ -189,7 +182,6 @@ export const fetchLeadById = async (id: string): Promise<Lead | null> => {
     if (error) throw error;
     if (!data) return null;
     
-    // Map the row to a Lead object
     return mapRowToLead(data as LeadRow);
     
   } catch (error) {
@@ -219,18 +211,15 @@ export const fetchLeadActivities = async (leadId: string): Promise<LeadActivity[
 
 export const createLead = async (lead: Partial<Lead>): Promise<Lead | null> => {
   try {
-    // Convert stage to status for DB
     const leadData: any = { ...lead };
     if (lead.stage) {
       leadData.status = lead.stage;
       delete leadData.stage;
     }
     
-    // Add default values for required fields
     if (!leadData.country) leadData.country = '';
     if (!leadData.industry) leadData.industry = '';
     
-    // Remove owner property as it's not in the database
     delete leadData.owner;
     
     const { data, error } = await supabase
@@ -249,7 +238,6 @@ export const createLead = async (lead: Partial<Lead>): Promise<Lead | null> => {
     
     toast.success("تم إضافة العميل المحتمل بنجاح");
     
-    // Return the created lead with proper mapping
     return data ? mapRowToLead(data as LeadRow) : null;
   } catch (error) {
     console.error("Error creating lead:", error);
@@ -260,14 +248,12 @@ export const createLead = async (lead: Partial<Lead>): Promise<Lead | null> => {
 
 export const updateLead = async (id: string, lead: Partial<Lead>): Promise<Lead | null> => {
   try {
-    // Convert stage to status field for DB
     const updateData: any = { ...lead };
     if (lead.stage) {
       updateData.status = lead.stage;
       delete updateData.stage;
     }
     
-    // Remove properties that should not be sent to the database
     delete updateData.id;
     delete updateData.created_at;
     delete updateData.updated_at;
@@ -290,7 +276,6 @@ export const updateLead = async (id: string, lead: Partial<Lead>): Promise<Lead 
     
     toast.success("تم تحديث بيانات العميل المحتمل بنجاح");
     
-    // Return the updated lead with proper mapping
     return data ? mapRowToLead(data as LeadRow) : null;
   } catch (error) {
     console.error("Error updating lead:", error);
