@@ -3,14 +3,37 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const Hero = () => {
+  const features = [
+    "متاح 24/7 بدون توقف",
+    "يتعامل مع عدد لا نهائي من المحادثات",
+    "يرد على أكثر من 1000 تعليق في نفس الثانية",
+    "يتحدث بكل اللغات واللهجات",
+    "يقوم بدور Sales Agents بخبرة سنين",
+    "نسبة الخطأ صفر%"
+  ];
+
   return (
     <section className="bg-gradient-to-r from-awfar-primary to-awfar-secondary text-white py-20 overflow-hidden relative">
       <div className="container mx-auto relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           <div className="text-center lg:text-right">
-            <h1 className="text-4xl md:text-5xl font-bold mb-6">كل تواصلك في مكان واحد</h1>
+            <h1 className="text-4xl md:text-5xl font-bold mb-6">من دلوقتي يقدر يبقى عندك موظف</h1>
+            <div className="mb-8">
+              <ul className="space-y-3 text-lg">
+                {features.map((feature, index) => (
+                  <li key={index} className="flex items-center justify-center lg:justify-end gap-3">
+                    <span>{feature}</span>
+                    <div className="bg-awfar-accent/30 rounded-full p-1 flex-shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-awfar-accent" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
             <p className="text-xl mb-8 text-gray-100">
-              مرحبا بكم في أوفر. نحن نسعى لتمكينكم من تقديم تجربة عملاء استثنائية من خلال حلولنا المتكاملة لتجميع كل قنوات التواصل في منصة واحدة، لتسهيل العمليات وزيادة رضا العملاء بشكل ملحوظ.
+              كل ده في نفس اللحظة … بأقل من مرتب موظف خدمة عملاء
             </p>
             <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
               <Button asChild size="lg" className="bg-awfar-accent text-awfar-primary hover:opacity-90">
@@ -24,7 +47,7 @@ const Hero = () => {
           <div className="flex justify-center lg:justify-end">
             <div className="relative">
               <img 
-                src="/lovable-uploads/307a5646-c037-4a60-ab47-b52f792a3b05.png" 
+                src="/lovable-uploads/4ae3a89c-aad3-4d1e-9beb-3890147a56ae.png" 
                 alt="Awfar AI Agent" 
                 className="w-full max-w-md rounded-lg shadow-lg animate-float"
               />

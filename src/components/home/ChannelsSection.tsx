@@ -38,6 +38,33 @@ const ChannelsSection = () => {
     },
   ];
 
+  const distributionMethods = [
+    {
+      title: "وكيل ذكاء اصطناعي",
+      subtitle: "إدارة الطلبات",
+      icon: "/lovable-uploads/bf8a59d9-e92a-42fc-b7f5-5f96e1497988.png",
+      description: "تعيين للبوت أو موظف الذكاء الاصطناعي"
+    },
+    {
+      title: "كريم أحمد",
+      subtitle: "إدارة الشكاوى",
+      icon: "https://randomuser.me/api/portraits/men/45.jpg",
+      description: "تعيين لنفس الموظف السابق تلقائياً"
+    },
+    {
+      title: "عبد الرحمن",
+      subtitle: "إدارة الطلبات",
+      icon: "https://randomuser.me/api/portraits/men/32.jpg",
+      description: "تعيين لأقل موظف لديه محادثات مفتوحة"
+    },
+    {
+      title: "محمود محمد",
+      subtitle: "إدارة الشكاوى",
+      icon: "https://randomuser.me/api/portraits/men/22.jpg",
+      description: "تعيين يدوي حسب متطلبات العميل"
+    }
+  ];
+
   return (
     <section className="py-20 bg-gray-50">
       <div className="container">
@@ -75,37 +102,44 @@ const ChannelsSection = () => {
           </div>
           
           <div>
-            <div className="relative">
-              <div className="bg-gradient-to-r from-awfar-primary to-awfar-secondary rounded-lg p-6 md:p-10 shadow-xl">
-                <div className="grid grid-cols-2 gap-6">
-                  {platforms.map((platform, index) => (
-                    <div key={index} className="bg-white rounded-lg p-4 flex flex-col items-center justify-center">
-                      {platform.icon}
-                      <span className="mt-3 font-medium">{platform.name}</span>
+            <div className="space-y-8">
+              <div className="bg-gradient-to-r from-awfar-primary to-awfar-secondary rounded-lg p-6 md:p-8 shadow-xl">
+                <h3 className="text-lg font-bold text-white mb-4 text-center">تحكم في توزيع محادثات عملائك</h3>
+                <p className="text-white mb-6 text-center text-sm">
+                  4 طرق توزيع، اختر منها ما يناسب احتياجاتك!
+                </p>
+                
+                <div className="space-y-4">
+                  {distributionMethods.map((method, index) => (
+                    <div key={index} className="bg-white/90 rounded-lg p-4 flex items-center gap-3">
+                      <img 
+                        src={method.icon} 
+                        alt={method.title} 
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                      <div>
+                        <div className="flex gap-2 items-center">
+                          <h4 className="font-bold text-awfar-primary">{method.title}</h4>
+                          <span className="text-xs bg-gray-100 px-2 py-1 rounded-full">{method.subtitle}</span>
+                        </div>
+                        <p className="text-sm text-gray-600">{method.description}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
-
-                <div className="mt-8 bg-white rounded-lg p-4 shadow-md">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="h-10 w-10 rounded-full bg-awfar-primary flex items-center justify-center">
-                      <span className="text-white font-bold">أ</span>
+              </div>
+              
+              <div className="bg-white rounded-lg p-6 shadow-md">
+                <h3 className="text-lg font-bold text-awfar-primary mb-4 text-center">قنوات التواصل المدعومة</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                  {platforms.map((platform, index) => (
+                    <div key={index} className="bg-gray-50 rounded-lg p-3 flex flex-col items-center justify-center">
+                      {platform.icon}
+                      <span className="mt-2 text-sm font-medium">{platform.name}</span>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">مركز تحكم أوفر</p>
-                      <p className="text-xs text-gray-500">واجهة موحدة لكل القنوات</p>
-                    </div>
-                  </div>
-                  <div className="bg-gray-100 p-3 rounded-lg text-right">
-                    <p className="text-sm">جميع الرسائل من كافة المنصات في مكان واحد، مع إمكانية توزيع المهام وتتبع الأداء</p>
-                  </div>
+                  ))}
                 </div>
               </div>
-              <img 
-                src="/lovable-uploads/399a88c1-4ff7-4a88-ad48-3532e6c669c4.png" 
-                alt="Messaging Platform" 
-                className="absolute -bottom-8 -right-8 w-32 h-32 object-contain"
-              />
             </div>
           </div>
         </div>

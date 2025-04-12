@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { MessageSquare, Mic, Image } from "lucide-react";
 
 const AIFeature = () => {
   return (
@@ -11,7 +12,7 @@ const AIFeature = () => {
             <div className="relative">
               <div className="absolute -z-10 w-72 h-72 bg-awfar-accent/20 rounded-full -top-10 -left-10 blur-3xl"></div>
               <img 
-                src="/lovable-uploads/b0b14990-b364-428f-b4d8-3eec941921fa.png"
+                src="/lovable-uploads/72cbf72d-0947-4e2f-8a78-d00fce992254.png"
                 alt="Awfar AI Agent" 
                 className="rounded-lg shadow-xl max-w-full mx-auto relative z-10"
               />
@@ -25,7 +26,7 @@ const AIFeature = () => {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-awfar-primary">الرد الفوري على استفسارات العملاء مع فهم كامل للهجات المختلفة</p>
+                    <p className="text-sm font-medium text-awfar-primary">الموظف المثالي لخدمة العملاء الأونلاين</p>
                   </div>
                 </div>
               </div>
@@ -36,28 +37,43 @@ const AIFeature = () => {
             <h2 className="text-3xl font-bold text-awfar-primary mb-4">وكيل الذكاء الاصطناعي</h2>
             <h3 className="text-xl text-awfar-secondary mb-6">Awfar AI Agent</h3>
             <p className="text-gray-600 mb-8">
-              نظام متقدم مصمم لتحسين التفاعل مع Awfar وكيل الذكاء الاصطناعي من العملاء، لتبسيط العمليات التجارية وزيادة الكفاءة من خلال الأتمتة الذكية.
+              نظام متقدم مصمم لتحسين التفاعل مع العملاء، تبسيط العمليات التجارية وزيادة الكفاءة من خلال الأتمتة الذكية.
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-bold text-awfar-primary mb-2">ردود تلقائية فورية</h4>
-                <p className="text-sm text-gray-600">يوفر إجابات سريعة ودقيقة للاستفسارات الشائعة للعملاء</p>
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-6 mb-8">
+              <div className="bg-gray-50 p-6 rounded-lg">
+                <h4 className="font-bold text-awfar-primary mb-4">يتفاعل مع رسائل عملائك</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="flex flex-col items-center p-4 bg-white rounded-lg shadow-sm">
+                    <MessageSquare className="h-8 w-8 text-awfar-accent mb-2" />
+                    <span className="font-medium">النصية</span>
+                  </div>
+                  
+                  <div className="flex flex-col items-center p-4 bg-white rounded-lg shadow-sm">
+                    <Mic className="h-8 w-8 text-awfar-accent mb-2" />
+                    <span className="font-medium">الصوتية</span>
+                  </div>
+                  
+                  <div className="flex flex-col items-center p-4 bg-white rounded-lg shadow-sm">
+                    <Image className="h-8 w-8 text-awfar-accent mb-2" />
+                    <span className="font-medium">الصور</span>
+                  </div>
+                </div>
               </div>
               
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-bold text-awfar-primary mb-2">فهم اللهجات والثقافات</h4>
-                <p className="text-sm text-gray-600">قادر على فهم مختلف اللهجات العربية والتفاعل بطريقة مناسبة ثقافياً</p>
-              </div>
-              
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-bold text-awfar-primary mb-2">تحليل البيانات</h4>
-                <p className="text-sm text-gray-600">تخصيص الردود وجمع البيانات وتحليلها لتحسين خدمة العملاء</p>
-              </div>
-              
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-bold text-awfar-primary mb-2">التعلم المستمر</h4>
-                <p className="text-sm text-gray-600">يعتمد على التعلم الآلي لتحسين الأداء وتوقع احتياجات العملاء المستقبلية</p>
+              <div className="bg-gray-50 p-6 rounded-lg">
+                <h4 className="font-bold text-awfar-primary mb-4">يتكلم كل اللغات واللهجات</h4>
+                <div className="flex items-center justify-around">
+                  <div className="flex flex-col items-center">
+                    <img src="/lovable-uploads/bf8a59d9-e92a-42fc-b7f5-5f96e1497988.png" alt="Multi-language support" className="h-20 w-20 object-contain" />
+                    <span className="mt-2 text-sm">دعم اللغة العربية</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <img src="/lovable-uploads/adf52374-3db1-45dd-a60b-018ee4627394.png" alt="Multi-language support" className="h-20 w-20 object-contain" />
+                    <span className="mt-2 text-sm">دعم اللغات الأجنبية</span>
+                  </div>
+                </div>
               </div>
             </div>
             

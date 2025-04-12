@@ -8,6 +8,9 @@ import ChannelsSection from "@/components/home/ChannelsSection";
 import Testimonials from "@/components/home/Testimonials";
 import CallToAction from "@/components/home/CallToAction";
 import ContactForm from "@/components/home/ContactForm";
+import Partners from "@/components/home/Partners";
+import CCommerce from "@/components/home/CCommerce";
+import ComparisonTable from "@/components/home/ComparisonTable";
 
 const Index = () => {
   return (
@@ -18,6 +21,9 @@ const Index = () => {
         <Features />
         <AIFeature />
         <ChannelsSection />
+        <CCommerce />
+        <Partners />
+        <ComparisonTable />
         <Testimonials />
         <CallToAction />
         <ContactForm />
