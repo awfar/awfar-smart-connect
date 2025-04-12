@@ -7,6 +7,7 @@ export interface Role {
   name: string;
   description: string | null;
   created_at?: string;
+  updated_at?: string;
 }
 
 export const fetchRoles = async (): Promise<Role[]> => {
@@ -37,7 +38,9 @@ export const fetchRoles = async (): Promise<Role[]> => {
         allRoles.push({
           id: role.name,
           name: role.name,
-          description: role.description
+          description: role.description,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         });
       }
     });
