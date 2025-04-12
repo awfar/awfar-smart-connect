@@ -17,7 +17,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { User, activateUser, deactivateUser } from "@/services/usersService";
+import { User, activateUser, deactivateUser } from "@/services/users";
 import { toast } from "sonner";
 
 interface UserListProps {

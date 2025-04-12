@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { fetchUserById, updateUser } from "@/services/usersService";
+import { fetchUserById, updateUser } from "@/services/users";
 import { fetchDepartments } from "@/services/departmentsService";
 import { fetchTeams } from "@/services/teamsService";
 import { fetchRoles } from "@/services/rolesService";
