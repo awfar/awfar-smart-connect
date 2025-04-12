@@ -1,116 +1,126 @@
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, Globe, X } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { Menu, X, ChevronDown, Globe } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose,
+} from '@/components/ui/sheet';
 
 const Navbar = () => {
   const location = useLocation();
-  const isMobile = useIsMobile();
   const [isOpen, setIsOpen] = useState(false);
-  const [language, setLanguage] = useState<'ar' | 'en'>('ar');
-  
-  const toggleLanguage = () => {
-    const newLang = language === 'ar' ? 'en' : 'ar';
-    setLanguage(newLang);
-    document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = newLang;
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
   };
-  
-  const navLinks = [
-    { href: '/', label: language === 'ar' ? 'الرئيسية' : 'Home' },
-    { href: '/ai-agent', label: language === 'ar' ? 'الذكاء الاصطناعي' : 'AI Agent' },
-    { href: '/try-ai-agent', label: language === 'ar' ? 'جرّب الوكيل الذكي' : 'Try AI Agent' },
-    { href: '/channels', label: language === 'ar' ? 'قنوات التواصل' : 'Channels' },
-    { href: '/solutions', label: language === 'ar' ? 'الحلول الشاملة' : 'Solutions' },
-    { href: '/integration', label: language === 'ar' ? 'التكامل' : 'Integration' },
-    { href: '/pricing', label: language === 'ar' ? 'الأسعار' : 'Pricing' },
-    { href: '/about', label: language === 'ar' ? 'من نحن' : 'About' },
+
+  const navItems = [
+    { name: 'الرئيسية', path: '/' },
+    { name: 'الذكاء الاصطناعي', path: '/ai-agent' },
+    { name: 'جرّب الوكيل الذكي', path: '/try-ai-agent' },
+    { name: 'قنوات التواصل', path: '/channels' },
+    { name: 'الحلول الشاملة', path: '/solutions' },
+    { name: 'التكامل', path: '/integration' },
+    { name: 'الأسعار', path: '/pricing' },
+    { name: 'من نحن', path: '/about-us' },
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="text-2xl font-bold text-awfar-primary">Awfar</span>
-            <span className="text-2xl font-bold text-awfar-accent">.com</span>
-          </Link>
-          
-          {!isMobile && (
-            <nav className="hidden md:flex gap-6">
-              {navLinks.map((link) => (
-                <Link 
-                  key={link.href} 
-                  to={link.href}
-                  className={`text-sm font-medium transition-colors ${
-                    location.pathname === link.href
-                      ? 'text-awfar-primary' 
-                      : 'text-gray-700 hover:text-awfar-primary'
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-          )}
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleLanguage}
-            className="rounded-full"
-            aria-label={language === 'ar' ? 'Switch to English' : 'التبديل إلى العربية'}
-          >
-            <Globe className="h-5 w-5" />
-          </Button>
-          
-          <div className="hidden md:flex items-center gap-4">
-            <Button variant="outline">
-              {language === 'ar' ? 'تسجيل الدخول' : 'Login'}
-            </Button>
-            <Button className="bg-gradient-to-r from-awfar-primary to-awfar-secondary hover:opacity-90">
-              {language === 'ar' ? 'تسجيل' : 'Sign up'}
-            </Button>
+    <header className="bg-white border-b border-gray-200 rtl">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16 md:h-20">
+          <div className="flex items-center">
+            <Link to="/" className="flex items-center gap-1">
+              <span className="text-xl md:text-2xl font-bold text-gray-900">Awfar</span>
+              <span className="text-xl md:text-2xl font-bold text-awfar-primary">.com</span>
+            </Link>
           </div>
-          
-          {isMobile && (
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-6 rtl:space-x-reverse">
+            {navItems.map((item) => (
+              <Link
+                key={item.name}
+                to={item.path}
+                className={`text-sm font-medium transition-colors hover:text-primary ${
+                  isActive(item.path) ? 'text-primary' : 'text-gray-600'
+                }`}
+              >
+                {item.name}
+              </Link>
+            ))}
+            <div className="mr-4 rtl:ml-4 rtl:mr-0">
+              <Button asChild variant="outline" size="sm">
+                <Link to="/auth/login">تسجيل الدخول</Link>
+              </Button>
+            </div>
+            <Button asChild size="sm">
+              <Link to="/auth/register">تسجيل</Link>
+            </Button>
+          </nav>
+
+          {/* Mobile Navigation */}
+          <div className="flex items-center gap-4 md:hidden">
+            <Button asChild variant="outline" size="sm" className="ml-2 rtl:mr-2 rtl:ml-0">
+              <Link to="/auth/login">تسجيل الدخول</Link>
+            </Button>
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Menu">
-                  <Menu className="h-6 w-6" />
+                <Button variant="ghost" size="icon" aria-label="القائمة">
+                  <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side={language === 'ar' ? 'right' : 'left'} className="w-[300px] sm:w-[400px]">
-                <div className="flex flex-col gap-6 mt-10">
-                  {navLinks.map((link) => (
-                    <Link
-                      key={link.href}
-                      to={link.href}
-                      className={`text-lg font-medium ${
-                        location.pathname === link.href ? 'text-awfar-primary' : ''
-                      }`}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      {link.label}
+              <SheetContent side="right" className="w-[300px] sm:w-[350px] rtl">
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center justify-between py-2 border-b">
+                    <Link to="/" className="flex items-center gap-1" onClick={() => setIsOpen(false)}>
+                      <span className="text-xl font-bold text-gray-900">Awfar</span>
+                      <span className="text-xl font-bold text-awfar-primary">.com</span>
                     </Link>
-                  ))}
-                  <div className="flex flex-col gap-3 mt-4">
-                    <Button variant="outline" className="w-full">
-                      {language === 'ar' ? 'تسجيل الدخول' : 'Login'}
-                    </Button>
-                    <Button className="w-full bg-gradient-to-r from-awfar-primary to-awfar-secondary hover:opacity-90">
-                      {language === 'ar' ? 'تسجيل' : 'Sign up'}
-                    </Button>
+                    <SheetClose asChild>
+                      <Button variant="ghost" size="icon">
+                        <X className="h-5 w-5" />
+                      </Button>
+                    </SheetClose>
+                  </div>
+                  
+                  <div className="flex-1 overflow-y-auto pt-4 pb-8">
+                    <nav className="flex flex-col gap-1">
+                      {navItems.map((item) => (
+                        <SheetClose asChild key={item.name}>
+                          <Link
+                            to={item.path}
+                            className={`px-4 py-3 text-base font-medium rounded-md transition-colors hover:bg-gray-100 ${
+                              isActive(item.path) ? 'text-primary bg-primary/5' : 'text-gray-600'
+                            }`}
+                          >
+                            {item.name}
+                          </Link>
+                        </SheetClose>
+                      ))}
+                    </nav>
+                  </div>
+                  
+                  <div className="pt-4 pb-6 border-t">
+                    <div className="flex flex-col gap-4 px-4">
+                      <Button asChild size="sm">
+                        <Link to="/auth/register">تسجيل</Link>
+                      </Button>
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Globe className="h-4 w-4" />
+                        <span>العربية</span>
+                        <ChevronDown className="h-4 w-4" />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </SheetContent>
             </Sheet>
-          )}
+          </div>
         </div>
       </div>
     </header>
