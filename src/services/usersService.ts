@@ -34,7 +34,16 @@ interface SupabaseUserData {
 
 export const fetchUsers = async (): Promise<User[]> => {
   try {
-    const { data, error } = await supabase
+    // First, fetch all auth users to get their emails
+    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+    
+    if (authError) {
+      console.error("خطأ في جلب بيانات المستخدمين من نظام المصادقة:", authError);
+      // Try to continue with just profiles data
+    }
+    
+    // Then fetch all profiles
+    const { data: profilesData, error: profilesError } = await supabase
       .from('profiles')
       .select(`
         *,
@@ -43,17 +52,40 @@ export const fetchUsers = async (): Promise<User[]> => {
       `)
       .order('created_at', { ascending: false });
     
-    if (error) throw error;
+    if (profilesError) throw profilesError;
+    
+    if (!profilesData || profilesData.length === 0) {
+      // Log that no profiles were found
+      console.log("لا توجد ملفات شخصية تم العثور عليها");
+      return [];
+    }
+    
+    // Log the profiles data for debugging
+    console.log("بيانات الملفات الشخصية:", profilesData);
+    
+    // Create an email map from auth users
+    const emailMap = new Map();
+    if (authUsers?.users) {
+      authUsers.users.forEach(user => {
+        emailMap.set(user.id, user.email);
+      });
+    }
 
     // Transform the data to include email and other properties
-    const usersWithEmails = (data || []).map((user: SupabaseUserData) => {
+    const usersWithEmails = (profilesData || []).map((profile: SupabaseUserData) => {
+      // Get email from auth users if available, otherwise use fallback
+      const email = emailMap.get(profile.id) || profile.email || `user-${profile.id}@example.com`;
+      
       return {
-        ...user,
-        email: user.email || `user-${user.id}@example.com`, // Fallback email
-        department_name: user.departments?.name,
-        team_name: user.teams?.name
+        ...profile,
+        email,
+        department_name: profile.departments?.name,
+        team_name: profile.teams?.name
       } as User;
     });
+    
+    // Log the transformed users data
+    console.log("بيانات المستخدمين بعد المعالجة:", usersWithEmails);
     
     return usersWithEmails;
   } catch (error) {
