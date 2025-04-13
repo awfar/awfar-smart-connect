@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { InvoiceFormValues } from "./InvoiceForm";
 import { InvoiceItemRow } from "./InvoiceItemRow";
-import { InvoiceItem } from "@/services/catalog/invoiceService";
+import { InvoiceItem } from "@/services/catalog/invoice/types";
 
 interface InvoiceItemFormProps {
   calculateTotal: () => number;
@@ -19,9 +19,8 @@ export function InvoiceItemForm({ calculateTotal }: InvoiceItemFormProps) {
     name: "items"
   });
 
-  // Add a new item to the invoice with all required properties explicitly assigned
+  // إضافة عنصر جديد إلى الفاتورة مع تعيين جميع الخصائص المطلوبة بشكل صريح
   const addItem = () => {
-    // Create a new item with all required properties explicitly set as non-optional values
     const newItem: InvoiceItem = { 
       productId: "", 
       productName: "", 
@@ -33,13 +32,13 @@ export function InvoiceItemForm({ calculateTotal }: InvoiceItemFormProps) {
     append(newItem);
   };
 
-  // Remove an item from the invoice
+  // إزالة عنصر من الفاتورة
   const removeItem = (index: number) => {
     remove(index);
     calculateTotal();
   };
 
-  // Update item price when quantity or unit price changes
+  // تحديث سعر العنصر عندما تتغير الكمية أو سعر الوحدة
   const updateItemPrice = (index: number) => {
     const items = form.getValues("items");
     const item = items[index];

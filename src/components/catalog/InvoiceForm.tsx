@@ -13,7 +13,7 @@ import { InvoiceHeader } from "./InvoiceHeader";
 import { InvoiceItemForm } from "./InvoiceItemForm";
 import { InvoiceTotals } from "./InvoiceTotals";
 
-// Define schema for invoice item validation
+// تعريف مخطط التحقق للعناصر
 const invoiceItemSchema = z.object({
   productId: z.string().min(1, { message: "معرف المنتج مطلوب" }),
   productName: z.string().min(1, { message: "اسم المنتج مطلوب" }),
@@ -22,7 +22,7 @@ const invoiceItemSchema = z.object({
   totalPrice: z.coerce.number().positive({ message: "السعر الإجمالي يجب أن يكون رقماً موجباً" }),
 });
 
-// Define schema for invoice validation
+// تعريف مخطط التحقق للفاتورة
 const invoiceSchema = z.object({
   customerId: z.string().min(1, { message: "معرف العميل مطلوب" }),
   customerName: z.string().min(1, { message: "اسم العميل مطلوب" }),
@@ -44,7 +44,7 @@ interface InvoiceFormProps {
   onSuccess: () => void;
 }
 
-// تعريف عنصر فاتورة افتراضي كثابت خارج الدالة الرئيسية
+// تعريف عنصر فاتورة افتراضي
 const DEFAULT_INVOICE_ITEM: InvoiceItem = {
   productId: "",
   productName: "",
@@ -54,7 +54,7 @@ const DEFAULT_INVOICE_ITEM: InvoiceItem = {
 };
 
 export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
-  // Initialize form with default values or provided invoice data
+  // تهيئة النموذج بالقيم الافتراضية أو بيانات الفاتورة المقدمة
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: invoice
@@ -74,14 +74,13 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
         },
   });
 
-  // Calculate total amount of the invoice
+  // حساب المبلغ الإجمالي للفاتورة
   const calculateTotal = () => {
     const items = form.getValues("items");
-    const totalAmount = items.reduce((sum, item) => sum + item.totalPrice, 0);
-    return totalAmount;
+    return items.reduce((sum, item) => sum + item.totalPrice, 0);
   };
 
-  // Handle form submission
+  // معالجة تقديم النموذج
   const onSubmit = async (data: InvoiceFormValues) => {
     try {
       const invoiceData: Omit<Invoice, 'id'> = {
