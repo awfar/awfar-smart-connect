@@ -24,7 +24,7 @@ export interface Invoice {
   notes?: string;
 }
 
-// Mock data for invoices
+// Get all invoices
 export const getInvoices = async (): Promise<Invoice[]> => {
   // First try to get data from Supabase
   try {
@@ -86,6 +86,7 @@ export const getInvoices = async (): Promise<Invoice[]> => {
   return mockInvoices;
 };
 
+// Get invoice by ID
 export const getInvoiceById = async (id: string): Promise<Invoice | null> => {
   try {
     // First try to get from Supabase
@@ -124,6 +125,7 @@ export const getInvoiceById = async (id: string): Promise<Invoice | null> => {
   return (await getInvoices()).find(i => i.id === id) || null;
 };
 
+// Create a new invoice
 export const createInvoice = async (invoice: Omit<Invoice, 'id'>): Promise<Invoice> => {
   try {
     const { data, error } = await supabase
@@ -166,6 +168,7 @@ export const createInvoice = async (invoice: Omit<Invoice, 'id'>): Promise<Invoi
   }
 };
 
+// Update invoice status
 export const updateInvoiceStatus = async (id: string, status: Invoice['status'], paidDate?: string): Promise<Invoice> => {
   try {
     const updateData: any = { status };
@@ -202,6 +205,7 @@ export const updateInvoiceStatus = async (id: string, status: Invoice['status'],
   }
 };
 
+// Generate an invoice for a subscription
 export const generateInvoiceForSubscription = async (subscriptionId: string, customerId: string, customerName: string, items: InvoiceItem[], dueDate: string): Promise<Invoice> => {
   const totalAmount = items.reduce((sum, item) => sum + item.totalPrice, 0);
   const today = new Date().toISOString().split('T')[0];

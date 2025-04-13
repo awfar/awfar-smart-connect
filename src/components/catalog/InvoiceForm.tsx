@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { DatePicker } from "@/components/ui/date-picker";
 import { format, addDays } from "date-fns";
 
+// Define schema for invoice item validation
 const invoiceItemSchema = z.object({
   productId: z.string().min(1, { message: "معرف المنتج مطلوب" }),
   productName: z.string().min(1, { message: "اسم المنتج مطلوب" }),
@@ -23,6 +24,7 @@ const invoiceItemSchema = z.object({
   totalPrice: z.coerce.number().positive({ message: "السعر الإجمالي يجب أن يكون رقماً موجباً" }),
 });
 
+// Define schema for invoice validation
 const invoiceSchema = z.object({
   customerId: z.string().min(1, { message: "معرف العميل مطلوب" }),
   customerName: z.string().min(1, { message: "اسم العميل مطلوب" }),
@@ -45,6 +47,7 @@ interface InvoiceFormProps {
 }
 
 export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
+  // Initialize form with default values or provided invoice data
   const form = useForm<InvoiceFormValues>({
     resolver: zodResolver(invoiceSchema),
     defaultValues: invoice
@@ -56,7 +59,13 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
       : {
           customerId: "",
           customerName: "",
-          items: [{ productId: "", productName: "", quantity: 1, unitPrice: 0, totalPrice: 0 }],
+          items: [{ 
+            productId: "", 
+            productName: "", 
+            quantity: 1, 
+            unitPrice: 0, 
+            totalPrice: 0 
+          }],
           status: "draft",
           issueDate: new Date(),
           dueDate: addDays(new Date(), 30),
@@ -64,11 +73,22 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
         },
   });
 
+  // Add a new item to the invoice
   const addItem = () => {
     const currentItems = form.getValues("items");
-    form.setValue("items", [...currentItems, { productId: "", productName: "", quantity: 1, unitPrice: 0, totalPrice: 0 }]);
+    form.setValue("items", [
+      ...currentItems, 
+      { 
+        productId: "", 
+        productName: "", 
+        quantity: 1, 
+        unitPrice: 0, 
+        totalPrice: 0 
+      }
+    ]);
   };
 
+  // Remove an item from the invoice
   const removeItem = (index: number) => {
     const currentItems = form.getValues("items");
     form.setValue(
@@ -78,6 +98,7 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
     calculateTotal();
   };
 
+  // Update item price when quantity or unit price changes
   const updateItemPrice = (index: number) => {
     const items = form.getValues("items");
     const item = items[index];
@@ -87,12 +108,14 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
     calculateTotal();
   };
 
+  // Calculate total amount of the invoice
   const calculateTotal = () => {
     const items = form.getValues("items");
     const totalAmount = items.reduce((sum, item) => sum + item.totalPrice, 0);
     return totalAmount;
   };
 
+  // Handle form submission
   const onSubmit = async (data: InvoiceFormValues) => {
     try {
       const invoiceData: Omit<Invoice, 'id'> = {

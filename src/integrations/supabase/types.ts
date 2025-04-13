@@ -407,6 +407,57 @@ export type Database = {
         }
         Relationships: []
       }
+      invoices: {
+        Row: {
+          created_at: string | null
+          customer_id: string
+          customer_name: string
+          due_date: string
+          id: string
+          issue_date: string
+          items: Json
+          notes: string | null
+          package_id: string | null
+          paid_date: string | null
+          status: string
+          subscription_id: string | null
+          total_amount: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id: string
+          customer_name: string
+          due_date: string
+          id?: string
+          issue_date: string
+          items?: Json
+          notes?: string | null
+          package_id?: string | null
+          paid_date?: string | null
+          status: string
+          subscription_id?: string | null
+          total_amount?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string
+          customer_name?: string
+          due_date?: string
+          id?: string
+          issue_date?: string
+          items?: Json
+          notes?: string | null
+          package_id?: string | null
+          paid_date?: string | null
+          status?: string
+          subscription_id?: string | null
+          total_amount?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       landing_pages: {
         Row: {
           content: Json
