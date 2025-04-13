@@ -45,7 +45,7 @@ interface InvoiceFormProps {
   onSuccess: () => void;
 }
 
-// تعريف عنصر فاتورة افتراضي
+// تعريف عنصر فاتورة افتراضي - making sure all required properties are explicitly defined
 const DEFAULT_INVOICE_ITEM: InvoiceItem = {
   productId: "",
   productName: "",
@@ -63,6 +63,7 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
           ...invoice,
           issueDate: new Date(invoice.issueDate),
           dueDate: new Date(invoice.dueDate),
+          // Ensure each item is explicitly typed as InvoiceItem with all required properties
           items: Array.isArray(invoice.items) 
             ? invoice.items.map(item => ({
                 productId: item.productId,
@@ -70,13 +71,14 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
                 quantity: item.quantity,
                 unitPrice: item.unitPrice,
                 totalPrice: item.totalPrice
-              }))
+              } as InvoiceItem))
             : [DEFAULT_INVOICE_ITEM]
         }
       : {
           customerId: "",
           customerName: "",
-          items: [{ ...DEFAULT_INVOICE_ITEM }],
+          // Explicitly create a new copy with all required properties
+          items: [{ ...DEFAULT_INVOICE_ITEM }] as InvoiceItem[],
           status: "draft",
           issueDate: new Date(),
           dueDate: addDays(new Date(), 30),

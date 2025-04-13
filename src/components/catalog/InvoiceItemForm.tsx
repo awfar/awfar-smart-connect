@@ -21,6 +21,7 @@ export function InvoiceItemForm({ calculateTotal }: InvoiceItemFormProps) {
 
   // إضافة عنصر جديد إلى الفاتورة مع تعيين جميع الخصائص المطلوبة بشكل صريح
   const addItem = () => {
+    // Create a new item with all required properties explicitly defined
     const newItem: InvoiceItem = { 
       productId: "", 
       productName: "", 
@@ -29,7 +30,8 @@ export function InvoiceItemForm({ calculateTotal }: InvoiceItemFormProps) {
       totalPrice: 0 
     };
     
-    append(newItem as any);
+    // Append the new item to the form
+    append(newItem);
   };
 
   // إزالة عنصر من الفاتورة
