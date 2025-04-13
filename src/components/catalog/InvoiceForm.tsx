@@ -59,13 +59,13 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
           customerName: "",
           items: [
             {
-              productId: "",  
-              productName: "", 
-              quantity: 1,    
-              unitPrice: 0,   
-              totalPrice: 0   
+              productId: "" as string,  
+              productName: "" as string, 
+              quantity: 1 as number,    
+              unitPrice: 0 as number,   
+              totalPrice: 0 as number   
             } as InvoiceItem
-          ],
+          ] as InvoiceItem[],
           status: "draft",
           issueDate: new Date(),
           dueDate: addDays(new Date(), 30),
