@@ -12,13 +12,15 @@ $$;
 
 -- Function to count activities by user
 CREATE OR REPLACE FUNCTION count_activities_by_user()
-RETURNS TABLE (user_id text, count bigint) 
+RETURNS TABLE (user_id text, first_name text, last_name text, count bigint) 
 LANGUAGE SQL
 AS $$
-  SELECT user_id, COUNT(*) as count
-  FROM activity_logs
-  GROUP BY user_id
-  ORDER BY count DESC;
+  SELECT al.user_id, p.first_name, p.last_name, COUNT(*) as count
+  FROM activity_logs al
+  LEFT JOIN profiles p ON p.id = al.user_id::uuid
+  GROUP BY al.user_id, p.first_name, p.last_name
+  ORDER BY count DESC
+  LIMIT 10;
 $$;
 
 -- Function to count activities by entity type
