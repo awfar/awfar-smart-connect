@@ -1,4 +1,3 @@
-
 import React from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -66,7 +65,7 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
               quantity: 1, 
               unitPrice: 0, 
               totalPrice: 0 
-            } as InvoiceItem
+            }
           ],
           status: "draft",
           issueDate: new Date(),
@@ -86,7 +85,7 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
         quantity: 1, 
         unitPrice: 0, 
         totalPrice: 0 
-      } as InvoiceItem
+      }
     ]);
   };
 
