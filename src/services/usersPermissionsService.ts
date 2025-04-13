@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -59,7 +58,6 @@ export const fetchActivityAnalytics = async (type: 'action' | 'user' | 'entity')
     
     switch (type) {
       case 'action': {
-        // Use raw SQL query for grouping instead of groupBy
         const { data, error } = await supabase
           .from('activity_logs')
           .select('action, count')
@@ -69,7 +67,9 @@ export const fetchActivityAnalytics = async (type: 'action' | 'user' | 'entity')
         
         return data.map(item => ({
           name: item.action || 'غير معروف',
-          count: parseInt(item.count as string)
+          count: typeof item.count === 'string' 
+            ? parseInt(item.count, 10) 
+            : Number(item.count)
         }));
       }
       
@@ -83,7 +83,9 @@ export const fetchActivityAnalytics = async (type: 'action' | 'user' | 'entity')
         
         return data.map(item => ({
           name: item.user_id || 'غير معروف',
-          count: parseInt(item.count as string)
+          count: typeof item.count === 'string' 
+            ? parseInt(item.count, 10) 
+            : Number(item.count)
         }));
       }
         
@@ -97,7 +99,9 @@ export const fetchActivityAnalytics = async (type: 'action' | 'user' | 'entity')
         
         return data.map(item => ({
           name: item.entity_type || 'غير معروف',
-          count: parseInt(item.count as string)
+          count: typeof item.count === 'string' 
+            ? parseInt(item.count, 10) 
+            : Number(item.count)
         }));
       }
         
