@@ -74,66 +74,84 @@ export const fetchRoleById = async (id: string): Promise<Role | null> => {
     };
     
     if (systemRoles[id]) {
-      const roleData = {
+      const roleData: Role = {
         id,
         name: systemRoles[id].name,
         description: systemRoles[id].description
       };
       
       // For system roles, we need to fetch permissions separately
-      const { data: rolePermissions, error: permError } = await supabase
-        .from('role_permissions')
-        .select(`
-          permission_id,
-          permissions (*)
-        `)
-        .eq('role', id);
+      try {
+        const { data: rolePermissions, error: permError } = await supabase
+          .from('role_permissions')
+          .select(`
+            permission_id,
+            permissions (*)
+          `)
+          .eq('role', id);
         
-      if (!permError && rolePermissions && rolePermissions.length > 0) {
-        const permissions = rolePermissions.map((rp: any) => rp.permissions);
-        roleData.permissions = permissions;
+        if (!permError && rolePermissions && rolePermissions.length > 0) {
+          const permissions = rolePermissions.map((rp: any) => rp.permissions);
+          roleData.permissions = permissions;
+        }
+      } catch (permError) {
+        console.error("Error fetching role permissions:", permError);
       }
       
       return roleData;
     }
     
     // If not a system role, look up in the database
-    const { data, error } = await supabase
-      .from('roles')
-      .select(`
-        *,
-        role_permissions!inner (
-          permission_id,
-          permissions (*)
-        )
-      `)
-      .eq('id', id)
-      .single();
-    
-    if (error) {
-      if (error.code === 'PGRST116') {
-        // No role permissions found, fetch just the role
-        const { data: roleOnly, error: roleError } = await supabase
-          .from('roles')
-          .select('*')
-          .eq('id', id)
-          .single();
-          
-        if (roleError) throw roleError;
-        return roleOnly;
+    try {
+      const { data, error } = await supabase
+        .from('roles')
+        .select(`
+          *,
+          role_permissions!inner (
+            permission_id,
+            permissions (*)
+          )
+        `)
+        .eq('id', id)
+        .single();
+      
+      if (error) {
+        if (error.code === 'PGRST116') {
+          // No role permissions found, fetch just the role
+          const { data: roleOnly, error: roleError } = await supabase
+            .from('roles')
+            .select('*')
+            .eq('id', id)
+            .single();
+            
+          if (roleError) throw roleError;
+          return roleOnly;
+        }
+        throw error;
       }
-      throw error;
+      
+      if (data && data.role_permissions) {
+        const permissions = data.role_permissions.map((rp: any) => rp.permissions);
+        return {
+          ...data,
+          permissions
+        };
+      }
+      
+      return data;
+    } catch (error) {
+      console.error("Error fetching role by ID:", error);
+      
+      // Fallback to simple query if the join fails
+      const { data: simpleData, error: simpleError } = await supabase
+        .from('roles')
+        .select('*')
+        .eq('id', id)
+        .single();
+        
+      if (simpleError) throw simpleError;
+      return simpleData;
     }
-    
-    if (data && data.role_permissions) {
-      const permissions = data.role_permissions.map((rp: any) => rp.permissions);
-      return {
-        ...data,
-        permissions
-      };
-    }
-    
-    return data;
   } catch (error) {
     console.error("خطأ في جلب تفاصيل الدور:", error);
     toast.error("فشل في جلب تفاصيل الدور");

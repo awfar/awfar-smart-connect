@@ -10,14 +10,19 @@ import PermissionForm from "@/components/permissions/PermissionForm";
 import PermissionsList from "@/components/permissions/PermissionsList";
 import MobileOptimizedContainer from "@/components/ui/mobile-optimized-container";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { PermissionDefinition } from "@/services/permissions/permissionTypes";
 
 const PermissionsManagement = () => {
   const [showPermissionForm, setShowPermissionForm] = useState(false);
   const [selectedPermission, setSelectedPermission] = useState<string | null>(null);
   
+  // Cast the returned data as PermissionDefinition[] to match the expected type
   const { data: permissions, isLoading, refetch } = useQuery({
     queryKey: ['permissions'],
-    queryFn: () => fetchPermissions(),
+    queryFn: async () => {
+      const data = await fetchPermissions();
+      return data as unknown as PermissionDefinition[];
+    },
   });
 
   const handlePermissionAdded = () => {

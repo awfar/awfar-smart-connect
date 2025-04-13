@@ -49,15 +49,17 @@ const PermissionForm = ({ permissionId, isEditing = false, onSave }: PermissionF
       const selectedObject = objects.find(obj => obj.name === object);
       if (selectedObject) {
         const permissionDef = selectedObject.permissions.find(p => p.level === level);
-        setAvailableScopes(permissionDef?.scopes || []);
-        
-        // Reset scope if it's not available
-        if (permissionDef && !permissionDef.scopes.includes(scope)) {
-          setScope(permissionDef.scopes[0] || 'own');
+        if (permissionDef) {
+          setAvailableScopes(permissionDef.scopes);
+          
+          // Reset scope if it's not available
+          if (!permissionDef.scopes.includes(scope)) {
+            setScope(permissionDef.scopes[0]);
+          }
         }
       }
     }
-  }, [object, level, objects]);
+  }, [object, level, objects, scope]);
 
   const generatePermissionName = () => {
     if (object && level && scope) {

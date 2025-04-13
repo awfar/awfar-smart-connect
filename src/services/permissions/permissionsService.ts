@@ -1,11 +1,8 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PermissionDefinition, PermissionLevel, PermissionScope } from "./permissionTypes";
 
-// Helper function to map database permission to PermissionDefinition
 const mapDbPermissionToDefinition = (permission: any): PermissionDefinition => {
-  // Extract object, level, scope from the permission name (e.g., "deals_read-only_own")
   const nameParts = permission.name?.split('_') || [];
   const level = nameParts.length > 1 ? nameParts[1] as PermissionLevel : 'read-only';
   const scope = nameParts.length > 2 ? nameParts[2] as PermissionScope : 'own';
@@ -21,7 +18,6 @@ const mapDbPermissionToDefinition = (permission: any): PermissionDefinition => {
   };
 };
 
-// Define system objects and their available permissions
 export const getSystemObjects = () => [
   {
     name: 'contacts',
@@ -97,7 +93,6 @@ export const getSystemObjects = () => [
   }
 ];
 
-// Get available scopes for a specific level and object
 export const getAvailableScopesForLevel = (object: string, level: PermissionLevel): PermissionScope[] => {
   const objectDefinition = getSystemObjects().find(obj => obj.name === object);
   if (!objectDefinition) return [];
@@ -224,7 +219,6 @@ export const deletePermission = async (id: string): Promise<boolean> => {
   try {
     console.log("Deleting permission:", id);
     
-    // Check if the permission is assigned to any roles
     const { count, error: countError } = await supabase
       .from('role_permissions')
       .select('role', { count: 'exact', head: true })
@@ -257,6 +251,76 @@ export const deletePermission = async (id: string): Promise<boolean> => {
   } catch (error) {
     console.error("خطأ في حذف الصلاحية:", error);
     toast.error("فشل في حذف الصلاحية");
+    return false;
+  }
+};
+
+export const checkUserHasPermission = async (object: string, level: PermissionLevel, scope: PermissionScope): Promise<boolean> => {
+  try {
+    const { data: user } = await supabase.auth.getUser();
+    if (!user?.user) return false;
+    
+    const permissionName = `${object}_${level}_${scope}`;
+    
+    const { data, error } = await supabase
+      .rpc('has_permission', {
+        user_id: user.user.id,
+        permission_name: permissionName
+      });
+    
+    if (error) {
+      console.error("Error checking permission:", error);
+      throw error;
+    }
+    
+    return !!data;
+  } catch (error) {
+    console.error("Error checking permission:", error);
+    return false;
+  }
+};
+
+export const initializeSystemPermissions = async (): Promise<boolean> => {
+  try {
+    const { count, error: countError } = await supabase
+      .from('permissions')
+      .select('*', { count: 'exact', head: true });
+    
+    if (countError) throw countError;
+    
+    if (count && count > 0) {
+      console.log("Permissions already initialized, count:", count);
+      return true;
+    }
+    
+    console.log("Initializing system permissions...");
+    
+    const systemObjects = getSystemObjects();
+    const permissionsToCreate = [];
+    
+    for (const obj of systemObjects) {
+      for (const perm of obj.permissions) {
+        for (const scope of perm.scopes) {
+          const permName = `${obj.name}_${perm.level}_${scope}`;
+          permissionsToCreate.push({
+            name: permName,
+            description: `${perm.description} (${scope})`
+          });
+        }
+      }
+    }
+    
+    if (permissionsToCreate.length > 0) {
+      const { error: insertError } = await supabase
+        .from('permissions')
+        .insert(permissionsToCreate);
+      
+      if (insertError) throw insertError;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error initializing permissions:", error);
     return false;
   }
 };
