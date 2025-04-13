@@ -34,6 +34,9 @@ import Contact from "./pages/Contact";
 import Demo from "./pages/Demo";
 import Channels from "./pages/Channels";
 import Integration from "./pages/Integration";
+import RolesManagement from "./pages/RolesManagement";
+import DepartmentsManagement from "./pages/DepartmentsManagement";
+import TeamsManagement from "./pages/TeamsManagement";
 
 function App() {
   return (
@@ -140,6 +143,19 @@ function App() {
           {
             path: "/enhanced-dashboard",
             element: <EnhancedDashboard />,
+          },
+          // إضافة الصفحات الجديدة
+          {
+            path: "/roles",
+            element: <RolesManagement />,
+          },
+          {
+            path: "/departments",
+            element: <DepartmentsManagement />,
+          },
+          {
+            path: "/teams",
+            element: <TeamsManagement />,
           },
           // New pages based on the navigation menu
           {

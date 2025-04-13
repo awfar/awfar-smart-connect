@@ -1,77 +1,202 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Building, Plus, Edit, Trash2, Users } from "lucide-react";
-import { Department, fetchDepartments, createDepartment, updateDepartment, deleteDepartment } from "@/services/departmentsService";
-import DepartmentForm from "@/components/users/DepartmentForm";
 import { toast } from "sonner";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Building2, Edit, MoreVertical, Trash2, Users } from "lucide-react";
+import { fetchDepartments, deleteDepartment, Department } from "@/services/departmentsService";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import MobileOptimizedContainer from "@/components/ui/mobile-optimized-container";
 
-const DepartmentsManagement = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showAddDepartment, setShowAddDepartment] = useState(false);
-  const [showEditDepartment, setShowEditDepartment] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
+interface DepartmentFormProps {
+  department?: Department;
+  isEditing: boolean;
+  onSave: () => void;
+}
 
-  const { data: departments = [], isLoading, refetch } = useQuery({
-    queryKey: ['departments'],
-    queryFn: fetchDepartments,
-  });
+const DepartmentForm = ({ department, isEditing, onSave }: DepartmentFormProps) => {
+  const [name, setName] = useState(department?.name || "");
+  const [description, setDescription] = useState(department?.description || "");
+  const [loading, setLoading] = useState(false);
 
-  const filteredDepartments = departments.filter(dept => 
-    dept.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      if (isEditing && department) {
+        await updateDepartment({
+          id: department.id,
+          name,
+          description,
+        });
+      } else {
+        await createDepartment({
+          name,
+          description,
+        });
+      }
+      
+      onSave();
+    } catch (error: any) {
+      console.error("خطأ في إضافة/تعديل القسم:", error);
+      toast.error(error.message || "حدث خطأ أثناء حفظ القسم");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleAddDepartment = async (data: { name: string; description?: string }) => {
-    const newDepartment = await createDepartment(data);
-    if (newDepartment) {
-      setShowAddDepartment(false);
-      refetch();
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="dept_name">اسم القسم</Label>
+          <Input 
+            id="dept_name" 
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            placeholder="مثال: المبيعات، خدمة العملاء"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="dept_description">وصف القسم</Label>
+          <Textarea 
+            id="dept_description" 
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="وصف مختصر للقسم والمسؤوليات المرتبطة به"
+            rows={3}
+          />
+        </div>
+      </div>
+      
+      <div className="flex justify-end gap-3 pt-4">
+        <Button variant="outline" type="button" onClick={onSave}>
+          إلغاء
+        </Button>
+        <Button type="submit" disabled={loading}>
+          {loading ? "جاري الحفظ..." : isEditing ? "حفظ التغييرات" : "إضافة القسم"}
+        </Button>
+      </div>
+    </form>
+  );
+  
+  // These functions will be implemented in the component, but are declared here for TypeScript
+  async function updateDepartment(department: Partial<Department> & { id: string }): Promise<Department | null> {
+    try {
+      const { data, error } = await supabase
+        .from('departments')
+        .update({
+          name: department.name,
+          description: department.description,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', department.id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      toast.success("تم تحديث القسم بنجاح");
+      return data;
+    } catch (error) {
+      console.error("خطأ في تحديث القسم:", error);
+      toast.error("فشل في تحديث القسم");
+      return null;
     }
+  }
+  
+  async function createDepartment(department: { name: string; description?: string }): Promise<Department | null> {
+    try {
+      const { data, error } = await supabase
+        .from('departments')
+        .insert([{
+          name: department.name,
+          description: department.description
+        }])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      toast.success("تم إنشاء القسم بنجاح");
+      return data;
+    } catch (error) {
+      console.error("خطأ في إنشاء القسم:", error);
+      toast.error("فشل في إنشاء القسم");
+      return null;
+    }
+  }
+};
+
+const DepartmentsManagement = () => {
+  const [showDepartmentForm, setShowDepartmentForm] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
+  
+  const { data: departments, isLoading, refetch } = useQuery({
+    queryKey: ['departments'],
+    queryFn: () => fetchDepartments(),
+  });
+
+  const handleDepartmentAdded = () => {
+    refetch();
+    setShowDepartmentForm(false);
+    toast.success("تم إضافة القسم بنجاح");
+  };
+
+  const handleDepartmentUpdated = () => {
+    refetch();
+    setShowDepartmentForm(false);
+    toast.success("تم تحديث القسم بنجاح");
   };
 
   const handleEditDepartment = (department: Department) => {
     setSelectedDepartment(department);
-    setShowEditDepartment(true);
+    setShowDepartmentForm(true);
   };
 
-  const handleSaveEdit = async (data: { name: string; description?: string }) => {
-    if (!selectedDepartment) return;
-    
-    const updated = await updateDepartment({
-      id: selectedDepartment.id,
-      name: data.name,
-      description: data.description
-    });
-    
-    if (updated) {
-      setShowEditDepartment(false);
-      refetch();
-    }
-  };
-
-  const handleDeletePrompt = (department: Department) => {
+  const handleDeleteClick = (department: Department) => {
     setSelectedDepartment(department);
-    setShowDeleteDialog(true);
+    setDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = async () => {
+  const confirmDelete = async () => {
     if (!selectedDepartment) return;
     
-    const success = await deleteDepartment(selectedDepartment.id);
-    if (success) {
-      setShowDeleteDialog(false);
+    try {
+      await deleteDepartment(selectedDepartment.id);
       refetch();
+    } catch (error) {
+      console.error("خطأ في حذف القسم:", error);
     }
+    
+    setDeleteDialogOpen(false);
+    setSelectedDepartment(null);
   };
 
   return (
@@ -80,88 +205,69 @@ const DepartmentsManagement = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">إدارة الأقسام</h1>
-            <p className="text-gray-500">إنشاء وتعديل وحذف الأقسام في المنظمة</p>
+            <p className="text-gray-500">إدارة أقسام الشركة وتنظيم المستخدمين</p>
           </div>
           
-          <Button onClick={() => setShowAddDepartment(true)} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            <span>إضافة قسم</span>
+          <Button onClick={() => {setSelectedDepartment(null); setShowDepartmentForm(true)}} className="flex items-center gap-2">
+            <span>إضافة قسم جديد</span>
           </Button>
         </div>
         
         <Card>
           <CardHeader className="pb-3">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <CardTitle>قائمة الأقسام</CardTitle>
-                <CardDescription>
-                  إجمالي الأقسام: {filteredDepartments.length}
-                </CardDescription>
-              </div>
-              
-              <div className="relative">
-                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  placeholder="بحث عن قسم..."
-                  className="w-full md:w-80 pr-10"
-                  value={searchTerm}
-                  onChange={handleSearch}
-                />
-              </div>
-            </div>
+            <CardTitle>قائمة الأقسام</CardTitle>
+            <CardDescription>
+              الأقسام المتاحة في النظام وعدد المستخدمين في كل قسم
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <div className="text-center py-10">جاري تحميل البيانات...</div>
-            ) : filteredDepartments.length === 0 ? (
+            ) : !departments || departments.length === 0 ? (
               <div className="text-center py-10">
-                <Building className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                <Building2 className="mx-auto h-12 w-12 text-gray-400 mb-3" />
                 <h3 className="text-lg font-medium">لا توجد أقسام</h3>
-                <p className="text-gray-500 mt-1">أضف أقساماً جديدة لتنظيم المستخدمين والفرق</p>
+                <p className="text-gray-500 mt-1">لم يتم إضافة أي أقسام بعد</p>
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>اسم القسم</TableHead>
+                    <TableHead>الاسم</TableHead>
                     <TableHead>الوصف</TableHead>
                     <TableHead>عدد المستخدمين</TableHead>
-                    <TableHead>تاريخ الإنشاء</TableHead>
                     <TableHead>إجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredDepartments.map((department) => (
+                  {departments.map((department) => (
                     <TableRow key={department.id}>
                       <TableCell className="font-medium">{department.name}</TableCell>
-                      <TableCell>{department.description || "-"}</TableCell>
+                      <TableCell>{department.description}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
+                          <Users className="h-3 w-3" />
                           <span>{department.user_count || 0}</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        {new Date(department.created_at).toLocaleDateString('ar-SA')}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEditDepartment(department)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => handleDeletePrompt(department)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEditDepartment(department)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              <span>تعديل</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDeleteClick(department)}>
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              <span>حذف</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -172,53 +278,37 @@ const DepartmentsManagement = () => {
         </Card>
       </div>
       
-      <Dialog open={showAddDepartment} onOpenChange={setShowAddDepartment}>
-        <DialogContent className="sm:max-w-md rtl">
+      <Dialog open={showDepartmentForm} onOpenChange={setShowDepartmentForm}>
+        <DialogContent className="max-w-2xl rtl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>إضافة قسم جديد</DialogTitle>
-            <DialogDescription>أدخل بيانات القسم الجديد</DialogDescription>
+            <DialogTitle>{selectedDepartment ? "تعديل القسم" : "إضافة قسم جديد"}</DialogTitle>
           </DialogHeader>
-          <DepartmentForm onSave={handleAddDepartment} onCancel={() => setShowAddDepartment(false)} />
+          <MobileOptimizedContainer>
+            <DepartmentForm 
+              department={selectedDepartment || undefined} 
+              isEditing={!!selectedDepartment}
+              onSave={selectedDepartment ? handleDepartmentUpdated : handleDepartmentAdded} 
+            />
+          </MobileOptimizedContainer>
         </DialogContent>
       </Dialog>
-      
-      <Dialog open={showEditDepartment} onOpenChange={setShowEditDepartment}>
-        <DialogContent className="sm:max-w-md rtl">
-          <DialogHeader>
-            <DialogTitle>تعديل قسم</DialogTitle>
-            <DialogDescription>تعديل بيانات القسم</DialogDescription>
-          </DialogHeader>
-          <DepartmentForm 
-            department={selectedDepartment} 
-            onSave={handleSaveEdit} 
-            onCancel={() => setShowEditDepartment(false)} 
-          />
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="sm:max-w-md rtl">
-          <DialogHeader>
-            <DialogTitle>تأكيد الحذف</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p>
-              هل أنت متأكد من رغبتك في حذف قسم "{selectedDepartment?.name}"؟
-            </p>
-            <p className="text-sm text-amber-600">
-              ملاحظة: لا يمكن حذف القسم إذا كان يحتوي على مستخدمين أو فرق.
-            </p>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
-                إلغاء
-              </Button>
-              <Button variant="destructive" onClick={handleDeleteConfirm}>
-                حذف
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>هل أنت متأكد من حذف هذا القسم؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم حذف القسم بشكل نهائي. لا يمكنك حذف قسم يحتوي على مستخدمين.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+              تأكيد الحذف
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };

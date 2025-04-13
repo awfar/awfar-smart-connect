@@ -16,7 +16,10 @@ import {
   ShoppingBag,
   Package,
   Receipt,
-  Bookmark
+  Bookmark,
+  Shield,
+  Building2,
+  UserCog
 } from 'lucide-react';
 
 export interface NavItemConfig {
@@ -105,6 +108,21 @@ export const navItems: NavItemConfig[] = [
     href: '/cms',
     label: 'إدارة المحتوى',
     icon: FileEdit,
+  },
+  {
+    href: '/roles',
+    label: 'الأدوار والصلاحيات',
+    icon: Shield,
+  },
+  {
+    href: '/departments',
+    label: 'الأقسام',
+    icon: Building2,
+  },
+  {
+    href: '/teams',
+    label: 'الفرق',
+    icon: UserCog,
   },
   {
     href: '/settings',

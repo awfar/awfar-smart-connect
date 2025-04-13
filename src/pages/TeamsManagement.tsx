@@ -1,107 +1,196 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, UsersRound, Plus, Edit, Trash2, Users, UserCheck } from "lucide-react";
-import { Team, fetchTeams, createTeam, updateTeam, deleteTeam, getTeamMembers } from "@/services/teamsService";
-import { fetchDepartments } from "@/services/departmentsService";
-import TeamForm from "@/components/users/TeamForm";
 import { toast } from "sonner";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Building2, Edit, MoreVertical, Trash2, Users, UserCog } from "lucide-react";
+import { fetchTeams, deleteTeam, Team, updateTeam, createTeam } from "@/services/teamsService";
+import { fetchDepartments } from "@/services/departmentsService";
+import { fetchUsers } from "@/services/users";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import MobileOptimizedContainer from "@/components/ui/mobile-optimized-container";
 
-const TeamsManagement = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [showAddTeam, setShowAddTeam] = useState(false);
-  const [showEditTeam, setShowEditTeam] = useState(false);
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showTeamMembers, setShowTeamMembers] = useState(false);
-  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
-  const [filterDepartment, setFilterDepartment] = useState<string | null>(null);
+interface TeamFormProps {
+  team?: Team;
+  isEditing: boolean;
+  onSave: () => void;
+}
 
-  const { data: teams = [], isLoading, refetch } = useQuery({
-    queryKey: ['teams'],
-    queryFn: fetchTeams,
-  });
+const TeamForm = ({ team, isEditing, onSave }: TeamFormProps) => {
+  const [name, setName] = useState(team?.name || "");
+  const [departmentId, setDepartmentId] = useState(team?.department_id || "");
+  const [managerId, setManagerId] = useState(team?.manager_id || "");
+  const [loading, setLoading] = useState(false);
 
   const { data: departments = [] } = useQuery({
     queryKey: ['departments'],
-    queryFn: fetchDepartments,
+    queryFn: () => fetchDepartments(),
   });
 
-  const filteredTeams = teams.filter(team => {
-    const matchesSearch = team.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = !filterDepartment || team.department_id === filterDepartment;
-    return matchesSearch && matchesDepartment;
+  const { data: users = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => fetchUsers(),
   });
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleFilterDepartment = (departmentId: string | null) => {
-    setFilterDepartment(departmentId);
-  };
-
-  const handleAddTeam = async (data: { name: string; department_id: string; manager_id?: string }) => {
-    const newTeam = await createTeam(data);
-    if (newTeam) {
-      setShowAddTeam(false);
-      refetch();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      if (isEditing && team) {
+        await updateTeam({
+          id: team.id,
+          name,
+          department_id: departmentId || null,
+          manager_id: managerId || null,
+        });
+      } else {
+        await createTeam({
+          name,
+          department_id: departmentId,
+          manager_id: managerId || undefined,
+        });
+      }
+      
+      onSave();
+    } catch (error: any) {
+      console.error("خطأ في إضافة/تعديل الفريق:", error);
+      toast.error(error.message || "حدث خطأ أثناء حفظ الفريق");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // منسقي الفريق فقط هم المستخدمين الذين لديهم دور team_manager
+  const managers = users.filter(user => user.role === 'team_manager');
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="team_name">اسم الفريق</Label>
+          <Input 
+            id="team_name" 
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            placeholder="مثال: فريق المبيعات، فريق الدعم"
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="team_department">القسم</Label>
+          <Select value={departmentId} onValueChange={setDepartmentId}>
+            <SelectTrigger id="team_department">
+              <SelectValue placeholder="اختر القسم" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">لا ينتمي لأي قسم</SelectItem>
+              {departments.map(department => (
+                <SelectItem key={department.id} value={department.id}>
+                  {department.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="team_manager">مدير الفريق</Label>
+          <Select value={managerId} onValueChange={setManagerId}>
+            <SelectTrigger id="team_manager">
+              <SelectValue placeholder="اختر مدير الفريق" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="">بدون مدير</SelectItem>
+              {managers.map(manager => (
+                <SelectItem key={manager.id} value={manager.id}>
+                  {manager.first_name} {manager.last_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      
+      <div className="flex justify-end gap-3 pt-4">
+        <Button variant="outline" type="button" onClick={onSave}>
+          إلغاء
+        </Button>
+        <Button type="submit" disabled={loading}>
+          {loading ? "جاري الحفظ..." : isEditing ? "حفظ التغييرات" : "إضافة الفريق"}
+        </Button>
+      </div>
+    </form>
+  );
+};
+
+const TeamsManagement = () => {
+  const [showTeamForm, setShowTeamForm] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+  
+  const { data: teams, isLoading, refetch } = useQuery({
+    queryKey: ['teams'],
+    queryFn: () => fetchTeams(),
+  });
+
+  const handleTeamAdded = () => {
+    refetch();
+    setShowTeamForm(false);
+    toast.success("تم إضافة الفريق بنجاح");
+  };
+
+  const handleTeamUpdated = () => {
+    refetch();
+    setShowTeamForm(false);
+    toast.success("تم تحديث الفريق بنجاح");
   };
 
   const handleEditTeam = (team: Team) => {
     setSelectedTeam(team);
-    setShowEditTeam(true);
+    setShowTeamForm(true);
   };
 
-  const handleSaveEdit = async (data: { name: string; department_id: string; manager_id?: string }) => {
-    if (!selectedTeam) return;
-    
-    const updated = await updateTeam({
-      id: selectedTeam.id,
-      name: data.name,
-      department_id: data.department_id,
-      manager_id: data.manager_id
-    });
-    
-    if (updated) {
-      setShowEditTeam(false);
-      refetch();
-    }
-  };
-
-  const handleDeletePrompt = (team: Team) => {
+  const handleDeleteClick = (team: Team) => {
     setSelectedTeam(team);
-    setShowDeleteDialog(true);
+    setDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = async () => {
+  const confirmDelete = async () => {
     if (!selectedTeam) return;
-    
-    const success = await deleteTeam(selectedTeam.id);
-    if (success) {
-      setShowDeleteDialog(false);
-      refetch();
-    }
-  };
-
-  const handleViewTeamMembers = async (team: Team) => {
-    setSelectedTeam(team);
     
     try {
-      const members = await getTeamMembers(team.id);
-      setTeamMembers(members);
-      setShowTeamMembers(true);
+      await deleteTeam(selectedTeam.id);
+      refetch();
     } catch (error) {
-      toast.error("فشل في جلب أعضاء الفريق");
+      console.error("خطأ في حذف الفريق:", error);
     }
+    
+    setDeleteDialogOpen(false);
+    setSelectedTeam(null);
   };
 
   return (
@@ -110,125 +199,89 @@ const TeamsManagement = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold">إدارة الفرق</h1>
-            <p className="text-gray-500">إنشاء وتعديل وحذف الفرق في المنظمة</p>
+            <p className="text-gray-500">إدارة فرق العمل وتوزيع المستخدمين</p>
           </div>
           
-          <Button onClick={() => setShowAddTeam(true)} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            <span>إضافة فريق</span>
+          <Button onClick={() => {setSelectedTeam(null); setShowTeamForm(true)}} className="flex items-center gap-2">
+            <span>إضافة فريق جديد</span>
           </Button>
-        </div>
-        
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="relative">
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="بحث عن فريق..."
-              className="w-full md:w-80 pr-10"
-              value={searchTerm}
-              onChange={handleSearch}
-            />
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">فلترة حسب القسم:</span>
-            <select 
-              className="border rounded p-2 text-sm"
-              value={filterDepartment || ""}
-              onChange={(e) => handleFilterDepartment(e.target.value || null)}
-            >
-              <option value="">جميع الأقسام</option>
-              {departments.map(dept => (
-                <option key={dept.id} value={dept.id}>{dept.name}</option>
-              ))}
-            </select>
-          </div>
         </div>
         
         <Card>
           <CardHeader className="pb-3">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <CardTitle>قائمة الفرق</CardTitle>
-                <CardDescription>
-                  إجمالي الفرق: {filteredTeams.length}
-                </CardDescription>
-              </div>
-            </div>
+            <CardTitle>قائمة الفرق</CardTitle>
+            <CardDescription>
+              الفرق المتاحة في النظام ومديري الفرق وعدد الأعضاء
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <div className="text-center py-10">جاري تحميل البيانات...</div>
-            ) : filteredTeams.length === 0 ? (
+            ) : !teams || teams.length === 0 ? (
               <div className="text-center py-10">
-                <UsersRound className="mx-auto h-12 w-12 text-gray-400 mb-3" />
+                <UserCog className="mx-auto h-12 w-12 text-gray-400 mb-3" />
                 <h3 className="text-lg font-medium">لا توجد فرق</h3>
-                <p className="text-gray-500 mt-1">أضف فرقاً جديدة لتنظيم المستخدمين</p>
+                <p className="text-gray-500 mt-1">لم يتم إضافة أي فرق بعد</p>
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>اسم الفريق</TableHead>
+                    <TableHead>الاسم</TableHead>
                     <TableHead>القسم</TableHead>
                     <TableHead>مدير الفريق</TableHead>
                     <TableHead>عدد الأعضاء</TableHead>
-                    <TableHead>تاريخ الإنشاء</TableHead>
                     <TableHead>إجراءات</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredTeams.map((team) => (
+                  {teams.map((team) => (
                     <TableRow key={team.id}>
                       <TableCell className="font-medium">{team.name}</TableCell>
-                      <TableCell>{team.department_name || "-"}</TableCell>
+                      <TableCell>
+                        {team.department_name ? (
+                          <div className="flex items-center gap-1">
+                            <Building2 className="h-3 w-3" />
+                            <span>{team.department_name}</span>
+                          </div>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
                       <TableCell>
                         {team.manager_name ? (
                           <div className="flex items-center gap-1">
-                            <UserCheck className="h-4 w-4" />
+                            <UserCog className="h-3 w-3" />
                             <span>{team.manager_name}</span>
                           </div>
                         ) : (
-                          <Badge variant="outline" className="bg-amber-100 text-amber-800">
-                            غير معين
-                          </Badge>
+                          "-"
                         )}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4" />
+                          <Users className="h-3 w-3" />
                           <span>{team.member_count || 0}</span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        {new Date(team.created_at).toLocaleDateString('ar-SA')}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleViewTeamMembers(team)}
-                            className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50"
-                          >
-                            <Users className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEditTeam(team)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => handleDeletePrompt(team)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEditTeam(team)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              <span>تعديل</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDeleteClick(team)}>
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              <span>حذف</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -239,99 +292,37 @@ const TeamsManagement = () => {
         </Card>
       </div>
       
-      <Dialog open={showAddTeam} onOpenChange={setShowAddTeam}>
-        <DialogContent className="sm:max-w-md rtl">
+      <Dialog open={showTeamForm} onOpenChange={setShowTeamForm}>
+        <DialogContent className="max-w-2xl rtl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>إضافة فريق جديد</DialogTitle>
-            <DialogDescription>أدخل بيانات الفريق الجديد</DialogDescription>
+            <DialogTitle>{selectedTeam ? "تعديل الفريق" : "إضافة فريق جديد"}</DialogTitle>
           </DialogHeader>
-          <TeamForm onSave={handleAddTeam} onCancel={() => setShowAddTeam(false)} />
+          <MobileOptimizedContainer>
+            <TeamForm 
+              team={selectedTeam || undefined} 
+              isEditing={!!selectedTeam}
+              onSave={selectedTeam ? handleTeamUpdated : handleTeamAdded} 
+            />
+          </MobileOptimizedContainer>
         </DialogContent>
       </Dialog>
-      
-      <Dialog open={showEditTeam} onOpenChange={setShowEditTeam}>
-        <DialogContent className="sm:max-w-md rtl">
-          <DialogHeader>
-            <DialogTitle>تعديل فريق</DialogTitle>
-            <DialogDescription>تعديل بيانات الفريق</DialogDescription>
-          </DialogHeader>
-          <TeamForm 
-            team={selectedTeam} 
-            onSave={handleSaveEdit} 
-            onCancel={() => setShowEditTeam(false)} 
-          />
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent className="sm:max-w-md rtl">
-          <DialogHeader>
-            <DialogTitle>تأكيد الحذف</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p>
-              هل أنت متأكد من رغبتك في حذف فريق "{selectedTeam?.name}"؟
-            </p>
-            <p className="text-sm text-amber-600">
-              ملاحظة: لا يمكن حذف الفريق إذا كان يحتوي على أعضاء.
-            </p>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
-                إلغاء
-              </Button>
-              <Button variant="destructive" onClick={handleDeleteConfirm}>
-                حذف
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      <Sheet open={showTeamMembers} onOpenChange={setShowTeamMembers}>
-        <SheetContent className="rtl overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>أعضاء فريق {selectedTeam?.name}</SheetTitle>
-          </SheetHeader>
-          <div className="mt-6">
-            {teamMembers.length === 0 ? (
-              <div className="text-center py-10">
-                <Users className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-                <h3 className="text-lg font-medium">لا يوجد أعضاء</h3>
-                <p className="text-gray-500 mt-1">هذا الفريق لا يحتوي على أعضاء حاليا</p>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>الاسم</TableHead>
-                    <TableHead>البريد الإلكتروني</TableHead>
-                    <TableHead>الدور</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {teamMembers.map((member) => (
-                    <TableRow key={member.id}>
-                      <TableCell>
-                        {member.first_name} {member.last_name}
-                      </TableCell>
-                      <TableCell>{member.email}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="bg-gray-100">
-                          {member.role === 'super_admin' ? 'مدير النظام' :
-                           member.role === 'team_manager' ? 'مدير فريق' :
-                           member.role === 'sales' ? 'مبيعات' :
-                           member.role === 'customer_service' ? 'خدمة عملاء' :
-                           member.role === 'technical_support' ? 'دعم فني' : 'غير محدد'}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent className="rtl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>هل أنت متأكد من حذف هذا الفريق؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم حذف الفريق بشكل نهائي. لا يمكنك حذف فريق يحتوي على أعضاء.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+              تأكيد الحذف
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };

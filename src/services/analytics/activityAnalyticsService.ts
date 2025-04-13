@@ -1,73 +1,76 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 export interface ActivityAnalytic {
-  name: string;
+  id: string;
+  label: string;
   count: number;
 }
 
-// استدعاء دالة قاعدة البيانات لجلب تحليلات النشاط
-export const fetchActivityAnalytics = async (type: 'action' | 'user' | 'entity'): Promise<ActivityAnalytic[]> => {
+// استرجاع إحصائيات النشاط حسب نوع النشاط
+export const fetchActivityAnalytics = async (): Promise<{ 
+  byType: ActivityAnalytic[],
+  byUser: ActivityAnalytic[],
+  byEntity: ActivityAnalytic[]
+}> => {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
+    // الإحصائيات حسب نوع النشاط
+    const { data: typeData, error: typeError } = await supabase
+      .from('activity_logs')
+      .select('action, count(*)')
+      .order('count', { ascending: false })
+      .limit(5);
     
-    switch (type) {
-      case 'action': {
-        const { data, error } = await supabase
-          .from('activity_logs')
-          .select('action, count')
-          .order('count', { ascending: false });
-        
-        if (error) throw error;
-        
-        return data.map(item => ({
-          name: item.action || 'غير معروف',
-          count: typeof item.count === 'string' 
-            ? parseInt(item.count, 10) 
-            : Number(item.count)
-        }));
-      }
-      
-      case 'user': {
-        const { data, error } = await supabase
-          .from('activity_logs')
-          .select('user_id, count')
-          .order('count', { ascending: false });
-          
-        if (error) throw error;
-        
-        return data.map(item => ({
-          name: item.user_id || 'غير معروف',
-          count: typeof item.count === 'string' 
-            ? parseInt(item.count, 10) 
-            : Number(item.count)
-        }));
-      }
-        
-      case 'entity': {
-        const { data, error } = await supabase
-          .from('activity_logs')
-          .select('entity_type, count')
-          .order('count', { ascending: false });
-          
-        if (error) throw error;
-        
-        return data.map(item => ({
-          name: item.entity_type || 'غير معروف',
-          count: typeof item.count === 'string' 
-            ? parseInt(item.count, 10) 
-            : Number(item.count)
-        }));
-      }
-        
-      default:
-        return [];
-    }
+    if (typeError) throw typeError;
+    
+    // الإحصائيات حسب المستخدم
+    const { data: userData, error: userError } = await supabase
+      .from('activity_logs')
+      .select('user_id, count(*)')
+      .order('count', { ascending: false })
+      .limit(5);
+    
+    if (userError) throw userError;
+    
+    // الإحصائيات حسب الكيان
+    const { data: entityData, error: entityError } = await supabase
+      .from('activity_logs')
+      .select('entity_type, count(*)')
+      .order('count', { ascending: false })
+      .limit(5);
+    
+    if (entityError) throw entityError;
+    
+    // تحويل النتائج إلى الشكل المطلوب
+    const byType: ActivityAnalytic[] = typeData.map((item: any) => ({
+      id: item.action,
+      label: item.action,
+      count: typeof item.count === 'number' ? item.count : parseInt(item.count)
+    }));
+    
+    const byUser: ActivityAnalytic[] = userData.map((item: any) => ({
+      id: item.user_id,
+      label: item.user_id,
+      count: typeof item.count === 'number' ? item.count : parseInt(item.count)
+    }));
+    
+    const byEntity: ActivityAnalytic[] = entityData.map((item: any) => ({
+      id: item.entity_type,
+      label: item.entity_type,
+      count: typeof item.count === 'number' ? item.count : parseInt(item.count)
+    }));
+    
+    return {
+      byType,
+      byUser,
+      byEntity
+    };
   } catch (error) {
-    console.error(`خطأ في جلب تحليلات النشاط (${type}):`, error);
-    toast.error("فشل في جلب تحليلات النشاط");
-    return [];
+    console.error("Error fetching activity analytics:", error);
+    return {
+      byType: [],
+      byUser: [],
+      byEntity: []
+    };
   }
 };
