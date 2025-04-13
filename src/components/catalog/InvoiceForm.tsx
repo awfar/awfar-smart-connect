@@ -58,15 +58,15 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
           customerId: "",
           customerName: "",
           items: [
-            // Explicitly define the default item with all required properties
+            // Create a properly typed default item with required non-optional values
             {
               productId: "",  
               productName: "", 
               quantity: 1,    
               unitPrice: 0,   
               totalPrice: 0   
-            } as InvoiceItem  // Cast individual item to InvoiceItem
-          ],
+            } 
+          ] as InvoiceItem[],  // Cast the entire array as InvoiceItem[]
           status: "draft",
           issueDate: new Date(),
           dueDate: addDays(new Date(), 30),
