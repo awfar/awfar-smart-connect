@@ -164,13 +164,30 @@ export const fetchPermissionsByModule = async (): Promise<Record<string, Permiss
 
 export const checkUserHasPermission = async (module: string, action: PermissionAction, scope?: PermissionScope): Promise<boolean> => {
   try {
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+    
+    // Get the user's role
+    const { data: userProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    
+    if (profileError || !userProfile?.role) return false;
+    
+    // Check if the user's role has the specified permission
+    const permissionName = `${module}_${action}_${scope || 'own'}`;
+    
     const { data, error } = await supabase
-      .rpc('check_permission', { 
-        _module: module,
-        _action: action,
-        _scope: scope || 'own',
-        _resource_owner_id: null
-      });
+      .from('role_permissions')
+      .select(`
+        permissions!inner (name)
+      `)
+      .eq('role', userProfile.role)
+      .filter('permissions.name', 'eq', permissionName)
+      .maybeSingle();
     
     if (error) throw error;
     
