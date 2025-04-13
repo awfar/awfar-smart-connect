@@ -46,11 +46,14 @@ export function InvoiceItemForm({ calculateTotal }: InvoiceItemFormProps) {
     const item = items[index];
     const totalPrice = item.quantity * item.unitPrice;
     
-    // نسخ المصفوفة وتحديث العنصر المحدد
+    // نسخ المصفوفة وتحديث العنصر المحدد مع الحفاظ على جميع الخصائص المطلوبة
     const updatedItems = [...items];
     updatedItems[index] = {
-      ...item,
-      totalPrice
+      productId: item.productId,
+      productName: item.productName,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      totalPrice: totalPrice
     };
     
     form.setValue("items", updatedItems);

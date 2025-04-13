@@ -63,21 +63,25 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
           ...invoice,
           issueDate: new Date(invoice.issueDate),
           dueDate: new Date(invoice.dueDate),
-          // التأكد من تحويل كل عنصر إلى نوع InvoiceItem بشكل صحيح
+          // معالجة العناصر بشكل صحيح وضمان أن تكون من نوع InvoiceItem
           items: Array.isArray(invoice.items) 
-            ? invoice.items.map((item): InvoiceItem => ({
-                productId: item.productId || "",
-                productName: item.productName || "",
-                quantity: item.quantity || 1,
-                unitPrice: item.unitPrice || 0,
-                totalPrice: item.totalPrice || 0
-              }))
-            : [DEFAULT_INVOICE_ITEM]
+            ? invoice.items.map((item) => {
+                // التأكد من أن جميع الخصائص المطلوبة موجودة
+                return {
+                  productId: item.productId || "",
+                  productName: item.productName || "",
+                  quantity: item.quantity || 1,
+                  unitPrice: item.unitPrice || 0,
+                  totalPrice: item.totalPrice || 0
+                } as InvoiceItem;
+              })
+            : [{ ...DEFAULT_INVOICE_ITEM }]
         }
       : {
           customerId: "",
           customerName: "",
-          items: [DEFAULT_INVOICE_ITEM], // استخدام العنصر الافتراضي مباشرة
+          // استخدام نسخة جديدة من العنصر الافتراضي
+          items: [{ ...DEFAULT_INVOICE_ITEM }],
           status: "draft",
           issueDate: new Date(),
           dueDate: addDays(new Date(), 30),
