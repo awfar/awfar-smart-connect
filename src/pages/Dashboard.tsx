@@ -6,8 +6,10 @@ import SalesChart from '@/components/dashboard/SalesChart';
 import LeadsOverview from '@/components/dashboard/LeadsOverview';
 import RecentActivities from '@/components/dashboard/RecentActivities';
 import TeamPerformance from '@/components/dashboard/TeamPerformance';
+import UserActivityAnalytics from '@/components/dashboard/UserActivityAnalytics';
 import { useQuery } from '@tanstack/react-query';
 import { fetchDashboardStats, fetchRecentActivities } from '@/services/dashboardService';
+import { fetchUserPermissions } from '@/services/usersPermissionsService';
 
 const Dashboard: React.FC = () => {
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -19,6 +21,13 @@ const Dashboard: React.FC = () => {
     queryKey: ['recentActivities'],
     queryFn: fetchRecentActivities,
   });
+
+  const { data: userPermissions = [], isLoading: permissionsLoading } = useQuery({
+    queryKey: ['userPermissions'],
+    queryFn: () => fetchUserPermissions(),
+  });
+
+  const isAdmin = userPermissions.includes('admin.access');
 
   return (
     <DashboardLayout>
@@ -43,6 +52,12 @@ const Dashboard: React.FC = () => {
             <TeamPerformance />
           </div>
         </div>
+
+        {isAdmin && (
+          <div className="mt-8">
+            <UserActivityAnalytics />
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
