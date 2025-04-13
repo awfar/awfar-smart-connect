@@ -21,6 +21,7 @@ export interface Ticket {
   } | null;
 }
 
+// Define a separate interface for data coming from the database
 interface TicketFromDB {
   id: string;
   subject: string;
@@ -118,7 +119,7 @@ export const createTicket = async (ticketData: Omit<Ticket, 'id' | 'created_at' 
     
     console.log("Ticket created:", data);
     toast.success("تم إنشاء التذكرة بنجاح");
-    return mapDBTicketToTicket(data);
+    return mapDBTicketToTicket(data as TicketFromDB);
   } catch (error) {
     console.error("خطأ في إنشاء التذكرة:", error);
     toast.error("فشل في إنشاء التذكرة");
@@ -148,7 +149,7 @@ export const updateTicket = async (id: string, ticketData: Partial<Ticket>): Pro
     
     console.log("Ticket updated:", data);
     toast.success("تم تحديث التذكرة بنجاح");
-    return mapDBTicketToTicket(data);
+    return mapDBTicketToTicket(data as TicketFromDB);
   } catch (error) {
     console.error("خطأ في تحديث التذكرة:", error);
     toast.error("فشل في تحديث التذكرة");
