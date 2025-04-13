@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          details: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          details?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          details?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       appointments: {
         Row: {
           client_id: string | null
@@ -970,6 +1003,39 @@ export type Database = {
           name?: string
           price?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      system_modules: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          error_message: string | null
+          id: string
+          last_sync_time: string | null
+          name: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          error_message?: string | null
+          id?: string
+          last_sync_time?: string | null
+          name: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          error_message?: string | null
+          id?: string
+          last_sync_time?: string | null
+          name?: string
+          status?: string
+          updated_at?: string | null
         }
         Relationships: []
       }

@@ -24,6 +24,14 @@ const AnalyticsDashboard: React.FC = () => {
     queryFn: getActivityAnalytics
   });
 
+  // Helper function to safely format numbers
+  const formatNumber = (value: any): string => {
+    if (typeof value === 'number') {
+      return value.toFixed(2);
+    }
+    return '0.00';
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">نظرة عامة على النظام</h2>
@@ -40,7 +48,7 @@ const AnalyticsDashboard: React.FC = () => {
               <>
                 <div className="text-2xl font-bold">{invoiceAnalytics?.totalCount || 0}</div>
                 <div className="text-sm text-muted-foreground mt-1">
-                  {invoiceAnalytics?.paidAmount.toFixed(2) || 0} ر.س إجمالي المدفوعات
+                  {formatNumber(invoiceAnalytics?.paidAmount || 0)} ر.س إجمالي المدفوعات
                 </div>
               </>
             )}
@@ -56,7 +64,7 @@ const AnalyticsDashboard: React.FC = () => {
               <Skeleton className="h-10 w-20" />
             ) : (
               <>
-                <div className="text-2xl font-bold">{invoiceAnalytics?.overdueAmount.toFixed(2) || 0} ر.س</div>
+                <div className="text-2xl font-bold">{formatNumber(invoiceAnalytics?.overdueAmount || 0)} ر.س</div>
                 <div className="text-sm text-red-500 mt-1">
                   يجب متابعة التحصيل
                 </div>
@@ -112,7 +120,12 @@ const AnalyticsDashboard: React.FC = () => {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
-                    <Tooltip formatter={(value) => [`${value.toFixed(2)} ر.س`]} />
+                    <Tooltip formatter={(value) => {
+                      if (typeof value === 'number') {
+                        return [`${value.toFixed(2)} ر.س`];
+                      }
+                      return [`${value} ر.س`];
+                    }} />
                     <Legend />
                     <Bar dataKey="amount" name="الإيرادات" fill="#8884d8" />
                   </BarChart>
@@ -143,7 +156,12 @@ const AnalyticsDashboard: React.FC = () => {
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ action, percent }) => `${action}: ${(percent * 100).toFixed(0)}%`}
+                        label={({ action, percent }) => {
+                          if (typeof percent === 'number') {
+                            return `${action}: ${(percent * 100).toFixed(0)}%`;
+                          }
+                          return `${action}: 0%`;
+                        }}
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="count"
@@ -179,7 +197,12 @@ const AnalyticsDashboard: React.FC = () => {
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ userName, percent }) => `${userName}: ${(percent * 100).toFixed(0)}%`}
+                        label={({ userName, percent }) => {
+                          if (typeof percent === 'number') {
+                            return `${userName}: ${(percent * 100).toFixed(0)}%`;
+                          }
+                          return `${userName}: 0%`;
+                        }}
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="count"

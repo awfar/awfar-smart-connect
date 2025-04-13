@@ -1,4 +1,3 @@
-
 import React from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -55,20 +54,17 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
           ...invoice,
           issueDate: new Date(invoice.issueDate),
           dueDate: new Date(invoice.dueDate),
-          // Ensure items is properly typed
-          items: invoice.items as InvoiceItem[],
         }
       : {
           customerId: "",
           customerName: "",
-          // Create properly typed invoice items
           items: [{ 
             productId: "", 
             productName: "", 
             quantity: 1, 
             unitPrice: 0, 
             totalPrice: 0 
-          }],
+          }] as InvoiceItem[],
           status: "draft",
           issueDate: new Date(),
           dueDate: addDays(new Date(), 30),
@@ -87,7 +83,7 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
         quantity: 1, 
         unitPrice: 0, 
         totalPrice: 0 
-      }
+      } as InvoiceItem
     ]);
   };
 
@@ -124,7 +120,7 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
       const invoiceData: Omit<Invoice, 'id'> = {
         customerId: data.customerId,
         customerName: data.customerName,
-        items: data.items as InvoiceItem[], // Ensure proper typing
+        items: data.items,
         totalAmount: calculateTotal(),
         status: data.status,
         dueDate: format(data.dueDate, 'yyyy-MM-dd'),

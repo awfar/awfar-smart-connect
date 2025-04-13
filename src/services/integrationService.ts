@@ -15,83 +15,37 @@ export interface SystemModule {
 // Get all system modules
 export const getSystemModules = async (): Promise<SystemModule[]> => {
   try {
-    const { data, error } = await supabase
-      .from('system_modules')
-      .select('*')
-      .order('name');
+    const { data, error } = await supabase.rpc('get_system_modules');
     
     if (error) throw error;
     
-    return data as SystemModule[] || [];
+    if (data && Array.isArray(data)) {
+      return data.map((module: any) => ({
+        id: module.id,
+        name: module.name,
+        description: module.description,
+        status: module.status,
+        lastSyncTime: module.last_sync_time,
+        errorMessage: module.error_message
+      }));
+    }
+    
+    return getMockSystemModules();
   } catch (err) {
     console.error("Error fetching system modules:", err);
-    
-    // Fallback to mock data
-    return [
-      {
-        id: '1',
-        name: 'الفواتير',
-        description: 'نظام إدارة الفواتير',
-        status: 'active',
-        lastSyncTime: new Date().toISOString()
-      },
-      {
-        id: '2',
-        name: 'المنتجات',
-        description: 'نظام إدارة المنتجات والكتالوج',
-        status: 'active',
-        lastSyncTime: new Date().toISOString()
-      },
-      {
-        id: '3',
-        name: 'الاشتراكات',
-        description: 'نظام إدارة اشتراكات العملاء',
-        status: 'active',
-        lastSyncTime: new Date().toISOString()
-      },
-      {
-        id: '4',
-        name: 'العملاء',
-        description: 'نظام إدارة العملاء',
-        status: 'active',
-        lastSyncTime: new Date().toISOString()
-      },
-      {
-        id: '5',
-        name: 'التقارير',
-        description: 'نظام التقارير والإحصائيات',
-        status: 'active',
-        lastSyncTime: new Date().toISOString()
-      }
-    ];
+    return getMockSystemModules();
   }
 };
 
 // Sync module data
 export const syncModuleData = async (moduleId: string, userId: string): Promise<SystemModule> => {
   try {
-    // Get the module
-    const { data: moduleData, error } = await supabase
-      .from('system_modules')
-      .select('*')
-      .eq('id', moduleId)
-      .single();
+    const { data, error } = await supabase.rpc('sync_module', {
+      p_module_id: moduleId,
+      p_user_id: userId
+    });
     
     if (error) throw error;
-    
-    // Update sync time
-    const { data: updatedModule, error: updateError } = await supabase
-      .from('system_modules')
-      .update({
-        last_sync_time: new Date().toISOString(),
-        status: 'active',
-        error_message: null
-      })
-      .eq('id', moduleId)
-      .select()
-      .single();
-    
-    if (updateError) throw updateError;
     
     // Log the sync activity
     await logActivity(
@@ -99,32 +53,23 @@ export const syncModuleData = async (moduleId: string, userId: string): Promise<
       moduleId,
       'sync',
       userId,
-      `تم مزامنة وحدة ${moduleData?.name || moduleId}`
+      `تم مزامنة وحدة ${data?.name || moduleId}`
     );
     
-    return updatedModule as SystemModule;
+    if (data) {
+      return {
+        id: data.id,
+        name: data.name,
+        description: data.description,
+        status: data.status,
+        lastSyncTime: data.last_sync_time,
+        errorMessage: data.error_message
+      };
+    }
+    
+    throw new Error("Failed to sync module");
   } catch (err) {
     console.error(`Error syncing module ${moduleId}:`, err);
-    
-    // Update module status to error
-    try {
-      const { data: errorModule } = await supabase
-        .from('system_modules')
-        .update({
-          last_sync_time: new Date().toISOString(),
-          status: 'error',
-          error_message: String(err)
-        })
-        .eq('id', moduleId)
-        .select()
-        .single();
-      
-      if (errorModule) {
-        return errorModule as SystemModule;
-      }
-    } catch (updateErr) {
-      console.error(`Error updating module ${moduleId} status:`, updateErr);
-    }
     
     // Fallback
     return {
@@ -182,3 +127,44 @@ export const checkModulesIntegration = async (): Promise<{
     };
   }
 };
+
+// Helper function for mock data
+function getMockSystemModules(): SystemModule[] {
+  return [
+    {
+      id: '1',
+      name: 'الفواتير',
+      description: 'نظام إدارة الفواتير',
+      status: 'active',
+      lastSyncTime: new Date().toISOString()
+    },
+    {
+      id: '2',
+      name: 'المنتجات',
+      description: 'نظام إدارة المنتجات والكتالوج',
+      status: 'active',
+      lastSyncTime: new Date().toISOString()
+    },
+    {
+      id: '3',
+      name: 'الاشتراكات',
+      description: 'نظام إدارة اشتراكات العملاء',
+      status: 'active',
+      lastSyncTime: new Date().toISOString()
+    },
+    {
+      id: '4',
+      name: 'العملاء',
+      description: 'نظام إدارة العملاء',
+      status: 'active',
+      lastSyncTime: new Date().toISOString()
+    },
+    {
+      id: '5',
+      name: 'التقارير',
+      description: 'نظام التقارير والإحصائيات',
+      status: 'active',
+      lastSyncTime: new Date().toISOString()
+    }
+  ];
+}

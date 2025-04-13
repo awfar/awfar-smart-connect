@@ -30,18 +30,22 @@ export const getInvoices = async (): Promise<Invoice[]> => {
   // First try to get data from Supabase
   try {
     const { data, error } = await supabase
-      .from('invoices')
-      .select('*');
+      .rpc('get_all_invoices')
+      .catch(() => {
+        return supabase
+          .from('invoices')
+          .select('*');
+      });
     
     if (error) throw error;
     
     if (data && data.length > 0) {
-      return data.map(item => ({
+      return data.map((item: any) => ({
         id: item.id,
         customerId: item.customer_id,
         customerName: item.customer_name,
         // Parse items from JSON if needed
-        items: Array.isArray(item.items) ? item.items : JSON.parse(Array.isArray(item.items) ? '[]' : (item.items as string || '[]')),
+        items: parseInvoiceItems(item.items),
         totalAmount: item.total_amount,
         status: item.status as Invoice['status'],
         dueDate: item.due_date,
@@ -93,10 +97,14 @@ export const getInvoiceById = async (id: string): Promise<Invoice | null> => {
   try {
     // First try to get from Supabase
     const { data, error } = await supabase
-      .from('invoices')
-      .select('*')
-      .eq('id', id)
-      .single();
+      .rpc('get_invoice_by_id', { p_invoice_id: id })
+      .catch(() => {
+        return supabase
+          .from('invoices')
+          .select('*')
+          .eq('id', id)
+          .single();
+      });
     
     if (error) {
       if (error.code === 'PGRST116') return null; // No rows found
@@ -109,7 +117,7 @@ export const getInvoiceById = async (id: string): Promise<Invoice | null> => {
         customerId: data.customer_id,
         customerName: data.customer_name,
         // Parse items from JSON if needed
-        items: Array.isArray(data.items) ? data.items : JSON.parse(Array.isArray(data.items) ? '[]' : (data.items as string || '[]')),
+        items: parseInvoiceItems(data.items),
         totalAmount: data.total_amount,
         status: data.status as Invoice['status'],
         dueDate: data.due_date,
@@ -131,12 +139,15 @@ export const getInvoiceById = async (id: string): Promise<Invoice | null> => {
 // Create a new invoice
 export const createInvoice = async (invoice: Omit<Invoice, 'id'>): Promise<Invoice> => {
   try {
+    // Convert InvoiceItems to JSON compatible format
+    const jsonItems = JSON.stringify(invoice.items);
+    
     const { data, error } = await supabase
       .from('invoices')
-      .insert([{
+      .insert({
         customer_id: invoice.customerId,
         customer_name: invoice.customerName,
-        items: invoice.items,
+        items: jsonItems,
         total_amount: invoice.totalAmount,
         status: invoice.status,
         due_date: invoice.dueDate,
@@ -145,7 +156,7 @@ export const createInvoice = async (invoice: Omit<Invoice, 'id'>): Promise<Invoi
         subscription_id: invoice.subscriptionId,
         package_id: invoice.packageId,
         notes: invoice.notes
-      }])
+      })
       .select()
       .single();
     
@@ -155,8 +166,7 @@ export const createInvoice = async (invoice: Omit<Invoice, 'id'>): Promise<Invoi
       id: data.id,
       customerId: data.customer_id,
       customerName: data.customer_name,
-      // Parse items from JSON if needed
-      items: Array.isArray(data.items) ? data.items : JSON.parse(Array.isArray(data.items) ? '[]' : (data.items as string || '[]')),
+      items: parseInvoiceItems(data.items),
       totalAmount: data.total_amount,
       status: data.status as Invoice['status'],
       dueDate: data.due_date,
@@ -193,8 +203,7 @@ export const updateInvoiceStatus = async (id: string, status: Invoice['status'],
       id: data.id,
       customerId: data.customer_id,
       customerName: data.customer_name,
-      // Parse items from JSON if needed
-      items: Array.isArray(data.items) ? data.items : JSON.parse(Array.isArray(data.items) ? '[]' : (data.items as string || '[]')),
+      items: parseInvoiceItems(data.items),
       totalAmount: data.total_amount,
       status: data.status as Invoice['status'],
       dueDate: data.due_date,
@@ -230,16 +239,15 @@ export const generateInvoiceForSubscription = async (subscriptionId: string, cus
 // Log action performed on invoice
 export const logInvoiceAction = async (invoiceId: string, action: string, userId: string, details?: string): Promise<void> => {
   try {
-    await supabase
-      .from('activity_logs')
-      .insert([{
-        entity_type: 'invoice',
-        entity_id: invoiceId,
-        action,
-        user_id: userId,
-        details,
-        created_at: new Date().toISOString()
-      }]);
+    await supabase.rpc('log_invoice_action', {
+      p_invoice_id: invoiceId,
+      p_action: action,
+      p_user_id: userId,
+      p_details: details
+    }).catch(async () => {
+      // Fallback to direct logging if RPC is not available
+      await logActivity('invoice', invoiceId, action, userId, details);
+    });
     
     console.log(`Logged action: ${action} on invoice ${invoiceId}`);
   } catch (err) {
@@ -255,50 +263,29 @@ export const getInvoiceAnalytics = async (): Promise<{
   monthlyRevenue: { month: string; amount: number }[];
 }> => {
   try {
-    // Get all invoices
-    const { data, error } = await supabase
-      .from('invoices')
-      .select('*');
+    const { data, error } = await supabase.rpc('get_invoice_analytics')
+      .catch(() => {
+        // If RPC fails, try to get data directly
+        return supabase.from('invoices').select('*');
+      });
     
     if (error) throw error;
     
-    if (!data || data.length === 0) {
-      return {
-        totalCount: 0,
-        paidAmount: 0,
-        overdueAmount: 0,
-        monthlyRevenue: []
-      };
+    if (data) {
+      if ('totalCount' in data) {
+        // RPC returned formatted data
+        return data as any;
+      } else if (Array.isArray(data)) {
+        // Calculate analytics from raw data
+        return calculateInvoiceAnalytics(data);
+      }
     }
     
-    // Calculate analytics
-    const totalCount = data.length;
-    const paidAmount = data
-      .filter(inv => inv.status === 'paid')
-      .reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
-    const overdueAmount = data
-      .filter(inv => inv.status === 'overdue')
-      .reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
-    
-    // Calculate monthly revenue
-    const monthlyData = data.reduce((acc: Record<string, number>, inv) => {
-      if (inv.status === 'paid' && inv.paid_date) {
-        const month = inv.paid_date.substring(0, 7); // Format: YYYY-MM
-        acc[month] = (acc[month] || 0) + (inv.total_amount || 0);
-      }
-      return acc;
-    }, {});
-    
-    const monthlyRevenue = Object.entries(monthlyData).map(([month, amount]) => ({
-      month,
-      amount
-    })).sort((a, b) => a.month.localeCompare(b.month));
-    
     return {
-      totalCount,
-      paidAmount,
-      overdueAmount,
-      monthlyRevenue
+      totalCount: 0,
+      paidAmount: 0,
+      overdueAmount: 0,
+      monthlyRevenue: []
     };
   } catch (err) {
     console.error("Error getting invoice analytics:", err);
@@ -310,3 +297,71 @@ export const getInvoiceAnalytics = async (): Promise<{
     };
   }
 };
+
+// Helper function to parse invoice items
+function parseInvoiceItems(items: any): InvoiceItem[] {
+  if (!items) return [];
+  
+  if (typeof items === 'string') {
+    try {
+      items = JSON.parse(items);
+    } catch (e) {
+      console.error("Failed to parse invoice items:", e);
+      return [];
+    }
+  }
+  
+  if (!Array.isArray(items)) {
+    return [];
+  }
+  
+  return items.map(item => ({
+    productId: item.productId || '',
+    productName: item.productName || '',
+    quantity: Number(item.quantity) || 0,
+    unitPrice: Number(item.unitPrice) || 0,
+    totalPrice: Number(item.totalPrice) || 0
+  }));
+}
+
+// Helper function to calculate invoice analytics
+function calculateInvoiceAnalytics(invoices: any[]): {
+  totalCount: number;
+  paidAmount: number;
+  overdueAmount: number;
+  monthlyRevenue: { month: string; amount: number }[];
+} {
+  const totalCount = invoices.length;
+  
+  // Calculate paid amount
+  const paidAmount = invoices
+    .filter((inv: any) => inv.status === 'paid')
+    .reduce((sum: number, inv: any) => sum + (Number(inv.total_amount) || 0), 0);
+  
+  // Calculate overdue amount
+  const overdueAmount = invoices
+    .filter((inv: any) => inv.status === 'overdue')
+    .reduce((sum: number, inv: any) => sum + (Number(inv.total_amount) || 0), 0);
+  
+  // Calculate monthly revenue
+  const monthlyData: Record<string, number> = {};
+  
+  invoices.forEach((inv: any) => {
+    if (inv.status === 'paid' && inv.paid_date) {
+      const month = inv.paid_date.substring(0, 7); // Format: YYYY-MM
+      monthlyData[month] = (monthlyData[month] || 0) + (Number(inv.total_amount) || 0);
+    }
+  });
+  
+  const monthlyRevenue = Object.entries(monthlyData).map(([month, amount]) => ({
+    month,
+    amount
+  })).sort((a, b) => a.month.localeCompare(b.month));
+  
+  return {
+    totalCount,
+    paidAmount,
+    overdueAmount,
+    monthlyRevenue
+  };
+}

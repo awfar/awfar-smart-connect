@@ -1,169 +1,152 @@
 
-import React, { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { 
-  CheckCircle, 
-  AlertCircle, 
-  AlertTriangle, 
-  RefreshCcw
+  CheckCircle2, AlertCircle, XCircle, Info, ServerCrash, Activity
 } from 'lucide-react';
-import { toast } from 'sonner';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { 
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from '@/components/ui/dialog';
-import { checkSystemHealth, getSystemStatistics, checkIntegrations } from '@/services/systemService';
+import { checkSystemHealth, SystemHealth } from '@/services/systemService';
+import { checkModulesIntegration } from '@/services/integrationService';
 
-const SystemStatus: React.FC = () => {
-  const [status, setStatus] = useState<'healthy' | 'warning' | 'error' | 'loading'>('loading');
-  const [message, setMessage] = useState<string>('جاري فحص حالة النظام...');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [details, setDetails] = useState<any>(null);
-  const [integrations, setIntegrations] = useState<{
-    database: boolean;
-    auth: boolean;
-    storage: boolean;
-  }>({ database: false, auth: false, storage: false });
-  
-  const checkStatus = async () => {
-    setStatus('loading');
-    setMessage('جاري فحص حالة النظام...');
-    
-    try {
-      // Check health
-      const health = await checkSystemHealth();
-      setStatus(health.status);
-      setMessage(health.message);
-      
-      // Get statistics
-      const stats = await getSystemStatistics();
-      setDetails(stats);
-      
-      // Check integrations
-      const integrationStatus = await checkIntegrations();
-      setIntegrations(integrationStatus);
-      
-    } catch (err) {
-      console.error('Error checking system status:', err);
-      setStatus('error');
-      setMessage('تعذر فحص حالة النظام');
-    }
-  };
-  
+const SystemStatus = () => {
+  const [systemStatus, setSystemStatus] = useState<SystemHealth | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [integrationStatus, setIntegrationStatus] = useState<{
+    status: 'success' | 'warning' | 'error';
+    message: string;
+    details?: Record<string, any>;
+  } | null>(null);
+
   useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Check system health
+        const health = await checkSystemHealth();
+        setSystemStatus(health);
+        
+        // Check integration status
+        const integration = await checkModulesIntegration();
+        setIntegrationStatus(integration);
+      } catch (error) {
+        console.error("Error checking system status:", error);
+        setSystemStatus({
+          status: 'error',
+          message: 'فشل في الاتصال بالنظام'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
     checkStatus();
     
-    // Set up a refresh interval
-    const interval = setInterval(() => {
-      checkStatus();
-    }, 300000); // 5 minutes
+    // Check status periodically
+    const interval = setInterval(checkStatus, 60000); // every minute
     
     return () => clearInterval(interval);
   }, []);
   
-  const handleRefresh = () => {
-    toast.promise(checkStatus(), {
-      loading: 'جاري فحص النظام...',
-      success: 'تم تحديث حالة النظام',
-      error: 'تعذر تحديث حالة النظام'
-    });
+  const getStatusIcon = () => {
+    if (isLoading) return <Activity className="h-4 w-4 animate-pulse" />;
+    
+    if (!systemStatus) return <Info className="h-4 w-4" />;
+    
+    switch (systemStatus.status) {
+      case 'healthy':
+        return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+      case 'warning':
+        return <AlertCircle className="h-4 w-4 text-amber-500" />;
+      case 'error':
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      default:
+        return <Info className="h-4 w-4" />;
+    }
   };
   
-  const statusIcon = {
-    healthy: <CheckCircle className="w-4 h-4 text-green-500" />,
-    warning: <AlertTriangle className="w-4 h-4 text-amber-500" />,
-    error: <AlertCircle className="w-4 h-4 text-red-500" />,
-    loading: <RefreshCcw className="w-4 h-4 animate-spin" />
+  const getStatusColor = () => {
+    if (isLoading) return "bg-slate-100 text-slate-800";
+    
+    if (!systemStatus) return "bg-slate-100 text-slate-800";
+    
+    switch (systemStatus.status) {
+      case 'healthy':
+        return "bg-green-100 text-green-800";
+      case 'warning':
+        return "bg-amber-100 text-amber-800";
+      case 'error':
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-slate-100 text-slate-800";
+    }
+  };
+  
+  const getStatusMessage = () => {
+    if (isLoading) return "جاري التحقق...";
+    
+    if (!systemStatus) return "غير معروف";
+    
+    return systemStatus.message;
   };
   
   return (
-    <>
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogTrigger asChild>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full p-0" onClick={() => setIsDialogOpen(true)}>
-                {statusIcon[status]}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{message}</p>
-            </TooltipContent>
-          </Tooltip>
-        </DialogTrigger>
-        
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>حالة النظام</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                {statusIcon[status]}
-                <span>{message}</span>
-              </div>
-              <Button variant="outline" size="sm" onClick={handleRefresh}>
-                <RefreshCcw className="w-4 h-4 mr-2" />
-                تحديث
-              </Button>
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" className="relative">
+          <Badge 
+            variant="outline" 
+            className={`flex gap-1.5 hover:${getStatusColor()} ${getStatusColor()}`}
+          >
+            {getStatusIcon()}
+            <span className="text-xs font-medium">حالة النظام</span>
+          </Badge>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80" align="end">
+        <div className="space-y-4">
+          <div className="border-b pb-2">
+            <h4 className="text-sm font-medium mb-1">حالة النظام</h4>
+            <div className="flex items-center gap-2">
+              {getStatusIcon()}
+              <span className="text-sm">{getStatusMessage()}</span>
             </div>
-            
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium">التكاملات</h3>
-              <div className="grid grid-cols-3 gap-2">
-                <div className={`p-2 rounded-md border ${integrations.database ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
-                  <div className="flex items-center">
-                    {integrations.database ? 
-                      <CheckCircle className="w-4 h-4 text-green-500 ml-2" /> : 
-                      <AlertCircle className="w-4 h-4 text-red-500 ml-2" />}
-                    <span className="text-sm">قاعدة البيانات</span>
-                  </div>
-                </div>
-                
-                <div className={`p-2 rounded-md border ${integrations.auth ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
-                  <div className="flex items-center">
-                    {integrations.auth ? 
-                      <CheckCircle className="w-4 h-4 text-green-500 ml-2" /> : 
-                      <AlertCircle className="w-4 h-4 text-red-500 ml-2" />}
-                    <span className="text-sm">المصادقة</span>
-                  </div>
-                </div>
-                
-                <div className={`p-2 rounded-md border ${integrations.storage ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
-                  <div className="flex items-center">
-                    {integrations.storage ? 
-                      <CheckCircle className="w-4 h-4 text-green-500 ml-2" /> : 
-                      <AlertCircle className="w-4 h-4 text-red-500 ml-2" />}
-                    <span className="text-sm">التخزين</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {details && (
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">إحصائيات النظام</h3>
-                <ul className="space-y-1">
-                  {details.tableStats.map((stat: any) => (
-                    <li key={stat.table} className="flex justify-between text-sm">
-                      <span>{stat.table}</span>
-                      <span className="font-medium">{stat.count}</span>
-                    </li>
-                  ))}
-                </ul>
-                <p className="text-xs text-muted-foreground">
-                  آخر تحديث: {new Date(details.lastUpdated).toLocaleString('ar-SA')}
-                </p>
-              </div>
-            )}
           </div>
-        </DialogContent>
-      </Dialog>
-    </>
+          
+          {integrationStatus && (
+            <div className="border-b pb-2">
+              <h4 className="text-sm font-medium mb-1">الوحدات</h4>
+              <div className="flex items-center gap-2">
+                {integrationStatus.status === 'success' ? (
+                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                ) : integrationStatus.status === 'warning' ? (
+                  <AlertCircle className="h-4 w-4 text-amber-500" />
+                ) : (
+                  <XCircle className="h-4 w-4 text-red-500" />
+                )}
+                <span className="text-sm">{integrationStatus.message}</span>
+              </div>
+              
+              {integrationStatus.details && integrationStatus.details.inactiveModules && (
+                <div className="mt-2 text-xs text-muted-foreground">
+                  {integrationStatus.details.inactiveModules.map((module: string, index: number) => (
+                    <div key={index}>{module}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+          
+          <div>
+            <h4 className="text-sm font-medium mb-1">آخر تحديث</h4>
+            <p className="text-xs text-muted-foreground">
+              {new Date().toLocaleTimeString('ar-SA')}
+            </p>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 };
 
