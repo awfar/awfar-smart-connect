@@ -59,12 +59,12 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
           customerName: "",
           items: [
             {
-              productId: "",
-              productName: "", 
-              quantity: 1,
-              unitPrice: 0,
-              totalPrice: 0
-            } as InvoiceItem
+              productId: "",  // Required field
+              productName: "", // Required field
+              quantity: 1,    // Required field
+              unitPrice: 0,   // Required field
+              totalPrice: 0   // Required field
+            } as InvoiceItem  // Explicitly cast as InvoiceItem to ensure type safety
           ],
           status: "draft",
           issueDate: new Date(),
