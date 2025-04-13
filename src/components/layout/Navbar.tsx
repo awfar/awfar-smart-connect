@@ -83,6 +83,20 @@ const Navbar = () => {
             </Link>
           </div>
 
+          {/* Mobile Menu Button - موضع معدل ليكون واضحاً */}
+          <button
+            onClick={toggleMenu}
+            type="button"
+            aria-label="Toggle menu"
+            className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-awfar-primary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-awfar-primary z-50"
+          >
+            {isOpen ? (
+              <X className="h-6 w-6" />
+            ) : (
+              <Menu className="h-6 w-6" />
+            )}
+          </button>
+
           {/* Desktop Navigation */}
           <div className="hidden md:block md:flex-1">
             <div className="flex items-center justify-center space-x-4 rtl:space-x-reverse">
@@ -107,53 +121,52 @@ const Navbar = () => {
               <Link to="/register">تسجيل</Link>
             </Button>
           </div>
-          
-          {/* Mobile Menu Button - أصلحنا ترتيب الظهور */}
-          <div className="flex md:hidden">
-            <button
-              onClick={toggleMenu}
-              type="button"
-              aria-label="Toggle menu"
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-awfar-primary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-awfar-primary"
-            >
-              {isOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
-            </button>
-          </div>
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - تم إعادة تصميمها لتكون أكثر وضوحاً */}
       <div
         className={cn(
-          "md:hidden fixed inset-x-0 top-20 bg-white shadow-lg z-50 transition-transform duration-300 ease-in-out transform",
-          isOpen ? "translate-y-0" : "-translate-y-full"
+          "md:hidden fixed inset-0 bg-white z-40 transition-opacity duration-300 ease-in-out",
+          isOpen 
+            ? "opacity-100 pointer-events-auto" 
+            : "opacity-0 pointer-events-none"
         )}
       >
-        <div className="px-4 py-3 space-y-1">
-          {menuItems.map((item, index) => (
-            <Link
-              key={index}
-              to={item.path}
-              onClick={closeMenu}
-              className="block text-gray-700 hover:bg-gray-50 hover:text-awfar-primary px-3 py-2 rounded-md text-base font-medium"
-            >
-              {item.title}
-            </Link>
-          ))}
-        </div>
-        {/* Mobile Auth Buttons - داخل القائمة المنسدلة */}
-        <div className="pt-4 pb-3 border-t border-gray-200 px-4">
+        <div className="flex flex-col h-full pt-20 px-6 pb-6 overflow-y-auto">
+          {/* Logo داخل القائمة */}
+          <div className="flex justify-center mb-8">
+            <img 
+              src="/lovable-uploads/c404f91d-42bc-4601-8675-47a02888d011.png" 
+              alt="Awfar Logo" 
+              className="h-10" 
+            />
+          </div>
+          
+          {/* روابط القائمة */}
           <div className="flex flex-col space-y-2">
-            <Button asChild variant="outline" className="w-full">
-              <Link to="/login" onClick={closeMenu}>دخول</Link>
-            </Button>
-            <Button asChild className="w-full">
-              <Link to="/register" onClick={closeMenu}>تسجيل</Link>
-            </Button>
+            {menuItems.map((item, index) => (
+              <Link
+                key={index}
+                to={item.path}
+                onClick={closeMenu}
+                className="block text-center text-gray-700 hover:bg-gray-50 hover:text-awfar-primary px-3 py-3 rounded-md text-lg font-medium"
+              >
+                {item.title}
+              </Link>
+            ))}
+          </div>
+          
+          {/* أزرار تسجيل الدخول داخل القائمة المتحركة */}
+          <div className="mt-auto pt-6 border-t border-gray-200">
+            <div className="flex flex-col space-y-3">
+              <Button asChild variant="outline" className="w-full">
+                <Link to="/login" onClick={closeMenu}>دخول</Link>
+              </Button>
+              <Button asChild className="w-full">
+                <Link to="/register" onClick={closeMenu}>تسجيل</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
