@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { fetchActivityAnalytics } from '@/services/analytics/activityAnalyticsService';
+import { fetchActivityAnalytics, ActivityAnalytic } from '@/services/analytics/activityAnalyticsService';
 
 type AnalyticsType = 'action' | 'user' | 'entity';
 
@@ -13,8 +13,8 @@ const UserActivityAnalytics: React.FC = () => {
   const [analyticsType, setAnalyticsType] = useState<AnalyticsType>('action');
 
   const { data, isLoading } = useQuery({
-    queryKey: ['activityAnalytics', analyticsType],
-    queryFn: () => fetchActivityAnalytics(analyticsType),
+    queryKey: ['activityAnalytics'],
+    queryFn: () => fetchActivityAnalytics(),
   });
 
   const colors = ['#4361EE', '#3A0CA3', '#7209B7', '#F72585', '#4CC9F0'];
@@ -24,7 +24,20 @@ const UserActivityAnalytics: React.FC = () => {
       return <Skeleton className="h-[320px] w-full" />;
     }
 
-    if (!data || data.length === 0) {
+    // Early return if no data
+    if (!data) {
+      return (
+        <div className="flex items-center justify-center h-[320px] text-muted-foreground">
+          لا توجد بيانات متاحة
+        </div>
+      );
+    }
+
+    // Select the appropriate data array based on analyticsType
+    const chartData = analyticsType === 'action' ? data.byType : 
+                      analyticsType === 'user' ? data.byUser : data.byEntity;
+
+    if (chartData.length === 0) {
       return (
         <div className="flex items-center justify-center h-[320px] text-muted-foreground">
           لا توجد بيانات متاحة
@@ -36,12 +49,12 @@ const UserActivityAnalytics: React.FC = () => {
       <div className="h-[320px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
-            data={data}
+            data={chartData}
             margin={{ top: 10, right: 30, left: 20, bottom: 70 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis 
-              dataKey="name" 
+              dataKey="label" 
               tick={{ fontSize: 12 }}
               interval={0}
               angle={-45}
@@ -63,7 +76,7 @@ const UserActivityAnalytics: React.FC = () => {
               radius={[6, 6, 0, 0]} 
               barSize={30}
             >
-              {data.map((entry, index) => (
+              {chartData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
               ))}
             </Bar>

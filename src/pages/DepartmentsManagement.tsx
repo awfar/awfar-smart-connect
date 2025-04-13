@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -29,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import MobileOptimizedContainer from "@/components/ui/mobile-optimized-container";
+import { supabase } from "@/integrations/supabase/client";
 
 interface DepartmentFormProps {
   department?: Department;
@@ -105,7 +105,6 @@ const DepartmentForm = ({ department, isEditing, onSave }: DepartmentFormProps) 
     </form>
   );
   
-  // These functions will be implemented in the component, but are declared here for TypeScript
   async function updateDepartment(department: Partial<Department> & { id: string }): Promise<Department | null> {
     try {
       const { data, error } = await supabase

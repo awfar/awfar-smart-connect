@@ -139,12 +139,14 @@ const LeadManagement = () => {
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">إضافة عميل محتمل جديد</DialogTitle>
           </DialogHeader>
-          <MobileOptimizedContainer className="mt-4">
-            <LeadForm 
-              onClose={() => setIsAddLeadOpen(false)}
-              onSuccess={handleLeadSuccess}
-            />
-          </MobileOptimizedContainer>
+          <div className="mt-4">
+            <MobileOptimizedContainer>
+              <LeadForm 
+                onClose={() => setIsAddLeadOpen(false)}
+                onSuccess={handleLeadSuccess}
+              />
+            </MobileOptimizedContainer>
+          </div>
         </DialogContent>
       </Dialog>
     </DashboardLayout>
