@@ -83,14 +83,13 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
       : {
           customerId: "",
           customerName: "",
-          // استخدام نسخة جديدة من العنصر الافتراضي مع التأكد من تعيين جميع الحقول المطلوبة
           items: [{ 
             productId: DEFAULT_INVOICE_ITEM.productId,
             productName: DEFAULT_INVOICE_ITEM.productName, 
             quantity: DEFAULT_INVOICE_ITEM.quantity, 
             unitPrice: DEFAULT_INVOICE_ITEM.unitPrice,
             totalPrice: DEFAULT_INVOICE_ITEM.totalPrice
-          }],
+          } as InvoiceItem],
           status: "draft",
           issueDate: new Date(),
           dueDate: addDays(new Date(), 30),
