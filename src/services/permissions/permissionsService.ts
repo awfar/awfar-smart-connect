@@ -23,45 +23,45 @@ export const getSystemObjects = () => [
     name: 'contacts',
     label: 'جهات الاتصال',
     permissions: [
-      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض جهات الاتصال' },
-      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض وتعديل جهات الاتصال' },
-      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'], description: 'وصول كامل لجهات الاتصال' },
+      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض جهات الاتصال' },
+      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض وتعديل جهات الاتصال' },
+      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'وصول كامل لجهات الاتصال' },
     ]
   },
   {
     name: 'companies',
     label: 'الشركات',
     permissions: [
-      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض الشركات' },
-      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض وتعديل الشركات' },
-      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'], description: 'وصول كامل للشركات' },
+      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض الشركات' },
+      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض وتعديل الشركات' },
+      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'وصول كامل للشركات' },
     ]
   },
   {
     name: 'deals',
     label: 'الصفقات',
     permissions: [
-      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض الصفقات' },
-      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض وتعديل الصفقات' },
-      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'], description: 'وصول كامل للصفقات' },
+      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض الصفقات' },
+      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض وتعديل الصفقات' },
+      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'وصول كامل للصفقات' },
     ]
   },
   {
     name: 'tickets',
     label: 'التذاكر',
     permissions: [
-      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض التذاكر' },
-      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض وتعديل التذاكر' },
-      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'], description: 'وصول كامل للتذاكر' },
+      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض التذاكر' },
+      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض وتعديل التذاكر' },
+      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'وصول كامل للتذاكر' },
     ]
   },
   {
     name: 'tasks',
     label: 'المهام',
     permissions: [
-      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض المهام' },
-      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض وتعديل المهام' },
-      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'], description: 'وصول كامل للمهام' },
+      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض المهام' },
+      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض وتعديل المهام' },
+      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'وصول كامل للمهام' },
     ]
   },
   {
@@ -78,7 +78,7 @@ export const getSystemObjects = () => [
     label: 'الاجتماعات',
     permissions: [
       { level: 'read-only', scopes: ['own', 'team', 'all'], description: 'عرض الاجتماعات' },
-      { level: 'read-edit', scopes: ['own', 'team', 'all'], description: 'عرض وتعديل الاجتماعات' },
+      { level: 'read-edit', scopes: ['own', 'team', 'all'], description: 'عرض وتعديل الاجت��اعات' },
       { level: 'full-access', scopes: ['own', 'team', 'all'], description: 'وصول كامل للاجتماعات' },
     ]
   },

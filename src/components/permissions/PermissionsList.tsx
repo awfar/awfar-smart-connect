@@ -13,7 +13,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Permission, deletePermission } from "@/services/permissionsService";
+import { deletePermission } from "@/services/permissions/permissionsService";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,9 +26,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import { toast } from "sonner";
+import { PermissionDefinition } from "@/services/permissions/permissionTypes";
 
 interface PermissionsListProps {
-  permissions: Permission[];
+  permissions: PermissionDefinition[];
   isLoading: boolean;
   onEdit: (permissionId: string) => void;
   onRefresh: () => void;
@@ -87,7 +88,7 @@ const PermissionsList = ({ permissions, isLoading, onEdit, onRefresh }: Permissi
           {permissions.map((permission) => (
             <TableRow key={permission.id}>
               <TableCell className="font-medium">{permission.name}</TableCell>
-              <TableCell>{permission.description}</TableCell>
+              <TableCell>{permission.description || ''}</TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

@@ -50,11 +50,13 @@ const PermissionForm = ({ permissionId, isEditing = false, onSave }: PermissionF
       if (selectedObject) {
         const permissionDef = selectedObject.permissions.find(p => p.level === level);
         if (permissionDef) {
-          setAvailableScopes(permissionDef.scopes);
+          // Convert string[] to PermissionScope[] with explicit type casting
+          const typedScopes: PermissionScope[] = permissionDef.scopes.map(s => s as PermissionScope);
+          setAvailableScopes(typedScopes);
           
           // Reset scope if it's not available
           if (!permissionDef.scopes.includes(scope)) {
-            setScope(permissionDef.scopes[0]);
+            setScope(permissionDef.scopes[0] as PermissionScope);
           }
         }
       }

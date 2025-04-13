@@ -131,6 +131,22 @@ export const fetchRoleById = async (id: string): Promise<Role | null> => {
       }
       
       if (data && data.role_permissions) {
+        // Check if data.role_permissions is an error or actual data
+        if (typeof data.role_permissions === 'object' && !Array.isArray(data.role_permissions) && 'code' in data.role_permissions) {
+          // This is an error object, not an array
+          console.error("Error in role permissions join:", data.role_permissions);
+          
+          // Return just the role data without permissions
+          return {
+            id: data.id,
+            name: data.name,
+            description: data.description,
+            created_at: data.created_at,
+            updated_at: data.updated_at
+          };
+        }
+        
+        // This is a valid array of permissions
         const permissions = data.role_permissions.map((rp: any) => rp.permissions);
         return {
           ...data,
