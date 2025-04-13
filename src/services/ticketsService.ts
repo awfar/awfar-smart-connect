@@ -82,8 +82,9 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     
     console.log("Tickets fetched:", data);
     
-    // Explicitly cast the data to TicketFromDB[] before mapping
-    const typedData = data as TicketFromDB[];
+    // Use type assertion with unknown as intermediate step to avoid deep instantiation
+    const rawData = data as unknown;
+    const typedData = rawData as TicketFromDB[];
     return typedData.map(mapDBTicketToTicket);
   } catch (error) {
     console.error("خطأ في جلب التذاكر:", error);
