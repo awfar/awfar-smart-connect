@@ -3,7 +3,7 @@ import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { UseFormReturn } from "react-hook-form";
-import { Product } from "@/services/catalogService";
+import { Product } from "@/services/catalog/productService";
 import { PackageFormValues } from "./PackageFormFields";
 
 interface ProductSelectionListProps {
