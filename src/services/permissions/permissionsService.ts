@@ -88,6 +88,28 @@ export const initializeSystemPermissions = async (): Promise<void> => {
   }
 };
 
+// Map database permission to application PermissionDefinition
+const mapDatabasePermissionToDefinition = (permission: any): PermissionDefinition => {
+  // Check if the permission already has the required fields
+  if (permission.object && permission.level && permission.scope) {
+    return permission as PermissionDefinition;
+  }
+  
+  // Extract the object, level, and scope from the permission name
+  // Assuming format: {object}_{level}_{scope}
+  const nameParts = (permission.name || '').split('_');
+  
+  return {
+    id: permission.id,
+    name: permission.name,
+    description: permission.description,
+    // Default to empty values if name format doesn't match expected pattern
+    object: nameParts.length >= 3 ? nameParts[0] : '',
+    level: nameParts.length >= 3 ? nameParts[1] as PermissionLevel : 'read-only',
+    scope: nameParts.length >= 3 ? nameParts[2] as PermissionScope : 'own'
+  };
+};
+
 export const fetchPermissions = async (): Promise<PermissionDefinition[]> => {
   try {
     console.log("Fetching permissions...");
@@ -102,7 +124,8 @@ export const fetchPermissions = async (): Promise<PermissionDefinition[]> => {
     }
     
     console.log("Permissions fetched:", data);
-    return data;
+    // Map the database response to PermissionDefinition type
+    return data.map(mapDatabasePermissionToDefinition);
   } catch (error) {
     console.error("خطأ في جلب الصلاحيات:", error);
     toast.error("فشل في جلب قائمة الصلاحيات");
@@ -124,7 +147,7 @@ export const fetchPermissionById = async (id: string): Promise<PermissionDefinit
       throw error;
     }
     
-    return data;
+    return data ? mapDatabasePermissionToDefinition(data) : null;
   } catch (error) {
     console.error("خطأ في جلب تفاصيل الصلاحية:", error);
     toast.error("فشل في جلب تفاصيل الصلاحية");
@@ -146,7 +169,7 @@ export const createPermission = async (permission: Omit<PermissionDefinition, 'i
       throw error;
     }
     
-    return data;
+    return data ? mapDatabasePermissionToDefinition(data) : null;
   } catch (error) {
     console.error("خطأ في إضافة الصلاحية:", error);
     toast.error("فشل في إضافة الصلاحية");
@@ -175,7 +198,7 @@ export const updatePermission = async (permission: PermissionDefinition): Promis
       throw error;
     }
     
-    return data;
+    return data ? mapDatabasePermissionToDefinition(data) : null;
   } catch (error) {
     console.error("خطأ في تحديث الصلاحية:", error);
     toast.error("فشل في تحديث الصلاحية");

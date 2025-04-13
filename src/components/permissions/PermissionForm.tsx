@@ -49,9 +49,9 @@ const PermissionForm = ({ permissionId, isEditing = false, onSave }: PermissionF
       if (selectedObject) {
         const permissionDef = selectedObject.permissions.find(p => p.level === level);
         if (permissionDef) {
-          // Fixed: ensure proper typing by explicitly casting to PermissionScope[]
           setAvailableScopes(permissionDef.scopes);
           
+          // If current scope is not available in the new level, select the first available scope
           if (!permissionDef.scopes.includes(scope)) {
             setScope(permissionDef.scopes[0]);
           }
