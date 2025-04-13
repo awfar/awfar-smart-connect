@@ -47,14 +47,18 @@ export function InvoiceItemForm({ calculateTotal }: InvoiceItemFormProps) {
     const totalPrice = item.quantity * item.unitPrice;
     
     // نسخ المصفوفة وتحديث العنصر المحدد مع الحفاظ على جميع الخصائص المطلوبة
-    const updatedItems = [...items];
-    updatedItems[index] = {
-      productId: item.productId,
-      productName: item.productName,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      totalPrice: totalPrice
-    };
+    const updatedItems = items.map((currentItem, i) => {
+      if (i === index) {
+        return {
+          productId: currentItem.productId,
+          productName: currentItem.productName,
+          quantity: currentItem.quantity,
+          unitPrice: currentItem.unitPrice,
+          totalPrice: i === index ? totalPrice : currentItem.totalPrice
+        };
+      }
+      return currentItem;
+    });
     
     form.setValue("items", updatedItems);
     calculateTotal();

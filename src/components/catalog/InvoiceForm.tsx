@@ -65,31 +65,21 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
           dueDate: new Date(invoice.dueDate),
           // معالجة العناصر بشكل صحيح وضمان أن تكون من نوع InvoiceItem
           items: Array.isArray(invoice.items) 
-            ? invoice.items.map((item): InvoiceItem => ({
-                productId: item.productId || "",
-                productName: item.productName || "",
-                quantity: item.quantity || 1,
-                unitPrice: item.unitPrice || 0,
-                totalPrice: item.totalPrice || 0
-              }))
-            : [{ 
-                productId: DEFAULT_INVOICE_ITEM.productId,
-                productName: DEFAULT_INVOICE_ITEM.productName,
-                quantity: DEFAULT_INVOICE_ITEM.quantity,
-                unitPrice: DEFAULT_INVOICE_ITEM.unitPrice,
-                totalPrice: DEFAULT_INVOICE_ITEM.totalPrice
-              }]
+            ? invoice.items.map((item): InvoiceItem => {
+                return {
+                  productId: item.productId || "",
+                  productName: item.productName || "",
+                  quantity: item.quantity || 1,
+                  unitPrice: item.unitPrice || 0,
+                  totalPrice: item.totalPrice || 0
+                };
+              })
+            : [{ ...DEFAULT_INVOICE_ITEM }]
         }
       : {
           customerId: "",
           customerName: "",
-          items: [{ 
-            productId: DEFAULT_INVOICE_ITEM.productId,
-            productName: DEFAULT_INVOICE_ITEM.productName, 
-            quantity: DEFAULT_INVOICE_ITEM.quantity, 
-            unitPrice: DEFAULT_INVOICE_ITEM.unitPrice,
-            totalPrice: DEFAULT_INVOICE_ITEM.totalPrice
-          } as InvoiceItem],
+          items: [{ ...DEFAULT_INVOICE_ITEM }],
           status: "draft",
           issueDate: new Date(),
           dueDate: addDays(new Date(), 30),
@@ -109,7 +99,13 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
       const invoiceData: Omit<Invoice, 'id'> = {
         customerId: data.customerId,
         customerName: data.customerName,
-        items: data.items,
+        items: data.items.map((item): InvoiceItem => ({
+          productId: item.productId,
+          productName: item.productName,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          totalPrice: item.totalPrice
+        })),
         totalAmount: calculateTotal(),
         status: data.status,
         dueDate: format(data.dueDate, 'yyyy-MM-dd'),
