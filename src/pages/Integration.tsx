@@ -1,220 +1,253 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle, Layers, Database, Share2, Lock, BarChart, Code } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Database, Zap, LineChart, MessageSquare, CheckCircle, ExternalLink, Settings, ServerCog } from 'lucide-react';
 
 const Integration = () => {
   const integrations = [
     {
-      id: 1,
-      title: 'أنظمة إدارة علاقات العملاء',
-      description: 'تكامل سلس مع أشهر أنظمة CRM مثل Salesforce وHubSpot وMicrosoft Dynamics',
-      icon: <Layers className="h-8 w-8 text-primary" />,
-      logos: ['/public/placeholder.svg', '/public/placeholder.svg', '/public/placeholder.svg']
+      category: "أنظمة إدارة علاقات العملاء",
+      systems: [
+        { name: "Salesforce", logo: "/lovable-uploads/bf8a59d9-e92a-42fc-b7f5-5f96e1497988.png", popular: true },
+        { name: "Microsoft Dynamics", logo: "/lovable-uploads/adf52374-3db1-45dd-a60b-018ee4627394.png" },
+        { name: "HubSpot", logo: "/lovable-uploads/bf8a59d9-e92a-42fc-b7f5-5f96e1497988.png", popular: true },
+        { name: "Zoho CRM", logo: "/lovable-uploads/adf52374-3db1-45dd-a60b-018ee4627394.png" },
+      ]
     },
     {
-      id: 2,
-      title: 'أنظمة المحاسبة والفوترة',
-      description: 'ربط مباشر مع أنظمة المحاسبة مثل QuickBooks وXero وFreshBooks',
-      icon: <Database className="h-8 w-8 text-primary" />,
-      logos: ['/public/placeholder.svg', '/public/placeholder.svg', '/public/placeholder.svg']
+      category: "أنظمة التجارة الإلكترونية",
+      systems: [
+        { name: "Shopify", logo: "/lovable-uploads/bf8a59d9-e92a-42fc-b7f5-5f96e1497988.png", popular: true },
+        { name: "WooCommerce", logo: "/lovable-uploads/adf52374-3db1-45dd-a60b-018ee4627394.png", popular: true },
+        { name: "Magento", logo: "/lovable-uploads/bf8a59d9-e92a-42fc-b7f5-5f96e1497988.png" },
+        { name: "Salla", logo: "/lovable-uploads/adf52374-3db1-45dd-a60b-018ee4627394.png", popular: true },
+      ]
     },
     {
-      id: 3,
-      title: 'منصات التجارة الإلكترونية',
-      description: 'تكامل مع منصات التجارة الإلكترونية مثل Shopify وWooCommerce وMagento',
-      icon: <Share2 className="h-8 w-8 text-primary" />,
-      logos: ['/public/placeholder.svg', '/public/placeholder.svg', '/public/placeholder.svg']
+      category: "أنظمة إدارة المحتوى",
+      systems: [
+        { name: "WordPress", logo: "/lovable-uploads/bf8a59d9-e92a-42fc-b7f5-5f96e1497988.png", popular: true },
+        { name: "Joomla", logo: "/lovable-uploads/adf52374-3db1-45dd-a60b-018ee4627394.png" },
+        { name: "Drupal", logo: "/lovable-uploads/bf8a59d9-e92a-42fc-b7f5-5f96e1497988.png" },
+        { name: "Contentful", logo: "/lovable-uploads/adf52374-3db1-45dd-a60b-018ee4627394.png" },
+      ]
     },
-    {
-      id: 4,
-      title: 'بوابات الدفع الإلكتروني',
-      description: 'دعم لمختلف بوابات الدفع مثل Stripe وPayPal ومدى وApple Pay',
-      icon: <Lock className="h-8 w-8 text-primary" />,
-      logos: ['/public/placeholder.svg', '/public/placeholder.svg', '/public/placeholder.svg']
-    },
-    {
-      id: 5,
-      title: 'أدوات التحليل والتقارير',
-      description: 'ربط مع منصات التحليل مثل Google Analytics وMixpanel وPower BI',
-      icon: <BarChart className="h-8 w-8 text-primary" />,
-      logos: ['/public/placeholder.svg', '/public/placeholder.svg', '/public/placeholder.svg']
-    },
-    {
-      id: 6,
-      title: 'واجهات برمجة التطبيقات المخصصة',
-      description: 'إمكانية التكامل مع أي نظام عبر واجهات برمجة التطبيقات (APIs) المخصصة',
-      icon: <Code className="h-8 w-8 text-primary" />,
-      logos: ['/public/placeholder.svg', '/public/placeholder.svg', '/public/placeholder.svg']
-    }
   ];
 
-  const benefits = [
+  const features = [
     {
-      title: 'تكامل سريع وسلس',
-      description: 'واجهات برمجة سهلة الاستخدام وإعداد سريع للتكامل'
+      icon: <Zap className="h-8 w-8 text-awfar-accent" />,
+      title: "تكامل بدون شفرة برمجية",
+      description: "استخدم واجهة سهلة لربط أنظمتك دون الحاجة لمعرفة برمجية"
     },
     {
-      title: 'تزامن البيانات في الوقت الفعلي',
-      description: 'مزامنة فورية للبيانات بين جميع الأنظمة المتكاملة'
+      icon: <Database className="h-8 w-8 text-awfar-accent" />,
+      title: "مزامنة البيانات في الوقت الفعلي",
+      description: "استفد من مزامنة فورية للبيانات بين جميع أنظمتك المتكاملة"
     },
     {
-      title: 'أمان عالي للبيانات',
-      description: 'تشفير متقدم وحماية كاملة للبيانات أثناء النقل والتخزين'
+      icon: <LineChart className="h-8 w-8 text-awfar-accent" />,
+      title: "تقارير وتحليلات متكاملة",
+      description: "احصل على تقارير موحدة من كافة مصادر البيانات المختلفة"
     },
     {
-      title: 'تخصيص مرن',
-      description: 'إمكانية تخصيص التكامل حسب احتياجات عملك الفريدة'
-    }
+      icon: <MessageSquare className="h-8 w-8 text-awfar-accent" />,
+      title: "الوصول لسجل العميل الموحد",
+      description: "اطلع على كامل سجل العميل وتفاعلاته عبر كافة المنصات"
+    },
+    {
+      icon: <ServerCog className="h-8 w-8 text-awfar-accent" />,
+      title: "أتمتة العمليات المتقاطعة",
+      description: "أنشئ مهام آلية تعمل عبر مختلف الأنظمة في مؤسستك"
+    },
+    {
+      icon: <Settings className="h-8 w-8 text-awfar-accent" />,
+      title: "إعدادات متقدمة وتخصيص",
+      description: "خصص التكاملات لتلبية احتياجات عملك الفريدة"
+    },
   ];
 
   return (
     <div className="min-h-screen flex flex-col rtl">
       <Navbar />
+      
       <main className="flex-grow">
-        <section className="py-16 bg-gradient-to-b from-blue-50 to-white">
+        <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <h1 className="text-4xl font-bold mb-6">تكامل سلس مع جميع أنظمتك</h1>
-              <p className="text-xl text-gray-700 mb-8">
-                صمم بنية تكامل مرنة تربط منصة أوفر بجميع أنظمتك وتطبيقاتك الحالية بسلاسة ودون عناء
+              <div className="inline-block mb-3 px-3 py-1 bg-awfar-accent/10 rounded-full text-awfar-accent font-medium">
+                تكامل سلس
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold mb-6">التكامل مع الأنظمة الحالية</h1>
+              <p className="text-xl text-gray-600 mb-8">
+                يوفر نظام Awfar إمكانية التكامل السلس مع أنظمتك وتطبيقاتك الحالية، مما يسمح بتدفق المعلومات بشكل آلي وسهل
               </p>
-              <Button asChild size="lg" className="gap-2">
-                <Link to="/demo">
-                  طلب استشارة فنية <ArrowRight className="h-4 w-4" />
-                </Link>
+              <Button asChild size="lg" className="bg-gradient-to-r from-awfar-primary to-awfar-secondary hover:opacity-90">
+                <Link to="/demo">جرّب التكامل الآن</Link>
               </Button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {integrations.map(integration => (
-                <Card key={integration.id} className="border border-gray-200 hover:shadow-lg transition-all duration-300">
-                  <CardContent className="pt-6">
-                    <div className="flex justify-center mb-4">
-                      <div className="bg-blue-50 p-3 rounded-full">
-                        {integration.icon}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+              {features.map((feature, index) => (
+                <div key={index} className="bg-white p-8 rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+                  <div className="bg-gray-50 p-3 inline-flex rounded-lg mb-5">
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                  <p className="text-gray-600">{feature.description}</p>
+                </div>
+              ))}
+            </div>
+            
+            <div className="bg-white shadow-lg rounded-xl p-8 border border-gray-100">
+              <h2 className="text-3xl font-bold text-center mb-10">تكامل مع أنظمة ومنصات متعددة</h2>
+              
+              {integrations.map((category, index) => (
+                <div key={index} className="mb-10">
+                  <h3 className="text-2xl font-bold mb-6">{category.category}</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    {category.systems.map((system, idx) => (
+                      <div key={idx} className="bg-gray-50 p-4 rounded-lg border border-gray-100 flex flex-col items-center text-center hover:shadow-md transition-shadow">
+                        <div className="bg-white p-3 rounded-full w-16 h-16 flex items-center justify-center mb-3">
+                          <img src={system.logo} alt={system.name} className="h-10 w-10 object-contain" />
+                        </div>
+                        <h4 className="font-bold">{system.name}</h4>
+                        {system.popular && (
+                          <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mt-2">
+                            الأكثر استخداماً
+                          </span>
+                        )}
                       </div>
-                    </div>
-                    <h3 className="text-xl font-semibold text-center mb-3">{integration.title}</h3>
-                    <p className="text-gray-600 text-center mb-6">{integration.description}</p>
-                    <div className="flex justify-center space-x-4 rtl:space-x-reverse">
-                      {integration.logos.map((logo, idx) => (
-                        <img key={idx} src={logo} alt="شعار الشركة" className="h-8 w-auto grayscale hover:grayscale-0 transition-all" />
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                    ))}
+                  </div>
+                </div>
               ))}
+              
+              <div className="mt-8 text-center">
+                <Button asChild variant="outline" className="gap-2">
+                  <Link to="/contact">
+                    اطلب تكامل مع نظام آخر
+                    <ExternalLink className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
         </section>
         
-        <section className="py-16">
+        <section className="py-16 bg-gradient-to-r from-awfar-primary to-awfar-secondary text-white">
           <div className="container mx-auto px-4">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="order-2 md:order-1">
-                <h2 className="text-3xl font-bold mb-6">واجهات برمجة تطبيقات قوية ومرنة</h2>
-                <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                  توفر منصة أوفر واجهات برمجة تطبيقات (APIs) قوية ومرنة تسمح لك بدمج منصتنا مع أي نظام أو تطبيق بسهولة. سواء كنت ترغب في نقل البيانات، أو تزامن المعلومات، أو إنشاء تكاملات مخصصة، فإن واجهات برمجة التطبيقات لدينا توفر لك المرونة والقوة التي تحتاجها.
+            <div className="max-w-3xl mx-auto text-center">
+              <h2 className="text-3xl font-bold mb-6">عملية تكامل سلسة وسريعة</h2>
+              <p className="text-xl mb-10">
+                فريق الدعم الفني لدينا سيقوم بمساعدتك في عملية التكامل مع أنظمتك الحالية بسرعة وكفاءة
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="bg-white/10 p-6 rounded-xl backdrop-blur-sm">
+                  <div className="bg-white/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl font-bold">1</span>
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">تحليل الاحتياجات</h3>
+                  <p className="text-white/80">نحدد معاً الأنظمة التي تحتاج للتكامل معها</p>
+                </div>
+                <div className="bg-white/10 p-6 rounded-xl backdrop-blur-sm">
+                  <div className="bg-white/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl font-bold">2</span>
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">إعداد التكامل</h3>
+                  <p className="text-white/80">يقوم فريقنا بإعداد وتهيئة التكامل بين الأنظمة</p>
+                </div>
+                <div className="bg-white/10 p-6 rounded-xl backdrop-blur-sm">
+                  <div className="bg-white/20 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span className="text-2xl font-bold">3</span>
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">التشغيل والمتابعة</h3>
+                  <p className="text-white/80">نتأكد من عمل التكامل بكفاءة ونقدم الدعم المستمر</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div className="order-2 lg:order-1">
+                <h2 className="text-3xl font-bold mb-6">واجهة برمجة تطبيقات API قوية ومرنة</h2>
+                <p className="text-gray-600 mb-8">
+                  نوفر واجهة برمجة تطبيقات (API) متكاملة تتيح لفريقك التقني إنشاء تكاملات مخصصة، وتطوير حلول فريدة تلبي احتياجات عملك.
                 </p>
-                <ul className="space-y-3 mb-8">
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                    <span>واجهات RESTful API سهلة الاستخدام</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                    <span>دعم لمختلف صيغ البيانات (JSON, XML)</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                    <span>توثيق شامل وأمثلة تطبيقية</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                    <span>بيئة اختبار كاملة للتطوير</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                    <span>مكتبات ومجموعات أدوات للغات البرمجة الشائعة</span>
-                  </li>
-                </ul>
-                <div className="flex gap-4">
-                  <Button asChild>
-                    <Link to="/demo">طلب العرض التقني</Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <a href="#" target="_blank" rel="noopener noreferrer">
-                      توثيق واجهات البرمجة
-                    </a>
-                  </Button>
+                
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-1" />
+                    <p className="text-gray-700">توثيق شامل لواجهة برمجة التطبيقات</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-1" />
+                    <p className="text-gray-700">دعم للعديد من لغات البرمجة والأطر</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-1" />
+                    <p className="text-gray-700">أمان متقدم وإدارة للصلاحيات</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-1" />
+                    <p className="text-gray-700">تحديثات منتظمة وتطوير مستمر</p>
+                  </div>
                 </div>
+                
+                <Button asChild>
+                  <Link to="/contact">طلب معلومات عن API</Link>
+                </Button>
               </div>
-              <div className="order-1 md:order-2">
-                <img 
-                  src="/public/placeholder.svg" 
-                  alt="واجهات برمجة التطبيقات" 
-                  className="rounded-lg shadow-lg"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-        
-        <section className="py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <h2 className="text-3xl font-bold mb-6">مزايا التكامل مع أوفر</h2>
-              <p className="text-lg text-gray-600">
-                تم تصميم منصة أوفر لتوفير تكامل سلس وفعال مع مختلف الأنظمة والتطبيقات
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {benefits.map((benefit, index) => (
-                <div key={index} className="bg-white p-6 rounded-lg shadow-md">
-                  <h3 className="text-xl font-bold mb-3">{benefit.title}</h3>
-                  <p className="text-gray-600">{benefit.description}</p>
-                </div>
-              ))}
-            </div>
-            
-            <div className="mt-16 text-center">
-              <p className="text-lg text-gray-600 mb-6">
-                لدينا فريق متخصص من المهندسين جاهز لمساعدتك في تخطيط وتنفيذ التكامل المثالي لاحتياجات عملك
-              </p>
-              <Button asChild size="lg">
-                <Link to="/demo">تحدث مع فريق التكامل</Link>
-              </Button>
-            </div>
-          </div>
-        </section>
-        
-        <section className="py-16">
-          <div className="container mx-auto px-4">
-            <div className="bg-primary/10 rounded-lg p-8 md:p-12">
-              <div className="grid md:grid-cols-2 gap-6 items-center">
-                <div>
-                  <h2 className="text-2xl font-bold mb-4">هل لديك نظام مخصص؟</h2>
-                  <p className="text-lg mb-6">
-                    يمكن لفريقنا التقني مساعدتك في تطوير تكامل مخصص يناسب احتياجاتك الفريدة، بغض النظر عن نوع الأنظمة التي تستخدمها.
-                  </p>
-                  <Button asChild>
-                    <Link to="/demo">تواصل مع فريق التطوير</Link>
-                  </Button>
-                </div>
-                <div className="hidden md:block text-center">
-                  <Code className="h-24 w-24 text-primary mx-auto" />
+              <div className="order-1 lg:order-2">
+                <div className="bg-gray-800 p-6 rounded-lg shadow-lg">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex space-x-2 rtl:space-x-reverse">
+                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    </div>
+                    <span className="text-xs text-gray-400">awfar-api-example.json</span>
+                  </div>
+                  <pre className="text-green-400 text-sm text-left overflow-x-auto">
+                    <code>
+{`// Awfar API Integration Example
+{
+  "endpoint": "/api/v1/customers",
+  "method": "GET",
+  "headers": {
+    "Authorization": "Bearer {YOUR_API_KEY}",
+    "Content-Type": "application/json"
+  },
+  "response": {
+    "status": 200,
+    "data": [
+      {
+        "id": "cust123",
+        "name": "أحمد محمد",
+        "email": "ahmed@example.com",
+        "interactions": 15,
+        "lastContact": "2023-08-15T14:30:00Z"
+      },
+      // More customer data...
+    ]
+  }
+}`}
+                    </code>
+                  </pre>
                 </div>
               </div>
             </div>
           </div>
         </section>
       </main>
+      
       <Footer />
     </div>
   );

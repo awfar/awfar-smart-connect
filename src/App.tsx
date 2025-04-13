@@ -1,3 +1,4 @@
+
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
@@ -25,6 +26,14 @@ import PropertiesManagement from "./pages/PropertiesManagement";
 import CMS from "./pages/CMS";
 import Index from "./pages/Index";
 import EnhancedDashboard from "./pages/EnhancedDashboard";
+import About from "./pages/About";
+import Solutions from "./pages/Solutions";
+import AIAgent from "./pages/AIAgent";
+import Pricing from "./pages/Pricing";
+import Contact from "./pages/Contact";
+import Demo from "./pages/Demo";
+import Channels from "./pages/Channels";
+import Integration from "./pages/Integration";
 
 function App() {
   return (
@@ -131,6 +140,39 @@ function App() {
           {
             path: "/enhanced-dashboard",
             element: <EnhancedDashboard />,
+          },
+          // New pages based on the navigation menu
+          {
+            path: "/ai-agent",
+            element: <AIAgent />,
+          },
+          {
+            path: "/solutions",
+            element: <Solutions />,
+          },
+          {
+            path: "/pricing",
+            element: <Pricing />,
+          },
+          {
+            path: "/about",
+            element: <About />,
+          },
+          {
+            path: "/contact",
+            element: <Contact />,
+          },
+          {
+            path: "/demo",
+            element: <Demo />,
+          },
+          {
+            path: "/channels",
+            element: <Channels />,
+          },
+          {
+            path: "/integration",
+            element: <Integration />,
           },
           {
             path: "*",

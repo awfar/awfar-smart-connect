@@ -1,431 +1,310 @@
 
 import React, { useState } from 'react';
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, MessageSquare, Send, User } from "lucide-react";
 import { toast } from "sonner";
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
+import { Bot, Send, Phone, Mail, Building, User } from 'lucide-react';
 
 const Demo = () => {
-  const [step, setStep] = useState<number>(1);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [industry, setIndustry] = useState<string>("");
-  const [name, setName] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [company, setCompany] = useState<string>("");
-  const [phone, setPhone] = useState<string>("");
-  const [message, setMessage] = useState<string>("");
-  const [demoChats, setDemoChats] = useState<Array<{sender: string, content: string, time: string}>>([
-    { sender: "bot", content: "مرحباً بك في خدمة عملاء أوفر. كيف يمكنني مساعدتك اليوم؟", time: "12:01" },
+  const [message, setMessage] = useState('');
+  const [chatHistory, setChatHistory] = useState([
+    { sender: 'bot', text: 'مرحباً! أنا الوكيل الذكي من Awfar. كيف يمكنني مساعدتك اليوم؟' }
   ]);
-  const [userInput, setUserInput] = useState<string>("");
-
-  const handleSubmitForm = (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      setStep(2);
-      toast.success("تم تسجيل طلب التجربة المجانية بنجاح!");
-    }, 1500);
-  };
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    company: '',
+    email: '',
+    phone: '',
+    message: ''
+  });
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userInput.trim()) return;
-    
-    // Add user message
-    const newUserMessage = {
-      sender: "user",
-      content: userInput,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    
-    setDemoChats(prev => [...prev, newUserMessage]);
-    setUserInput("");
-    
-    // Simulate bot response
+    if (!message.trim()) return;
+
+    // Add user message to chat
+    setChatHistory([...chatHistory, { sender: 'user', text: message }]);
+    setMessage('');
+    setIsSubmitting(true);
+
+    // Simulate AI response
     setTimeout(() => {
-      let botResponse;
+      const responses = [
+        'شكراً على تواصلك معنا! يسعدني مساعدتك في التعرف على خدماتنا.',
+        'يمكنني مساعدتك في اختيار الباقة المناسبة لاحتياجات عملك.',
+        'لدينا حلول متكاملة لإدارة تفاعلات العملاء عبر جميع منصات التواصل.',
+        'هل ترغب في معرفة المزيد عن كيفية تحسين تجربة عملائك؟',
+        'يمكنني تزويدك بمعلومات عن أسعارنا وكيفية البدء بالاستخدام.'
+      ];
       
-      if (userInput.toLowerCase().includes("سعر") || userInput.toLowerCase().includes("تكلفة") || userInput.toLowerCase().includes("price")) {
-        botResponse = {
-          sender: "bot",
-          content: "أسعار الخدمة تبدأ من 199 ريال شهرياً للباقة الأساسية، ويمكنك الاطلاع على جميع الباقات من صفحة الأسعار. هل ترغب في معرفة المزيد عن ميزات كل باقة؟",
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-      } else if (userInput.toLowerCase().includes("خدمات") || userInput.toLowerCase().includes("ميزات") || userInput.toLowerCase().includes("features")) {
-        botResponse = {
-          sender: "bot",
-          content: "نقدم العديد من الخدمات المتميزة مثل الرد التلقائي على العملاء على مدار 24 ساعة عبر جميع منصات التواصل، تحليل بيانات العملاء، إدارة المبيعات، وتكامل مع أنظمة الشركات. أي من هذه الخدمات تود معرفة المزيد عنها؟",
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-      } else if (userInput.toLowerCase().includes("شكرا") || userInput.toLowerCase().includes("thanks")) {
-        botResponse = {
-          sender: "bot",
-          content: "شكراً لك! يسعدنا دائماً خدمتك. هل هناك أي استفسارات أخرى يمكنني مساعدتك بها؟",
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-      } else {
-        botResponse = {
-          sender: "bot",
-          content: "شكراً لتواصلك معنا. سأقوم بتوجيه استفسارك إلى الفريق المختص وسيتم التواصل معك قريباً. هل يمكنني مساعدتك في أي شيء آخر؟",
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        };
-      }
-      
-      setDemoChats(prev => [...prev, botResponse]);
+      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+      setChatHistory(prev => [...prev, { sender: 'bot', text: randomResponse }]);
+      setIsSubmitting(false);
     }, 1000);
+  };
+
+  const handleContactFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setContactForm({
+      ...contactForm,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const handleContactSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast.success("تم استلام طلبك بنجاح! سيقوم فريقنا بالتواصل معك في أقرب وقت.");
+    setContactForm({
+      name: '',
+      company: '',
+      email: '',
+      phone: '',
+      message: ''
+    });
   };
 
   return (
     <div className="min-h-screen flex flex-col rtl">
       <Navbar />
+      
       <main className="flex-grow">
-        <section className="py-16 bg-gradient-to-r from-awfar-primary to-awfar-secondary text-white">
-          <div className="container mx-auto text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">جرب موظف أوفر الذكي</h1>
-            <p className="text-xl max-w-2xl mx-auto">اختبر قوة الذكاء الاصطناعي في التفاعل مع عملائك وزيادة مبيعاتك</p>
-          </div>
-        </section>
-
-        <section className="py-16 bg-white">
-          <div className="container mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <section className="py-20 bg-gradient-to-b from-blue-50 to-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <div className="inline-block mb-3 px-3 py-1 bg-awfar-primary/10 rounded-full text-awfar-primary font-medium">
+                تجربة حية
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold mb-6">جرب الوكيل الذكي من Awfar</h1>
+              <p className="text-xl text-gray-600 mb-8">
+                اختبر قدرات الوكيل الذكي بنفسك وتعرف على كيفية مساعدته في تحسين تفاعلك مع العملاء
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
               <div>
-                <h2 className="text-3xl font-bold text-awfar-primary mb-6">تجربة مجانية لمدة 14 يوم</h2>
-                <p className="text-gray-600 mb-8">
-                  احصل على تجربة مجانية كاملة لمدة 14 يوم واكتشف كيف يمكن للموظف الذكي من أوفر أن يحدث ثورة في طريقة تفاعلك مع عملائك.
-                </p>
-                
-                {step === 1 ? (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>طلب تجربة مجانية</CardTitle>
-                      <CardDescription>أدخل بياناتك للحصول على فترة تجريبية مجانية</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <form className="space-y-4" onSubmit={handleSubmitForm}>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="name">الاسم الكامل</Label>
-                            <Input 
-                              id="name" 
-                              placeholder="أدخل اسمك الكامل" 
-                              value={name}
-                              onChange={(e) => setName(e.target.value)}
-                              required
-                            />
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="email">البريد الإلكتروني</Label>
-                            <Input 
-                              id="email" 
-                              type="email" 
-                              placeholder="name@example.com" 
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="company">اسم الشركة</Label>
-                            <Input 
-                              id="company" 
-                              placeholder="أدخل اسم شركتك" 
-                              value={company}
-                              onChange={(e) => setCompany(e.target.value)}
-                              required
-                            />
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <Label htmlFor="phone">رقم الهاتف</Label>
-                            <Input 
-                              id="phone" 
-                              placeholder="+966 55 123 4567" 
-                              value={phone}
-                              onChange={(e) => setPhone(e.target.value)}
-                              required
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="industry">القطاع</Label>
-                          <Select 
-                            value={industry} 
-                            onValueChange={setIndustry}
-                            required
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="اختر قطاع عملك" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="retail">تجارة التجزئة</SelectItem>
-                              <SelectItem value="ecommerce">التجارة الإلكترونية</SelectItem>
-                              <SelectItem value="healthcare">الرعاية الصحية</SelectItem>
-                              <SelectItem value="finance">المالية والمصرفية</SelectItem>
-                              <SelectItem value="education">التعليم</SelectItem>
-                              <SelectItem value="technology">التكنولوجيا</SelectItem>
-                              <SelectItem value="other">أخرى</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor="message">كيف يمكننا مساعدتك؟</Label>
-                          <Textarea 
-                            id="message" 
-                            placeholder="أخبرنا المزيد عن احتياجات شركتك..." 
-                            rows={4}
-                            value={message}
-                            onChange={(e) => setMessage(e.target.value)}
-                          />
-                        </div>
-                        
-                        <Button 
-                          type="submit" 
-                          className="w-full bg-awfar-primary hover:bg-awfar-primary/90"
-                          disabled={loading}
+                <Card className="shadow-lg border-0 overflow-hidden">
+                  <div className="bg-gradient-to-r from-awfar-primary to-awfar-secondary p-4 flex items-center gap-3">
+                    <div className="bg-white/20 p-2 rounded-full">
+                      <Bot className="h-6 w-6 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-white">الوكيل الذكي من Awfar</h3>
+                  </div>
+                  
+                  <CardContent className="p-0">
+                    <div className="h-96 overflow-y-auto p-4 bg-gray-50">
+                      {chatHistory.map((msg, index) => (
+                        <div
+                          key={index}
+                          className={`mb-4 flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
-                          {loading ? "جاري الإرسال..." : "ابدأ التجربة المجانية"}
+                          <div
+                            className={`max-w-[80%] rounded-lg p-3 ${
+                              msg.sender === 'user'
+                                ? 'bg-awfar-primary text-white'
+                                : 'bg-white text-gray-800 border border-gray-200'
+                            }`}
+                          >
+                            <p>{msg.text}</p>
+                          </div>
+                        </div>
+                      ))}
+                      {isSubmitting && (
+                        <div className="flex justify-start mb-4">
+                          <div className="bg-white text-gray-800 rounded-lg p-3 border border-gray-200">
+                            <div className="flex gap-1">
+                              <span className="animate-bounce">·</span>
+                              <span className="animate-bounce" style={{ animationDelay: '0.2s' }}>·</span>
+                              <span className="animate-bounce" style={{ animationDelay: '0.4s' }}>·</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="p-4 border-t">
+                      <form onSubmit={handleSendMessage} className="flex gap-2">
+                        <Input
+                          placeholder="اكتب رسالتك هنا..."
+                          value={message}
+                          onChange={(e) => setMessage(e.target.value)}
+                          className="flex-grow"
+                        />
+                        <Button type="submit" size="icon">
+                          <Send className="h-5 w-5" />
                         </Button>
                       </form>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-green-600">تم تسجيل طلبك بنجاح!</CardTitle>
-                      <CardDescription>شكراً لك على اهتمامك بتجربة موظف أوفر الذكي</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="bg-green-50 p-4 rounded-lg">
-                        <div className="flex items-start gap-3">
-                          <div className="bg-green-100 p-2 rounded-full">
-                            <Check className="h-5 w-5 text-green-600" />
-                          </div>
-                          <div>
-                            <h4 className="font-medium text-green-800">تم استلام طلبك</h4>
-                            <p className="text-green-700 text-sm">
-                              سيقوم فريقنا بالتواصل معك قريباً لإعداد حسابك التجريبي
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="border-t pt-4">
-                        <h4 className="font-medium mb-2">الخطوات القادمة:</h4>
-                        <ol className="list-decimal list-inside space-y-2 text-gray-700">
-                          <li>سيتصل بك مدير الحساب خلال 24 ساعة</li>
-                          <li>إعداد حسابك وتكوين الموظف الذكي</li>
-                          <li>تدريب سريع على استخدام المنصة</li>
-                          <li>بدء التجربة المجانية لمدة 14 يوم</li>
-                        </ol>
-                      </div>
-                      
-                      <div className="mt-6">
-                        <Button 
-                          className="w-full bg-awfar-primary hover:bg-awfar-primary/90"
-                          onClick={() => setStep(3)}
-                        >
-                          جرب المحادثة مع الموظف الذكي
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                <div className="text-center mt-6">
+                  <p className="text-sm text-gray-500 mb-2">هذه نسخة توضيحية فقط. النسخة الكاملة تتضمن مميزات أكثر تخصيصاً لعملك</p>
+                </div>
               </div>
               
-              <div className={step === 3 ? "col-span-2" : ""}>
-                {step < 3 ? (
-                  <div className="bg-gray-50 p-6 rounded-xl border shadow-sm">
-                    <h3 className="text-2xl font-bold text-awfar-primary mb-4">ما الذي يميزنا؟</h3>
-                    
-                    <div className="space-y-4 mb-6">
-                      <div className="flex items-start gap-2">
-                        <Check className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
-                        <div>
-                          <h4 className="font-medium text-gray-900">متاح 24/7</h4>
-                          <p className="text-gray-600">الموظف الذكي يعمل بدون توقف على مدار الساعة طوال أيام الأسبوع.</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start gap-2">
-                        <Check className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
-                        <div>
-                          <h4 className="font-medium text-gray-900">متعدد اللغات</h4>
-                          <p className="text-gray-600">يتحدث بكل اللغات واللهجات المحلية مما يضمن تفاعل أفضل مع عملائك.</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start gap-2">
-                        <Check className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
-                        <div>
-                          <h4 className="font-medium text-gray-900">ذكاء اصطناعي متقدم</h4>
-                          <p className="text-gray-600">مدرب على فهم احتياجات العملاء وتقديم حلول فعالة وشخصية.</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start gap-2">
-                        <Check className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
-                        <div>
-                          <h4 className="font-medium text-gray-900">تكامل سلس</h4>
-                          <p className="text-gray-600">يتكامل مع أنظمة CRM الحالية وقنوات التواصل الخاصة بك.</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start gap-2">
-                        <Check className="h-5 w-5 text-green-500 mt-1 flex-shrink-0" />
-                        <div>
-                          <h4 className="font-medium text-gray-900">تحسين المبيعات</h4>
-                          <p className="text-gray-600">يحول المحادثات إلى فرص بيع ويزيد من معدل التحويل.</p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="border-t pt-6">
-                      <blockquote className="italic text-gray-600">
-                        "بفضل موظف أوفر الذكي، تمكنا من زيادة المبيعات بنسبة 35% وتحسين رضا العملاء بشكل كبير."
-                        <footer className="text-gray-500 mt-2 not-italic">- أحمد محمد، المدير التنفيذي لشركة تقنية</footer>
-                      </blockquote>
-                    </div>
+              <div>
+                <Card className="shadow-lg border-0">
+                  <div className="bg-gradient-to-r from-awfar-secondary to-awfar-accent p-4">
+                    <h3 className="text-xl font-bold text-white text-center">طلب عرض توضيحي مخصص</h3>
                   </div>
-                ) : (
-                  <Card className="w-full">
-                    <CardHeader>
-                      <CardTitle>جرب المحادثة مع الموظف الذكي</CardTitle>
-                      <CardDescription>هذه محادثة توضيحية لإمكانيات الموظف الذكي</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Tabs defaultValue="chat">
-                        <TabsList className="mb-4">
-                          <TabsTrigger value="chat">المحادثة</TabsTrigger>
-                          <TabsTrigger value="info">معلومات الموظف الذكي</TabsTrigger>
-                        </TabsList>
-                        
-                        <TabsContent value="chat" className="space-y-4">
-                          <div 
-                            className="h-[400px] overflow-y-auto border rounded-lg p-4 bg-gray-50"
-                            style={{ scrollBehavior: 'smooth' }}
-                          >
-                            {demoChats.map((chat, index) => (
-                              <div 
-                                key={index} 
-                                className={`mb-4 flex ${chat.sender === 'user' ? 'justify-end' : ''}`}
-                              >
-                                <div 
-                                  className={`flex gap-3 max-w-[80%] ${chat.sender === 'user' ? 'flex-row-reverse' : ''}`}
-                                >
-                                  <div 
-                                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                                      chat.sender === 'user' ? 'bg-awfar-primary' : 'bg-green-500'
-                                    }`}
-                                  >
-                                    {chat.sender === 'user' ? 
-                                      <User className="h-4 w-4 text-white" /> : 
-                                      <MessageSquare className="h-4 w-4 text-white" />
-                                    }
-                                  </div>
-                                  <div>
-                                    <div 
-                                      className={`rounded-lg p-3 ${
-                                        chat.sender === 'user' 
-                                          ? 'bg-awfar-primary text-white' 
-                                          : 'bg-white border text-gray-800'
-                                      }`}
-                                    >
-                                      <p>{chat.content}</p>
-                                    </div>
-                                    <div 
-                                      className={`text-xs text-gray-500 mt-1 ${
-                                        chat.sender === 'user' ? 'text-left' : 'text-right'
-                                      }`}
-                                    >
-                                      {chat.time}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          
-                          <form className="flex gap-2" onSubmit={handleSendMessage}>
-                            <Input 
-                              placeholder="اكتب رسالتك هنا..." 
-                              value={userInput}
-                              onChange={(e) => setUserInput(e.target.value)}
-                              className="flex-1"
+                  
+                  <CardContent className="p-6">
+                    <form onSubmit={handleContactSubmit} className="space-y-5">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">الاسم الكامل</Label>
+                        <div className="flex">
+                          <span className="inline-flex items-center px-3 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 shadow-sm text-sm rounded-r-md">
+                            <User className="h-4 w-4" />
+                          </span>
+                          <Input
+                            id="name"
+                            name="name"
+                            placeholder="أدخل اسمك الكامل"
+                            value={contactForm.name}
+                            onChange={handleContactFormChange}
+                            className="rounded-r-none"
+                            required
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="company">اسم الشركة</Label>
+                        <div className="flex">
+                          <span className="inline-flex items-center px-3 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 shadow-sm text-sm rounded-r-md">
+                            <Building className="h-4 w-4" />
+                          </span>
+                          <Input
+                            id="company"
+                            name="company"
+                            placeholder="أدخل اسم الشركة"
+                            value={contactForm.company}
+                            onChange={handleContactFormChange}
+                            className="rounded-r-none"
+                            required
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="email">البريد الإلكتروني</Label>
+                          <div className="flex">
+                            <span className="inline-flex items-center px-3 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 shadow-sm text-sm rounded-r-md">
+                              <Mail className="h-4 w-4" />
+                            </span>
+                            <Input
+                              id="email"
+                              name="email"
+                              type="email"
+                              placeholder="example@example.com"
+                              value={contactForm.email}
+                              onChange={handleContactFormChange}
+                              className="rounded-r-none"
+                              required
                             />
-                            <Button type="submit" className="bg-awfar-primary">
-                              <Send className="h-4 w-4" />
-                            </Button>
-                          </form>
-                        </TabsContent>
-                        
-                        <TabsContent value="info">
-                          <div className="space-y-4">
-                            <div className="bg-gray-50 p-4 rounded-lg">
-                              <h4 className="font-medium mb-2">مواصفات الموظف الذكي:</h4>
-                              <ul className="list-disc list-inside space-y-2 text-gray-700">
-                                <li>مدرب على المنتجات والخدمات الخاصة بعملك</li>
-                                <li>قدرات لغوية متقدمة تشمل العربية واللهجات المحلية</li>
-                                <li>فهم سياق المحادثة والرد بشكل طبيعي</li>
-                                <li>القدرة على إكمال عمليات البيع والإجابة على الأسئلة الشائعة</li>
-                                <li>تحويل المحادثات إلى موظفين بشريين عند الحاجة</li>
-                                <li>تحليل سلوك المستخدم وتقديم توصيات للتحسين</li>
-                              </ul>
-                            </div>
-                            
-                            <div className="bg-awfar-primary/10 p-4 rounded-lg">
-                              <h4 className="font-medium text-awfar-primary mb-2">استخدامات شائعة:</h4>
-                              <ul className="list-disc list-inside space-y-2 text-gray-700">
-                                <li>الرد على استفسارات العملاء على مدار الساعة</li>
-                                <li>معالجة طلبات المبيعات وتحويلها</li>
-                                <li>تقديم الدعم الفني والمساعدة</li>
-                                <li>جدولة المواعيد والاجتماعات</li>
-                                <li>متابعة الطلبات ومعالجة الشكاوى</li>
-                                <li>تقديم توصيات للمنتجات والخدمات</li>
-                              </ul>
-                            </div>
                           </div>
-                        </TabsContent>
-                      </Tabs>
-                    </CardContent>
-                  </Card>
-                )}
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="phone">رقم الهاتف</Label>
+                          <div className="flex">
+                            <span className="inline-flex items-center px-3 border border-l-0 border-gray-300 bg-gray-50 text-gray-500 shadow-sm text-sm rounded-r-md">
+                              <Phone className="h-4 w-4" />
+                            </span>
+                            <Input
+                              id="phone"
+                              name="phone"
+                              placeholder="+966 5X XXX XXXX"
+                              value={contactForm.phone}
+                              onChange={handleContactFormChange}
+                              className="rounded-r-none"
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="message">رسالتك</Label>
+                        <Textarea
+                          id="message"
+                          name="message"
+                          placeholder="أخبرنا أكثر عن احتياجات عملك..."
+                          rows={4}
+                          value={contactForm.message}
+                          onChange={handleContactFormChange}
+                          required
+                        />
+                      </div>
+                      
+                      <Button
+                        type="submit"
+                        className="w-full bg-gradient-to-r from-awfar-primary to-awfar-secondary"
+                      >
+                        طلب عرض توضيحي مخصص
+                      </Button>
+                      
+                      <p className="text-xs text-gray-500 text-center">
+                        بالضغط على زر الإرسال، أنت توافق على سياسة الخصوصية الخاصة بنا وشروط الخدمة.
+                      </p>
+                    </form>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </div>
         </section>
         
-        {step < 3 && (
-          <section className="py-12 bg-gray-50 border-t">
-            <div className="container mx-auto text-center">
-              <h2 className="text-2xl font-bold text-awfar-primary mb-6">عملاء يثقون بنا</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center opacity-70">
-                <img src="/lovable-uploads/18411ffb-259b-4ff4-b30a-dd6dcdcc63e5.png" alt="Client Logo" className="max-h-12 w-auto mx-auto" />
-                <img src="/lovable-uploads/193f53ad-1a0c-4c7b-9d7d-bdda35106e9f.png" alt="Client Logo" className="max-h-12 w-auto mx-auto" />
-                <img src="/lovable-uploads/d0e8da8f-bc27-437d-9d5e-681870721ef9.png" alt="Client Logo" className="max-h-12 w-auto mx-auto" />
-                <img src="/lovable-uploads/af225455-5aeb-41ac-b7e2-0fc4447b4063.png" alt="Client Logo" className="max-h-12 w-auto mx-auto" />
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="text-center max-w-3xl mx-auto mb-12">
+              <h2 className="text-3xl font-bold mb-6">ماذا سيقدم لك العرض التوضيحي المخصص؟</h2>
+              <p className="text-lg text-gray-600">
+                نقدم عرضاً توضيحياً متكاملاً مخصصاً لاحتياجات عملك، يتضمن:
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="bg-gray-50 p-8 rounded-xl border border-gray-100 text-center">
+                <div className="bg-awfar-primary/10 w-16 h-16 flex items-center justify-center rounded-full mx-auto mb-6">
+                  <Bot className="h-8 w-8 text-awfar-primary" />
+                </div>
+                <h3 className="text-xl font-bold mb-4">وكيل ذكي مخصص</h3>
+                <p className="text-gray-600">
+                  وكيل ذكي مدرب خصيصاً على بيانات شركتك ومتوافق مع احتياجات عملك الفريدة
+                </p>
+              </div>
+              
+              <div className="bg-gray-50 p-8 rounded-xl border border-gray-100 text-center">
+                <div className="bg-awfar-secondary/10 w-16 h-16 flex items-center justify-center rounded-full mx-auto mb-6">
+                  <Phone className="h-8 w-8 text-awfar-secondary" />
+                </div>
+                <h3 className="text-xl font-bold mb-4">شرح تفصيلي للميزات</h3>
+                <p className="text-gray-600">
+                  جلسة تفصيلية لشرح كافة ميزات المنصة وكيفية الاستفادة منها بالشكل الأمثل
+                </p>
+              </div>
+              
+              <div className="bg-gray-50 p-8 rounded-xl border border-gray-100 text-center">
+                <div className="bg-awfar-accent/10 w-16 h-16 flex items-center justify-center rounded-full mx-auto mb-6">
+                  <Building className="h-8 w-8 text-awfar-accent" />
+                </div>
+                <h3 className="text-xl font-bold mb-4">خطة تنفيذ مقترحة</h3>
+                <p className="text-gray-600">
+                  خطة مخصصة لتنفيذ الحلول في شركتك مع تقدير للتكلفة والوقت اللازم للتنفيذ
+                </p>
               </div>
             </div>
-          </section>
-        )}
+          </div>
+        </section>
       </main>
+      
       <Footer />
     </div>
   );

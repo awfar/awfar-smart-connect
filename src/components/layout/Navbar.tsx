@@ -1,129 +1,132 @@
 
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ChevronDown, Globe } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetClose,
-} from '@/components/ui/sheet';
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Menu, X, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const Navbar = () => {
-  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
-
-  const navItems = [
-    { name: 'الرئيسية', path: '/' },
-    { name: 'الذكاء الاصطناعي', path: '/ai-agent' },
-    { name: 'جرّب الوكيل الذكي', path: '/try-ai-agent' },
-    { name: 'قنوات التواصل', path: '/channels' },
-    { name: 'الحلول الشاملة', path: '/solutions' },
-    { name: 'التكامل', path: '/integration' },
-    { name: 'الأسعار', path: '/pricing' },
-    { name: 'من نحن', path: '/about-us' },
+  const menuItems = [
+    {
+      title: "الرئيسية",
+      path: "/",
+    },
+    {
+      title: "الذكاء الاصطناعي",
+      path: "/ai-agent",
+    },
+    {
+      title: "جرّب الوكيل الذكي",
+      path: "/demo",
+    },
+    {
+      title: "قنوات التواصل",
+      path: "/channels",
+    },
+    {
+      title: "الحلول الشاملة",
+      path: "/solutions",
+    },
+    {
+      title: "التكامل",
+      path: "/integration",
+    },
+    {
+      title: "الأسعار",
+      path: "/pricing",
+    },
+    {
+      title: "من نحن",
+      path: "/about",
+    },
   ];
 
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
+  };
+
   return (
-    <header className="bg-white border-b border-gray-200 rtl">
+    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm rtl">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16 md:h-20">
+        <div className="flex items-center justify-between h-20">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center gap-1">
-              <span className="text-xl md:text-2xl font-bold text-gray-900">Awfar</span>
-              <span className="text-xl md:text-2xl font-bold text-awfar-primary">.com</span>
+            <Link to="/" className="flex-shrink-0">
+              <img 
+                src="/lovable-uploads/3020e17e-f138-47f6-ad1e-029e32c4540f.png" 
+                alt="Awfar Logo" 
+                className="h-10" 
+              />
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6 rtl:space-x-reverse">
-            {navItems.map((item) => (
+          <div className="hidden md:flex items-center space-x-4 rtl:space-x-reverse">
+            {menuItems.map((item, index) => (
               <Link
-                key={item.name}
+                key={index}
                 to={item.path}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  isActive(item.path) ? 'text-primary' : 'text-gray-600'
-                }`}
+                className="text-gray-700 hover:text-awfar-primary px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
-                {item.name}
+                {item.title}
               </Link>
             ))}
-            <div className="mr-4 rtl:ml-4 rtl:mr-0">
-              <Button asChild variant="outline" size="sm">
-                <Link to="/login">تسجيل الدخول</Link>
-              </Button>
-            </div>
-            <Button asChild size="sm">
+          </div>
+
+          <div className="hidden md:flex items-center">
+            <Button asChild variant="outline" className="mr-3">
+              <Link to="/login">دخول</Link>
+            </Button>
+            <Button asChild>
               <Link to="/register">تسجيل</Link>
             </Button>
-          </nav>
+          </div>
 
-          {/* Mobile Navigation */}
-          <div className="flex items-center gap-4 md:hidden">
-            <Button asChild variant="outline" size="sm" className="ml-2 rtl:mr-2 rtl:ml-0">
-              <Link to="/login">تسجيل الدخول</Link>
-            </Button>
-            <Sheet open={isOpen} onOpenChange={setIsOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="القائمة">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[350px] rtl">
-                <div className="flex flex-col h-full">
-                  <div className="flex items-center justify-between py-2 border-b">
-                    <Link to="/" className="flex items-center gap-1" onClick={() => setIsOpen(false)}>
-                      <span className="text-xl font-bold text-gray-900">Awfar</span>
-                      <span className="text-xl font-bold text-awfar-primary">.com</span>
-                    </Link>
-                    <SheetClose asChild>
-                      <Button variant="ghost" size="icon">
-                        <X className="h-5 w-5" />
-                      </Button>
-                    </SheetClose>
-                  </div>
-                  
-                  <div className="flex-1 overflow-y-auto pt-4 pb-8">
-                    <nav className="flex flex-col gap-1">
-                      {navItems.map((item) => (
-                        <SheetClose asChild key={item.name}>
-                          <Link
-                            to={item.path}
-                            className={`px-4 py-3 text-base font-medium rounded-md transition-colors hover:bg-gray-100 ${
-                              isActive(item.path) ? 'text-primary bg-primary/5' : 'text-gray-600'
-                            }`}
-                          >
-                            {item.name}
-                          </Link>
-                        </SheetClose>
-                      ))}
-                    </nav>
-                  </div>
-                  
-                  <div className="pt-4 pb-6 border-t">
-                    <div className="flex flex-col gap-4 px-4">
-                      <Button asChild size="sm">
-                        <Link to="/register">تسجيل</Link>
-                      </Button>
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <Globe className="h-4 w-4" />
-                        <span>العربية</span>
-                        <ChevronDown className="h-4 w-4" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+          <div className="md:hidden flex items-center">
+            <button
+              onClick={toggleMenu}
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-awfar-primary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-awfar-primary"
+            >
+              {isOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
           </div>
         </div>
       </div>
-    </header>
+
+      <div
+        className={cn(
+          "md:hidden bg-white absolute top-full w-full z-20 shadow-lg transform transition-transform duration-300 ease-in-out",
+          isOpen ? "translate-y-0" : "-translate-y-full"
+        )}
+      >
+        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+          {menuItems.map((item, index) => (
+            <Link
+              key={index}
+              to={item.path}
+              onClick={toggleMenu}
+              className="text-gray-700 hover:bg-gray-50 hover:text-awfar-primary block px-3 py-2 rounded-md text-base font-medium"
+            >
+              {item.title}
+            </Link>
+          ))}
+        </div>
+        <div className="pt-4 pb-3 border-t border-gray-200">
+          <div className="flex items-center px-4 space-x-2 rtl:space-x-reverse">
+            <Button asChild variant="outline" className="w-full mb-2">
+              <Link to="/login" onClick={toggleMenu}>دخول</Link>
+            </Button>
+            <Button asChild className="w-full mb-2">
+              <Link to="/register" onClick={toggleMenu}>تسجيل</Link>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </nav>
   );
 };
 

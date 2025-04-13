@@ -1,233 +1,218 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MessageSquare, Phone, Mail, Instagram, Twitter, Facebook, Globe, ArrowRight } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { MessageCircle, MessageSquare, Phone, Globe, Users, CheckCircle, ArrowRight } from 'lucide-react';
 
 const Channels = () => {
-  const channels = [
+  const channelTypes = [
     {
-      id: 1,
-      title: 'المحادثات المباشرة',
-      description: 'تفاعل فوري مع عملائك على موقعك الإلكتروني والتطبيقات',
-      icon: <MessageSquare className="h-8 w-8 text-primary" />,
-      benefits: [
-        'تواصل فوري مع العملاء أثناء تصفحهم لموقعك',
-        'رد الوكيل الذكي تلقائياً على الاستفسارات الشائعة',
-        'تحويل سلس للمحادثة إلى موظف حقيقي عند الحاجة'
+      icon: <MessageCircle className="h-10 w-10 text-white" />,
+      name: 'الواتساب',
+      description: 'تواصل مع عملائك عبر تطبيق الواتساب الأكثر استخداماً في العالم',
+      color: 'bg-green-500',
+      features: [
+        'ردود تلقائية فورية 24/7',
+        'إمكانية إرسال الصور والفيديوهات',
+        'دعم المحادثات الجماعية',
+        'متابعة تلقائية للعملاء'
       ]
     },
     {
-      id: 2,
-      title: 'الهاتف الذكي',
-      description: 'مركز اتصال ذكي مدعوم بتقنيات الذكاء الاصطناعي',
-      icon: <Phone className="h-8 w-8 text-primary" />,
-      benefits: [
-        'استقبال المكالمات وتوجيهها بشكل ذكي',
-        'الرد التلقائي على الاستفسارات المتكررة',
-        'تسجيل المكالمات وتحليلها لتحسين الخدمة'
+      icon: <MessageSquare className="h-10 w-10 text-white" />,
+      name: 'ماسنجر الفيسبوك',
+      description: 'تواصل مع جمهورك على منصة فيسبوك مباشرة من خلال الماسنجر',
+      color: 'bg-blue-500',
+      features: [
+        'تكامل مع صفحات الفيسبوك',
+        'استجابة فورية لاستفسارات العملاء',
+        'بوت مخصص للرد التلقائي',
+        'إدارة محادثات متعددة'
       ]
     },
     {
-      id: 3,
-      title: 'البريد الإلكتروني',
-      description: 'إدارة ذكية وفعالة للمراسلات الإلكترونية',
-      icon: <Mail className="h-8 w-8 text-primary" />,
-      benefits: [
-        'تصنيف تلقائي للرسائل حسب الأولوية',
-        'إعداد ردود تلقائية ذكية على الاستفسارات الشائعة',
-        'متابعة وتحليل أداء حملات البريد الإلكتروني'
+      icon: <Phone className="h-10 w-10 text-white" />,
+      name: 'المكالمات الهاتفية',
+      description: 'خدمة الرد الآلي الذكي للمكالمات الهاتفية وتحويلها للموظف المختص',
+      color: 'bg-yellow-500',
+      features: [
+        'رد آلي ذكي على المكالمات',
+        'تحويل المكالمات للموظفين المعنيين',
+        'تسجيل المكالمات وتحليلها',
+        'تقارير مفصلة عن أداء الخدمة'
       ]
     },
     {
-      id: 4,
-      title: 'منصات التواصل الاجتماعي',
-      description: 'إدارة موحدة لجميع حسابات التواصل الاجتماعي',
-      icon: <Instagram className="h-8 w-8 text-primary" />,
-      benefits: [
-        'نشر المحتوى على جميع المنصات من مكان واحد',
-        'الرد الآلي على التعليقات والرسائل',
-        'تحليل أداء المنشورات وتفاعل الجمهور'
+      icon: <Globe className="h-10 w-10 text-white" />,
+      name: 'الموقع الإلكتروني',
+      description: 'شات بوت ذكي لموقعك الإلكتروني للإجابة على استفسارات الزوار',
+      color: 'bg-purple-500',
+      features: [
+        'تخصيص شكل الشات حسب تصميم موقعك',
+        'تكامل سلس مع نظام الموقع',
+        'تشغيل آلي بدون تدخل بشري',
+        'تحليل سلوك المستخدمين'
       ]
     },
     {
-      id: 5,
-      title: 'تطبيقات المراسلة',
-      description: 'التواصل عبر واتساب وتلغرام وتطبيقات المراسلة الأخرى',
-      icon: <MessageSquare className="h-8 w-8 text-primary" />,
-      benefits: [
-        'دعم لجميع تطبيقات المراسلة الشائعة',
-        'نماذج رسائل جاهزة ومخصصة',
-        'ردود آلية ذكية على الاستفسارات'
+      icon: <Users className="h-10 w-10 text-white" />,
+      name: 'تطبيقات الجوال',
+      description: 'دمج الوكيل الذكي مع تطبيقات الهواتف الذكية لتحسين تجربة المستخدم',
+      color: 'bg-pink-500',
+      features: [
+        'واجهة برمجة تطبيقات سهلة الاستخدام',
+        'دعم لنظامي iOS و Android',
+        'تكامل سلس مع واجهة التطبيق',
+        'دعم اللغة العربية والإنجليزية'
       ]
-    },
-    {
-      id: 6,
-      title: 'موقعك الإلكتروني',
-      description: 'تكامل سلس مع موقعك الإلكتروني وبوابات العملاء',
-      icon: <Globe className="h-8 w-8 text-primary" />,
-      benefits: [
-        'واجهات برمجة تطبيقات سهلة الاستخدام',
-        'تخصيص حسب تصميم موقعك',
-        'تحسين تجربة المستخدم وزيادة معدل التحويل'
-      ]
-    },
+    }
   ];
 
   return (
     <div className="min-h-screen flex flex-col rtl">
       <Navbar />
+      
       <main className="flex-grow">
-        <section className="py-16 bg-gradient-to-b from-blue-50 to-white">
+        <section className="py-20 bg-gradient-to-b from-blue-50 to-white">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-3xl mx-auto mb-16">
-              <h1 className="text-4xl font-bold mb-6">قنوات التواصل المتكاملة</h1>
-              <p className="text-xl text-gray-700 mb-8">
-                نوفر لك منصة متكاملة لإدارة جميع قنوات التواصل مع عملائك من مكان واحد، مدعومة بتقنيات الذكاء الاصطناعي
+              <div className="inline-block mb-3 px-3 py-1 bg-awfar-primary/10 rounded-full text-awfar-primary font-medium">
+                تعدد القنوات
+              </div>
+              <h1 className="text-4xl md:text-5xl font-bold mb-6">تواصل مع عملائك عبر كافة القنوات</h1>
+              <p className="text-xl text-gray-600 mb-8">
+                يتيح لك نظام Awfar التواصل مع عملائك بشكل فعال عبر جميع منصات التواصل المعروفة مع خدمة موحدة وتجربة متكاملة
               </p>
-              <Button asChild size="lg" className="gap-2">
-                <Link to="/demo">
-                  طلب عرض توضيحي <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
+              <div className="flex justify-center gap-4">
+                <Button asChild size="lg" className="bg-gradient-to-r from-awfar-primary to-awfar-secondary hover:opacity-90">
+                  <Link to="/demo">جرّب الآن</Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link to="/pricing">استعرض الباقات</Link>
+                </Button>
+              </div>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {channels.map(channel => (
-                <Card key={channel.id} className="border border-gray-200 hover:shadow-lg transition-all duration-300">
-                  <CardContent className="pt-6">
-                    <div className="flex justify-center mb-4">
-                      <div className="bg-blue-50 p-3 rounded-full">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+              {channelTypes.map((channel, index) => (
+                <div key={index} className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-xl transition-shadow duration-300">
+                  <div className={`${channel.color} p-6`}>
+                    <div className="flex items-center gap-3">
+                      <div className="bg-white/20 p-3 rounded-full">
                         {channel.icon}
                       </div>
+                      <h3 className="text-xl font-bold text-white">{channel.name}</h3>
                     </div>
-                    <h3 className="text-xl font-semibold text-center mb-4">{channel.title}</h3>
-                    <p className="text-gray-600 text-center mb-6">{channel.description}</p>
-                    <ul className="space-y-2">
-                      {channel.benefits.map((benefit, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <div className="mt-1 flex-shrink-0">
-                            <div className="h-4 w-4 rounded-full bg-primary flex items-center justify-center">
-                              <svg width="8" height="8" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                            </div>
-                          </div>
-                          <span className="text-sm">{benefit}</span>
+                  </div>
+                  <div className="p-6">
+                    <p className="text-gray-600 mb-6">{channel.description}</p>
+                    <ul className="space-y-3">
+                      {channel.features.map((feature, idx) => (
+                        <li key={idx} className="flex items-start gap-3">
+                          <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
+                          <span className="text-gray-700">{feature}</span>
                         </li>
                       ))}
                     </ul>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               ))}
+            </div>
+            
+            <div className="bg-gradient-to-r from-awfar-primary to-awfar-secondary rounded-2xl p-8 text-white text-center max-w-4xl mx-auto">
+              <h2 className="text-3xl font-bold mb-6">تكامل مع جميع منصات التواصل الاجتماعي</h2>
+              <p className="text-xl mb-8">
+                يقدم نظام Awfar تكاملاً سلساً مع كافة منصات التواصل الاجتماعي الشهيرة، مما يتيح لك إدارة جميع قنوات التواصل من مكان واحد
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+                <div className="flex flex-col items-center">
+                  <div className="bg-white/10 p-4 rounded-full mb-3">
+                    <img src="/lovable-uploads/bf8a59d9-e92a-42fc-b7f5-5f96e1497988.png" alt="WhatsApp" className="h-10 w-10" />
+                  </div>
+                  <span>واتساب</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="bg-white/10 p-4 rounded-full mb-3">
+                    <img src="/lovable-uploads/adf52374-3db1-45dd-a60b-018ee4627394.png" alt="Facebook" className="h-10 w-10" />
+                  </div>
+                  <span>فيسبوك</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="bg-white/10 p-4 rounded-full mb-3">
+                    <img src="/lovable-uploads/bf8a59d9-e92a-42fc-b7f5-5f96e1497988.png" alt="Instagram" className="h-10 w-10" />
+                  </div>
+                  <span>انستغرام</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="bg-white/10 p-4 rounded-full mb-3">
+                    <img src="/lovable-uploads/adf52374-3db1-45dd-a60b-018ee4627394.png" alt="Twitter" className="h-10 w-10" />
+                  </div>
+                  <span>تويتر</span>
+                </div>
+              </div>
+              <Button asChild size="lg" variant="secondary">
+                <Link to="/integration" className="flex items-center gap-2">
+                  اكتشف المزيد من التكاملات
+                  <ArrowRight className="h-5 w-5" />
+                </Link>
+              </Button>
             </div>
           </div>
         </section>
         
-        <section className="py-16 bg-gray-50">
+        <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
-            <div className="bg-white rounded-lg shadow-xl overflow-hidden">
-              <div className="grid md:grid-cols-2 items-center">
-                <div className="p-8 md:p-12">
-                  <h2 className="text-3xl font-bold mb-6">تجربة عملاء متكاملة وموحدة</h2>
-                  <p className="text-gray-600 mb-8">
-                    مع أوفر يمكنك توحيد جميع قنوات التواصل مع عملائك في منصة واحدة، مما يوفر تجربة سلسة ومتناغمة لعملائك بغض النظر عن القناة التي يختارونها للتواصل معك.
-                  </p>
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                      <div className="mt-1">
-                        <div className="bg-primary/10 p-1 rounded-full">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        </div>
-                      </div>
-                      <div>
-                        <h3 className="font-medium">تاريخ تواصل موحد</h3>
-                        <p className="text-sm text-gray-500">رؤية شاملة لجميع تفاعلات العميل عبر مختلف القنوات</p>
-                      </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <img 
+                  src="/lovable-uploads/72cbf72d-0947-4e2f-8a78-d00fce992254.png" 
+                  alt="Centralized communication" 
+                  className="rounded-lg shadow-lg"
+                />
+              </div>
+              <div className="text-right">
+                <h2 className="text-3xl font-bold mb-6">إدارة موحدة لجميع قنوات التواصل</h2>
+                <p className="text-gray-600 mb-8 leading-relaxed">
+                  مع منصة Awfar، يمكنك إدارة جميع محادثاتك مع العملاء عبر مختلف القنوات في مكان واحد. لم تعد هناك حاجة للتنقل بين تطبيقات متعددة أو أنظمة منفصلة للتعامل مع استفسارات العملاء.
+                </p>
+                
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-start gap-3 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                    <CheckCircle className="h-6 w-6 text-green-500 mt-1 flex-shrink-0" />
+                    <div>
+                      <h3 className="font-bold text-gray-800 mb-1">رؤية شاملة لتفاعلات العملاء</h3>
+                      <p className="text-gray-600">متابعة جميع المحادثات والتفاعلات مع العملاء في لوحة تحكم موحدة</p>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <div className="mt-1">
-                        <div className="bg-primary/10 p-1 rounded-full">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        </div>
-                      </div>
-                      <div>
-                        <h3 className="font-medium">تكامل سلس</h3>
-                        <p className="text-sm text-gray-500">ربط سهل مع أنظمتك وبرامجك الحالية</p>
-                      </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                    <CheckCircle className="h-6 w-6 text-green-500 mt-1 flex-shrink-0" />
+                    <div>
+                      <h3 className="font-bold text-gray-800 mb-1">تحويل المحادثات بين القنوات</h3>
+                      <p className="text-gray-600">إمكانية نقل المحادثة من قناة إلى أخرى دون فقدان سياق المحادثة</p>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <div className="mt-1">
-                        <div className="bg-primary/10 p-1 rounded-full">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        </div>
-                      </div>
-                      <div>
-                        <h3 className="font-medium">تحليلات شاملة</h3>
-                        <p className="text-sm text-gray-500">تقارير وإحصائيات مفصلة لأداء جميع قنوات التواصل</p>
-                      </div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                    <CheckCircle className="h-6 w-6 text-green-500 mt-1 flex-shrink-0" />
+                    <div>
+                      <h3 className="font-bold text-gray-800 mb-1">تقارير موحدة عن أداء القنوات</h3>
+                      <p className="text-gray-600">تحليلات شاملة تساعدك على فهم أي القنوات أكثر فعالية لعملك</p>
                     </div>
                   </div>
                 </div>
-                <div className="bg-gray-100 h-full flex items-center justify-center p-8 md:p-0">
-                  <img 
-                    src="/lovable-uploads/5d1bb1dd-d818-4445-b619-efc19f9cee42.png" 
-                    alt="قنوات التواصل المتكاملة" 
-                    className="max-w-full h-auto rounded-lg shadow-lg"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-        
-        <section className="py-16">
-          <div className="container mx-auto px-4">
-            <div className="text-center max-w-3xl mx-auto mb-12">
-              <h2 className="text-3xl font-bold mb-6">أسئلة شائعة حول قنوات التواصل</h2>
-            </div>
-            
-            <div className="max-w-3xl mx-auto space-y-6">
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="font-bold text-lg mb-2">ما هي القنوات المدعومة في منصة أوفر؟</h3>
-                <p className="text-gray-600">
-                  تدعم منصة أوفر العديد من قنوات التواصل بما في ذلك المحادثات المباشرة على الموقع، البريد الإلكتروني، الهاتف، وسائل التواصل الاجتماعي، تطبيقات المراسلة مثل واتساب وتلغرام، بالإضافة إلى تكامل سلس مع موقعك الإلكتروني.
-                </p>
-              </div>
-              
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="font-bold text-lg mb-2">هل يمكن إضافة قنوات تواصل مخصصة؟</h3>
-                <p className="text-gray-600">
-                  نعم، يمكن تخصيص وإضافة قنوات تواصل جديدة حسب احتياجات عملك. فريقنا التقني مستعد للعمل معك لضمان تكامل أي قناة تواصل تحتاجها مع منصة أوفر.
-                </p>
-              </div>
-              
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="font-bold text-lg mb-2">كيف يساعد الذكاء الاصطناعي في إدارة قنوات التواصل؟</h3>
-                <p className="text-gray-600">
-                  يوفر الذكاء الاصطناعي في أوفر العديد من المزايا مثل الرد التلقائي على الاستفسارات الشائعة، توجيه الرسائل للفريق المناسب، تحليل مشاعر العملاء، وتقديم اقتراحات للردود المناسبة، مما يساعد في تحسين كفاءة خدمة العملاء وتجربتهم.
-                </p>
-              </div>
-              
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="font-bold text-lg mb-2">هل يمكنني رؤية سجل تفاعلات العميل عبر جميع القنوات؟</h3>
-                <p className="text-gray-600">
-                  نعم، توفر منصة أوفر سجلًا موحدًا وشاملًا لجميع تفاعلات العميل عبر مختلف قنوات التواصل، مما يتيح لفريقك رؤية كاملة لتاريخ العميل وتقديم خدمة أفضل وأكثر تخصيصًا.
-                </p>
+                
+                <Button asChild>
+                  <Link to="/demo">جرّب نظام إدارة القنوات</Link>
+                </Button>
               </div>
             </div>
           </div>
         </section>
       </main>
+      
       <Footer />
     </div>
   );
