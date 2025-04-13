@@ -59,18 +59,17 @@ export const fetchActivityAnalytics = async (type: 'action' | 'user' | 'entity')
     
     switch (type) {
       case 'action': {
-        // Usar SQL directa en lugar de group()
+        // Use raw SQL query for grouping instead of groupBy
         const { data, error } = await supabase
           .from('activity_logs')
           .select('action, count')
-          .select('action, count(*)')
-          .groupBy('action');
+          .order('count', { ascending: false });
         
         if (error) throw error;
         
         return data.map(item => ({
           name: item.action || 'غير معروف',
-          count: parseInt(item.count)
+          count: parseInt(item.count as string)
         }));
       }
       
@@ -78,14 +77,13 @@ export const fetchActivityAnalytics = async (type: 'action' | 'user' | 'entity')
         const { data, error } = await supabase
           .from('activity_logs')
           .select('user_id, count')
-          .select('user_id, count(*)')
-          .groupBy('user_id');
+          .order('count', { ascending: false });
           
         if (error) throw error;
         
         return data.map(item => ({
           name: item.user_id || 'غير معروف',
-          count: parseInt(item.count)
+          count: parseInt(item.count as string)
         }));
       }
         
@@ -93,14 +91,13 @@ export const fetchActivityAnalytics = async (type: 'action' | 'user' | 'entity')
         const { data, error } = await supabase
           .from('activity_logs')
           .select('entity_type, count')
-          .select('entity_type, count(*)')
-          .groupBy('entity_type');
+          .order('count', { ascending: false });
           
         if (error) throw error;
         
         return data.map(item => ({
           name: item.entity_type || 'غير معروف',
-          count: parseInt(item.count)
+          count: parseInt(item.count as string)
         }));
       }
         
