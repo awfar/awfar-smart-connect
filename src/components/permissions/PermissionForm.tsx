@@ -62,6 +62,8 @@ const PermissionForm = ({ permissionId, isEditing = false, onSave }: PermissionF
         scope
       };
       
+      console.log("Submitting permission:", permissionData);
+      
       let result;
       
       if (isEditing && permissionId) {

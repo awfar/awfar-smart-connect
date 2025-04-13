@@ -232,6 +232,8 @@ export const fetchPermissionById = async (id: string): Promise<PermissionDefinit
 
 export const createPermission = async (permission: Omit<PermissionDefinition, 'id'>): Promise<PermissionDefinition | null> => {
   try {
+    console.log("Creating permission:", permission);
+    
     const { data, error } = await supabase
       .from('permissions')
       .insert([permission])

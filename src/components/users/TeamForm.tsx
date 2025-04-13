@@ -7,17 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Team } from "@/services/teamsService";
 import { fetchDepartments } from "@/services/departmentsService";
-import { fetchUsers } from "@/services/users"; // Updated import path
+import { fetchUsers } from "@/services/users";
 
 interface TeamFormProps {
   team?: Team | null;
-  onSave: (data: { name: string; department_id: string; manager_id?: string }) => void;
+  onSave: (data: { name: string; department_id?: string; manager_id?: string }) => void;
   onCancel: () => void;
 }
 
 const TeamForm = ({ team, onSave, onCancel }: TeamFormProps) => {
   const [name, setName] = useState("");
-  const [departmentId, setDepartmentId] = useState("");
+  const [departmentId, setDepartmentId] = useState<string | undefined>(undefined);
   const [managerId, setManagerId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [managers, setManagers] = useState<any[]>([]);
@@ -46,8 +46,8 @@ const TeamForm = ({ team, onSave, onCancel }: TeamFormProps) => {
   useEffect(() => {
     if (team) {
       setName(team.name);
-      setDepartmentId(team.department_id || "");
-      setManagerId(team.manager_id);
+      setDepartmentId(team.department_id || undefined);
+      setManagerId(team.manager_id || undefined);
     }
   }, [team]);
 
@@ -58,8 +58,8 @@ const TeamForm = ({ team, onSave, onCancel }: TeamFormProps) => {
     try {
       onSave({
         name,
-        department_id: departmentId,
-        manager_id: managerId
+        department_id: departmentId === "none" ? undefined : departmentId,
+        manager_id: managerId === "none" ? undefined : managerId
       });
     } catch (error) {
       console.error("خطأ في حفظ بيانات الفريق:", error);
@@ -83,11 +83,12 @@ const TeamForm = ({ team, onSave, onCancel }: TeamFormProps) => {
       
       <div className="space-y-2">
         <Label htmlFor="department">القسم</Label>
-        <Select value={departmentId} onValueChange={setDepartmentId} required>
+        <Select value={departmentId || "none"} onValueChange={setDepartmentId}>
           <SelectTrigger id="department">
             <SelectValue placeholder="اختر قسماً" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="none">لا ينتمي لأي قسم</SelectItem>
             {departments.map((dept) => (
               <SelectItem key={dept.id} value={dept.id}>{dept.name}</SelectItem>
             ))}
@@ -99,7 +100,7 @@ const TeamForm = ({ team, onSave, onCancel }: TeamFormProps) => {
         <Label htmlFor="manager">مدير الفريق (اختياري)</Label>
         <Select 
           value={managerId || "none"} 
-          onValueChange={(value) => setManagerId(value === "none" ? undefined : value)}
+          onValueChange={setManagerId}
         >
           <SelectTrigger id="manager">
             <SelectValue placeholder="اختر مديراً للفريق" />
