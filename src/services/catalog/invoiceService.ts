@@ -1,4 +1,6 @@
 
+import { supabase } from "@/integrations/supabase/client";
+
 export interface InvoiceItem {
   productId: string;
   productName: string;
@@ -17,11 +19,42 @@ export interface Invoice {
   dueDate: string;
   issueDate: string;
   paidDate?: string;
+  subscriptionId?: string;
+  packageId?: string;
+  notes?: string;
 }
 
 // Mock data for invoices
 export const getInvoices = async (): Promise<Invoice[]> => {
-  // Mock data for development
+  // First try to get data from Supabase
+  try {
+    const { data, error } = await supabase
+      .from('invoices')
+      .select('*');
+    
+    if (error) throw error;
+    
+    if (data && data.length > 0) {
+      return data.map(item => ({
+        id: item.id,
+        customerId: item.customer_id,
+        customerName: item.customer_name,
+        items: item.items || [],
+        totalAmount: item.total_amount,
+        status: item.status,
+        dueDate: item.due_date,
+        issueDate: item.issue_date,
+        paidDate: item.paid_date,
+        subscriptionId: item.subscription_id,
+        packageId: item.package_id,
+        notes: item.notes
+      }));
+    }
+  } catch (err) {
+    console.error("Error fetching invoices from database:", err);
+  }
+  
+  // Fall back to mock data if database fetch fails or returns no results
   const mockInvoices: Invoice[] = [
     {
       id: '1',
@@ -54,6 +87,133 @@ export const getInvoices = async (): Promise<Invoice[]> => {
 };
 
 export const getInvoiceById = async (id: string): Promise<Invoice | null> => {
-  // Using mock data for now
+  try {
+    // First try to get from Supabase
+    const { data, error } = await supabase
+      .from('invoices')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) {
+      if (error.code === 'PGRST116') return null; // No rows found
+      throw error;
+    }
+    
+    if (data) {
+      return {
+        id: data.id,
+        customerId: data.customer_id,
+        customerName: data.customer_name,
+        items: data.items || [],
+        totalAmount: data.total_amount,
+        status: data.status,
+        dueDate: data.due_date,
+        issueDate: data.issue_date,
+        paidDate: data.paid_date,
+        subscriptionId: data.subscription_id,
+        packageId: data.package_id,
+        notes: data.notes
+      };
+    }
+  } catch (err) {
+    console.error("Error fetching invoice from database:", err);
+  }
+  
+  // Fall back to mock data
   return (await getInvoices()).find(i => i.id === id) || null;
+};
+
+export const createInvoice = async (invoice: Omit<Invoice, 'id'>): Promise<Invoice> => {
+  try {
+    const { data, error } = await supabase
+      .from('invoices')
+      .insert([{
+        customer_id: invoice.customerId,
+        customer_name: invoice.customerName,
+        items: invoice.items,
+        total_amount: invoice.totalAmount,
+        status: invoice.status,
+        due_date: invoice.dueDate,
+        issue_date: invoice.issueDate,
+        paid_date: invoice.paidDate,
+        subscription_id: invoice.subscriptionId,
+        package_id: invoice.packageId,
+        notes: invoice.notes
+      }])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    return {
+      id: data.id,
+      customerId: data.customer_id,
+      customerName: data.customer_name,
+      items: data.items || [],
+      totalAmount: data.total_amount,
+      status: data.status,
+      dueDate: data.due_date,
+      issueDate: data.issue_date,
+      paidDate: data.paid_date,
+      subscriptionId: data.subscription_id,
+      packageId: data.package_id,
+      notes: data.notes
+    };
+  } catch (err) {
+    console.error("Error creating invoice:", err);
+    throw new Error("Failed to create invoice");
+  }
+};
+
+export const updateInvoiceStatus = async (id: string, status: Invoice['status'], paidDate?: string): Promise<Invoice> => {
+  try {
+    const updateData: any = { status };
+    if (status === 'paid' && paidDate) {
+      updateData.paid_date = paidDate;
+    }
+    
+    const { data, error } = await supabase
+      .from('invoices')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    return {
+      id: data.id,
+      customerId: data.customer_id,
+      customerName: data.customer_name,
+      items: data.items || [],
+      totalAmount: data.total_amount,
+      status: data.status,
+      dueDate: data.due_date,
+      issueDate: data.issue_date,
+      paidDate: data.paid_date,
+      subscriptionId: data.subscription_id,
+      packageId: data.package_id,
+      notes: data.notes
+    };
+  } catch (err) {
+    console.error("Error updating invoice status:", err);
+    throw new Error("Failed to update invoice status");
+  }
+};
+
+export const generateInvoiceForSubscription = async (subscriptionId: string, customerId: string, customerName: string, items: InvoiceItem[], dueDate: string): Promise<Invoice> => {
+  const totalAmount = items.reduce((sum, item) => sum + item.totalPrice, 0);
+  const today = new Date().toISOString().split('T')[0];
+  
+  return createInvoice({
+    customerId,
+    customerName,
+    items,
+    totalAmount,
+    status: 'draft',
+    dueDate,
+    issueDate: today,
+    subscriptionId
+  });
 };
