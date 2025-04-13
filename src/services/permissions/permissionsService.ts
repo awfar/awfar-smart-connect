@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PermissionDefinition, PermissionLevel, PermissionScope } from "./permissionTypes";
@@ -68,27 +69,27 @@ export const getSystemObjects = () => [
     name: 'emails',
     label: 'البريد الإلكتروني',
     permissions: [
-      { level: 'read-only', scopes: ['own', 'team', 'all'], description: 'عرض رسائل البريد الإلكتروني' },
-      { level: 'read-edit', scopes: ['own', 'team', 'all'], description: 'عرض وتعديل رسائل البريد الإلكتروني' },
-      { level: 'full-access', scopes: ['own', 'team', 'all'], description: 'وصول كامل لرسائل البريد الإلكتروني' },
+      { level: 'read-only', scopes: ['own', 'team', 'all'] as PermissionScope[], description: 'عرض رسائل البريد الإلكتروني' },
+      { level: 'read-edit', scopes: ['own', 'team', 'all'] as PermissionScope[], description: 'عرض وتعديل رسائل البريد الإلكتروني' },
+      { level: 'full-access', scopes: ['own', 'team', 'all'] as PermissionScope[], description: 'وصول كامل لرسائل البريد الإلكتروني' },
     ]
   },
   {
     name: 'meetings',
     label: 'الاجتماعات',
     permissions: [
-      { level: 'read-only', scopes: ['own', 'team', 'all'], description: 'عرض الاجتماعات' },
-      { level: 'read-edit', scopes: ['own', 'team', 'all'], description: 'عرض وتعديل الاجت��اعات' },
-      { level: 'full-access', scopes: ['own', 'team', 'all'], description: 'وصول كامل للاجتماعات' },
+      { level: 'read-only', scopes: ['own', 'team', 'all'] as PermissionScope[], description: 'عرض الاجتماعات' },
+      { level: 'read-edit', scopes: ['own', 'team', 'all'] as PermissionScope[], description: 'عرض وتعديل الاجت��اعات' },
+      { level: 'full-access', scopes: ['own', 'team', 'all'] as PermissionScope[], description: 'وصول كامل للاجتماعات' },
     ]
   },
   {
     name: 'calls',
     label: 'المكالمات',
     permissions: [
-      { level: 'read-only', scopes: ['own', 'team', 'all'], description: 'عرض المكالمات' },
-      { level: 'read-edit', scopes: ['own', 'team', 'all'], description: 'عرض وتعديل المكالمات' },
-      { level: 'full-access', scopes: ['own', 'team', 'all'], description: 'وصول كامل للمكالمات' },
+      { level: 'read-only', scopes: ['own', 'team', 'all'] as PermissionScope[], description: 'عرض المكالمات' },
+      { level: 'read-edit', scopes: ['own', 'team', 'all'] as PermissionScope[], description: 'عرض وتعديل المكالمات' },
+      { level: 'full-access', scopes: ['own', 'team', 'all'] as PermissionScope[], description: 'وصول كامل للمكالمات' },
     ]
   }
 ];

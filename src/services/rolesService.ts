@@ -131,7 +131,7 @@ export const fetchRoleById = async (id: string): Promise<Role | null> => {
       }
       
       if (data && data.role_permissions) {
-        // Check if data.role_permissions is an error or actual data
+        // Check if data.role_permissions is an error object
         if (typeof data.role_permissions === 'object' && !Array.isArray(data.role_permissions) && 'code' in data.role_permissions) {
           // This is an error object, not an array
           console.error("Error in role permissions join:", data.role_permissions);
@@ -147,11 +147,16 @@ export const fetchRoleById = async (id: string): Promise<Role | null> => {
         }
         
         // This is a valid array of permissions
-        const permissions = data.role_permissions.map((rp: any) => rp.permissions);
-        return {
-          ...data,
-          permissions
-        };
+        if (Array.isArray(data.role_permissions)) {
+          const permissions = data.role_permissions.map((rp: any) => rp.permissions);
+          return {
+            ...data,
+            permissions
+          };
+        } else {
+          console.error("Unexpected role_permissions structure:", data.role_permissions);
+          return data;
+        }
       }
       
       return data;

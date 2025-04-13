@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -43,20 +42,16 @@ const PermissionForm = ({ permissionId, isEditing = false, onSave }: PermissionF
     }
   }, [permission]);
 
-  // Update available scopes when object or level changes
   useEffect(() => {
     if (object && level) {
       const selectedObject = objects.find(obj => obj.name === object);
       if (selectedObject) {
         const permissionDef = selectedObject.permissions.find(p => p.level === level);
         if (permissionDef) {
-          // Convert string[] to PermissionScope[] with explicit type casting
-          const typedScopes: PermissionScope[] = permissionDef.scopes.map(s => s as PermissionScope);
-          setAvailableScopes(typedScopes);
+          setAvailableScopes(permissionDef.scopes);
           
-          // Reset scope if it's not available
           if (!permissionDef.scopes.includes(scope)) {
-            setScope(permissionDef.scopes[0] as PermissionScope);
+            setScope(permissionDef.scopes[0]);
           }
         }
       }
