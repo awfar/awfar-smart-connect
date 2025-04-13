@@ -4,14 +4,6 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -91,22 +83,6 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden order-last">
-            <button
-              onClick={toggleMenu}
-              type="button"
-              aria-label="Toggle menu"
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-awfar-primary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-awfar-primary"
-            >
-              {isOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
-            </button>
-          </div>
-
           {/* Desktop Navigation */}
           <div className="hidden md:block md:flex-1">
             <div className="flex items-center justify-center space-x-4 rtl:space-x-reverse">
@@ -130,6 +106,22 @@ const Navbar = () => {
             <Button asChild>
               <Link to="/register">تسجيل</Link>
             </Button>
+          </div>
+          
+          {/* Mobile Menu Button - أصلحنا ترتيب الظهور */}
+          <div className="flex md:hidden">
+            <button
+              onClick={toggleMenu}
+              type="button"
+              aria-label="Toggle menu"
+              className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-awfar-primary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-awfar-primary"
+            >
+              {isOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
           </div>
         </div>
       </div>
