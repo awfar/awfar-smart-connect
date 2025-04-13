@@ -1,21 +1,6 @@
 
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
-  CardDescription 
-} from "@/components/ui/card";
-import { 
-  Users, 
-  UserPlus, 
-  PercentSquare, 
-  CreditCard,
-  Loader2,
-  TrendingUp,
-  ArrowUp,
-  ArrowDown
-} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { BarChart, Contact, DollarSign, Users } from "lucide-react";
 import { DashboardStats } from "@/services/dashboardService";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -25,143 +10,93 @@ interface StatsCardsProps {
 }
 
 const StatsCards = ({ isLoading, stats }: StatsCardsProps) => {
-  // Calculate the trend percentage with a random value between 5-15%
-  const leadsTrend = Math.floor(Math.random() * 10) + 5;
-  const isLeadsTrendPositive = true; // For demo purposes, showing positive trend
-  
-  // Calculate new leads trend compared to previous day
-  const newLeadsTrend = Math.floor(Math.random() * 20) + 5;
-  const isNewLeadsTrendPositive = Math.random() > 0.3; // 70% chance of being positive
-  
-  // Calculate conversion rate trend
-  const conversionTrend = Math.floor(Math.random() * 8) + 2;
-  const isConversionTrendPositive = Math.random() > 0.4; // 60% chance of being positive
-  
-  // Calculate revenue trend
-  const revenueTrend = Math.floor(Math.random() * 12) + 3;
-  const isRevenueTrendPositive = Math.random() > 0.2; // 80% chance of being positive
-  
+  const items = [
+    {
+      title: "إجمالي المبيعات",
+      icon: DollarSign,
+      value: stats?.totalSales || "0",
+      description: "مقارنة بالشهر السابق",
+      change: stats?.salesChange || "+0%",
+      trend: "up",
+      color: "bg-gradient-to-br from-blue-100 to-blue-50 text-blue-900",
+      iconColor: "text-blue-700 bg-blue-100"
+    },
+    {
+      title: "العملاء المحتملين الجدد",
+      icon: Users,
+      value: stats?.newLeads || "0",
+      description: "في هذا الشهر",
+      change: stats?.leadsChange || "+0%",
+      trend: "up",
+      color: "bg-gradient-to-br from-green-100 to-green-50 text-green-900",
+      iconColor: "text-green-700 bg-green-100"
+    },
+    {
+      title: "معدل التحويل",
+      icon: BarChart,
+      value: stats?.conversionRate || "0%",
+      description: "العملاء المحولين من العملاء المحتملين",
+      change: stats?.conversionChange || "+0%",
+      trend: "up",
+      color: "bg-gradient-to-br from-purple-100 to-purple-50 text-purple-900",
+      iconColor: "text-purple-700 bg-purple-100"
+    },
+    {
+      title: "التذاكر النشطة",
+      icon: Contact,
+      value: stats?.activeTickets || "0",
+      description: "تذاكر تحتاج إلى معالجة",
+      change: stats?.ticketsChange || "+0%",
+      trend: "down",
+      color: "bg-gradient-to-br from-amber-100 to-amber-50 text-amber-900",
+      iconColor: "text-amber-700 bg-amber-100"
+    },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="overflow-hidden shadow-md">
+            <CardContent className="p-0">
+              <div className="p-6 flex flex-col gap-2">
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-8 w-1/3" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      <Card className="border-r-4 border-r-blue-500">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">إجمالي العملاء المحتملين</CardTitle>
-          <Users className="h-4 w-4 text-blue-500" />
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <Skeleton className="h-10 w-20" />
-          ) : (
-            <>
-              <div className="text-2xl font-bold">{stats?.totalLeads.toLocaleString() || 0}</div>
-              <div className="flex items-center text-xs text-muted-foreground mt-1">
-                {isLeadsTrendPositive ? (
-                  <>
-                    <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
-                    <span className="text-green-500">+{leadsTrend}%</span>
-                  </>
-                ) : (
-                  <>
-                    <TrendingUp className="h-3 w-3 text-red-500 mr-1 transform rotate-180" />
-                    <span className="text-red-500">-{leadsTrend}%</span>
-                  </>
-                )}
-                <span className="mr-1">من الشهر الماضي</span>
+      {items.map((item, index) => (
+        <Card 
+          key={index} 
+          className={`overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-200 ${item.color} border-0`}
+        >
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div className="space-y-1">
+                <p className="text-sm font-medium opacity-80">{item.title}</p>
+                <h3 className="text-2xl font-bold">{item.value}</h3>
+                <div className="flex items-center text-xs">
+                  <span className="opacity-70">{item.description}</span>
+                  <span className={`mr-2 font-medium ${item.trend === "up" ? "text-green-700" : "text-red-700"}`}>
+                    {item.change}
+                  </span>
+                </div>
               </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-      
-      <Card className="border-r-4 border-r-green-500">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">عملاء محتملين جدد</CardTitle>
-          <UserPlus className="h-4 w-4 text-green-500" />
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <Skeleton className="h-10 w-20" />
-          ) : (
-            <>
-              <div className="text-2xl font-bold">+{stats?.newLeadsToday || 0}</div>
-              <div className="flex items-center text-xs text-muted-foreground mt-1">
-                {isNewLeadsTrendPositive ? (
-                  <>
-                    <ArrowUp className="h-3 w-3 text-green-500 mr-1" />
-                    <span className="text-green-500">+{newLeadsTrend}%</span>
-                  </>
-                ) : (
-                  <>
-                    <ArrowDown className="h-3 w-3 text-red-500 mr-1" />
-                    <span className="text-red-500">-{newLeadsTrend}%</span>
-                  </>
-                )}
-                <span className="mr-1">مقارنة بالأمس</span>
+              <div className={`p-2 rounded-full ${item.iconColor}`}>
+                <item.icon className="h-5 w-5" />
               </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-      
-      <Card className="border-r-4 border-r-purple-500">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">نسبة التحويل</CardTitle>
-          <PercentSquare className="h-4 w-4 text-purple-500" />
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <Skeleton className="h-10 w-20" />
-          ) : (
-            <>
-              <div className="text-2xl font-bold">{stats?.conversionRate || 0}%</div>
-              <div className="flex items-center text-xs text-muted-foreground mt-1">
-                {isConversionTrendPositive ? (
-                  <>
-                    <ArrowUp className="h-3 w-3 text-green-500 mr-1" />
-                    <span className="text-green-500">+{conversionTrend}%</span>
-                  </>
-                ) : (
-                  <>
-                    <ArrowDown className="h-3 w-3 text-red-500 mr-1" />
-                    <span className="text-red-500">-{conversionTrend}%</span>
-                  </>
-                )}
-                <span className="mr-1">من الربع الماضي</span>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-      
-      <Card className="border-r-4 border-r-amber-500">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">العائد المالي</CardTitle>
-          <CreditCard className="h-4 w-4 text-amber-500" />
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <Skeleton className="h-10 w-20" />
-          ) : (
-            <>
-              <div className="text-2xl font-bold">{stats?.totalRevenue?.toLocaleString() || 0} ريال</div>
-              <div className="flex items-center text-xs text-muted-foreground mt-1">
-                {isRevenueTrendPositive ? (
-                  <>
-                    <TrendingUp className="h-3 w-3 text-green-500 mr-1" />
-                    <span className="text-green-500">+{revenueTrend}%</span>
-                  </>
-                ) : (
-                  <>
-                    <TrendingUp className="h-3 w-3 text-red-500 mr-1 transform rotate-180" />
-                    <span className="text-red-500">-{revenueTrend}%</span>
-                  </>
-                )}
-                <span className="mr-1">من الشهر الماضي</span>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 };
