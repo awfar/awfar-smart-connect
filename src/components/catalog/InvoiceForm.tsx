@@ -65,7 +65,7 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
               unitPrice: 0,   
               totalPrice: 0   
             }
-          ] as InvoiceItem[],  // Explicitly cast the entire array, not just the single item
+          ] as InvoiceItem[],  // Explicitly cast the entire array as InvoiceItem[]
           status: "draft",
           issueDate: new Date(),
           dueDate: addDays(new Date(), 30),
