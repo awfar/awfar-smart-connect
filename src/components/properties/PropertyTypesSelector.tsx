@@ -67,7 +67,7 @@ const PropertyTypesSelector: React.FC<PropertyTypesSelectorProps> = ({
           defaultValue={selectedType} 
           onValueChange={(value) => onTypeChange(value as PropertyType)}
         >
-          <TabsList className="overflow-auto flex w-full border-b pb-px">
+          <TabsList className="overflow-auto flex w-full border-b pb-px bg-background">
             {propertyTypes.map((type) => (
               <Tooltip key={type}>
                 <TooltipTrigger asChild>

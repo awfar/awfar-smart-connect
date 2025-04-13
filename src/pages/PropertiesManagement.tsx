@@ -85,12 +85,12 @@ const PropertiesManagement: React.FC = () => {
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2" onClick={() => setSelectedProperty(undefined)}>
+              <Button className="gap-2 bg-awfar-accent text-awfar-primary hover:bg-awfar-accent/90" onClick={() => setSelectedProperty(undefined)}>
                 <Plus className="h-4 w-4" />
                 إضافة خاصية جديدة
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
+            <DialogContent className="sm:max-w-[600px] rtl">
               <DialogTitle>
                 {selectedProperty ? 'تعديل خاصية' : 'إضافة خاصية جديدة'}
               </DialogTitle>
@@ -109,9 +109,11 @@ const PropertiesManagement: React.FC = () => {
           onTypeChange={handlePropertyTypeChange}
         />
         
-        <Card>
+        <Card className="shadow-sm">
           <CardHeader className="pb-3">
-            <CardTitle>خصائص {getTypeLabel(propertyType)}</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              خصائص {getTypeLabel(propertyType)}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
