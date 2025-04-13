@@ -2,44 +2,60 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ContentManager from "@/components/cms/ContentManager";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Settings, Plus, LayoutDashboard } from "lucide-react";
 
 const CMS = () => {
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">إدارة المحتوى</h1>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">إدارة المحتوى</h1>
+            <p className="text-muted-foreground mt-1">إنشاء وتحرير محتوى الموقع بشكل سهل ومرن</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline">
+              <Settings className="h-4 w-4 mr-2" />
+              الإعدادات
+            </Button>
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              إضافة محتوى جديد
+            </Button>
+          </div>
         </div>
       
-        <Tabs defaultValue="pages">
+        <Tabs defaultValue="content">
           <TabsList className="mb-6">
-            <TabsTrigger value="pages">محتوى الصفحات</TabsTrigger>
-            <TabsTrigger value="media">مكتبة الوسائط</TabsTrigger>
-            <TabsTrigger value="settings">الإعدادات</TabsTrigger>
+            <TabsTrigger value="content" className="flex items-center gap-1">
+              <LayoutDashboard className="h-4 w-4" />
+              لوحة التحكم
+            </TabsTrigger>
+            <TabsTrigger value="website">محتوى الموقع</TabsTrigger>
+            <TabsTrigger value="blog">المدونة</TabsTrigger>
+            <TabsTrigger value="landing">صفحات الهبوط</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="pages">
+          <TabsContent value="content">
             <ContentManager />
           </TabsContent>
           
-          <TabsContent value="media">
+          <TabsContent value="website">
+            <ContentManager />
+          </TabsContent>
+          
+          <TabsContent value="blog">
             <div className="p-6 bg-white rounded-lg shadow-sm">
-              <h2 className="text-xl font-bold mb-4">مكتبة الوسائط</h2>
-              <p className="text-gray-600">إدارة الصور وملفات الوسائط هنا.</p>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                <img src="/lovable-uploads/af225455-5aeb-41ac-b7e2-0fc4447b4063.png" alt="Media" className="rounded-md border object-cover aspect-square" />
-                <img src="/lovable-uploads/d0e8da8f-bc27-437d-9d5e-681870721ef9.png" alt="Media" className="rounded-md border object-cover aspect-square" />
-                <img src="/lovable-uploads/18411ffb-259b-4ff4-b30a-dd6dcdcc63e5.png" alt="Media" className="rounded-md border object-cover aspect-square" />
-                <img src="/lovable-uploads/193f53ad-1a0c-4c7b-9d7d-bdda35106e9f.png" alt="Media" className="rounded-md border object-cover aspect-square" />
-              </div>
+              <h2 className="text-xl font-bold mb-4">إدارة المدونة</h2>
+              <p className="text-gray-600">قم بإنشاء وتحرير مقالات المدونة هنا.</p>
             </div>
           </TabsContent>
           
-          <TabsContent value="settings">
+          <TabsContent value="landing">
             <div className="p-6 bg-white rounded-lg shadow-sm">
-              <h2 className="text-xl font-bold mb-4">إعدادات الموقع</h2>
-              <p className="text-gray-600">تكوين إعدادات الموقع العامة هنا.</p>
+              <h2 className="text-xl font-bold mb-4">صفحات الهبوط</h2>
+              <p className="text-gray-600">قم بإنشاء وإدارة صفحات الهبوط المخصصة هنا.</p>
             </div>
           </TabsContent>
         </Tabs>
