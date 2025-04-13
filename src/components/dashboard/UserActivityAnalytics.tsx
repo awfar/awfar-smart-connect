@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { fetchActivityAnalytics } from '@/services/usersPermissionsService';
+import { fetchActivityAnalytics } from '@/services/analytics/activityAnalyticsService';
 
 type AnalyticsType = 'action' | 'user' | 'entity';
 

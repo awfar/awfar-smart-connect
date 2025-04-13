@@ -9,7 +9,7 @@ import TeamPerformance from '@/components/dashboard/TeamPerformance';
 import UserActivityAnalytics from '@/components/dashboard/UserActivityAnalytics';
 import { useQuery } from '@tanstack/react-query';
 import { fetchDashboardStats, fetchRecentActivities } from '@/services/dashboardService';
-import { fetchUserPermissions } from '@/services/usersPermissionsService';
+import { fetchUserPermissions } from '@/services/permissions/userPermissionsService';
 
 const Dashboard: React.FC = () => {
   const { data: stats, isLoading: statsLoading } = useQuery({
