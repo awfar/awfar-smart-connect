@@ -2,10 +2,9 @@
 import React from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { InvoiceFormValues } from "./InvoiceForm";
+import { InvoiceItemRow } from "./InvoiceItemRow";
 
 interface InvoiceItemFormProps {
   calculateTotal: () => number;
@@ -70,108 +69,13 @@ export function InvoiceItemForm({ calculateTotal }: InvoiceItemFormProps) {
       </div>
 
       {fields.map((field, index) => (
-        <div key={field.id} className="grid grid-cols-12 gap-2 items-center">
-          <div className="col-span-4">
-            <FormField
-              control={form.control}
-              name={`items.${index}.productName`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input {...field} placeholder="اسم المنتج" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name={`items.${index}.productId`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input {...field} placeholder="معرف المنتج" className="mt-1 text-xs" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <div className="col-span-2">
-            <FormField
-              control={form.control}
-              name={`items.${index}.quantity`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="number"
-                      min={1}
-                      onChange={(e) => {
-                        field.onChange(parseInt(e.target.value));
-                        updateItemPrice(index);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <div className="col-span-2">
-            <FormField
-              control={form.control}
-              name={`items.${index}.unitPrice`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      type="number"
-                      min={0}
-                      step={0.01}
-                      onChange={(e) => {
-                        field.onChange(parseFloat(e.target.value));
-                        updateItemPrice(index);
-                      }}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <div className="col-span-3">
-            <FormField
-              control={form.control}
-              name={`items.${index}.totalPrice`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      readOnly
-                      className="bg-muted"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <div className="col-span-1 flex justify-center">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => removeItem(index)}
-              disabled={fields.length <= 1}
-            >
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
-          </div>
-        </div>
+        <InvoiceItemRow 
+          key={field.id}
+          index={index}
+          removeItem={removeItem}
+          updateItemPrice={updateItemPrice}
+          canDelete={fields.length > 1}
+        />
       ))}
     </div>
   );
