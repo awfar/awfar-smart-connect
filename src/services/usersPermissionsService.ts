@@ -13,20 +13,41 @@ export const fetchUserPermissions = async (): Promise<string[]> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
     
-    const { data, error } = await supabase.rpc('has_permission', { 
-      user_id: user.id, 
-      permission_name: 'admin.access' 
-    });
+    // Usamos una consulta directa en lugar de una función RPC que no está tipada
+    const { data, error } = await supabase
+      .from('role_permissions')
+      .select(`
+        permissions (name)
+      `)
+      .eq('role', await getUserRole(user.id));
     
     if (error) throw error;
     
-    // ملاحظة: في نظام حقيقي، يجب أن نقوم بجلب قائمة كاملة من الصلاحيات
-    // هنا نقوم بإرجاع نتيجة التحقق فقط كمثال بسيط
-    return data ? ['admin.access'] : [];
+    // Verificamos si data es un array antes de usar map
+    return Array.isArray(data) 
+      ? data.map(item => item.permissions?.name).filter(Boolean)
+      : [];
   } catch (error) {
     console.error("خطأ في جلب صلاحيات المستخدم:", error);
     toast.error("فشل في جلب صلاحيات المستخدم");
     return [];
+  }
+};
+
+// Función auxiliar para obtener el rol del usuario
+const getUserRole = async (userId: string): Promise<string> => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .single();
+      
+    if (error) throw error;
+    return data?.role || '';
+  } catch (error) {
+    console.error("Error getting user role:", error);
+    return '';
   }
 };
 
@@ -39,27 +60,48 @@ export const fetchActivityAnalytics = async (type: 'action' | 'user' | 'entity')
     let functionName = '';
     switch (type) {
       case 'action':
-        functionName = 'count_activities_by_action';
-        break;
+        // Usamos una consulta directa en lugar de funciones RPC no tipadas
+        const { data: actionData, error: actionError } = await supabase
+          .from('activity_logs')
+          .select('action, count(*)')
+          .group('action');
+        
+        if (actionError) throw actionError;
+        
+        return actionData.map((item: any) => ({
+          name: item.action || 'غير معروف',
+          count: item.count
+        }));
+      
       case 'user':
-        functionName = 'count_activities_by_user';
-        break;
+        const { data: userData, error: userError } = await supabase
+          .from('activity_logs')
+          .select('user_id, count(*)')
+          .group('user_id');
+          
+        if (userError) throw userError;
+        
+        return userData.map((item: any) => ({
+          name: item.user_id || 'غير معروف',
+          count: item.count
+        }));
+        
       case 'entity':
-        functionName = 'count_activities_by_entity_type';
-        break;
+        const { data: entityData, error: entityError } = await supabase
+          .from('activity_logs')
+          .select('entity_type, count(*)')
+          .group('entity_type');
+          
+        if (entityError) throw entityError;
+        
+        return entityData.map((item: any) => ({
+          name: item.entity_type || 'غير معروف',
+          count: item.count
+        }));
+        
       default:
-        functionName = 'count_activities_by_action';
+        return [];
     }
-    
-    const { data, error } = await supabase.rpc(functionName);
-    
-    if (error) throw error;
-    
-    // تنسيق البيانات لعرضها في المخطط البياني
-    return data.map((item: any) => ({
-      name: item.action || item.user_id || item.entity_type || 'غير معروف',
-      count: item.count
-    }));
   } catch (error) {
     console.error(`خطأ في جلب تحليلات النشاط (${type}):`, error);
     toast.error("فشل في جلب تحليلات النشاط");
@@ -73,7 +115,7 @@ export const addPermissionToRole = async (roleId: string, permissionId: string):
     const { error } = await supabase
       .from('role_permissions')
       .insert([
-        { role_id: roleId, permission_id: permissionId }
+        { role: roleId, permission_id: permissionId }
       ]);
     
     if (error) throw error;
@@ -117,7 +159,7 @@ export const assignRoleToUser = async (userId: string, roleId: string): Promise<
   try {
     const { error } = await supabase
       .from('profiles')
-      .update({ role_id: roleId })
+      .update({ role: roleId })
       .eq('id', userId);
     
     if (error) throw error;
@@ -151,16 +193,16 @@ export const assignUserToTeam = async (userId: string, teamId: string): Promise<
 };
 
 // تغيير حالة المستخدم (نشط/معلق)
-export const changeUserStatus = async (userId: string, status: 'active' | 'suspended'): Promise<boolean> => {
+export const changeUserStatus = async (userId: string, isActive: boolean): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('profiles')
-      .update({ status })
+      .update({ is_active: isActive })
       .eq('id', userId);
     
     if (error) throw error;
     
-    const statusText = status === 'active' ? 'تنشيط' : 'تعليق';
+    const statusText = isActive ? 'تنشيط' : 'تعليق';
     toast.success(`تم ${statusText} المستخدم بنجاح`);
     return true;
   } catch (error) {
