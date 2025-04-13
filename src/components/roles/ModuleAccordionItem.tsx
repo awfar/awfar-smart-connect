@@ -1,40 +1,40 @@
 
 import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { PermissionAction, PermissionScope } from "@/services/permissions/permissionTypes";
-import ModulePermissionsTable from "./ModulePermissionsTable";
+import { PermissionLevel, PermissionScope } from "@/services/permissions/permissionTypes";
+import ObjectPermissionsTable from "./ModulePermissionsTable";
 
-interface ModuleAccordionItemProps {
-  module: string;
-  moduleLabel: string;
-  getAvailableScopesForAction: (module: string, action: PermissionAction) => PermissionScope[];
-  isPermissionSelected: (module: string, action: PermissionAction, scope: PermissionScope) => boolean;
-  togglePermission: (module: string, action: PermissionAction, scope: PermissionScope | null) => void;
-  actionLabels: Record<PermissionAction, string>;
+interface ObjectAccordionItemProps {
+  object: string;
+  objectLabel: string;
+  getAvailableScopesForLevel: (object: string, level: PermissionLevel) => PermissionScope[];
+  isPermissionSelected: (object: string, level: PermissionLevel, scope: PermissionScope) => boolean;
+  togglePermission: (object: string, level: PermissionLevel, scope: PermissionScope | null) => void;
+  levelLabels: Record<PermissionLevel, string>;
   scopeLabels: Record<PermissionScope, string>;
 }
 
-const ModuleAccordionItem = ({
-  module,
-  moduleLabel,
-  getAvailableScopesForAction,
+const ObjectAccordionItem = ({
+  object,
+  objectLabel,
+  getAvailableScopesForLevel,
   isPermissionSelected,
   togglePermission,
-  actionLabels,
+  levelLabels,
   scopeLabels
-}: ModuleAccordionItemProps) => {
+}: ObjectAccordionItemProps) => {
   return (
-    <AccordionItem key={module} value={module}>
+    <AccordionItem key={object} value={object}>
       <AccordionTrigger className="text-lg font-medium hover:no-underline">
-        {moduleLabel}
+        {objectLabel}
       </AccordionTrigger>
       <AccordionContent>
         <div className="pt-2">
-          <ModulePermissionsTable
-            module={module}
-            getAvailableScopesForAction={getAvailableScopesForAction}
+          <ObjectPermissionsTable
+            object={object}
+            getAvailableScopesForLevel={getAvailableScopesForLevel}
             isPermissionSelected={isPermissionSelected}
             togglePermission={togglePermission}
-            actionLabels={actionLabels}
+            levelLabels={levelLabels}
             scopeLabels={scopeLabels}
           />
         </div>
@@ -43,4 +43,4 @@ const ModuleAccordionItem = ({
   );
 };
 
-export default ModuleAccordionItem;
+export default ObjectAccordionItem;

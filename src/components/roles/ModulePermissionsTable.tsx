@@ -1,31 +1,31 @@
 
-import { PermissionAction, PermissionScope } from "@/services/permissions/permissionTypes";
+import { PermissionLevel, PermissionScope } from "@/services/permissions/permissionTypes";
 import PermissionActionRow from "./PermissionActionRow";
 
-interface ModulePermissionsTableProps {
-  module: string;
-  getAvailableScopesForAction: (module: string, action: PermissionAction) => PermissionScope[];
-  isPermissionSelected: (module: string, action: PermissionAction, scope: PermissionScope) => boolean;
-  togglePermission: (module: string, action: PermissionAction, scope: PermissionScope | null) => void;
-  actionLabels: Record<PermissionAction, string>;
+interface ObjectPermissionsTableProps {
+  object: string;
+  getAvailableScopesForLevel: (object: string, level: PermissionLevel) => PermissionScope[];
+  isPermissionSelected: (object: string, level: PermissionLevel, scope: PermissionScope) => boolean;
+  togglePermission: (object: string, level: PermissionLevel, scope: PermissionScope | null) => void;
+  levelLabels: Record<PermissionLevel, string>;
   scopeLabels: Record<PermissionScope, string>;
 }
 
-const ModulePermissionsTable = ({
-  module,
-  getAvailableScopesForAction,
+const ObjectPermissionsTable = ({
+  object,
+  getAvailableScopesForLevel,
   isPermissionSelected,
   togglePermission,
-  actionLabels,
+  levelLabels,
   scopeLabels
-}: ModulePermissionsTableProps) => {
+}: ObjectPermissionsTableProps) => {
   return (
     <table className="w-full text-sm">
       <thead className="bg-muted">
         <tr>
           <th className="text-right py-2 px-3">الصلاحية</th>
           <th className="text-center py-2 px-3">لا صلاحية</th>
-          {['own', 'team', 'all'].map(scope => (
+          {['own', 'team', 'all', 'unassigned'].map(scope => (
             <th key={scope} className="text-center py-2 px-3">
               {scopeLabels[scope as PermissionScope]}
             </th>
@@ -33,13 +33,13 @@ const ModulePermissionsTable = ({
         </tr>
       </thead>
       <tbody>
-        {(['create', 'read', 'update', 'delete'] as PermissionAction[]).map(action => (
+        {(['read-only', 'read-edit', 'full-access'] as PermissionLevel[]).map(level => (
           <PermissionActionRow 
-            key={`${module}_${action}`}
-            module={module}
-            action={action}
-            actionLabel={actionLabels[action]}
-            getAvailableScopesForAction={getAvailableScopesForAction}
+            key={`${object}_${level}`}
+            object={object}
+            level={level}
+            levelLabel={levelLabels[level]}
+            getAvailableScopesForLevel={getAvailableScopesForLevel}
             isPermissionSelected={isPermissionSelected}
             togglePermission={togglePermission}
             scopeLabels={scopeLabels}
@@ -50,4 +50,4 @@ const ModulePermissionsTable = ({
   );
 };
 
-export default ModulePermissionsTable;
+export default ObjectPermissionsTable;

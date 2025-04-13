@@ -1,12 +1,12 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { checkUserHasPermission, initializeSystemPermissions } from "@/services/permissions/permissionsService";
-import { PermissionAction, PermissionScope } from "@/services/permissions/permissionTypes";
+import { PermissionLevel, PermissionScope } from "@/services/permissions/permissionTypes";
 
-type PermissionKey = `${string}.${PermissionAction}.${PermissionScope}`;
+type PermissionKey = `${string}.${PermissionLevel}.${PermissionScope}`;
 
 interface PermissionsContextType {
-  hasPermission: (module: string, action: PermissionAction, scope?: PermissionScope) => boolean;
+  hasPermission: (object: string, level: PermissionLevel, scope?: PermissionScope) => boolean;
   isLoading: boolean;
 }
 
@@ -32,8 +32,8 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
     fetchPermissions();
   }, []);
 
-  const hasPermission = (module: string, action: PermissionAction, scope: PermissionScope = 'own') => {
-    const key = `${module}.${action}.${scope}` as PermissionKey;
+  const hasPermission = (object: string, level: PermissionLevel, scope: PermissionScope = 'own') => {
+    const key = `${object}.${level}.${scope}` as PermissionKey;
     
     // Check if we've already cached this permission check
     if (permissions[key] !== undefined) {
@@ -42,16 +42,16 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
     
     // If permission not in cache, return false for synchronous call
     // but trigger an async check that will update the cache
-    checkPermissionAsync(module, action, scope);
+    checkPermissionAsync(object, level, scope);
     return false;
   };
   
-  const checkPermissionAsync = async (module: string, action: PermissionAction, scope: PermissionScope) => {
-    const key = `${module}.${action}.${scope}` as PermissionKey;
+  const checkPermissionAsync = async (object: string, level: PermissionLevel, scope: PermissionScope) => {
+    const key = `${object}.${level}.${scope}` as PermissionKey;
     
     // Check with the server
     try {
-      const hasAccess = await checkUserHasPermission(module, action, scope);
+      const hasAccess = await checkUserHasPermission(object, level, scope);
       
       // Cache the result
       setPermissions(prev => ({

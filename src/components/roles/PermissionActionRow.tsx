@@ -1,38 +1,38 @@
 
-import { PermissionAction, PermissionScope } from "@/services/permissions/permissionTypes";
+import { PermissionLevel, PermissionScope } from "@/services/permissions/permissionTypes";
 import PermissionScopeCheckboxes from "./PermissionScopeCheckboxes";
 
 interface PermissionActionRowProps {
-  module: string;
-  action: PermissionAction;
-  actionLabel: string;
-  getAvailableScopesForAction: (module: string, action: PermissionAction) => PermissionScope[];
-  isPermissionSelected: (module: string, action: PermissionAction, scope: PermissionScope) => boolean;
-  togglePermission: (module: string, action: PermissionAction, scope: PermissionScope | null) => void;
+  object: string;
+  level: PermissionLevel;
+  levelLabel: string;
+  getAvailableScopesForLevel: (object: string, level: PermissionLevel) => PermissionScope[];
+  isPermissionSelected: (object: string, level: PermissionLevel, scope: PermissionScope) => boolean;
+  togglePermission: (object: string, level: PermissionLevel, scope: PermissionScope | null) => void;
   scopeLabels: Record<PermissionScope, string>;
 }
 
 const PermissionActionRow = ({
-  module,
-  action,
-  actionLabel,
-  getAvailableScopesForAction,
+  object,
+  level,
+  levelLabel,
+  getAvailableScopesForLevel,
   isPermissionSelected,
   togglePermission,
   scopeLabels
 }: PermissionActionRowProps) => {
-  const availableScopes = getAvailableScopesForAction(module, action);
+  const availableScopes = getAvailableScopesForLevel(object, level);
   
   if (availableScopes.length === 0) return null;
   
   return (
-    <tr key={`${module}_${action}`} className="border-b">
+    <tr key={`${object}_${level}`} className="border-b">
       <td className="py-3 px-3 font-medium">
-        {actionLabel}
+        {levelLabel}
       </td>
       <PermissionScopeCheckboxes
-        module={module}
-        action={action}
+        object={object}
+        level={level}
         availableScopes={availableScopes}
         isPermissionSelected={isPermissionSelected}
         togglePermission={togglePermission}

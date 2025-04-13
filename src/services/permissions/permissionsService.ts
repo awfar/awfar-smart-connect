@@ -1,124 +1,145 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { PermissionDefinition, PermissionAction, PermissionScope, ModulePermission } from "./permissionTypes";
+import { PermissionDefinition, PermissionLevel, PermissionScope, ObjectPermission } from "./permissionTypes";
 
 // Helper function to map database permission to PermissionDefinition
 const mapDbPermissionToDefinition = (permission: any): PermissionDefinition => {
-  // Extract module, action, scope from the permission name (e.g., "leads_read_own")
+  // Extract object, level, scope from the permission name (e.g., "deals_read-only_own")
   const nameParts = permission.name?.split('_') || [];
-  const action = nameParts.length > 1 ? nameParts[1] as PermissionAction : 'read';
+  const level = nameParts.length > 1 ? nameParts[1] as PermissionLevel : 'read-only';
   const scope = nameParts.length > 2 ? nameParts[2] as PermissionScope : 'own';
-  let module = nameParts.length > 0 ? nameParts[0] : '';
+  let object = nameParts.length > 0 ? nameParts[0] : '';
   
-  // If module/action/scope are directly in the database record, use those
-  if (permission.module) module = permission.module;
+  // If object/level/scope are directly in the database record, use those
+  if (permission.object) object = permission.object;
 
   return {
     id: permission.id,
     name: permission.name,
     description: permission.description,
-    module: module,
-    action: permission.action || action,
+    object: permission.object || object,
+    level: permission.level || level,
     scope: permission.scope || scope
   };
 };
 
-// Define system modules and their available permissions
-const systemModules = [
+// Define system objects and their available permissions
+const systemObjects = [
   {
-    name: 'leads',
-    label: 'إدارة العملاء المحتملين',
+    name: 'contacts',
+    label: 'جهات الاتصال',
     permissions: [
-      { action: 'create', scopes: ['own', 'team', 'all'], description: 'إضافة عميل محتمل' },
-      { action: 'read', scopes: ['own', 'team', 'all'], description: 'عرض العملاء المحتملين' },
-      { action: 'update', scopes: ['own', 'team', 'all'], description: 'تعديل بيانات العميل المحتمل' },
-      { action: 'delete', scopes: ['own', 'team', 'all'], description: 'حذف عميل محتمل' },
-    ]
-  },
-  {
-    name: 'deals',
-    label: 'إدارة الصفقات',
-    permissions: [
-      { action: 'create', scopes: ['own', 'team', 'all'], description: 'إضافة صفقة' },
-      { action: 'read', scopes: ['own', 'team', 'all'], description: 'عرض الصفقات' },
-      { action: 'update', scopes: ['own', 'team', 'all'], description: 'تعديل بيانات الصفقة' },
-      { action: 'delete', scopes: ['own', 'team', 'all'], description: 'حذف صفقة' },
+      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض جهات الاتصال' },
+      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض وتعديل جهات الاتصال' },
+      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'], description: 'وصول كامل لجهات الاتصال' },
     ]
   },
   {
     name: 'companies',
-    label: 'إدارة الشركات',
+    label: 'الشركات',
     permissions: [
-      { action: 'create', scopes: ['own', 'team', 'all'], description: 'إضافة شركة' },
-      { action: 'read', scopes: ['own', 'team', 'all'], description: 'عرض الشركات' },
-      { action: 'update', scopes: ['own', 'team', 'all'], description: 'تعديل بيانات الشركة' },
-      { action: 'delete', scopes: ['own', 'team', 'all'], description: 'حذف شركة' },
+      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض الشركات' },
+      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض وتعديل الشركات' },
+      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'], description: 'وصول كامل للشركات' },
+    ]
+  },
+  {
+    name: 'deals',
+    label: 'الصفقات',
+    permissions: [
+      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض الصفقات' },
+      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض وتعديل الصفقات' },
+      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'], description: 'وصول كامل للصفقات' },
+    ]
+  },
+  {
+    name: 'tickets',
+    label: 'التذاكر',
+    permissions: [
+      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض التذاكر' },
+      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض وتعديل التذاكر' },
+      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'], description: 'وصول كامل للتذاكر' },
     ]
   },
   {
     name: 'tasks',
-    label: 'إدارة المهام',
+    label: 'المهام',
     permissions: [
-      { action: 'create', scopes: ['own', 'team', 'all'], description: 'إضافة مهمة' },
-      { action: 'read', scopes: ['own', 'team', 'all'], description: 'عرض المهام' },
-      { action: 'update', scopes: ['own', 'team', 'all'], description: 'تعديل بيانات المهمة' },
-      { action: 'delete', scopes: ['own', 'team', 'all'], description: 'حذف مهمة' },
+      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض المهام' },
+      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'], description: 'عرض وتعديل المهام' },
+      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'], description: 'وصول كامل للمهام' },
     ]
   },
   {
-    name: 'users',
-    label: 'إدارة المستخدمين',
+    name: 'emails',
+    label: 'البريد الإلكتروني',
     permissions: [
-      { action: 'create', scopes: ['all'], description: 'إضافة مستخدم' },
-      { action: 'read', scopes: ['all'], description: 'عرض المستخدمين' },
-      { action: 'update', scopes: ['all'], description: 'تعديل بيانات المستخدم' },
-      { action: 'delete', scopes: ['all'], description: 'حذف مستخدم' },
+      { level: 'read-only', scopes: ['own', 'team', 'all'], description: 'عرض رسائل البريد الإلكتروني' },
+      { level: 'read-edit', scopes: ['own', 'team', 'all'], description: 'عرض وتعديل رسائل البريد الإلكتروني' },
+      { level: 'full-access', scopes: ['own', 'team', 'all'], description: 'وصول كامل لرسائل البريد الإلكتروني' },
     ]
   },
   {
-    name: 'roles',
-    label: 'إدارة الأدوار',
+    name: 'meetings',
+    label: 'الاجتماعات',
     permissions: [
-      { action: 'create', scopes: ['all'], description: 'إضافة دور' },
-      { action: 'read', scopes: ['all'], description: 'عرض الأدوار' },
-      { action: 'update', scopes: ['all'], description: 'تعديل بيانات الدور' },
-      { action: 'delete', scopes: ['all'], description: 'حذف دور' },
+      { level: 'read-only', scopes: ['own', 'team', 'all'], description: 'عرض الاجتماعات' },
+      { level: 'read-edit', scopes: ['own', 'team', 'all'], description: 'عرض وتعديل الاجتماعات' },
+      { level: 'full-access', scopes: ['own', 'team', 'all'], description: 'وصول كامل للاجتماعات' },
     ]
   },
   {
-    name: 'reports',
-    label: 'التقارير',
+    name: 'calls',
+    label: 'المكالمات',
     permissions: [
-      { action: 'read', scopes: ['own', 'team', 'all'], description: 'عرض التقارير' },
+      { level: 'read-only', scopes: ['own', 'team', 'all'], description: 'عرض المكالمات' },
+      { level: 'read-edit', scopes: ['own', 'team', 'all'], description: 'عرض وتعديل المكالمات' },
+      { level: 'full-access', scopes: ['own', 'team', 'all'], description: 'وصول كامل للمكالمات' },
     ]
   },
   {
-    name: 'settings',
-    label: 'الإعدادات',
+    name: 'notes',
+    label: 'الملاحظات',
     permissions: [
-      { action: 'read', scopes: ['all'], description: 'عرض الإعدادات' },
-      { action: 'update', scopes: ['all'], description: 'تعديل الإعدادات' },
+      { level: 'read-only', scopes: ['own', 'team', 'all'], description: 'عرض الملاحظات' },
+      { level: 'read-edit', scopes: ['own', 'team', 'all'], description: 'عرض وتعديل الملاحظات' },
+      { level: 'full-access', scopes: ['own', 'team', 'all'], description: 'وصول كامل للملاحظات' },
     ]
   },
   {
     name: 'invoices',
     label: 'الفواتير',
     permissions: [
-      { action: 'create', scopes: ['own', 'team', 'all'], description: 'إنشاء فاتورة' },
-      { action: 'read', scopes: ['own', 'team', 'all'], description: 'عرض الفواتير' },
-      { action: 'update', scopes: ['own', 'team', 'all'], description: 'تعديل الفاتورة' },
-      { action: 'delete', scopes: ['own', 'team', 'all'], description: 'حذف فاتورة' },
+      { level: 'read-only', scopes: ['own', 'team', 'all'], description: 'عرض الفواتير' },
+      { level: 'read-edit', scopes: ['own', 'team', 'all'], description: 'عرض وتعديل الفواتير' },
+      { level: 'full-access', scopes: ['own', 'team', 'all'], description: 'وصول كامل للفواتير' },
+    ]
+  },
+  {
+    name: 'users',
+    label: 'المستخدمين',
+    permissions: [
+      { level: 'read-only', scopes: ['all'], description: 'عرض المستخدمين' },
+      { level: 'read-edit', scopes: ['all'], description: 'عرض وتعديل المستخدمين' },
+      { level: 'full-access', scopes: ['all'], description: 'وصول كامل للمستخدمين' },
+    ]
+  },
+  {
+    name: 'roles',
+    label: 'الأدوار',
+    permissions: [
+      { level: 'read-only', scopes: ['all'], description: 'عرض الأدوار' },
+      { level: 'read-edit', scopes: ['all'], description: 'عرض وتعديل الأدوار' },
+      { level: 'full-access', scopes: ['all'], description: 'وصول كامل للأدوار' },
     ]
   },
   {
     name: 'products',
     label: 'المنتجات',
     permissions: [
-      { action: 'create', scopes: ['all'], description: 'إضافة منتج' },
-      { action: 'read', scopes: ['all'], description: 'عرض المنتجات' },
-      { action: 'update', scopes: ['all'], description: 'تعديل بيانات المنتج' },
-      { action: 'delete', scopes: ['all'], description: 'حذف منتج' },
+      { level: 'read-only', scopes: ['all'], description: 'عرض المنتجات' },
+      { level: 'read-edit', scopes: ['all'], description: 'عرض وتعديل المنتجات' },
+      { level: 'full-access', scopes: ['all'], description: 'وصول كامل للمنتجات' },
     ]
   }
 ];
@@ -129,10 +150,10 @@ export const initializeSystemPermissions = async (): Promise<boolean> => {
     let permissionsToCreate = [];
     
     // Generate all system permissions
-    for (const module of systemModules) {
-      for (const perm of module.permissions) {
+    for (const object of systemObjects) {
+      for (const perm of object.permissions) {
         for (const scope of perm.scopes) {
-          const permissionName = `${module.name}_${perm.action}_${scope}`;
+          const permissionName = `${object.name}_${perm.level}_${scope}`;
           
           // Check if permission already exists
           const { data: existingPerm } = await supabase
@@ -144,9 +165,9 @@ export const initializeSystemPermissions = async (): Promise<boolean> => {
           if (!existingPerm) {
             permissionsToCreate.push({
               name: permissionName,
-              description: `${perm.description} (${scope === 'own' ? 'خاص بالمستخدم' : scope === 'team' ? 'خاص بالفريق' : 'جميع البيانات'})`,
-              module: module.name,
-              action: perm.action,
+              description: `${perm.description} (${scope === 'own' ? 'سجلاته' : scope === 'team' ? 'سجلات فريقه' : scope === 'unassigned' ? 'سجلات غير مسندة' : 'جميع السجلات'})`,
+              object: object.name,
+              level: perm.level,
               scope: scope
             });
           }
@@ -240,8 +261,8 @@ export const updatePermission = async (permission: Partial<PermissionDefinition>
       .update({
         name: permission.name,
         description: permission.description,
-        module: permission.module,
-        action: permission.action,
+        object: permission.object,
+        level: permission.level,
         scope: permission.scope
       })
       .eq('id', permission.id)
@@ -311,7 +332,8 @@ export const fetchPermissionsByModule = async (): Promise<Record<string, Permiss
   }
 };
 
-export const checkUserHasPermission = async (module: string, action: PermissionAction, scope?: PermissionScope): Promise<boolean> => {
+// Check if a user has a specific permission
+export const checkUserHasPermission = async (object: string, level: PermissionLevel, scope?: PermissionScope): Promise<boolean> => {
   try {
     // Get the current user
     const { data: { user } } = await supabase.auth.getUser();
@@ -327,7 +349,7 @@ export const checkUserHasPermission = async (module: string, action: PermissionA
     if (profileError || !userProfile?.role) return false;
     
     // Check if the user's role has the specified permission
-    const permissionName = `${module}_${action}_${scope || 'own'}`;
+    const permissionName = `${object}_${level}_${scope || 'own'}`;
     
     const { data, error } = await supabase
       .from('role_permissions')
@@ -347,10 +369,10 @@ export const checkUserHasPermission = async (module: string, action: PermissionA
   }
 };
 
-// Get all modules with their display names
-export const getSystemModules = () => {
-  return systemModules.map(module => ({
-    name: module.name,
-    label: module.label
+// Get all objects with their display names
+export const getSystemObjects = () => {
+  return systemObjects.map(object => ({
+    name: object.name,
+    label: object.label
   }));
 };

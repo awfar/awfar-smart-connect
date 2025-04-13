@@ -1,19 +1,19 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
-import { PermissionAction, PermissionScope } from "@/services/permissions/permissionTypes";
+import { PermissionLevel, PermissionScope } from "@/services/permissions/permissionTypes";
 
 interface PermissionScopeCheckboxesProps {
-  module: string;
-  action: PermissionAction;
+  object: string;
+  level: PermissionLevel;
   availableScopes: PermissionScope[];
-  isPermissionSelected: (module: string, action: PermissionAction, scope: PermissionScope) => boolean;
-  togglePermission: (module: string, action: PermissionAction, scope: PermissionScope | null) => void;
+  isPermissionSelected: (object: string, level: PermissionLevel, scope: PermissionScope) => boolean;
+  togglePermission: (object: string, level: PermissionLevel, scope: PermissionScope | null) => void;
   scopeLabels: Record<PermissionScope, string>;
 }
 
 const PermissionScopeCheckboxes = ({
-  module,
-  action,
+  object,
+  level,
   availableScopes,
   isPermissionSelected,
   togglePermission,
@@ -23,20 +23,21 @@ const PermissionScopeCheckboxes = ({
     <>
       <td className="text-center">
         <Checkbox 
-          checked={!isPermissionSelected(module, action, 'own') && 
-                  !isPermissionSelected(module, action, 'team') &&
-                  !isPermissionSelected(module, action, 'all')}
-          onCheckedChange={() => togglePermission(module, action, null)}
+          checked={!isPermissionSelected(object, level, 'own') && 
+                  !isPermissionSelected(object, level, 'team') &&
+                  !isPermissionSelected(object, level, 'all') &&
+                  !isPermissionSelected(object, level, 'unassigned')}
+          onCheckedChange={() => togglePermission(object, level, null)}
         />
       </td>
-      {(['own', 'team', 'all'] as PermissionScope[]).map(scope => {
+      {(['own', 'team', 'all', 'unassigned'] as PermissionScope[]).map(scope => {
         const isAvailable = availableScopes.includes(scope);
         return (
-          <td key={`${module}_${action}_${scope}`} className="text-center">
+          <td key={`${object}_${level}_${scope}`} className="text-center">
             {isAvailable ? (
               <Checkbox 
-                checked={isPermissionSelected(module, action, scope)}
-                onCheckedChange={(checked) => togglePermission(module, action, checked ? scope : null)}
+                checked={isPermissionSelected(object, level, scope)}
+                onCheckedChange={(checked) => togglePermission(object, level, checked ? scope : null)}
               />
             ) : (
               <span className="text-muted-foreground">-</span>

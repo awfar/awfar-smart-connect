@@ -1,24 +1,23 @@
 
-
-export type PermissionAction = 'create' | 'read' | 'update' | 'delete';
-export type PermissionScope = 'own' | 'team' | 'all';
+// Change from CRUD-based permissions to HubSpot-style permission levels
+export type PermissionLevel = 'read-only' | 'read-edit' | 'full-access';
+export type PermissionScope = 'own' | 'team' | 'all' | 'unassigned';
 
 export interface PermissionDefinition {
   id: string;
   name: string;
   description: string | null;
-  module: string;
-  action: PermissionAction;
+  object: string;  // Instead of module
+  level: PermissionLevel;
   scope: PermissionScope;
 }
 
-export interface ModulePermission {
-  module: string;
-  actions: {
-    create: PermissionScope | null;
-    read: PermissionScope | null;
-    update: PermissionScope | null;
-    delete: PermissionScope | null;
+export interface ObjectPermission {
+  object: string;
+  levels: {
+    'read-only': PermissionScope | null;
+    'read-edit': PermissionScope | null;
+    'full-access': PermissionScope | null;
   };
 }
 
@@ -26,5 +25,5 @@ export interface RoleWithPermissions {
   id: string;
   name: string;
   description: string | null;
-  permissions: ModulePermission[];
+  permissions: ObjectPermission[];
 }

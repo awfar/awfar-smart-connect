@@ -3,90 +3,89 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion } from "@/components/ui/accordion";
-import { PermissionDefinition, ModulePermission, PermissionScope, PermissionAction } from "@/services/permissions/permissionTypes";
-import { getSystemModules } from "@/services/permissions/permissionsService";
-import ModuleAccordionItem from "./ModuleAccordionItem";
+import { PermissionDefinition, ObjectPermission, PermissionScope, PermissionLevel } from "@/services/permissions/permissionTypes";
+import { getSystemObjects } from "@/services/permissions/permissionsService";
+import ObjectAccordionItem from "./ModuleAccordionItem";
 
 interface PermissionMatrixProps {
   permissions: PermissionDefinition[];
-  selectedPermissions: ModulePermission[];
-  onChange: (permissions: ModulePermission[]) => void;
+  selectedPermissions: ObjectPermission[];
+  onChange: (permissions: ObjectPermission[]) => void;
 }
 
 const PermissionMatrix = ({ permissions, selectedPermissions, onChange }: PermissionMatrixProps) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const systemModules = getSystemModules();
+  const systemObjects = getSystemObjects();
   
-  // Group permissions by module
-  const permissionsByModule: Record<string, PermissionDefinition[]> = {};
+  // Group permissions by object
+  const permissionsByObject: Record<string, PermissionDefinition[]> = {};
   permissions.forEach(permission => {
-    if (!permission.module) return;
+    if (!permission.object) return;
     
-    if (!permissionsByModule[permission.module]) {
-      permissionsByModule[permission.module] = [];
+    if (!permissionsByObject[permission.object]) {
+      permissionsByObject[permission.object] = [];
     }
     
-    permissionsByModule[permission.module].push(permission);
+    permissionsByObject[permission.object].push(permission);
   });
 
-  // Get display label for a module
-  const getModuleLabel = (moduleName: string) => {
-    const module = systemModules.find(m => m.name === moduleName);
-    return module ? module.label : moduleName;
+  // Get display label for an object
+  const getObjectLabel = (objectName: string) => {
+    const obj = systemObjects.find(o => o.name === objectName);
+    return obj ? obj.label : objectName;
   };
   
   // Check if a specific permission is selected
-  const isPermissionSelected = (module: string, action: PermissionAction, scope: PermissionScope) => {
-    const modulePermission = selectedPermissions.find(mp => mp.module === module);
-    if (!modulePermission) return false;
+  const isPermissionSelected = (object: string, level: PermissionLevel, scope: PermissionScope) => {
+    const objectPermission = selectedPermissions.find(op => op.object === object);
+    if (!objectPermission) return false;
     
-    return modulePermission.actions[action] === scope;
+    return objectPermission.levels[level] === scope;
   };
   
   // Toggle a permission selection
-  const togglePermission = (module: string, action: PermissionAction, scope: PermissionScope | null) => {
+  const togglePermission = (object: string, level: PermissionLevel, scope: PermissionScope | null) => {
     let updatedPermissions = [...selectedPermissions];
     
-    // Find if we already have this module in our selected permissions
-    const moduleIndex = updatedPermissions.findIndex(mp => mp.module === module);
+    // Find if we already have this object in our selected permissions
+    const objectIndex = updatedPermissions.findIndex(op => op.object === object);
     
-    if (moduleIndex === -1 && scope) {
-      // If module doesn't exist and we're setting a permission, add it
+    if (objectIndex === -1 && scope) {
+      // If object doesn't exist and we're setting a permission, add it
       updatedPermissions.push({
-        module,
-        actions: {
-          create: action === 'create' ? scope : null,
-          read: action === 'read' ? scope : null,
-          update: action === 'update' ? scope : null,
-          delete: action === 'delete' ? scope : null
+        object,
+        levels: {
+          'read-only': level === 'read-only' ? scope : null,
+          'read-edit': level === 'read-edit' ? scope : null,
+          'full-access': level === 'full-access' ? scope : null
         }
       });
-    } else if (moduleIndex !== -1) {
-      // Module exists, update the specific action
-      updatedPermissions[moduleIndex] = {
-        ...updatedPermissions[moduleIndex],
-        actions: {
-          ...updatedPermissions[moduleIndex].actions,
-          [action]: scope
+    } else if (objectIndex !== -1) {
+      // Object exists, update the specific level
+      updatedPermissions[objectIndex] = {
+        ...updatedPermissions[objectIndex],
+        levels: {
+          ...updatedPermissions[objectIndex].levels,
+          [level]: scope
         }
       };
       
-      // If all actions are null, remove the module entirely
-      const allActionsNull = Object.values(updatedPermissions[moduleIndex].actions).every(v => v === null);
-      if (allActionsNull) {
-        updatedPermissions = updatedPermissions.filter((_, index) => index !== moduleIndex);
+      // If all levels are null, remove the object entirely
+      const allLevelsNull = Object.values(updatedPermissions[objectIndex].levels).every(v => v === null);
+      if (allLevelsNull) {
+        updatedPermissions = updatedPermissions.filter((_, index) => index !== objectIndex);
       }
     }
     
     onChange(updatedPermissions);
   };
 
-  // Get available scopes for a specific module and action
-  const getAvailableScopesForAction = (module: string, action: PermissionAction): PermissionScope[] => {
+  // Get available scopes for a specific object and level
+  const getAvailableScopesForLevel = (object: string, level: PermissionLevel): PermissionScope[] => {
     const scopes: PermissionScope[] = [];
     
     permissions
-      .filter(p => p.module === module && p.action === action)
+      .filter(p => p.object === object && p.level === level)
       .forEach(p => {
         if (!scopes.includes(p.scope)) {
           scopes.push(p.scope);
@@ -96,18 +95,18 @@ const PermissionMatrix = ({ permissions, selectedPermissions, onChange }: Permis
     return scopes;
   };
 
-  // Filter modules based on search term
-  const filteredModules = Object.keys(permissionsByModule)
-    .filter(module => {
+  // Filter objects based on search term
+  const filteredObjects = Object.keys(permissionsByObject)
+    .filter(object => {
       if (!searchTerm) return true;
       
-      // Check if module name matches search
-      if (getModuleLabel(module).toLowerCase().includes(searchTerm.toLowerCase())) {
+      // Check if object name matches search
+      if (getObjectLabel(object).toLowerCase().includes(searchTerm.toLowerCase())) {
         return true;
       }
       
-      // Check if any permission in this module matches search
-      return permissionsByModule[module].some(p => 
+      // Check if any permission in this object matches search
+      return permissionsByObject[object].some(p => 
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (p.description && p.description.toLowerCase().includes(searchTerm.toLowerCase()))
       );
@@ -116,17 +115,17 @@ const PermissionMatrix = ({ permissions, selectedPermissions, onChange }: Permis
 
   // Scope display names
   const scopeLabels: Record<PermissionScope, string> = {
-    'own': 'خاصة بالمستخدم',
-    'team': 'فريق المستخدم',
-    'all': 'جميع البيانات'
+    'own': 'سجلاته',
+    'team': 'سجلات فريقه',
+    'all': 'جميع السجلات',
+    'unassigned': 'سجلات غير مسندة'
   };
   
-  // Action display names
-  const actionLabels: Record<PermissionAction, string> = {
-    'create': 'إنشاء',
-    'read': 'قراءة',
-    'update': 'تعديل',
-    'delete': 'حذف'
+  // Level display names
+  const levelLabels: Record<PermissionLevel, string> = {
+    'read-only': 'قراءة فقط',
+    'read-edit': 'قراءة وتعديل',
+    'full-access': 'وصول كامل'
   };
 
   return (
@@ -143,21 +142,21 @@ const PermissionMatrix = ({ permissions, selectedPermissions, onChange }: Permis
       <ScrollArea className="h-[500px] pr-4 border rounded-md">
         <div className="p-4 space-y-4">
           <Accordion type="multiple" className="w-full">
-            {filteredModules.map(module => (
-              <ModuleAccordionItem
-                key={module}
-                module={module}
-                moduleLabel={getModuleLabel(module)}
-                getAvailableScopesForAction={getAvailableScopesForAction}
+            {filteredObjects.map(object => (
+              <ObjectAccordionItem
+                key={object}
+                object={object}
+                objectLabel={getObjectLabel(object)}
+                getAvailableScopesForLevel={getAvailableScopesForLevel}
                 isPermissionSelected={isPermissionSelected}
                 togglePermission={togglePermission}
-                actionLabels={actionLabels}
+                levelLabels={levelLabels}
                 scopeLabels={scopeLabels}
               />
             ))}
           </Accordion>
           
-          {filteredModules.length === 0 && (
+          {filteredObjects.length === 0 && (
             <div className="py-8 text-center text-muted-foreground">
               لا توجد صلاحيات تطابق البحث
             </div>
