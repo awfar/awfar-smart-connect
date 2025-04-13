@@ -65,23 +65,32 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
           dueDate: new Date(invoice.dueDate),
           // معالجة العناصر بشكل صحيح وضمان أن تكون من نوع InvoiceItem
           items: Array.isArray(invoice.items) 
-            ? invoice.items.map((item) => {
-                // التأكد من أن جميع الخصائص المطلوبة موجودة
-                return {
-                  productId: item.productId || "",
-                  productName: item.productName || "",
-                  quantity: item.quantity || 1,
-                  unitPrice: item.unitPrice || 0,
-                  totalPrice: item.totalPrice || 0
-                } as InvoiceItem;
-              })
-            : [{ ...DEFAULT_INVOICE_ITEM }]
+            ? invoice.items.map((item): InvoiceItem => ({
+                productId: item.productId || "",
+                productName: item.productName || "",
+                quantity: item.quantity || 1,
+                unitPrice: item.unitPrice || 0,
+                totalPrice: item.totalPrice || 0
+              }))
+            : [{ 
+                productId: DEFAULT_INVOICE_ITEM.productId,
+                productName: DEFAULT_INVOICE_ITEM.productName,
+                quantity: DEFAULT_INVOICE_ITEM.quantity,
+                unitPrice: DEFAULT_INVOICE_ITEM.unitPrice,
+                totalPrice: DEFAULT_INVOICE_ITEM.totalPrice
+              }]
         }
       : {
           customerId: "",
           customerName: "",
-          // استخدام نسخة جديدة من العنصر الافتراضي
-          items: [{ ...DEFAULT_INVOICE_ITEM }],
+          // استخدام نسخة جديدة من العنصر الافتراضي مع التأكد من تعيين جميع الحقول المطلوبة
+          items: [{ 
+            productId: DEFAULT_INVOICE_ITEM.productId,
+            productName: DEFAULT_INVOICE_ITEM.productName, 
+            quantity: DEFAULT_INVOICE_ITEM.quantity, 
+            unitPrice: DEFAULT_INVOICE_ITEM.unitPrice,
+            totalPrice: DEFAULT_INVOICE_ITEM.totalPrice
+          }],
           status: "draft",
           issueDate: new Date(),
           dueDate: addDays(new Date(), 30),
