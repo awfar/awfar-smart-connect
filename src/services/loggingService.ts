@@ -86,42 +86,37 @@ export const getActivityAnalytics = async (): Promise<{
   entityCounts: { entityType: string; count: number }[];
 }> => {
   try {
-    // Get action counts
-    const { data: actionData, error: actionError } = await supabase
-      .from('activity_logs')
-      .select('action, count')
-      .group('action');
+    // For action counts, we'll perform individual queries since group() isn't available
+    const { data: actionCountsRaw, error: actionError } = await supabase
+      .rpc('count_activities_by_action');
     
     if (actionError) throw actionError;
     
-    // Get user counts
-    const { data: userData, error: userError } = await supabase
-      .from('activity_logs')
-      .select('user_id, count')
-      .group('user_id');
+    // For user counts
+    const { data: userCountsRaw, error: userError } = await supabase
+      .rpc('count_activities_by_user');
     
     if (userError) throw userError;
     
-    // Get entity counts
-    const { data: entityData, error: entityError } = await supabase
-      .from('activity_logs')
-      .select('entity_type, count')
-      .group('entity_type');
+    // For entity counts
+    const { data: entityCountsRaw, error: entityError } = await supabase
+      .rpc('count_activities_by_entity_type');
     
     if (entityError) throw entityError;
     
-    const actionCounts = actionData.map((item: any) => ({
+    // Format the data in a way our frontend expects
+    const actionCounts = (actionCountsRaw || []).map((item: any) => ({
       action: item.action,
       count: parseInt(item.count)
     }));
     
-    const userCounts = userData.map((item: any) => ({
+    const userCounts = (userCountsRaw || []).map((item: any) => ({
       userId: item.user_id,
-      userName: 'مستخدم', // Default name 
+      userName: 'مستخدم', // Default name
       count: parseInt(item.count)
     }));
     
-    const entityCounts = entityData.map((item: any) => ({
+    const entityCounts = (entityCountsRaw || []).map((item: any) => ({
       entityType: item.entity_type,
       count: parseInt(item.count)
     }));
