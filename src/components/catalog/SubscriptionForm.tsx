@@ -3,7 +3,7 @@ import React from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Subscription, createSubscription, updateSubscription } from "@/services/catalogService";
+import { Subscription, BillingCycle, createSubscription, updateSubscription } from "@/services/catalogService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -43,7 +43,7 @@ export default function SubscriptionForm({ subscription, onSuccess }: Subscripti
           name: "",
           description: "",
           price: 0,
-          billingCycle: "monthly",
+          billingCycle: "monthly" as BillingCycle,
           features: [""],
           isActive: true,
         },
@@ -67,11 +67,21 @@ export default function SubscriptionForm({ subscription, onSuccess }: Subscripti
       // Filter out empty features
       const filteredFeatures = data.features.filter((feature) => feature.trim() !== "");
       
+      // Ensure all required fields are present
+      const subscriptionData: Omit<Subscription, 'id'> = {
+        name: data.name,
+        description: data.description,
+        price: data.price,
+        billingCycle: data.billingCycle,
+        features: filteredFeatures,
+        isActive: data.isActive
+      };
+      
       if (subscription) {
-        await updateSubscription(subscription.id, { ...data, features: filteredFeatures });
+        await updateSubscription(subscription.id, subscriptionData);
         toast.success("تم تحديث الاشتراك بنجاح");
       } else {
-        await createSubscription({ ...data, features: filteredFeatures });
+        await createSubscription(subscriptionData);
         toast.success("تم إنشاء الاشتراك بنجاح");
       }
       

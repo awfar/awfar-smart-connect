@@ -64,11 +64,20 @@ export default function PackageForm({ package: pkg, onSuccess }: PackageFormProp
 
   const onSubmit = async (data: PackageFormValues) => {
     try {
+      // Ensure all required fields are present
+      const packageData: Omit<Package, 'id'> = {
+        name: data.name,
+        description: data.description,
+        price: data.price,
+        products: data.products,
+        isActive: data.isActive
+      };
+      
       if (pkg) {
-        await updatePackage(pkg.id, data);
+        await updatePackage(pkg.id, packageData);
         toast.success("تم تحديث الباقة بنجاح");
       } else {
-        await createPackage(data);
+        await createPackage(packageData);
         toast.success("تم إنشاء الباقة بنجاح");
       }
       

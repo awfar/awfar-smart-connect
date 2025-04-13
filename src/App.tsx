@@ -16,6 +16,14 @@ import ProductDetails from "./pages/ProductDetails";
 import SubscriptionManagement from "./pages/SubscriptionManagement";
 import PackageManagement from "./pages/PackageManagement";
 import InvoiceManagement from "./pages/InvoiceManagement";
+import NotFound from "./pages/NotFound";
+import LeadManagement from "./pages/LeadManagement";
+import DealsManagement from "./pages/DealsManagement";
+import TasksManagement from "./pages/TasksManagement";
+import ReportsManagement from "./pages/ReportsManagement";
+import UserManagement from "./pages/UserManagement";
+import PropertiesManagement from "./pages/PropertiesManagement";
+import CMS from "./pages/CMS";
 
 function App() {
   return (
@@ -24,6 +32,11 @@ function App() {
         createBrowserRouter([
           {
             path: "/",
+            element: <Dashboard />,
+            errorElement: <NotFound />,
+          },
+          {
+            path: "/dashboard",
             element: <Dashboard />,
           },
           {
@@ -35,8 +48,32 @@ function App() {
             element: <Register />,
           },
           {
+            path: "/leads",
+            element: <LeadManagement />,
+          },
+          {
+            path: "/deals",
+            element: <DealsManagement />,
+          },
+          {
             path: "/appointments",
             element: <AppointmentsManagement />,
+          },
+          {
+            path: "/tasks",
+            element: <TasksManagement />,
+          },
+          {
+            path: "/tickets",
+            element: <TicketsManagement />,
+          },
+          {
+            path: "/reports",
+            element: <ReportsManagement />,
+          },
+          {
+            path: "/users",
+            element: <UserManagement />,
           },
           {
             path: "/settings",
@@ -51,8 +88,8 @@ function App() {
             element: <CompaniesManagement />,
           },
           {
-            path: "/tickets",
-            element: <TicketsManagement />,
+            path: "/properties",
+            element: <PropertiesManagement />,
           },
           {
             path: "/company-properties",
@@ -85,6 +122,14 @@ function App() {
           {
             path: "/invoices",
             element: <InvoiceManagement />,
+          },
+          {
+            path: "/cms",
+            element: <CMS />,
+          },
+          {
+            path: "*",
+            element: <NotFound />,
           },
         ])
       }

@@ -41,12 +41,14 @@ export interface Category {
   parentId?: string;
 }
 
+export type BillingCycle = 'monthly' | 'quarterly' | 'annually';
+
 export interface Subscription {
   id: string;
   name: string;
   description: string;
   price: number;
-  billingCycle: 'monthly' | 'quarterly' | 'annually';
+  billingCycle: BillingCycle;
   features: string[];
   isActive: boolean;
 }
@@ -173,11 +175,11 @@ export const createProduct = async (product: Omit<Product, 'id' | 'createdAt' | 
 export const updateProduct = async (id: string, product: Partial<Omit<Product, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Product> => {
   const updateData: any = {};
   
-  if (product.name) updateData.name = product.name;
-  if (product.description) updateData.description = product.description;
+  if (product.name !== undefined) updateData.name = product.name;
+  if (product.description !== undefined) updateData.description = product.description;
   if (product.price !== undefined) updateData.price = product.price;
-  if (product.type) updateData.type = product.type;
-  if (product.sku) updateData.sku = product.sku;
+  if (product.type !== undefined) updateData.type = product.type;
+  if (product.sku !== undefined) updateData.sku = product.sku;
   if (product.isActive !== undefined) updateData.is_active = product.isActive;
   if (product.imageUrl !== undefined) updateData.image_url = product.imageUrl;
   if (product.inventory !== undefined) updateData.inventory = product.inventory;
@@ -258,8 +260,8 @@ export const getSubscriptions = async (): Promise<Subscription[]> => {
     name: item.name,
     description: item.description,
     price: item.price,
-    billingCycle: item.billing_cycle,
-    features: Array.isArray(item.features) ? item.features : [],
+    billingCycle: item.billing_cycle as BillingCycle,
+    features: Array.isArray(item.features) ? item.features.map(f => String(f)) : [],
     isActive: item.is_active
   }));
 };
@@ -283,8 +285,8 @@ export const getSubscriptionById = async (id: string): Promise<Subscription | nu
     name: data.name,
     description: data.description,
     price: data.price,
-    billingCycle: data.billing_cycle,
-    features: Array.isArray(data.features) ? data.features : [],
+    billingCycle: data.billing_cycle as BillingCycle,
+    features: Array.isArray(data.features) ? data.features.map(f => String(f)) : [],
     isActive: data.is_active
   };
 };
@@ -310,8 +312,8 @@ export const createSubscription = async (subscription: Omit<Subscription, 'id'>)
     name: data.name,
     description: data.description,
     price: data.price,
-    billingCycle: data.billing_cycle,
-    features: Array.isArray(data.features) ? data.features : [],
+    billingCycle: data.billing_cycle as BillingCycle,
+    features: Array.isArray(data.features) ? data.features.map(f => String(f)) : [],
     isActive: data.is_active
   };
 };
@@ -319,11 +321,11 @@ export const createSubscription = async (subscription: Omit<Subscription, 'id'>)
 export const updateSubscription = async (id: string, subscription: Partial<Omit<Subscription, 'id'>>): Promise<Subscription> => {
   const updateData: any = {};
   
-  if (subscription.name) updateData.name = subscription.name;
-  if (subscription.description) updateData.description = subscription.description;
+  if (subscription.name !== undefined) updateData.name = subscription.name;
+  if (subscription.description !== undefined) updateData.description = subscription.description;
   if (subscription.price !== undefined) updateData.price = subscription.price;
-  if (subscription.billingCycle) updateData.billing_cycle = subscription.billingCycle;
-  if (subscription.features) updateData.features = subscription.features;
+  if (subscription.billingCycle !== undefined) updateData.billing_cycle = subscription.billingCycle;
+  if (subscription.features !== undefined) updateData.features = subscription.features;
   if (subscription.isActive !== undefined) updateData.is_active = subscription.isActive;
   
   const { data, error } = await supabase
@@ -340,8 +342,8 @@ export const updateSubscription = async (id: string, subscription: Partial<Omit<
     name: data.name,
     description: data.description,
     price: data.price,
-    billingCycle: data.billing_cycle,
-    features: Array.isArray(data.features) ? data.features : [],
+    billingCycle: data.billing_cycle as BillingCycle,
+    features: Array.isArray(data.features) ? data.features.map(f => String(f)) : [],
     isActive: data.is_active
   };
 };
@@ -359,7 +361,7 @@ export const getPackages = async (): Promise<Package[]> => {
     name: item.name,
     description: item.description,
     price: item.price,
-    products: Array.isArray(item.products) ? item.products : [],
+    products: Array.isArray(item.products) ? item.products.map(p => String(p)) : [],
     isActive: item.is_active
   }));
 };
@@ -383,7 +385,7 @@ export const getPackageById = async (id: string): Promise<Package | null> => {
     name: data.name,
     description: data.description,
     price: data.price,
-    products: Array.isArray(data.products) ? data.products : [],
+    products: Array.isArray(data.products) ? data.products.map(p => String(p)) : [],
     isActive: data.is_active
   };
 };
@@ -408,7 +410,7 @@ export const createPackage = async (pkg: Omit<Package, 'id'>): Promise<Package> 
     name: data.name,
     description: data.description,
     price: data.price,
-    products: Array.isArray(data.products) ? data.products : [],
+    products: Array.isArray(data.products) ? data.products.map(p => String(p)) : [],
     isActive: data.is_active
   };
 };
@@ -416,10 +418,10 @@ export const createPackage = async (pkg: Omit<Package, 'id'>): Promise<Package> 
 export const updatePackage = async (id: string, pkg: Partial<Omit<Package, 'id'>>): Promise<Package> => {
   const updateData: any = {};
   
-  if (pkg.name) updateData.name = pkg.name;
-  if (pkg.description) updateData.description = pkg.description;
+  if (pkg.name !== undefined) updateData.name = pkg.name;
+  if (pkg.description !== undefined) updateData.description = pkg.description;
   if (pkg.price !== undefined) updateData.price = pkg.price;
-  if (pkg.products) updateData.products = pkg.products;
+  if (pkg.products !== undefined) updateData.products = pkg.products;
   if (pkg.isActive !== undefined) updateData.is_active = pkg.isActive;
   
   const { data, error } = await supabase
@@ -436,7 +438,7 @@ export const updatePackage = async (id: string, pkg: Partial<Omit<Package, 'id'>
     name: data.name,
     description: data.description,
     price: data.price,
-    products: Array.isArray(data.products) ? data.products : [],
+    products: Array.isArray(data.products) ? data.products.map(p => String(p)) : [],
     isActive: data.is_active
   };
 };
