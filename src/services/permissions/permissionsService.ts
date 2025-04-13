@@ -1,0 +1,160 @@
+
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { PermissionDefinition, PermissionAction, PermissionScope, ModulePermission } from "./permissionTypes";
+
+export const fetchPermissions = async (): Promise<PermissionDefinition[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('permissions')
+      .select('*')
+      .order('name');
+    
+    if (error) throw error;
+    
+    return data || [];
+  } catch (error) {
+    console.error("خطأ في جلب الصلاحيات:", error);
+    toast.error("فشل في جلب قائمة الصلاحيات");
+    return [];
+  }
+};
+
+export const fetchPermissionById = async (id: string): Promise<PermissionDefinition | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('permissions')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) throw error;
+    
+    return data;
+  } catch (error) {
+    console.error("خطأ في جلب تفاصيل الصلاحية:", error);
+    toast.error("فشل في جلب تفاصيل الصلاحية");
+    return null;
+  }
+};
+
+export const createPermission = async (permission: Omit<PermissionDefinition, 'id'>): Promise<PermissionDefinition | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('permissions')
+      .insert([permission])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    toast.success("تم إضافة الصلاحية بنجاح");
+    return data;
+  } catch (error: any) {
+    console.error("خطأ في إضافة الصلاحية:", error);
+    
+    if (error.code === '23505') {
+      toast.error("اسم الصلاحية موجود بالفعل، يرجى اختيار اسم آخر");
+    } else {
+      toast.error(error.message || "فشل في إضافة الصلاحية");
+    }
+    
+    return null;
+  }
+};
+
+export const updatePermission = async (permission: Partial<PermissionDefinition> & { id: string }): Promise<PermissionDefinition | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('permissions')
+      .update({
+        name: permission.name,
+        description: permission.description,
+        module: permission.module,
+        action: permission.action,
+        scope: permission.scope
+      })
+      .eq('id', permission.id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    toast.success("تم تحديث الصلاحية بنجاح");
+    return data;
+  } catch (error: any) {
+    console.error("خطأ في تحديث الصلاحية:", error);
+    
+    if (error.code === '23505') {
+      toast.error("اسم الصلاحية موجود بالفعل، يرجى اختيار اسم آخر");
+    } else {
+      toast.error(error.message || "فشل في تحديث الصلاحية");
+    }
+    
+    return null;
+  }
+};
+
+export const deletePermission = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('permissions')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    
+    return true;
+  } catch (error) {
+    console.error("خطأ في حذف الصلاحية:", error);
+    throw error;
+  }
+};
+
+export const fetchPermissionsByModule = async (): Promise<Record<string, PermissionDefinition[]>> => {
+  try {
+    const { data, error } = await supabase
+      .from('permissions')
+      .select('*')
+      .order('name');
+    
+    if (error) throw error;
+    
+    const groupedPermissions: Record<string, PermissionDefinition[]> = {};
+    
+    (data || []).forEach(permission => {
+      if (!permission.module) return;
+      
+      if (!groupedPermissions[permission.module]) {
+        groupedPermissions[permission.module] = [];
+      }
+      
+      groupedPermissions[permission.module].push(permission);
+    });
+    
+    return groupedPermissions;
+  } catch (error) {
+    console.error("خطأ في جلب الصلاحيات حسب الوحدة:", error);
+    toast.error("فشل في جلب قائمة الصلاحيات");
+    return {};
+  }
+};
+
+export const checkUserHasPermission = async (module: string, action: PermissionAction, scope?: PermissionScope): Promise<boolean> => {
+  try {
+    const { data, error } = await supabase
+      .rpc('check_permission', { 
+        _module: module,
+        _action: action,
+        _scope: scope || 'own',
+        _resource_owner_id: null
+      });
+    
+    if (error) throw error;
+    
+    return !!data;
+  } catch (error) {
+    console.error("خطأ في التحقق من الصلاحية:", error);
+    return false;
+  }
+};

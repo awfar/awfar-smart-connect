@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -7,7 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { fetchRoles } from "@/services/rolesService";
-import RoleForm from "@/components/roles/RoleForm";
+import RoleFormEnhanced from "@/components/roles/RoleFormEnhanced";
 import RolesList from "@/components/roles/RolesList";
 import RolePermissions from "@/components/roles/RolePermissions";
 import MobileOptimizedContainer from "@/components/ui/mobile-optimized-container";
@@ -90,7 +90,7 @@ const RolesManagement = () => {
             <DialogTitle>{selectedRole ? "تعديل الدور" : "إضافة دور جديد"}</DialogTitle>
           </DialogHeader>
           <MobileOptimizedContainer>
-            <RoleForm 
+            <RoleFormEnhanced 
               roleId={selectedRole} 
               isEditing={!!selectedRole}
               onSave={selectedRole ? handleRoleUpdated : handleRoleAdded} 

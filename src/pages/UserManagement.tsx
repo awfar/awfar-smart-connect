@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -11,7 +10,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import UserManagementHeader from "@/components/users/management/UserManagementHeader";
 import UserManagementSearch from "@/components/users/management/UserManagementSearch";
 import UserManagementTabs from "@/components/users/management/UserManagementTabs";
-import UserForm from "@/components/users/UserForm";
+import UserFormEnhanced from "@/components/users/UserFormEnhanced";
 
 const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -102,7 +101,7 @@ const UserManagement = () => {
           <DialogHeader>
             <DialogTitle>إضافة مستخدم جديد</DialogTitle>
           </DialogHeader>
-          <UserForm onSave={handleUserAdded} />
+          <UserFormEnhanced onSave={handleUserAdded} />
         </DialogContent>
       </Dialog>
       
@@ -112,7 +111,7 @@ const UserManagement = () => {
             <SheetTitle>تفاصيل المستخدم</SheetTitle>
           </SheetHeader>
           {selectedUser && (
-            <UserForm 
+            <UserFormEnhanced 
               userId={selectedUser} 
               isEditing={true}
               onSave={handleUserUpdated}
