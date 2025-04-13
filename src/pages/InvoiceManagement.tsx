@@ -1,8 +1,7 @@
-
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { getInvoices, Invoice, getInvoiceById } from '@/services/catalogService';
+import { getInvoices, Invoice, getInvoiceById } from '@/services/catalog/invoiceService';
 import {
   Calendar as CalendarIcon,
   FileText,
@@ -115,7 +114,6 @@ const InvoiceManagement: React.FC = () => {
     queryClient.invalidateQueries({ queryKey: ['invoice', selectedInvoiceId] });
   };
 
-  // Calculate statistics for the dashboard
   const totalInvoices = invoices.length;
   const totalPaid = invoices
     .filter(inv => inv.status === 'paid')
@@ -316,7 +314,7 @@ const InvoiceManagement: React.FC = () => {
           <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
             {isLoadingInvoiceDetails ? (
               <div className="flex justify-center items-center h-60">
-                <div className="animate-pulse text-lg">جاري تحميل البيانات...</div>
+                <div className="animate-pulse text-lg">جاري تحميل البيان��ت...</div>
               </div>
             ) : selectedInvoice ? (
               <InvoiceDetails 
