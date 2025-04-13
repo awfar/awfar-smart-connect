@@ -1,4 +1,5 @@
 
+import { useEffect, useState } from "react";
 import {
   Table,
   TableBody,
@@ -9,102 +10,55 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, CheckCircle, Clock, Edit, MessageCircle, Tag, Trash2 } from "lucide-react";
+import { AlertCircle, CheckCircle, Edit, MessageCircle, Tag, Trash2, Loader2 } from "lucide-react";
+import { deleteTicket, fetchTickets, Ticket } from "@/services/ticketsService";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface TicketsListProps {
   view: "all" | "open" | "closed";
   filterPriority: string;
   filterCategory: string;
+  triggerRefresh?: number;
 }
 
-// Mock data for tickets
-const MOCK_TICKETS = [
-  { 
-    id: 1, 
-    title: "مشكلة في تسجيل الدخول", 
-    description: "لا يمكنني تسجيل الدخول إلى حسابي", 
-    clientName: "أحمد محمد", 
-    createdAt: new Date(2025, 3, 14), 
-    lastUpdated: new Date(2025, 3, 14), 
-    category: "خدمة العملاء", 
-    priority: "عالي", 
-    status: "مفتوح", 
-    assignedTo: "سارة علي",
-    comments: 3
-  },
-  { 
-    id: 2, 
-    title: "خطأ في الفاتورة", 
-    description: "تم احتساب مبلغ خاطئ في الفاتورة الأخيرة", 
-    clientName: "خالد أحمد", 
-    createdAt: new Date(2025, 3, 10), 
-    lastUpdated: new Date(2025, 3, 12), 
-    category: "المالية", 
-    priority: "متوسط", 
-    status: "مفتوح", 
-    assignedTo: "محمد علي",
-    comments: 5
-  },
-  { 
-    id: 3, 
-    title: "طلب استرداد", 
-    description: "أريد استرداد قيمة المنتج لأنه معيب", 
-    clientName: "فاطمة خالد", 
-    createdAt: new Date(2025, 3, 5), 
-    lastUpdated: new Date(2025, 3, 13), 
-    category: "المبيعات", 
-    priority: "منخفض", 
-    status: "مفتوح", 
-    assignedTo: "أحمد خالد",
-    comments: 8
-  },
-  { 
-    id: 4, 
-    title: "مشكلة في المنتج", 
-    description: "المنتج لا يعمل بشكل صحيح", 
-    clientName: "علي محمود", 
-    createdAt: new Date(2025, 3, 1), 
-    lastUpdated: new Date(2025, 3, 10), 
-    category: "الدعم الفني", 
-    priority: "عاجل", 
-    status: "مفتوح", 
-    assignedTo: "محمد سعيد",
-    comments: 12
-  },
-  { 
-    id: 5, 
-    title: "استفسار عن المنتج", 
-    description: "أريد معلومات إضافية عن المنتج الجديد", 
-    clientName: "سارة محمد", 
-    createdAt: new Date(2025, 2, 25), 
-    lastUpdated: new Date(2025, 2, 28), 
-    category: "المبيعات", 
-    priority: "منخفض", 
-    status: "مغلق", 
-    assignedTo: "خالد علي",
-    comments: 4
-  },
-];
+const TicketsList: React.FC<TicketsListProps> = ({ 
+  view, 
+  filterPriority, 
+  filterCategory,
+  triggerRefresh = 0 
+}) => {
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [ticketToDelete, setTicketToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const navigate = useNavigate();
+  
+  const { data: tickets = [], isLoading, isError, refetch } = useQuery({
+    queryKey: ['tickets', view, filterPriority, filterCategory, triggerRefresh],
+    queryFn: () => fetchTickets(
+      view, 
+      filterPriority !== 'all' ? filterPriority : undefined,
+      filterCategory !== 'all' ? filterCategory : undefined
+    ),
+  });
+  
+  useEffect(() => {
+    refetch();
+  }, [triggerRefresh, refetch]);
 
-const TicketsList: React.FC<TicketsListProps> = ({ view, filterPriority, filterCategory }) => {
-  const formatDate = (date: Date) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
     return date.toLocaleDateString('ar-SA');
   };
-
-  // Filter tickets based on view and filters
-  const filteredTickets = MOCK_TICKETS.filter(ticket => {
-    // Filter by view (status)
-    if (view === "open" && ticket.status !== "مفتوح") return false;
-    if (view === "closed" && ticket.status !== "مغلق") return false;
-    
-    // Filter by priority
-    if (filterPriority !== "all" && ticket.priority !== filterPriority) return false;
-    
-    // Filter by category
-    if (filterCategory !== "all" && ticket.category !== filterCategory) return false;
-    
-    return true;
-  });
 
   const getPriorityBadgeVariant = (priority: string) => {
     switch (priority) {
@@ -117,84 +71,168 @@ const TicketsList: React.FC<TicketsListProps> = ({ view, filterPriority, filterC
   };
 
   const getStatusIcon = (status: string) => {
-    return status === "مفتوح" ? 
+    return status === "open" ? 
       <AlertCircle className="h-4 w-4 text-orange-500" /> : 
       <CheckCircle className="h-4 w-4 text-green-500" />;
   };
 
-  const handleEdit = (ticketId: number) => {
-    console.log("Edit ticket", ticketId);
+  const getCategoryLabel = (categoryValue: string): string => {
+    switch (categoryValue) {
+      case "customer-service": return "خدمة العملاء";
+      case "technical-support": return "الدعم الفني";
+      case "sales": return "المبيعات";
+      case "finance": return "المالية";
+      case "other": return "أخرى";
+      default: return categoryValue;
+    }
   };
 
-  const handleDelete = (ticketId: number) => {
-    console.log("Delete ticket", ticketId);
+  const handleEdit = (ticketId: string) => {
+    // Navigate to edit page or open edit dialog
+    toast.info("سيتم تنفيذ تعديل التذكرة قريبًا");
   };
+
+  const confirmDelete = (ticketId: string) => {
+    setTicketToDelete(ticketId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (!ticketToDelete) return;
+    
+    setIsDeleting(true);
+    
+    try {
+      const success = await deleteTicket(ticketToDelete);
+      if (success) {
+        refetch();
+      }
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+      setTicketToDelete(null);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="w-full flex items-center justify-center py-10">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <span className="mr-2 text-lg">جاري تحميل البيانات...</span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-10 text-muted-foreground">
+        <AlertCircle className="h-10 w-10 text-destructive mx-auto mb-2" />
+        <p className="text-lg font-medium">حدث خطأ أثناء تحميل البيانات</p>
+        <Button onClick={() => refetch()} variant="outline" className="mt-2">
+          المحاولة مرة أخرى
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full overflow-auto">
-      {filteredTickets.length === 0 ? (
+      {tickets.length === 0 ? (
         <div className="text-center py-10 text-muted-foreground">
-          لا توجد تذاكر تطابق المعايير المحددة
+          <p className="text-lg font-medium mb-2">لا توجد تذاكر تطابق المعايير المحددة</p>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/tickets', { state: { createNew: true } })}
+            className="mt-2"
+          >
+            إنشاء تذكرة جديدة
+          </Button>
         </div>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>رقم التذكرة</TableHead>
-              <TableHead>العنوان</TableHead>
-              <TableHead>العميل</TableHead>
-              <TableHead>التاريخ</TableHead>
-              <TableHead>الفئة</TableHead>
-              <TableHead>الأولوية</TableHead>
-              <TableHead>الحالة</TableHead>
-              <TableHead className="text-center">التعليقات</TableHead>
-              <TableHead className="text-left">الإجراءات</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredTickets.map((ticket) => (
-              <TableRow key={ticket.id}>
-                <TableCell className="font-mono">#{ticket.id.toString().padStart(4, '0')}</TableCell>
-                <TableCell className="font-medium max-w-[200px] truncate">{ticket.title}</TableCell>
-                <TableCell>{ticket.clientName}</TableCell>
-                <TableCell>{formatDate(ticket.createdAt)}</TableCell>
-                <TableCell>
-                  <div className="flex items-center">
-                    <Tag className="ml-2 h-4 w-4 text-muted-foreground" />
-                    <span>{ticket.category}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={getPriorityBadgeVariant(ticket.priority)}>
-                    {ticket.priority}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center">
-                    {getStatusIcon(ticket.status)}
-                    <span className="mr-2">{ticket.status}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-center">
-                  <div className="flex items-center justify-center">
-                    <MessageCircle className="mr-1 h-4 w-4 text-muted-foreground" />
-                    <span>{ticket.comments}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex space-x-2 rtl:space-x-reverse">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(ticket.id)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(ticket.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
+        <>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>رقم التذكرة</TableHead>
+                <TableHead>العنوان</TableHead>
+                <TableHead>تاريخ الإنشاء</TableHead>
+                <TableHead>الفئة</TableHead>
+                <TableHead>الأولوية</TableHead>
+                <TableHead>الحالة</TableHead>
+                <TableHead className="text-center">التعليقات</TableHead>
+                <TableHead className="text-left">الإجراءات</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {tickets.map((ticket: Ticket) => (
+                <TableRow key={ticket.id}>
+                  <TableCell className="font-mono">#{ticket.id?.substring(0, 8)}</TableCell>
+                  <TableCell className="font-medium max-w-[200px] truncate">{ticket.subject}</TableCell>
+                  <TableCell>{formatDate(ticket.created_at)}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      <Tag className="ml-2 h-4 w-4 text-muted-foreground" />
+                      <span>{getCategoryLabel(ticket.category || '')}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getPriorityBadgeVariant(ticket.priority)}>
+                      {ticket.priority}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center">
+                      {getStatusIcon(ticket.status)}
+                      <span className="mr-2">{ticket.status === 'open' ? 'مفتوح' : 'مغلق'}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center">
+                      <MessageCircle className="mr-1 h-4 w-4 text-muted-foreground" />
+                      <span>0</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex space-x-2 rtl:space-x-reverse">
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(ticket.id!)}>
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" onClick={() => confirmDelete(ticket.id!)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          
+          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>تأكيد الحذف</DialogTitle>
+              </DialogHeader>
+              <p className="py-4">هل أنت متأكد من رغبتك في حذف هذه التذكرة؟ هذا الإجراء لا يمكن التراجع عنه.</p>
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>إلغاء</Button>
+                <Button 
+                  variant="destructive" 
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      جاري الحذف...
+                    </>
+                  ) : (
+                    "حذف"
+                  )}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
       )}
     </div>
   );

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
+import { createTicket, fetchClients, fetchStaff, Ticket } from "@/services/ticketsService";
+import { Loader2 } from "lucide-react";
 
 interface TicketFormProps {
   onCancel: () => void;
@@ -24,13 +27,69 @@ const TicketForm: React.FC<TicketFormProps> = ({ onCancel, onSave }) => {
   const [description, setDescription] = useState("");
   const [client, setClient] = useState("");
   const [category, setCategory] = useState("");
-  const [priority, setPriority] = useState("");
+  const [priority, setPriority] = useState<string>("");
   const [assignedTo, setAssignedTo] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
+  const [staff, setStaff] = useState<{ id: string; name: string }[]>([]);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    // Load clients and staff data when component mounts
+    const loadData = async () => {
+      const clientsData = await fetchClients();
+      const staffData = await fetchStaff();
+      setClients(clientsData);
+      setStaff(staffData);
+    };
+    
+    loadData();
+  }, []);
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave();
+    
+    if (!title || !description || !client || !category || !priority) {
+      toast.error("يرجى ملء جميع الحقول المطلوبة");
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      const ticketData: Omit<Ticket, 'id' | 'created_at' | 'updated_at'> = {
+        subject: title,
+        description,
+        status: 'open',
+        priority: priority as Ticket['priority'],
+        category,
+        client_id: client,
+        assigned_to: assignedTo || undefined
+      };
+      
+      const result = await createTicket(ticketData);
+      
+      if (result) {
+        onSave();
+      }
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const categories = [
+    { value: "customer-service", label: "خدمة العملاء" },
+    { value: "technical-support", label: "الدعم الفني" },
+    { value: "sales", label: "المبيعات" },
+    { value: "finance", label: "المالية" },
+    { value: "other", label: "أخرى" }
+  ];
+
+  const priorities = [
+    { value: "منخفض", label: "منخفض" },
+    { value: "متوسط", label: "متوسط" },
+    { value: "عالي", label: "عالي" },
+    { value: "عاجل", label: "عاجل" }
+  ];
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
@@ -70,11 +129,17 @@ const TicketForm: React.FC<TicketFormProps> = ({ onCancel, onSave }) => {
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>العملاء</SelectLabel>
-                  <SelectItem value="ahmed">أحمد محمد</SelectItem>
-                  <SelectItem value="khaled">خالد أحمد</SelectItem>
-                  <SelectItem value="fatima">فاطمة خالد</SelectItem>
-                  <SelectItem value="ali">علي محمود</SelectItem>
-                  <SelectItem value="sara">سارة محمد</SelectItem>
+                  {clients.length > 0 ? (
+                    clients.map((clientItem) => (
+                      <SelectItem key={clientItem.id} value={clientItem.id}>
+                        {clientItem.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-clients" disabled>
+                      لا يوجد عملاء
+                    </SelectItem>
+                  )}
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -89,11 +154,11 @@ const TicketForm: React.FC<TicketFormProps> = ({ onCancel, onSave }) => {
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>الفئات</SelectLabel>
-                  <SelectItem value="customer-service">خدمة العملاء</SelectItem>
-                  <SelectItem value="technical-support">الدعم الفني</SelectItem>
-                  <SelectItem value="sales">المبيعات</SelectItem>
-                  <SelectItem value="finance">المالية</SelectItem>
-                  <SelectItem value="other">أخرى</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -110,10 +175,11 @@ const TicketForm: React.FC<TicketFormProps> = ({ onCancel, onSave }) => {
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>مستوى الأولوية</SelectLabel>
-                  <SelectItem value="low">منخفض</SelectItem>
-                  <SelectItem value="medium">متوسط</SelectItem>
-                  <SelectItem value="high">عالي</SelectItem>
-                  <SelectItem value="urgent">عاجل</SelectItem>
+                  {priorities.map((pri) => (
+                    <SelectItem key={pri.value} value={pri.value}>
+                      {pri.label}
+                    </SelectItem>
+                  ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -128,11 +194,17 @@ const TicketForm: React.FC<TicketFormProps> = ({ onCancel, onSave }) => {
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>الموظفين</SelectLabel>
-                  <SelectItem value="sarah">سارة علي</SelectItem>
-                  <SelectItem value="mohammed">محمد علي</SelectItem>
-                  <SelectItem value="ahmed">أحمد خالد</SelectItem>
-                  <SelectItem value="mohammed2">محمد سعيد</SelectItem>
-                  <SelectItem value="khaled">خالد علي</SelectItem>
+                  {staff.length > 0 ? (
+                    staff.map((staffItem) => (
+                      <SelectItem key={staffItem.id} value={staffItem.id}>
+                        {staffItem.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-staff" disabled>
+                      لا يوجد موظفين
+                    </SelectItem>
+                  )}
                 </SelectGroup>
               </SelectContent>
             </Select>
@@ -153,7 +225,16 @@ const TicketForm: React.FC<TicketFormProps> = ({ onCancel, onSave }) => {
 
       <div className="flex justify-end gap-4">
         <Button variant="outline" onClick={onCancel} type="button">إلغاء</Button>
-        <Button type="submit">حفظ التذكرة</Button>
+        <Button type="submit" disabled={loading}>
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              جاري الحفظ...
+            </>
+          ) : (
+            "حفظ التذكرة"
+          )}
+        </Button>
       </div>
     </form>
   );
