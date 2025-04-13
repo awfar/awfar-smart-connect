@@ -16,19 +16,19 @@ export const fetchActivityAnalytics = async (): Promise<ActivityAnalyticsData> =
   try {
     // 1. Получаем аналитику по типам действий (create, update, delete, и т.д.)
     const { data: byTypeData, error: typeError } = await supabase
-      .rpc('count_activities_by_action');
+      .rpc('count_activities_by_action') as { data: { action: string, count: string }[], error: any };
     
     if (typeError) throw typeError;
 
     // 2. Получаем аналитику по пользователям
     const { data: userActivities, error: userError } = await supabase
-      .rpc('count_activities_by_user');
+      .rpc('count_activities_by_user') as { data: { user_id: string, first_name: string, last_name: string, count: string }[], error: any };
     
     if (userError) throw userError;
 
     // 3. Получаем аналитику по типам сущностей (leads, deals, и т.д.)
     const { data: entityData, error: entityError } = await supabase
-      .rpc('count_activities_by_entity_type');
+      .rpc('count_activities_by_entity_type') as { data: { entity_type: string, count: string }[], error: any };
     
     if (entityError) throw entityError;
 
