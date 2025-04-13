@@ -3,6 +3,27 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PermissionDefinition, PermissionAction, PermissionScope, ModulePermission } from "./permissionTypes";
 
+// Helper function to map database permission to PermissionDefinition
+const mapDbPermissionToDefinition = (permission: any): PermissionDefinition => {
+  // Extract module, action, scope from the permission name (e.g., "leads_read_own")
+  const nameParts = permission.name?.split('_') || [];
+  const action = nameParts.length > 1 ? nameParts[1] as PermissionAction : 'read';
+  const scope = nameParts.length > 2 ? nameParts[2] as PermissionScope : 'own';
+  let module = nameParts.length > 0 ? nameParts[0] : '';
+  
+  // If module/action/scope are directly in the database record, use those
+  if (permission.module) module = permission.module;
+
+  return {
+    id: permission.id,
+    name: permission.name,
+    description: permission.description,
+    module: module,
+    action: permission.action || action,
+    scope: permission.scope || scope
+  };
+};
+
 export const fetchPermissions = async (): Promise<PermissionDefinition[]> => {
   try {
     const { data, error } = await supabase
@@ -12,7 +33,7 @@ export const fetchPermissions = async (): Promise<PermissionDefinition[]> => {
     
     if (error) throw error;
     
-    return data || [];
+    return (data || []).map(mapDbPermissionToDefinition);
   } catch (error) {
     console.error("خطأ في جلب الصلاحيات:", error);
     toast.error("فشل في جلب قائمة الصلاحيات");
@@ -30,7 +51,7 @@ export const fetchPermissionById = async (id: string): Promise<PermissionDefinit
     
     if (error) throw error;
     
-    return data;
+    return data ? mapDbPermissionToDefinition(data) : null;
   } catch (error) {
     console.error("خطأ في جلب تفاصيل الصلاحية:", error);
     toast.error("فشل في جلب تفاصيل الصلاحية");
@@ -49,7 +70,7 @@ export const createPermission = async (permission: Omit<PermissionDefinition, 'i
     if (error) throw error;
     
     toast.success("تم إضافة الصلاحية بنجاح");
-    return data;
+    return data ? mapDbPermissionToDefinition(data) : null;
   } catch (error: any) {
     console.error("خطأ في إضافة الصلاحية:", error);
     
@@ -81,7 +102,7 @@ export const updatePermission = async (permission: Partial<PermissionDefinition>
     if (error) throw error;
     
     toast.success("تم تحديث الصلاحية بنجاح");
-    return data;
+    return data ? mapDbPermissionToDefinition(data) : null;
   } catch (error: any) {
     console.error("خطأ في تحديث الصلاحية:", error);
     
@@ -120,9 +141,10 @@ export const fetchPermissionsByModule = async (): Promise<Record<string, Permiss
     
     if (error) throw error;
     
+    const permissions = (data || []).map(mapDbPermissionToDefinition);
     const groupedPermissions: Record<string, PermissionDefinition[]> = {};
     
-    (data || []).forEach(permission => {
+    permissions.forEach(permission => {
       if (!permission.module) return;
       
       if (!groupedPermissions[permission.module]) {

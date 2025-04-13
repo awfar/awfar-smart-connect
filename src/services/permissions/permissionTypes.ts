@@ -1,4 +1,5 @@
 
+
 export type PermissionAction = 'create' | 'read' | 'update' | 'delete';
 export type PermissionScope = 'own' | 'team' | 'all';
 
