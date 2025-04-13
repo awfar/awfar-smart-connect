@@ -1,266 +1,270 @@
 
-import React, { useState } from 'react';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { Product, ProductType, createProduct } from '@/services/catalogService';
-import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormControl,
-  FormDescription,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Switch } from '@/components/ui/switch';
-import { toast } from 'sonner';
+import React from "react";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { 
+  Product,
+  ProductType,
+  productTypeLabels,
+  createProduct,
+  updateProduct,
+  getCategories
+} from "@/services/catalogService";
+import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 
 const productSchema = z.object({
-  name: z.string().min(3, { message: 'اسم المنتج يجب أن يكون على الأقل 3 أحرف' }),
-  description: z.string().min(10, { message: 'وصف المنتج يجب أن يكون على الأقل 10 أحرف' }),
-  price: z.coerce.number().min(0, { message: 'يجب أن يكون السعر 0 أو أكثر' }),
-  type: z.enum(['physical', 'digital', 'service', 'subscription']),
-  sku: z.string().min(3, { message: 'رمز المنتج يجب أن يكون على الأقل 3 أحرف' }),
+  name: z.string().min(1, { message: "الإسم مطلوب" }),
+  description: z.string().min(1, { message: "الوصف مطلوب" }),
+  price: z.coerce.number().positive({ message: "السعر يجب أن يكون رقماً موجباً" }),
+  type: z.enum(["physical", "digital", "service", "subscription"], {
+    required_error: "نوع المنتج مطلوب",
+  }),
+  sku: z.string().min(1, { message: "رمز المنتج مطلوب" }),
   isActive: z.boolean().default(true),
   imageUrl: z.string().optional(),
-  inventory: z.coerce.number().min(0).optional(),
+  inventory: z.coerce.number().optional(),
+  categoryId: z.string().optional(),
 });
 
-type ProductFormData = z.infer<typeof productSchema>;
+type ProductFormValues = z.infer<typeof productSchema>;
 
 interface ProductFormProps {
-  onSuccess?: () => void;
+  product?: Product;
+  onSuccess: () => void;
 }
 
-const ProductForm: React.FC<ProductFormProps> = ({ onSuccess }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export default function ProductForm({ product, onSuccess }: ProductFormProps) {
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: getCategories
+  });
   
-  const form = useForm<ProductFormData>({
+  const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-      price: 0,
-      type: 'physical',
-      sku: '',
-      isActive: true,
-      imageUrl: '',
-    },
+    defaultValues: product
+      ? {
+          ...product,
+        }
+      : {
+          name: "",
+          description: "",
+          price: 0,
+          type: "physical",
+          sku: "",
+          isActive: true,
+          inventory: 0,
+          imageUrl: "",
+          categoryId: "",
+        },
   });
 
-  const showInventory = form.watch('type') === 'physical';
+  const productType = form.watch("type");
 
-  const onSubmit = async (data: ProductFormData) => {
+  const onSubmit = async (data: ProductFormValues) => {
     try {
-      setIsSubmitting(true);
-      
-      // Ensure we have all required fields before submission
-      const productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'> = {
-        name: data.name,
-        description: data.description,
-        price: data.price,
-        type: data.type as ProductType,
-        sku: data.sku,
-        isActive: data.isActive,
-      };
-      
-      // Add optional fields if they exist
-      if (data.imageUrl) productData.imageUrl = data.imageUrl;
-      if (showInventory && data.inventory !== undefined) productData.inventory = data.inventory;
-      
-      await createProduct(productData);
-      
-      toast.success('تم إنشاء المنتج بنجاح');
-      
-      if (onSuccess) {
-        onSuccess();
+      if (product) {
+        await updateProduct(product.id, data);
+        toast.success("تم تحديث المنتج بنجاح");
+      } else {
+        await createProduct(data);
+        toast.success("تم إنشاء المنتج بنجاح");
       }
+      
+      onSuccess();
     } catch (error) {
-      console.error('Error creating product:', error);
-      toast.error('حدث خطأ أثناء إنشاء المنتج');
-    } finally {
-      setIsSubmitting(false);
+      console.error("Error saving product:", error);
+      toast.error("حدث خطأ أثناء حفظ المنتج");
     }
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>اسم المنتج</FormLabel>
-              <FormControl>
-                <Input placeholder="أدخل اسم المنتج" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>وصف المنتج</FormLabel>
-              <FormControl>
-                <Textarea placeholder="أدخل وصفاً للمنتج" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>السعر (ر.س)</FormLabel>
-                <FormControl>
-                  <Input type="number" min="0" step="0.01" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="sku"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>رمز المنتج (SKU)</FormLabel>
-                <FormControl>
-                  <Input placeholder="PRD-001" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-        
-        <FormField
-          control={form.control}
-          name="type"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>نوع المنتج</FormLabel>
-              <FormControl>
-                <RadioGroup 
-                  className="grid grid-cols-2 gap-4"
-                  value={field.value} 
-                  onValueChange={field.onChange}
-                >
-                  <FormItem className="flex items-center space-x-3 space-y-0 rtl:space-x-reverse">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 gap-6">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>الإسم</FormLabel>
                     <FormControl>
-                      <RadioGroupItem value="physical" />
+                      <Input {...field} placeholder="أدخل إسم المنتج" />
                     </FormControl>
-                    <FormLabel className="font-normal cursor-pointer">منتج مادي</FormLabel>
+                    <FormMessage />
                   </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0 rtl:space-x-reverse">
-                    <FormControl>
-                      <RadioGroupItem value="digital" />
-                    </FormControl>
-                    <FormLabel className="font-normal cursor-pointer">منتج رقمي</FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0 rtl:space-x-reverse">
-                    <FormControl>
-                      <RadioGroupItem value="service" />
-                    </FormControl>
-                    <FormLabel className="font-normal cursor-pointer">خدمة</FormLabel>
-                  </FormItem>
-                  <FormItem className="flex items-center space-x-3 space-y-0 rtl:space-x-reverse">
-                    <FormControl>
-                      <RadioGroupItem value="subscription" />
-                    </FormControl>
-                    <FormLabel className="font-normal cursor-pointer">اشتراك</FormLabel>
-                  </FormItem>
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        {showInventory && (
-          <FormField
-            control={form.control}
-            name="inventory"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>المخزون</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    min="0" 
-                    step="1" 
-                    {...field} 
-                    value={field.value || 0}
-                    onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                  />
-                </FormControl>
-                <FormDescription>
-                  عدد الوحدات المتوفرة في المخزون
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-        
-        <FormField
-          control={form.control}
-          name="imageUrl"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>رابط الصورة (اختياري)</FormLabel>
-              <FormControl>
-                <Input placeholder="أدخل رابط صورة المنتج" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="isActive"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">تفعيل المنتج</FormLabel>
-                <FormDescription>
-                  سيظهر المنتج في الكتالوج إذا كان مفعلاً
-                </FormDescription>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
+                )}
+              />
 
-        <div className="flex justify-end gap-2 pt-4">
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'جاري الإنشاء...' : 'إنشاء المنتج'}
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>الوصف</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} placeholder="أدخل وصف المنتج" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>السعر</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="0" step="0.01" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="sku"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>رمز المنتج (SKU)</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="أدخل رمز المنتج" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>نوع المنتج</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="اختر نوع المنتج" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {(Object.keys(productTypeLabels) as ProductType[]).map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {productTypeLabels[type]}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="categoryId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>التصنيف</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="اختر تصنيف المنتج" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="">بدون تصنيف</SelectItem>
+                          {categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {productType === "physical" && (
+                <FormField
+                  control={form.control}
+                  name="inventory"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>المخزون</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="0" step="1" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              <FormField
+                control={form.control}
+                name="imageUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>رابط الصورة</FormLabel>
+                    <FormControl>
+                      <Input {...field} placeholder="أدخل رابط صورة المنتج" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="isActive"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between gap-2">
+                    <FormLabel>نشط</FormLabel>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={onSuccess}>
+            إلغاء
           </Button>
+          <Button type="submit">{product ? "تحديث" : "إنشاء"} المنتج</Button>
         </div>
       </form>
     </Form>
   );
-};
-
-export default ProductForm;
+}

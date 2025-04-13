@@ -1,9 +1,14 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { getProductById, productTypeIconMap, productTypeLabels } from '@/services/catalogService';
+import { 
+  getProductById, 
+  productTypeIconMap, 
+  productTypeLabels,
+  updateProduct
+} from '@/services/catalogService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
@@ -11,22 +16,65 @@ import {
   Edit, 
   Trash2, 
   Clock, 
-  Tag 
+  Tag,
+  AlertCircle
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import ProductForm from '@/components/catalog/ProductForm';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from 'sonner';
 
 const ProductDetails: React.FC = () => {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   
   const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', productId],
     queryFn: () => getProductById(productId || ''),
     enabled: !!productId
   });
+
+  const handleProductUpdate = () => {
+    setShowEditDialog(false);
+    queryClient.invalidateQueries({ queryKey: ['product', productId] });
+    queryClient.invalidateQueries({ queryKey: ['products'] });
+    toast.success('تم تحديث المنتج بنجاح');
+  };
+
+  const handleDeleteProduct = async () => {
+    try {
+      if (product) {
+        await updateProduct(product.id, { isActive: false });
+        toast.success('تم إلغاء تنشيط المنتج بنجاح');
+        setShowDeleteDialog(false);
+        navigate('/catalog');
+      }
+    } catch (error) {
+      console.error('Error deactivating product:', error);
+      toast.error('حدث خطأ أثناء إلغاء تنشيط المنتج');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -47,6 +95,7 @@ const ProductDetails: React.FC = () => {
     return (
       <DashboardLayout>
         <div className="p-6 text-center">
+          <AlertCircle className="mx-auto h-12 w-12 text-red-600 mb-4" />
           <h2 className="text-2xl font-bold text-red-600">حدث خطأ</h2>
           <p className="mt-2 text-gray-600">لم يتم العثور على المنتج المطلوب</p>
           <Button 
@@ -78,11 +127,11 @@ const ProductDetails: React.FC = () => {
             <h1 className="text-2xl font-bold">تفاصيل المنتج</h1>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2" onClick={() => setShowEditDialog(true)}>
               <Edit className="h-4 w-4" />
               تعديل
             </Button>
-            <Button variant="destructive" className="gap-2">
+            <Button variant="destructive" className="gap-2" onClick={() => setShowDeleteDialog(true)}>
               <Trash2 className="h-4 w-4" />
               حذف
             </Button>
@@ -105,7 +154,7 @@ const ProductDetails: React.FC = () => {
               <h2 className="text-3xl font-bold mb-4">{product.name}</h2>
               
               <div className="flex items-center text-gray-500 text-sm mb-6">
-                <Clock className="h-4 w-4 mr-1" /> 
+                <Clock className="h-4 w-4 ml-1" /> 
                 <span>تم الإنشاء {timeAgo}</span>
               </div>
 
@@ -197,7 +246,7 @@ const ProductDetails: React.FC = () => {
                 
                 <div className="mt-4">
                   <Button variant="ghost" size="sm" className="text-primary">
-                    <Tag className="h-3 w-3 mr-1" />
+                    <Tag className="h-3 w-3 ml-1" />
                     إضافة تصنيف
                   </Button>
                 </div>
@@ -206,6 +255,37 @@ const ProductDetails: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Edit Product Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>تعديل المنتج</DialogTitle>
+          </DialogHeader>
+          <ProductForm 
+            product={product} 
+            onSuccess={handleProductUpdate} 
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>هل أنت متأكد من حذف هذا المنتج؟</AlertDialogTitle>
+            <AlertDialogDescription>
+              سيتم إلغاء تنشيط المنتج بدلاً من حذفه نهائياً. يمكنك إعادة تنشيطه لاحقاً.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteProduct} className="bg-destructive text-destructive-foreground">
+              نعم، قم بالحذف
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 };
