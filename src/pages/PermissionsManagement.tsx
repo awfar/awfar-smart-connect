@@ -1,11 +1,11 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { fetchPermissions } from "@/services/permissionsService";
+import { fetchPermissions } from "@/services/permissions/permissionsService";
 import PermissionForm from "@/components/permissions/PermissionForm";
 import PermissionsList from "@/components/permissions/PermissionsList";
 import MobileOptimizedContainer from "@/components/ui/mobile-optimized-container";

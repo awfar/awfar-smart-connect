@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { fetchRoleById, createRole, updateRole, updateRolePermissions } from "@/services/rolesService";
 import { fetchPermissions } from "@/services/permissions/permissionsService";
-import { ModulePermission, PermissionDefinition } from "@/services/permissions/permissionTypes";
+import { ObjectPermission, PermissionDefinition } from "@/services/permissions/permissionTypes";
 import { toast } from "sonner";
 import PermissionMatrix from "./PermissionMatrix";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,7 +21,7 @@ interface RoleFormEnhancedProps {
 const RoleFormEnhanced = ({ roleId, isEditing = false, onSave }: RoleFormEnhancedProps) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [selectedPermissions, setSelectedPermissions] = useState<ModulePermission[]>([]);
+  const [selectedPermissions, setSelectedPermissions] = useState<ObjectPermission[]>([]);
   const [activeTab, setActiveTab] = useState("details");
   const [loading, setLoading] = useState(false);
 
@@ -91,10 +92,10 @@ const RoleFormEnhanced = ({ roleId, isEditing = false, onSave }: RoleFormEnhance
   const getSelectedPermissionIds = (): string[] => {
     const permissionIds: string[] = [];
     
-    selectedPermissions.forEach(mp => {
-      Object.entries(mp.actions).forEach(([action, scope]) => {
+    selectedPermissions.forEach(op => {
+      Object.entries(op.levels).forEach(([level, scope]) => {
         if (scope) {
-          const permName = `${mp.module}_${action}_${scope}`;
+          const permName = `${op.object}_${level}_${scope}`;
           const permission = permissions.find(p => p.name === permName);
           if (permission) {
             permissionIds.push(permission.id);

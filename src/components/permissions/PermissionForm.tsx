@@ -7,8 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { fetchPermissionById, createPermission, updatePermission, getSystemModules } from "@/services/permissions/permissionsService";
-import { PermissionAction, PermissionScope } from "@/services/permissions/permissionTypes";
+import { fetchPermissionById, createPermission, updatePermission, getSystemObjects } from "@/services/permissions/permissionsService";
+import { PermissionLevel, PermissionScope } from "@/services/permissions/permissionTypes";
 
 interface PermissionFormProps {
   permissionId?: string | null;
@@ -19,12 +19,12 @@ interface PermissionFormProps {
 const PermissionForm = ({ permissionId, isEditing = false, onSave }: PermissionFormProps) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [module, setModule] = useState("");
-  const [action, setAction] = useState<PermissionAction>("read");
+  const [object, setObject] = useState("");
+  const [level, setLevel] = useState<PermissionLevel>("read-only");
   const [scope, setScope] = useState<PermissionScope>("own");
   const [loading, setLoading] = useState(false);
   
-  const modules = getSystemModules();
+  const objects = getSystemObjects();
   
   const { data: permission } = useQuery({
     queryKey: ['permission', permissionId],
@@ -36,15 +36,15 @@ const PermissionForm = ({ permissionId, isEditing = false, onSave }: PermissionF
     if (permission) {
       setName(permission.name || "");
       setDescription(permission.description || "");
-      setModule(permission.module || "");
-      setAction(permission.action || "read");
+      setObject(permission.object || "");
+      setLevel(permission.level || "read-only");
       setScope(permission.scope || "own");
     }
   }, [permission]);
 
   const generatePermissionName = () => {
-    if (module && action && scope) {
-      return `${module}_${action}_${scope}`;
+    if (object && level && scope) {
+      return `${object}_${level}_${scope}`;
     }
     return name;
   };
@@ -57,8 +57,8 @@ const PermissionForm = ({ permissionId, isEditing = false, onSave }: PermissionF
       const permissionData = {
         name: generatePermissionName(),
         description,
-        module,
-        action,
+        object,
+        level,
         scope
       };
       
@@ -85,17 +85,17 @@ const PermissionForm = ({ permissionId, isEditing = false, onSave }: PermissionF
     }
   };
 
-  const actions: { value: PermissionAction, label: string }[] = [
-    { value: "create", label: "إنشاء" },
-    { value: "read", label: "قراءة" },
-    { value: "update", label: "تعديل" },
-    { value: "delete", label: "حذف" }
+  const levels: { value: PermissionLevel, label: string }[] = [
+    { value: "read-only", label: "قراءة فقط" },
+    { value: "read-edit", label: "قراءة وتعديل" },
+    { value: "full-access", label: "وصول كامل" }
   ];
   
   const scopes: { value: PermissionScope, label: string }[] = [
-    { value: "own", label: "خاص بالمستخدم" },
-    { value: "team", label: "فريق المستخدم" },
-    { value: "all", label: "جميع البيانات" }
+    { value: "own", label: "سجلاته" },
+    { value: "team", label: "سجلات فريقه" },
+    { value: "all", label: "جميع السجلات" },
+    { value: "unassigned", label: "سجلات غير مسندة" }
   ];
 
   return (
@@ -103,15 +103,15 @@ const PermissionForm = ({ permissionId, isEditing = false, onSave }: PermissionF
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="permission-module">الوحدة</Label>
-            <Select value={module} onValueChange={setModule} required>
-              <SelectTrigger id="permission-module">
+            <Label htmlFor="permission-object">الوحدة</Label>
+            <Select value={object} onValueChange={setObject} required>
+              <SelectTrigger id="permission-object">
                 <SelectValue placeholder="اختر الوحدة" />
               </SelectTrigger>
               <SelectContent>
-                {modules.map((mod) => (
-                  <SelectItem key={mod.name} value={mod.name}>
-                    {mod.label}
+                {objects.map((obj) => (
+                  <SelectItem key={obj.name} value={obj.name}>
+                    {obj.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -119,15 +119,15 @@ const PermissionForm = ({ permissionId, isEditing = false, onSave }: PermissionF
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="permission-action">نوع الصلاحية</Label>
-            <Select value={action} onValueChange={(val) => setAction(val as PermissionAction)} required>
-              <SelectTrigger id="permission-action">
-                <SelectValue placeholder="اختر نوع الصلاحية" />
+            <Label htmlFor="permission-level">مستوى الصلاحية</Label>
+            <Select value={level} onValueChange={(val) => setLevel(val as PermissionLevel)} required>
+              <SelectTrigger id="permission-level">
+                <SelectValue placeholder="اختر مستوى الصلاحية" />
               </SelectTrigger>
               <SelectContent>
-                {actions.map((act) => (
-                  <SelectItem key={act.value} value={act.value}>
-                    {act.label}
+                {levels.map((lvl) => (
+                  <SelectItem key={lvl.value} value={lvl.value}>
+                    {lvl.label}
                   </SelectItem>
                 ))}
               </SelectContent>

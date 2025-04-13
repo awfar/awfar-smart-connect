@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PermissionDefinition, PermissionLevel, PermissionScope, ObjectPermission } from "./permissionTypes";
@@ -302,7 +303,7 @@ export const deletePermission = async (id: string): Promise<boolean> => {
   }
 };
 
-export const fetchPermissionsByModule = async (): Promise<Record<string, PermissionDefinition[]>> => {
+export const fetchPermissionsByObject = async (): Promise<Record<string, PermissionDefinition[]>> => {
   try {
     const { data, error } = await supabase
       .from('permissions')
@@ -315,13 +316,13 @@ export const fetchPermissionsByModule = async (): Promise<Record<string, Permiss
     const groupedPermissions: Record<string, PermissionDefinition[]> = {};
     
     permissions.forEach(permission => {
-      if (!permission.module) return;
+      if (!permission.object) return;
       
-      if (!groupedPermissions[permission.module]) {
-        groupedPermissions[permission.module] = [];
+      if (!groupedPermissions[permission.object]) {
+        groupedPermissions[permission.object] = [];
       }
       
-      groupedPermissions[permission.module].push(permission);
+      groupedPermissions[permission.object].push(permission);
     });
     
     return groupedPermissions;
