@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { checkUserHasPermission } from "@/services/permissions/permissionsService";
 import { PermissionAction, PermissionScope } from "@/services/permissions/permissionTypes";
@@ -31,7 +32,7 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
     fetchPermissions();
   }, []);
 
-  const hasPermission = async (module: string, action: PermissionAction, scope: PermissionScope = 'own') => {
+  const hasPermission = (module: string, action: PermissionAction, scope: PermissionScope = 'own') => {
     const key = `${module}.${action}.${scope}` as PermissionKey;
     
     // Check if we've already cached this permission check
@@ -39,7 +40,16 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
       return permissions[key];
     }
     
-    // Otherwise check with the server
+    // If permission not in cache, return false for synchronous call
+    // but trigger an async check that will update the cache
+    checkPermissionAsync(module, action, scope);
+    return false;
+  };
+  
+  const checkPermissionAsync = async (module: string, action: PermissionAction, scope: PermissionScope) => {
+    const key = `${module}.${action}.${scope}` as PermissionKey;
+    
+    // Check with the server
     try {
       const hasAccess = await checkUserHasPermission(module, action, scope);
       
@@ -48,11 +58,8 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
         ...prev,
         [key]: hasAccess
       }));
-      
-      return hasAccess;
     } catch (error) {
       console.error("Error checking permission:", error);
-      return false;
     }
   };
 

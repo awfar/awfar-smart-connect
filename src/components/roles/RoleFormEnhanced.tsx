@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -6,8 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { fetchRoleById, createRole, updateRole, updateRolePermissions } from "@/services/rolesService";
-import { fetchPermissions } from "@/services/permissionsService";
-import { ModulePermission } from "@/services/permissions/permissionTypes";
+import { fetchPermissions } from "@/services/permissions/permissionsService";
+import { ModulePermission, PermissionDefinition } from "@/services/permissions/permissionTypes";
 import { toast } from "sonner";
 import PermissionMatrix from "./PermissionMatrix";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -31,7 +30,7 @@ const RoleFormEnhanced = ({ roleId, isEditing = false, onSave }: RoleFormEnhance
     enabled: !!roleId && isEditing,
   });
 
-  const { data: permissions = [] } = useQuery({
+  const { data: permissions = [], isLoading: permissionsLoading } = useQuery({
     queryKey: ['permissions'],
     queryFn: fetchPermissions,
   });
