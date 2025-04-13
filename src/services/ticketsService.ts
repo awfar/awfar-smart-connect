@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -82,10 +81,8 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     
     console.log("Tickets fetched:", data);
     
-    // Use type assertion with unknown as intermediate step to avoid deep instantiation
-    const rawData = data as unknown;
-    const typedData = rawData as TicketFromDB[];
-    return typedData.map(mapDBTicketToTicket);
+    // Avoid type instantiation issues by using a simpler approach
+    return (data || []).map((ticket: any) => mapDBTicketToTicket(ticket as TicketFromDB));
   } catch (error) {
     console.error("خطأ في جلب التذاكر:", error);
     toast.error("فشل في جلب قائمة التذاكر");
