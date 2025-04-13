@@ -85,10 +85,11 @@ const Navbar = () => {
             </Button>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button - Moved to the right side */}
           <div className="flex md:hidden">
             <button
               onClick={toggleMenu}
+              type="button"
               aria-label="Toggle menu"
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-awfar-primary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-awfar-primary"
             >
@@ -102,11 +103,11 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Fixed positioning for better mobile experience */}
       <div
         className={cn(
-          "md:hidden bg-white absolute top-full w-full z-20 shadow-lg transform transition-transform duration-300 ease-in-out",
-          isOpen ? "translate-y-0" : "-translate-y-full"
+          "md:hidden bg-white absolute top-20 left-0 right-0 w-full z-20 shadow-lg transition-all duration-300 ease-in-out",
+          isOpen ? "block" : "hidden"
         )}
       >
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
@@ -121,6 +122,7 @@ const Navbar = () => {
             </Link>
           ))}
         </div>
+        {/* Mobile Auth Buttons - Inside the menu */}
         <div className="pt-4 pb-3 border-t border-gray-200">
           <div className="flex flex-col px-4 space-y-2">
             <Button asChild variant="outline" className="w-full">
