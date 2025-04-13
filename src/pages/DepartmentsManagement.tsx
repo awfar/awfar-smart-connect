@@ -16,7 +16,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Building2, Edit, MoreVertical, Trash2, Users } from "lucide-react";
-import { fetchDepartments, deleteDepartment, Department } from "@/services/departmentsService";
+import { fetchDepartments, deleteDepartment, Department, updateDepartment, createDepartment } from "@/services/departmentsService";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { 
   DropdownMenu, 
@@ -28,7 +28,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import MobileOptimizedContainer from "@/components/ui/mobile-optimized-container";
-import { supabase } from "@/integrations/supabase/client";
 
 interface DepartmentFormProps {
   department?: Department;
@@ -104,52 +103,6 @@ const DepartmentForm = ({ department, isEditing, onSave }: DepartmentFormProps) 
       </div>
     </form>
   );
-  
-  async function updateDepartment(department: Partial<Department> & { id: string }): Promise<Department | null> {
-    try {
-      const { data, error } = await supabase
-        .from('departments')
-        .update({
-          name: department.name,
-          description: department.description,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', department.id)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      toast.success("تم تحديث القسم بنجاح");
-      return data;
-    } catch (error) {
-      console.error("خطأ في تحديث القسم:", error);
-      toast.error("فشل في تحديث القسم");
-      return null;
-    }
-  }
-  
-  async function createDepartment(department: { name: string; description?: string }): Promise<Department | null> {
-    try {
-      const { data, error } = await supabase
-        .from('departments')
-        .insert([{
-          name: department.name,
-          description: department.description
-        }])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      toast.success("تم إنشاء القسم بنجاح");
-      return data;
-    } catch (error) {
-      console.error("خطأ في إنشاء القسم:", error);
-      toast.error("فشل في إنشاء القسم");
-      return null;
-    }
-  }
 };
 
 const DepartmentsManagement = () => {

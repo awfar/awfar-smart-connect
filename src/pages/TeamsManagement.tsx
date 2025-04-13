@@ -107,7 +107,7 @@ const TeamForm = ({ team, isEditing, onSave }: TeamFormProps) => {
               <SelectValue placeholder="اختر القسم" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">لا ينتمي لأي قسم</SelectItem>
+              <SelectItem value="none">لا ينتمي لأي قسم</SelectItem>
               {departments.map(department => (
                 <SelectItem key={department.id} value={department.id}>
                   {department.name}
@@ -124,7 +124,7 @@ const TeamForm = ({ team, isEditing, onSave }: TeamFormProps) => {
               <SelectValue placeholder="اختر مدير الفريق" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">بدون مدير</SelectItem>
+              <SelectItem value="none">بدون مدير</SelectItem>
               {managers.map(manager => (
                 <SelectItem key={manager.id} value={manager.id}>
                   {manager.first_name} {manager.last_name}
