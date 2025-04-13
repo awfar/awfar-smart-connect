@@ -51,6 +51,7 @@ const Navbar = () => {
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm rtl">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
+          {/* Logo */}
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0">
               <img 
@@ -61,6 +62,7 @@ const Navbar = () => {
             </Link>
           </div>
 
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4 rtl:space-x-reverse">
             {menuItems.map((item, index) => (
               <Link
@@ -73,6 +75,7 @@ const Navbar = () => {
             ))}
           </div>
 
+          {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center">
             <Button asChild variant="outline" className="mr-3">
               <Link to="/login">دخول</Link>
@@ -82,7 +85,8 @@ const Navbar = () => {
             </Button>
           </div>
 
-          <div className="md:hidden flex items-center">
+          {/* Mobile Menu Button */}
+          <div className="md:hidden">
             <button
               onClick={toggleMenu}
               aria-label="Toggle menu"
@@ -98,6 +102,7 @@ const Navbar = () => {
         </div>
       </div>
 
+      {/* Mobile Menu */}
       <div
         className={cn(
           "md:hidden bg-white absolute top-full w-full z-20 shadow-lg transform transition-transform duration-300 ease-in-out",
@@ -117,11 +122,11 @@ const Navbar = () => {
           ))}
         </div>
         <div className="pt-4 pb-3 border-t border-gray-200">
-          <div className="flex items-center px-4 space-x-2 rtl:space-x-reverse">
-            <Button asChild variant="outline" className="w-full mb-2">
+          <div className="flex flex-col px-4 space-y-2">
+            <Button asChild variant="outline" className="w-full">
               <Link to="/login" onClick={toggleMenu}>دخول</Link>
             </Button>
-            <Button asChild className="w-full mb-2">
+            <Button asChild className="w-full">
               <Link to="/register" onClick={toggleMenu}>تسجيل</Link>
             </Button>
           </div>
