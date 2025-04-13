@@ -4,8 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 export interface DashboardStats {
   totalLeads: number;
   newLeadsToday: number;
-  conversionRate: number;
+  conversionRate: string;
   totalRevenue: number;
+  // Add the missing properties
+  totalSales: string;
+  salesChange: string;
+  newLeads: string;
+  leadsChange: string;
+  conversionChange: string;
+  activeTickets: string;
+  ticketsChange: string;
 }
 
 export interface RecentActivity {
@@ -46,22 +54,47 @@ export const fetchDashboardStats = async (): Promise<DashboardStats> => {
     if (todayLeadsError) throw todayLeadsError;
 
     // For demo purposes, we'll calculate simulated values
-    const conversionRate = totalLeads > 0 ? Math.round((Math.random() * 30) + 10) : 0;
+    const conversionRate = totalLeads > 0 ? Math.round((Math.random() * 30) + 10) + '%' : '0%';
     const totalRevenue = totalLeads * Math.round((Math.random() * 1000) + 500);
+    
+    // Generate mock data for the additional stats fields
+    const totalSales = Math.round(totalRevenue).toLocaleString() + ' SAR';
+    const salesChange = '+' + Math.round(Math.random() * 15) + '%';
+    const newLeads = (newLeadsToday || Math.round(Math.random() * 20) + 5).toString();
+    const leadsChange = '+' + Math.round(Math.random() * 20) + '%';
+    const conversionChange = '+' + Math.round(Math.random() * 10) + '%';
+    const activeTickets = Math.round(Math.random() * 15 + 3).toString();
+    const ticketsChange = Math.random() > 0.5 ? '+' : '-' + Math.round(Math.random() * 15) + '%';
 
     return {
       totalLeads: totalLeads || 0,
       newLeadsToday: newLeadsToday || 0,
       conversionRate,
-      totalRevenue
+      totalRevenue,
+      // Add the additional fields
+      totalSales,
+      salesChange,
+      newLeads,
+      leadsChange,
+      conversionChange,
+      activeTickets,
+      ticketsChange
     };
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);
     return {
       totalLeads: 0,
       newLeadsToday: 0,
-      conversionRate: 0,
-      totalRevenue: 0
+      conversionRate: '0%',
+      totalRevenue: 0,
+      // Default values for the additional fields
+      totalSales: '0 SAR',
+      salesChange: '+0%',
+      newLeads: '0',
+      leadsChange: '+0%',
+      conversionChange: '+0%',
+      activeTickets: '0',
+      ticketsChange: '+0%'
     };
   }
 };
