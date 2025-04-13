@@ -64,7 +64,7 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
               quantity: 1,    
               unitPrice: 0,   
               totalPrice: 0   
-            }
+            } as InvoiceItem  // Explicitly cast as InvoiceItem to ensure type safety
           ],
           status: "draft",
           issueDate: new Date(),

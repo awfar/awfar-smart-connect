@@ -21,6 +21,7 @@ export function InvoiceItemForm({ calculateTotal }: InvoiceItemFormProps) {
 
   // Add a new item to the invoice with all required properties
   const addItem = () => {
+    // Create a new item with all required properties explicitly set
     const newItem: InvoiceItem = { 
       productId: "", 
       productName: "", 
