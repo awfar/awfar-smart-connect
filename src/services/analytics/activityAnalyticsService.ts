@@ -12,31 +12,49 @@ export interface ActivityAnalyticsData {
   byEntity: ActivityAnalytic[];
 }
 
+interface ActionCount {
+  action: string;
+  count: bigint | string;
+}
+
+interface UserCount {
+  user_id: string;
+  first_name: string | null;
+  last_name: string | null;
+  count: bigint | string;
+}
+
+interface EntityCount {
+  entity_type: string;
+  count: bigint | string;
+}
+
 export const fetchActivityAnalytics = async (): Promise<ActivityAnalyticsData> => {
   try {
     // 1. Получаем аналитику по типам действий (create, update, delete, и т.д.)
     const { data: byTypeData, error: typeError } = await supabase
-      .from('activity_logs')
-      .select('action, count(*)')
-      .groupBy('action');
+      .rpc('count_activities_by_action') as unknown as { 
+        data: ActionCount[] | null; 
+        error: any;
+      };
     
     if (typeError) throw typeError;
 
     // 2. Получаем аналитику по пользователям
     const { data: userActivities, error: userError } = await supabase
-      .from('activity_logs')
-      .select('user_id, profiles!inner(first_name, last_name), count(*)')
-      .groupBy('user_id, profiles.first_name, profiles.last_name')
-      .order('count', { ascending: false })
-      .limit(10);
+      .rpc('count_activities_by_user') as unknown as { 
+        data: UserCount[] | null; 
+        error: any;
+      };
     
     if (userError) throw userError;
 
     // 3. Получаем аналитику по типам сущностей (leads, deals, и т.д.)
     const { data: entityData, error: entityError } = await supabase
-      .from('activity_logs')
-      .select('entity_type, count(*)')
-      .groupBy('entity_type');
+      .rpc('count_activities_by_entity_type') as unknown as { 
+        data: EntityCount[] | null; 
+        error: any;
+      };
     
     if (entityError) throw entityError;
 
@@ -47,8 +65,8 @@ export const fetchActivityAnalytics = async (): Promise<ActivityAnalyticsData> =
     }));
 
     const byUser: ActivityAnalytic[] = (userActivities || []).map(item => {
-      const name = item.profiles?.first_name || item.profiles?.last_name 
-        ? `${item.profiles.first_name || ''} ${item.profiles.last_name || ''}`.trim() 
+      const name = item.first_name || item.last_name 
+        ? `${item.first_name || ''} ${item.last_name || ''}`.trim() 
         : 'مستخدم غير معروف';
       return {
         label: name || item.user_id,

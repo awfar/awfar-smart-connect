@@ -1172,6 +1172,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      count_activities_by_action: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          action: string
+          count: number
+        }[]
+      }
+      count_activities_by_entity_type: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          entity_type: string
+          count: number
+        }[]
+      }
+      count_activities_by_user: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          user_id: string
+          first_name: string
+          last_name: string
+          count: number
+        }[]
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
