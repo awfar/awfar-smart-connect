@@ -55,10 +55,13 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
           ...invoice,
           issueDate: new Date(invoice.issueDate),
           dueDate: new Date(invoice.dueDate),
+          // Ensure items is properly typed
+          items: invoice.items as InvoiceItem[],
         }
       : {
           customerId: "",
           customerName: "",
+          // Create properly typed invoice items
           items: [{ 
             productId: "", 
             productName: "", 
@@ -121,7 +124,7 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
       const invoiceData: Omit<Invoice, 'id'> = {
         customerId: data.customerId,
         customerName: data.customerName,
-        items: data.items,
+        items: data.items as InvoiceItem[], // Ensure proper typing
         totalAmount: calculateTotal(),
         status: data.status,
         dueDate: format(data.dueDate, 'yyyy-MM-dd'),

@@ -1,4 +1,3 @@
-
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
@@ -24,6 +23,8 @@ import ReportsManagement from "./pages/ReportsManagement";
 import UserManagement from "./pages/UserManagement";
 import PropertiesManagement from "./pages/PropertiesManagement";
 import CMS from "./pages/CMS";
+import Index from "./pages/Index";
+import EnhancedDashboard from "./pages/EnhancedDashboard";
 
 function App() {
   return (
@@ -32,7 +33,7 @@ function App() {
         createBrowserRouter([
           {
             path: "/",
-            element: <Dashboard />,
+            element: <Index />,
             errorElement: <NotFound />,
           },
           {
@@ -126,6 +127,10 @@ function App() {
           {
             path: "/cms",
             element: <CMS />,
+          },
+          {
+            path: "/enhanced-dashboard",
+            element: <EnhancedDashboard />,
           },
           {
             path: "*",
