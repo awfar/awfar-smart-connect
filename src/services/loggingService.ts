@@ -86,37 +86,47 @@ export const getActivityAnalytics = async (): Promise<{
   entityCounts: { entityType: string; count: number }[];
 }> => {
   try {
-    // For action counts, we'll perform individual queries since group() isn't available
-    const { data: actionCountsRaw, error: actionError } = await supabase
-      .rpc('count_activities_by_action');
+    // Instead of using RPC functions, we'll use direct queries with group by
+    // For action counts
+    const { data: actionCountsData, error: actionError } = await supabase
+      .from('activity_logs')
+      .select('action, count(*)')
+      .order('count', { ascending: false })
+      .throwOnError();
     
     if (actionError) throw actionError;
     
     // For user counts
-    const { data: userCountsRaw, error: userError } = await supabase
-      .rpc('count_activities_by_user');
+    const { data: userCountsData, error: userError } = await supabase
+      .from('activity_logs')
+      .select('user_id, count(*)')
+      .order('count', { ascending: false })
+      .throwOnError();
     
     if (userError) throw userError;
     
     // For entity counts
-    const { data: entityCountsRaw, error: entityError } = await supabase
-      .rpc('count_activities_by_entity_type');
+    const { data: entityCountsData, error: entityError } = await supabase
+      .from('activity_logs')
+      .select('entity_type, count(*)')
+      .order('count', { ascending: false })
+      .throwOnError();
     
     if (entityError) throw entityError;
     
     // Format the data in a way our frontend expects
-    const actionCounts = (actionCountsRaw || []).map((item: any) => ({
+    const actionCounts = (actionCountsData || []).map((item: any) => ({
       action: item.action,
       count: parseInt(item.count)
     }));
     
-    const userCounts = (userCountsRaw || []).map((item: any) => ({
+    const userCounts = (userCountsData || []).map((item: any) => ({
       userId: item.user_id,
       userName: 'مستخدم', // Default name
       count: parseInt(item.count)
     }));
     
-    const entityCounts = (entityCountsRaw || []).map((item: any) => ({
+    const entityCounts = (entityCountsData || []).map((item: any) => ({
       entityType: item.entity_type,
       count: parseInt(item.count)
     }));
