@@ -126,10 +126,10 @@ const DashboardNav = ({ mobileOpen = false, onClose }: DashboardNavProps) => {
   // For desktop view
   if (!isMobile) {
     return (
-      <div className="h-full w-64 border-l p-4 bg-white dark:bg-gray-900">
+      <div className="h-full w-64 border-l p-4 bg-awfar-primary text-white">
         <div className="flex justify-center mb-6 pt-2">
           <img 
-            src="/lovable-uploads/c404f91d-42bc-4601-8675-47a02888d011.png" 
+            src="/lovable-uploads/2469fa9e-f2ef-495c-b429-586ab2bf0574.png" 
             alt="Awfar Logo" 
             className="h-9" 
           />
@@ -142,8 +142,8 @@ const DashboardNav = ({ mobileOpen = false, onClose }: DashboardNavProps) => {
                 className={cn(
                   "w-full justify-start gap-2 text-right",
                   pathname === item.href
-                    ? "bg-awfar-primary text-white hover:bg-awfar-primary/90"
-                    : "hover:bg-transparent hover:underline"
+                    ? "bg-awfar-accent text-awfar-primary hover:bg-awfar-accent/90"
+                    : "text-white hover:bg-awfar-primary/50 hover:text-gray-200"
                 )}
               >
                 <item.icon className="h-4 w-4" />
@@ -159,12 +159,12 @@ const DashboardNav = ({ mobileOpen = false, onClose }: DashboardNavProps) => {
   // For mobile view
   return (
     <Sheet open={mobileOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="rtl p-0 w-[80%] sm:max-w-sm">
+      <SheetContent side="right" className="rtl p-0 w-[80%] sm:max-w-sm bg-awfar-primary text-white">
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="font-semibold">القائمة</h2>
+          <div className="flex items-center justify-between p-4 border-b border-gray-700">
+            <h2 className="font-semibold text-white">القائمة</h2>
             <SheetClose asChild>
-              <Button variant="ghost" size="icon" onClick={onClose}>
+              <Button variant="ghost" size="icon" onClick={onClose} className="text-white hover:bg-awfar-primary/50">
                 <X className="h-4 w-4" />
               </Button>
             </SheetClose>
@@ -172,7 +172,7 @@ const DashboardNav = ({ mobileOpen = false, onClose }: DashboardNavProps) => {
           
           <div className="flex justify-center my-4">
             <img 
-              src="/lovable-uploads/c404f91d-42bc-4601-8675-47a02888d011.png" 
+              src="/lovable-uploads/2469fa9e-f2ef-495c-b429-586ab2bf0574.png" 
               alt="Awfar Logo" 
               className="h-9" 
             />
@@ -188,8 +188,8 @@ const DashboardNav = ({ mobileOpen = false, onClose }: DashboardNavProps) => {
                       className={cn(
                         "w-full justify-start gap-2 text-right",
                         pathname === item.href
-                          ? "bg-awfar-primary text-white hover:bg-awfar-primary/90"
-                          : "hover:bg-transparent hover:underline"
+                          ? "bg-awfar-accent text-awfar-primary hover:bg-awfar-accent/90"
+                          : "text-white hover:bg-awfar-primary/50 hover:text-gray-200"
                       )}
                     >
                       <item.icon className="h-4 w-4" />

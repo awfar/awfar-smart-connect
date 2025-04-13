@@ -12,16 +12,16 @@ interface DashboardHeaderProps {
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuToggle }) => {
   return (
-    <header className="h-16 md:h-20 border-b flex items-center fixed top-0 w-full z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:static">
+    <header className="h-16 md:h-20 border-b flex items-center fixed top-0 w-full z-10 bg-awfar-primary backdrop-blur supports-[backdrop-filter]:bg-awfar-primary/90 lg:static">
       <div className="container mx-auto px-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuToggle}>
+          <Button variant="ghost" size="icon" className="lg:hidden text-white hover:bg-awfar-primary/80" onClick={onMenuToggle}>
             <Menu className="h-5 w-5" />
           </Button>
           
           <div className="mr-4 flex items-center">
             <img 
-              src="/lovable-uploads/c404f91d-42bc-4601-8675-47a02888d011.png" 
+              src="/lovable-uploads/2469fa9e-f2ef-495c-b429-586ab2bf0574.png" 
               alt="Awfar Logo" 
               className="h-9" 
             />
@@ -41,7 +41,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuToggle }) => {
           {/* System Status */}
           <SystemStatus />
           
-          <Button variant="ghost" size="icon" className="relative">
+          <Button variant="ghost" size="icon" className="relative text-white hover:bg-awfar-primary/80">
             <Bell className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[10px] font-medium text-white flex items-center justify-center">
               3

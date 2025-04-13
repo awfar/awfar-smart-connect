@@ -60,7 +60,7 @@ const Navbar = () => {
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
-    console.log("Menu toggled, isOpen:", !isOpen); // إضافة سجل للتتبع
+    console.log("Menu toggled, isOpen:", !isOpen);
   };
 
   // إغلاق القائمة عند النقر على أي عنصر فيها
@@ -69,14 +69,14 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm rtl">
+    <nav className="bg-awfar-primary border-b border-gray-800 sticky top-0 z-50 shadow-sm rtl">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
-          {/* Logo */}
+          {/* Logo with dark background */}
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center" onClick={closeMenu}>
               <img 
-                src="/lovable-uploads/c404f91d-42bc-4601-8675-47a02888d011.png" 
+                src="/lovable-uploads/2469fa9e-f2ef-495c-b429-586ab2bf0574.png" 
                 alt="Awfar Logo" 
                 className="h-10" 
               />
@@ -88,7 +88,7 @@ const Navbar = () => {
             onClick={toggleMenu}
             type="button"
             aria-label="Toggle menu"
-            className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-awfar-primary focus:outline-none focus:ring-2 focus:ring-inset focus:ring-awfar-primary z-50"
+            className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-white hover:bg-awfar-primary/80 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white z-50"
           >
             {isOpen ? (
               <X className="h-6 w-6" />
@@ -104,7 +104,7 @@ const Navbar = () => {
                 <Link
                   key={index}
                   to={item.path}
-                  className="text-gray-700 hover:text-awfar-primary px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  className="text-white hover:text-gray-200 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   {item.title}
                 </Link>
@@ -114,10 +114,10 @@ const Navbar = () => {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center">
-            <Button asChild variant="outline" className="mr-3">
+            <Button asChild variant="outline" className="mr-3 border-white text-white hover:bg-white hover:text-awfar-primary">
               <Link to="/login">دخول</Link>
             </Button>
-            <Button asChild>
+            <Button asChild className="bg-awfar-accent text-awfar-primary hover:bg-awfar-accent/90">
               <Link to="/register">تسجيل</Link>
             </Button>
           </div>
@@ -127,7 +127,7 @@ const Navbar = () => {
       {/* Mobile Menu - تم إعادة تصميمها لتكون أكثر وضوحاً */}
       <div
         className={cn(
-          "md:hidden fixed inset-0 bg-white z-40 transition-opacity duration-300 ease-in-out",
+          "md:hidden fixed inset-0 bg-awfar-primary z-40 transition-opacity duration-300 ease-in-out",
           isOpen 
             ? "opacity-100 pointer-events-auto" 
             : "opacity-0 pointer-events-none"
@@ -137,9 +137,9 @@ const Navbar = () => {
           {/* Logo داخل القائمة */}
           <div className="flex justify-center mb-8">
             <img 
-              src="/lovable-uploads/c404f91d-42bc-4601-8675-47a02888d011.png" 
+              src="/lovable-uploads/2469fa9e-f2ef-495c-b429-586ab2bf0574.png" 
               alt="Awfar Logo" 
-              className="h-10" 
+              className="h-12" 
             />
           </div>
           
@@ -150,7 +150,7 @@ const Navbar = () => {
                 key={index}
                 to={item.path}
                 onClick={closeMenu}
-                className="block text-center text-gray-700 hover:bg-gray-50 hover:text-awfar-primary px-3 py-3 rounded-md text-lg font-medium"
+                className="block text-center text-white hover:bg-awfar-primary/50 px-3 py-3 rounded-md text-lg font-medium"
               >
                 {item.title}
               </Link>
@@ -158,12 +158,12 @@ const Navbar = () => {
           </div>
           
           {/* أزرار تسجيل الدخول داخل القائمة المتحركة */}
-          <div className="mt-auto pt-6 border-t border-gray-200">
+          <div className="mt-auto pt-6 border-t border-gray-700">
             <div className="flex flex-col space-y-3">
-              <Button asChild variant="outline" className="w-full">
+              <Button asChild variant="outline" className="w-full border-white text-white hover:bg-white hover:text-awfar-primary">
                 <Link to="/login" onClick={closeMenu}>دخول</Link>
               </Button>
-              <Button asChild className="w-full">
+              <Button asChild className="w-full bg-awfar-accent text-awfar-primary hover:bg-awfar-accent/90">
                 <Link to="/register" onClick={closeMenu}>تسجيل</Link>
               </Button>
             </div>
