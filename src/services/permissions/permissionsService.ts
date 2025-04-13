@@ -24,6 +24,155 @@ const mapDbPermissionToDefinition = (permission: any): PermissionDefinition => {
   };
 };
 
+// Define system modules and their available permissions
+const systemModules = [
+  {
+    name: 'leads',
+    label: 'إدارة العملاء المحتملين',
+    permissions: [
+      { action: 'create', scopes: ['own', 'team', 'all'], description: 'إضافة عميل محتمل' },
+      { action: 'read', scopes: ['own', 'team', 'all'], description: 'عرض العملاء المحتملين' },
+      { action: 'update', scopes: ['own', 'team', 'all'], description: 'تعديل بيانات العميل المحتمل' },
+      { action: 'delete', scopes: ['own', 'team', 'all'], description: 'حذف عميل محتمل' },
+    ]
+  },
+  {
+    name: 'deals',
+    label: 'إدارة الصفقات',
+    permissions: [
+      { action: 'create', scopes: ['own', 'team', 'all'], description: 'إضافة صفقة' },
+      { action: 'read', scopes: ['own', 'team', 'all'], description: 'عرض الصفقات' },
+      { action: 'update', scopes: ['own', 'team', 'all'], description: 'تعديل بيانات الصفقة' },
+      { action: 'delete', scopes: ['own', 'team', 'all'], description: 'حذف صفقة' },
+    ]
+  },
+  {
+    name: 'companies',
+    label: 'إدارة الشركات',
+    permissions: [
+      { action: 'create', scopes: ['own', 'team', 'all'], description: 'إضافة شركة' },
+      { action: 'read', scopes: ['own', 'team', 'all'], description: 'عرض الشركات' },
+      { action: 'update', scopes: ['own', 'team', 'all'], description: 'تعديل بيانات الشركة' },
+      { action: 'delete', scopes: ['own', 'team', 'all'], description: 'حذف شركة' },
+    ]
+  },
+  {
+    name: 'tasks',
+    label: 'إدارة المهام',
+    permissions: [
+      { action: 'create', scopes: ['own', 'team', 'all'], description: 'إضافة مهمة' },
+      { action: 'read', scopes: ['own', 'team', 'all'], description: 'عرض المهام' },
+      { action: 'update', scopes: ['own', 'team', 'all'], description: 'تعديل بيانات المهمة' },
+      { action: 'delete', scopes: ['own', 'team', 'all'], description: 'حذف مهمة' },
+    ]
+  },
+  {
+    name: 'users',
+    label: 'إدارة المستخدمين',
+    permissions: [
+      { action: 'create', scopes: ['all'], description: 'إضافة مستخدم' },
+      { action: 'read', scopes: ['all'], description: 'عرض المستخدمين' },
+      { action: 'update', scopes: ['all'], description: 'تعديل بيانات المستخدم' },
+      { action: 'delete', scopes: ['all'], description: 'حذف مستخدم' },
+    ]
+  },
+  {
+    name: 'roles',
+    label: 'إدارة الأدوار',
+    permissions: [
+      { action: 'create', scopes: ['all'], description: 'إضافة دور' },
+      { action: 'read', scopes: ['all'], description: 'عرض الأدوار' },
+      { action: 'update', scopes: ['all'], description: 'تعديل بيانات الدور' },
+      { action: 'delete', scopes: ['all'], description: 'حذف دور' },
+    ]
+  },
+  {
+    name: 'reports',
+    label: 'التقارير',
+    permissions: [
+      { action: 'read', scopes: ['own', 'team', 'all'], description: 'عرض التقارير' },
+    ]
+  },
+  {
+    name: 'settings',
+    label: 'الإعدادات',
+    permissions: [
+      { action: 'read', scopes: ['all'], description: 'عرض الإعدادات' },
+      { action: 'update', scopes: ['all'], description: 'تعديل الإعدادات' },
+    ]
+  },
+  {
+    name: 'invoices',
+    label: 'الفواتير',
+    permissions: [
+      { action: 'create', scopes: ['own', 'team', 'all'], description: 'إنشاء فاتورة' },
+      { action: 'read', scopes: ['own', 'team', 'all'], description: 'عرض الفواتير' },
+      { action: 'update', scopes: ['own', 'team', 'all'], description: 'تعديل الفاتورة' },
+      { action: 'delete', scopes: ['own', 'team', 'all'], description: 'حذف فاتورة' },
+    ]
+  },
+  {
+    name: 'products',
+    label: 'المنتجات',
+    permissions: [
+      { action: 'create', scopes: ['all'], description: 'إضافة منتج' },
+      { action: 'read', scopes: ['all'], description: 'عرض المنتجات' },
+      { action: 'update', scopes: ['all'], description: 'تعديل بيانات المنتج' },
+      { action: 'delete', scopes: ['all'], description: 'حذف منتج' },
+    ]
+  }
+];
+
+// Function to initialize system permissions
+export const initializeSystemPermissions = async (): Promise<boolean> => {
+  try {
+    let permissionsToCreate = [];
+    
+    // Generate all system permissions
+    for (const module of systemModules) {
+      for (const perm of module.permissions) {
+        for (const scope of perm.scopes) {
+          const permissionName = `${module.name}_${perm.action}_${scope}`;
+          
+          // Check if permission already exists
+          const { data: existingPerm } = await supabase
+            .from('permissions')
+            .select('name')
+            .eq('name', permissionName)
+            .single();
+            
+          if (!existingPerm) {
+            permissionsToCreate.push({
+              name: permissionName,
+              description: `${perm.description} (${scope === 'own' ? 'خاص بالمستخدم' : scope === 'team' ? 'خاص بالفريق' : 'جميع البيانات'})`,
+              module: module.name,
+              action: perm.action,
+              scope: scope
+            });
+          }
+        }
+      }
+    }
+    
+    // Insert permissions in batches if needed
+    if (permissionsToCreate.length > 0) {
+      const { error } = await supabase
+        .from('permissions')
+        .insert(permissionsToCreate);
+      
+      if (error) throw error;
+      
+      console.log(`تم إضافة ${permissionsToCreate.length} صلاحية جديدة`);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("خطأ في تهيئة صلاحيات النظام:", error);
+    toast.error("فشل في تهيئة صلاحيات النظام");
+    return false;
+  }
+};
+
 export const fetchPermissions = async (): Promise<PermissionDefinition[]> => {
   try {
     const { data, error } = await supabase
@@ -196,4 +345,12 @@ export const checkUserHasPermission = async (module: string, action: PermissionA
     console.error("خطأ في التحقق من الصلاحية:", error);
     return false;
   }
+};
+
+// Get all modules with their display names
+export const getSystemModules = () => {
+  return systemModules.map(module => ({
+    name: module.name,
+    label: module.label
+  }));
 };

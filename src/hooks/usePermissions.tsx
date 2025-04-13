@@ -1,6 +1,6 @@
 
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
-import { checkUserHasPermission } from "@/services/permissions/permissionsService";
+import { checkUserHasPermission, initializeSystemPermissions } from "@/services/permissions/permissionsService";
 import { PermissionAction, PermissionScope } from "@/services/permissions/permissionTypes";
 
 type PermissionKey = `${string}.${PermissionAction}.${PermissionScope}`;
@@ -22,8 +22,8 @@ export const PermissionsProvider = ({ children }: { children: ReactNode }) => {
   const fetchPermissions = async () => {
     setIsLoading(true);
     
-    // We'll implement this in a way that checks permissions when needed
-    // instead of loading all at once to minimize initial load time
+    // Initialize system permissions if needed
+    await initializeSystemPermissions();
     
     setIsLoading(false);
   };
