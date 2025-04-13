@@ -23,6 +23,7 @@ const PermissionForm = ({ permissionId, isEditing = false, onSave }: PermissionF
   const [level, setLevel] = useState<PermissionLevel>("read-only");
   const [scope, setScope] = useState<PermissionScope>("own");
   const [loading, setLoading] = useState(false);
+  const [availableScopes, setAvailableScopes] = useState<PermissionScope[]>([]);
   
   const objects = getSystemObjects();
   
@@ -42,6 +43,22 @@ const PermissionForm = ({ permissionId, isEditing = false, onSave }: PermissionF
     }
   }, [permission]);
 
+  // Update available scopes when object or level changes
+  useEffect(() => {
+    if (object && level) {
+      const selectedObject = objects.find(obj => obj.name === object);
+      if (selectedObject) {
+        const permissionDef = selectedObject.permissions.find(p => p.level === level);
+        setAvailableScopes(permissionDef?.scopes || []);
+        
+        // Reset scope if it's not available
+        if (permissionDef && !permissionDef.scopes.includes(scope)) {
+          setScope(permissionDef.scopes[0] || 'own');
+        }
+      }
+    }
+  }, [object, level, objects]);
+
   const generatePermissionName = () => {
     if (object && level && scope) {
       return `${object}_${level}_${scope}`;
@@ -54,9 +71,11 @@ const PermissionForm = ({ permissionId, isEditing = false, onSave }: PermissionF
     setLoading(true);
     
     try {
+      const generatedName = generatePermissionName();
+      
       const permissionData = {
-        name: generatePermissionName(),
-        description,
+        name: generatedName,
+        description: description || generatedName,
         object,
         level,
         scope
@@ -138,16 +157,24 @@ const PermissionForm = ({ permissionId, isEditing = false, onSave }: PermissionF
           
           <div className="space-y-2">
             <Label htmlFor="permission-scope">نطاق الصلاحية</Label>
-            <Select value={scope} onValueChange={(val) => setScope(val as PermissionScope)} required>
+            <Select 
+              value={scope} 
+              onValueChange={(val) => setScope(val as PermissionScope)} 
+              required
+              disabled={availableScopes.length === 0}
+            >
               <SelectTrigger id="permission-scope">
                 <SelectValue placeholder="اختر نطاق الصلاحية" />
               </SelectTrigger>
               <SelectContent>
-                {scopes.map((sc) => (
-                  <SelectItem key={sc.value} value={sc.value}>
-                    {sc.label}
-                  </SelectItem>
-                ))}
+                {scopes
+                  .filter(s => availableScopes.includes(s.value))
+                  .map((sc) => (
+                    <SelectItem key={sc.value} value={sc.value}>
+                      {sc.label}
+                    </SelectItem>
+                  ))
+                }
               </SelectContent>
             </Select>
           </div>

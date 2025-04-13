@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Department } from "@/services/departmentsService";
+import { toast } from "sonner";
 
 interface DepartmentFormProps {
   department?: Department | null;
@@ -29,13 +30,15 @@ const DepartmentForm = ({ department, onSave, onCancel }: DepartmentFormProps) =
     setLoading(true);
     
     try {
+      console.log("Submitting department data:", { name, description });
       onSave({
         name,
         description: description || undefined
       });
+      // Don't set loading to false here, let the parent component do it after API call
     } catch (error) {
       console.error("خطأ في حفظ بيانات القسم:", error);
-    } finally {
+      toast.error("حدث خطأ أثناء حفظ القسم");
       setLoading(false);
     }
   };

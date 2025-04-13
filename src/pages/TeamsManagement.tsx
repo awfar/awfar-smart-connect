@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -59,19 +58,27 @@ const TeamForm = ({ team, isEditing, onSave }: TeamFormProps) => {
     setLoading(true);
     
     try {
+      console.log("Creating team with data:", {
+        name,
+        department_id: departmentId === "none" ? undefined : departmentId,
+        manager_id: managerId === "none" ? undefined : managerId
+      });
+      
       if (isEditing && team) {
         await updateTeam({
           id: team.id,
           name,
-          department_id: departmentId || null,
-          manager_id: managerId || null,
+          department_id: departmentId === "none" ? undefined : departmentId,
+          manager_id: managerId === "none" ? undefined : managerId,
         });
+        toast.success("تم تحديث الفريق بنجاح");
       } else {
         await createTeam({
           name,
-          department_id: departmentId,
-          manager_id: managerId || undefined,
+          department_id: departmentId === "none" ? undefined : departmentId,
+          manager_id: managerId === "none" ? undefined : managerId,
         });
+        toast.success("تم إنشاء الفريق بنجاح");
       }
       
       onSave();
@@ -83,7 +90,6 @@ const TeamForm = ({ team, isEditing, onSave }: TeamFormProps) => {
     }
   };
 
-  // منسقي الفريق فقط هم المستخدمين الذين لديهم دور team_manager
   const managers = users.filter(user => user.role === 'team_manager');
 
   return (

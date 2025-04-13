@@ -13,19 +13,29 @@ export interface Department {
 
 export const fetchDepartments = async (): Promise<Department[]> => {
   try {
+    console.log("Fetching departments...");
     const { data, error } = await supabase
       .from('departments')
       .select()
       .order('name');
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching departments:", error);
+      throw error;
+    }
+    
+    console.log("Departments fetched:", data);
     
     // احصل على عدد المستخدمين في كل قسم
-    const departmentsWithCount = await Promise.all(data.map(async (dept) => {
+    const departmentsWithCount = await Promise.all((data || []).map(async (dept) => {
       const { count, error: countError } = await supabase
         .from('profiles')
         .select('id', { count: 'exact', head: true })
         .eq('department_id', dept.id);
+      
+      if (countError) {
+        console.error(`Error fetching user count for department ${dept.id}:`, countError);
+      }
       
       return {
         ...dept,
@@ -43,17 +53,25 @@ export const fetchDepartments = async (): Promise<Department[]> => {
 
 export const createDepartment = async (department: { name: string; description?: string }): Promise<Department | null> => {
   try {
+    console.log("Creating department with data:", department);
+    
+    const deptData = {
+      name: department.name,
+      description: department.description || null
+    };
+    
     const { data, error } = await supabase
       .from('departments')
-      .insert([{
-        name: department.name,
-        description: department.description
-      }])
+      .insert([deptData])
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error creating department:", error);
+      throw error;
+    }
     
+    console.log("Department created successfully:", data);
     toast.success("تم إنشاء القسم بنجاح");
     return data;
   } catch (error) {
@@ -65,6 +83,8 @@ export const createDepartment = async (department: { name: string; description?:
 
 export const updateDepartment = async (department: Partial<Department> & { id: string }): Promise<Department | null> => {
   try {
+    console.log("Updating department:", department);
+    
     const { data, error } = await supabase
       .from('departments')
       .update({
@@ -76,8 +96,12 @@ export const updateDepartment = async (department: Partial<Department> & { id: s
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error updating department:", error);
+      throw error;
+    }
     
+    console.log("Department updated successfully:", data);
     toast.success("تم تحديث القسم بنجاح");
     return data;
   } catch (error) {
@@ -89,15 +113,21 @@ export const updateDepartment = async (department: Partial<Department> & { id: s
 
 export const deleteDepartment = async (id: string): Promise<boolean> => {
   try {
+    console.log("Attempting to delete department:", id);
+    
     // التحقق من عدم وجود مستخدمين في القسم
     const { count, error: countError } = await supabase
       .from('profiles')
       .select('id', { count: 'exact', head: true })
       .eq('department_id', id);
     
-    if (countError) throw countError;
+    if (countError) {
+      console.error("Error checking users in department:", countError);
+      throw countError;
+    }
     
     if (count && count > 0) {
+      console.log("Cannot delete department with users:", count);
       toast.error("لا يمكن حذف القسم لأنه يحتوي على مستخدمين");
       return false;
     }
@@ -108,9 +138,13 @@ export const deleteDepartment = async (id: string): Promise<boolean> => {
       .select('id', { count: 'exact', head: true })
       .eq('department_id', id);
     
-    if (teamCountError) throw teamCountError;
+    if (teamCountError) {
+      console.error("Error checking teams in department:", teamCountError);
+      throw teamCountError;
+    }
     
     if (teamCount && teamCount > 0) {
+      console.log("Cannot delete department with teams:", teamCount);
       toast.error("لا يمكن حذف القسم لأنه يحتوي على فرق");
       return false;
     }
@@ -121,8 +155,12 @@ export const deleteDepartment = async (id: string): Promise<boolean> => {
       .delete()
       .eq('id', id);
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error deleting department:", error);
+      throw error;
+    }
     
+    console.log("Department deleted successfully");
     toast.success("تم حذف القسم بنجاح");
     return true;
   } catch (error) {

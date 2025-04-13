@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { PermissionDefinition } from "./permissions/permissionTypes";
 
 export interface Role {
   id: string;
@@ -8,16 +9,23 @@ export interface Role {
   description: string | null;
   created_at?: string;
   updated_at?: string;
+  permissions?: PermissionDefinition[];
 }
 
 export const fetchRoles = async (): Promise<Role[]> => {
   try {
+    console.log("Fetching roles...");
     const { data, error } = await supabase
       .from('roles')
       .select('*')
       .order('name');
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching roles:", error);
+      throw error;
+    }
+    
+    console.log("Roles fetched:", data);
     
     // Define the system roles
     const systemRoles = [
@@ -55,6 +63,7 @@ export const fetchRoles = async (): Promise<Role[]> => {
 
 export const fetchRoleById = async (id: string): Promise<Role | null> => {
   try {
+    console.log("Fetching role by ID:", id);
     // Check if it's a system role
     const systemRoles: Record<string, { name: string, description: string }> = {
       'super_admin': { name: 'super_admin', description: 'مدير النظام مع كامل الصلاحيات' },
@@ -65,21 +74,64 @@ export const fetchRoleById = async (id: string): Promise<Role | null> => {
     };
     
     if (systemRoles[id]) {
-      return {
+      const roleData = {
         id,
         name: systemRoles[id].name,
         description: systemRoles[id].description
       };
+      
+      // For system roles, we need to fetch permissions separately
+      const { data: rolePermissions, error: permError } = await supabase
+        .from('role_permissions')
+        .select(`
+          permission_id,
+          permissions (*)
+        `)
+        .eq('role', id);
+        
+      if (!permError && rolePermissions && rolePermissions.length > 0) {
+        const permissions = rolePermissions.map((rp: any) => rp.permissions);
+        roleData.permissions = permissions;
+      }
+      
+      return roleData;
     }
     
     // If not a system role, look up in the database
     const { data, error } = await supabase
       .from('roles')
-      .select('*')
+      .select(`
+        *,
+        role_permissions!inner (
+          permission_id,
+          permissions (*)
+        )
+      `)
       .eq('id', id)
       .single();
     
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No role permissions found, fetch just the role
+        const { data: roleOnly, error: roleError } = await supabase
+          .from('roles')
+          .select('*')
+          .eq('id', id)
+          .single();
+          
+        if (roleError) throw roleError;
+        return roleOnly;
+      }
+      throw error;
+    }
+    
+    if (data && data.role_permissions) {
+      const permissions = data.role_permissions.map((rp: any) => rp.permissions);
+      return {
+        ...data,
+        permissions
+      };
+    }
     
     return data;
   } catch (error) {
@@ -91,14 +143,20 @@ export const fetchRoleById = async (id: string): Promise<Role | null> => {
 
 export const createRole = async (role: Omit<Role, 'id' | 'created_at'>): Promise<Role | null> => {
   try {
+    console.log("Creating role:", role);
+    
     const { data, error } = await supabase
       .from('roles')
       .insert([role])
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error creating role:", error);
+      throw error;
+    }
     
+    console.log("Role created successfully:", data);
     toast.success("تم إضافة الدور بنجاح");
     return data;
   } catch (error: any) {
@@ -116,10 +174,12 @@ export const createRole = async (role: Omit<Role, 'id' | 'created_at'>): Promise
 
 export const updateRole = async (role: Partial<Role> & { id: string }): Promise<Role | null> => {
   try {
+    console.log("Updating role:", role);
     // Check if it's a system role
     const systemRoles = ['super_admin', 'team_manager', 'sales', 'customer_service', 'technical_support'];
     
     if (systemRoles.includes(role.id)) {
+      console.log("Cannot update system role:", role.id);
       toast.error("لا يمكن تعديل أدوار النظام الأساسية");
       return null;
     }
@@ -134,8 +194,12 @@ export const updateRole = async (role: Partial<Role> & { id: string }): Promise<
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error updating role:", error);
+      throw error;
+    }
     
+    console.log("Role updated successfully:", data);
     toast.success("تم تحديث الدور بنجاح");
     return data;
   } catch (error: any) {
@@ -153,11 +217,30 @@ export const updateRole = async (role: Partial<Role> & { id: string }): Promise<
 
 export const deleteRole = async (id: string): Promise<boolean> => {
   try {
+    console.log("Attempting to delete role:", id);
     // Check if it's a system role
     const systemRoles = ['super_admin', 'team_manager', 'sales', 'customer_service', 'technical_support'];
     
     if (systemRoles.includes(id)) {
+      console.log("Cannot delete system role:", id);
       toast.error("لا يمكن حذف أدوار النظام الأساسية");
+      return false;
+    }
+    
+    // Check if any users have this role
+    const { count: userCount, error: countError } = await supabase
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('role', id);
+      
+    if (countError) {
+      console.error("Error checking users with role:", countError);
+      throw countError;
+    }
+    
+    if (userCount && userCount > 0) {
+      console.log("Cannot delete role used by users:", userCount);
+      toast.error("لا يمكن حذف الدور لأنه مستخدم من قبل مستخدمين");
       return false;
     }
     
@@ -166,24 +249,36 @@ export const deleteRole = async (id: string): Promise<boolean> => {
       .delete()
       .eq('id', id);
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error deleting role:", error);
+      throw error;
+    }
     
+    console.log("Role deleted successfully");
+    toast.success("تم حذف الدور بنجاح");
     return true;
   } catch (error) {
     console.error("خطأ في حذف الدور:", error);
-    throw error;
+    toast.error("فشل في حذف الدور");
+    return false;
   }
 };
 
 export const updateRolePermissions = async (roleId: string, permissionIds: string[]): Promise<boolean> => {
   try {
+    console.log("Updating role permissions for role:", roleId);
+    console.log("New permissions:", permissionIds);
+    
     // Delete all current role permissions
     const { error: deleteError } = await supabase
       .from('role_permissions')
       .delete()
       .eq('role', roleId);
     
-    if (deleteError) throw deleteError;
+    if (deleteError) {
+      console.error("Error deleting existing role permissions:", deleteError);
+      throw deleteError;
+    }
     
     // Add new role permissions
     if (permissionIds.length > 0) {
@@ -192,18 +287,55 @@ export const updateRolePermissions = async (roleId: string, permissionIds: strin
         permission_id: permissionId
       }));
       
+      console.log("Inserting role permissions:", rolePermissions);
+      
       const { error: insertError } = await supabase
         .from('role_permissions')
         .insert(rolePermissions);
       
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error("Error inserting role permissions:", insertError);
+        throw insertError;
+      }
     }
     
+    console.log("Role permissions updated successfully");
     toast.success("تم تحديث صلاحيات الدور بنجاح");
     return true;
   } catch (error) {
     console.error("خطأ في تحديث صلاحيات الدور:", error);
     toast.error("فشل في تحديث صلاحيات الدور");
     return false;
+  }
+};
+
+export const getRolePermissions = async (roleId: string): Promise<PermissionDefinition[]> => {
+  try {
+    console.log("Fetching permissions for role:", roleId);
+    
+    const { data, error } = await supabase
+      .from('role_permissions')
+      .select(`
+        permissions (*)
+      `)
+      .eq('role', roleId);
+    
+    if (error) {
+      console.error("Error fetching role permissions:", error);
+      throw error;
+    }
+    
+    if (!data || data.length === 0) {
+      return [];
+    }
+    
+    const permissions = data.map((rp: any) => rp.permissions);
+    console.log("Role permissions fetched:", permissions);
+    
+    return permissions;
+  } catch (error) {
+    console.error("خطأ في جلب صلاحيات الدور:", error);
+    toast.error("فشل في جلب صلاحيات الدور");
+    return [];
   }
 };

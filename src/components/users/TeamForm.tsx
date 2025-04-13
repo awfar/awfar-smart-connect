@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Team } from "@/services/teamsService";
 import { fetchDepartments } from "@/services/departmentsService";
 import { fetchUsers } from "@/services/users";
+import { toast } from "sonner";
 
 interface TeamFormProps {
   team?: Team | null;
@@ -56,14 +57,17 @@ const TeamForm = ({ team, onSave, onCancel }: TeamFormProps) => {
     setLoading(true);
     
     try {
+      console.log("Submitting team data:", { name, departmentId, managerId });
       onSave({
         name,
         department_id: departmentId === "none" ? undefined : departmentId,
         manager_id: managerId === "none" ? undefined : managerId
       });
+      
+      // Don't set loading to false here, let the parent component do it after API call
     } catch (error) {
       console.error("خطأ في حفظ بيانات الفريق:", error);
-    } finally {
+      toast.error("حدث خطأ أثناء حفظ الفريق");
       setLoading(false);
     }
   };
@@ -83,7 +87,7 @@ const TeamForm = ({ team, onSave, onCancel }: TeamFormProps) => {
       
       <div className="space-y-2">
         <Label htmlFor="department">القسم</Label>
-        <Select value={departmentId || "none"} onValueChange={setDepartmentId}>
+        <Select value={departmentId || "none"} onValueChange={(value) => setDepartmentId(value === "none" ? undefined : value)}>
           <SelectTrigger id="department">
             <SelectValue placeholder="اختر قسماً" />
           </SelectTrigger>
@@ -100,7 +104,7 @@ const TeamForm = ({ team, onSave, onCancel }: TeamFormProps) => {
         <Label htmlFor="manager">مدير الفريق (اختياري)</Label>
         <Select 
           value={managerId || "none"} 
-          onValueChange={setManagerId}
+          onValueChange={(value) => setManagerId(value === "none" ? undefined : value)}
         >
           <SelectTrigger id="manager">
             <SelectValue placeholder="اختر مديراً للفريق" />

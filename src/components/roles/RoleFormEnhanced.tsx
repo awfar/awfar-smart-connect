@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { fetchRoleById, createRole, updateRole, updateRolePermissions } from "@/services/rolesService";
 import { fetchPermissions } from "@/services/permissions/permissionsService";
-import { ObjectPermission, PermissionDefinition } from "@/services/permissions/permissionTypes";
+import { ObjectPermission } from "@/services/permissions/permissionTypes";
 import { toast } from "sonner";
 import PermissionMatrix from "./PermissionMatrix";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -25,7 +25,7 @@ const RoleFormEnhanced = ({ roleId, isEditing = false, onSave }: RoleFormEnhance
   const [activeTab, setActiveTab] = useState("details");
   const [loading, setLoading] = useState(false);
 
-  const { data: role } = useQuery({
+  const { data: role, refetch: refetchRole } = useQuery({
     queryKey: ['role', roleId],
     queryFn: () => fetchRoleById(roleId!),
     enabled: !!roleId && isEditing,
@@ -40,6 +40,28 @@ const RoleFormEnhanced = ({ roleId, isEditing = false, onSave }: RoleFormEnhance
     if (role) {
       setName(role.name || "");
       setDescription(role.description || "");
+      
+      // Populate selected permissions from role.permissions if available
+      if (role.permissions && Array.isArray(role.permissions)) {
+        // Convert role.permissions to ObjectPermission[] format
+        const objectPermissionsMap = new Map<string, ObjectPermission>();
+        
+        role.permissions.forEach(permission => {
+          const { object, level, scope } = permission;
+          
+          if (!objectPermissionsMap.has(object)) {
+            objectPermissionsMap.set(object, {
+              object,
+              levels: {}
+            });
+          }
+          
+          const objPerm = objectPermissionsMap.get(object)!;
+          objPerm.levels[level] = scope;
+        });
+        
+        setSelectedPermissions(Array.from(objectPermissionsMap.values()));
+      }
     }
   }, [role]);
 
@@ -48,6 +70,9 @@ const RoleFormEnhanced = ({ roleId, isEditing = false, onSave }: RoleFormEnhance
     setLoading(true);
     
     try {
+      console.log("Submitting role:", { name, description });
+      console.log("Selected permissions:", selectedPermissions);
+      
       let roleData;
       
       if (isEditing && roleId) {
@@ -79,6 +104,7 @@ const RoleFormEnhanced = ({ roleId, isEditing = false, onSave }: RoleFormEnhance
         if (!success) throw new Error("فشل تحديث صلاحيات الدور");
       }
       
+      toast.success(isEditing ? "تم تحديث الدور بنجاح" : "تم إضافة الدور بنجاح");
       onSave();
     } catch (error: any) {
       console.error("خطأ في إضافة/تعديل الدور:", error);
@@ -96,14 +122,19 @@ const RoleFormEnhanced = ({ roleId, isEditing = false, onSave }: RoleFormEnhance
       Object.entries(op.levels).forEach(([level, scope]) => {
         if (scope) {
           const permName = `${op.object}_${level}_${scope}`;
+          console.log("Looking for permission with name:", permName);
           const permission = permissions.find(p => p.name === permName);
           if (permission) {
+            console.log("Found permission:", permission);
             permissionIds.push(permission.id);
+          } else {
+            console.log("Permission not found:", permName);
           }
         }
       });
     });
     
+    console.log("Selected permission IDs:", permissionIds);
     return permissionIds;
   };
 
