@@ -29,7 +29,7 @@ export function InvoiceItemForm({ calculateTotal }: InvoiceItemFormProps) {
       totalPrice: 0 
     };
     
-    append(newItem);
+    append(newItem as any);
   };
 
   // إزالة عنصر من الفاتورة

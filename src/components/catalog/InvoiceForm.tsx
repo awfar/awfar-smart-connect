@@ -3,7 +3,8 @@ import React from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, FormProvider } from "react-hook-form";
-import { Invoice, InvoiceItem, createInvoice } from "@/services/catalog/invoiceService";
+import { Invoice, InvoiceItem } from "@/services/catalog/invoice/types";
+import { createInvoice } from "@/services/catalog/invoice/crud";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
@@ -50,7 +51,7 @@ const DEFAULT_INVOICE_ITEM: InvoiceItem = {
   productName: "",
   quantity: 1,
   unitPrice: 0,
-  totalPrice: 0
+  totalPrice: 0,
 };
 
 export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
@@ -62,11 +63,20 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
           ...invoice,
           issueDate: new Date(invoice.issueDate),
           dueDate: new Date(invoice.dueDate),
+          items: Array.isArray(invoice.items) 
+            ? invoice.items.map(item => ({
+                productId: item.productId,
+                productName: item.productName,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                totalPrice: item.totalPrice
+              }))
+            : [DEFAULT_INVOICE_ITEM]
         }
       : {
           customerId: "",
           customerName: "",
-          items: [DEFAULT_INVOICE_ITEM],
+          items: [{ ...DEFAULT_INVOICE_ITEM }],
           status: "draft",
           issueDate: new Date(),
           dueDate: addDays(new Date(), 30),
