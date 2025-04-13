@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CheckCircle } from "lucide-react";
 
 const HeroSection = () => {
   return (
@@ -14,25 +14,37 @@ const HeroSection = () => {
       <div className="container mx-auto relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="text-center lg:text-right">
+            <div className="inline-block mb-3 px-4 py-1 bg-white/20 backdrop-blur-sm rounded-full">
+              <span className="text-white font-medium">تكنولوجيا الذكاء الاصطناعي المتقدمة</span>
+            </div>
             <div className="mb-6">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-                موظفك الذكي المتخصص متاح <span className="text-awfar-accent">24/7</span>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+                تأخرك في الرد يُفقدك <span className="text-awfar-accent">66%</span> من عملائك المحتملين!
               </h1>
-              <p className="text-xl text-white/80 mb-8 leading-relaxed">
-                استفد من قوة الذكاء الاصطناعي في خدمة العملاء والمبيعات. موظف متخصص يتحدث بلغة عملائك ويفهم احتياجاتهم.
+              <p className="text-xl text-white/90 mb-8 leading-relaxed">
+                بطء الاستجابة يؤدي لخسارتك يومياً لأكثر من 10 فرص بيع. موظفنا الذكي يتعامل مع عملائك على مدار <span className="font-bold">24 ساعة</span> بكل اللغات واللهجات!
               </p>
             </div>
             
-            <div className="flex flex-wrap gap-4 justify-center lg:justify-end">
+            <div className="flex flex-wrap gap-4 justify-center lg:justify-end mb-8">
               <Button asChild size="lg" className="bg-awfar-accent hover:bg-awfar-accent/90 text-white">
                 <Link to="/demo" className="flex items-center">
-                  ابدأ الآن مجاناً
+                  قم بتجربة الموظف الذكي
                   <ArrowRight className="mr-2 h-5 w-5 rtl:rotate-180" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="border-white text-white hover:bg-white/10">
-                <Link to="/pricing">عرض الباقات والأسعار</Link>
+                <Link to="/pricing">تعرف على خدماتنا</Link>
               </Button>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {["ردود فورية", "دعم 24/7", "تكامل مع الأنظمة", "تخصيص كامل"].map((feature, index) => (
+                <div key={index} className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 flex items-center justify-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-awfar-accent" />
+                  <span className="text-sm font-medium">{feature}</span>
+                </div>
+              ))}
             </div>
             
             <div className="mt-10">
@@ -60,35 +72,42 @@ const HeroSection = () => {
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-awfar-accent/20 rounded-full blur-3xl"></div>
             <div className="relative bg-gradient-to-br from-white/10 to-white/5 rounded-3xl p-6 border border-white/10 backdrop-blur-sm shadow-2xl">
               <img 
-                src="/lovable-uploads/d0e8da8f-bc27-437d-9d5e-681870721ef9.png" 
+                src="/lovable-uploads/72cbf72d-0947-4e2f-8a78-d00fce992254.png"
                 alt="Awfar AI Agent" 
-                className="w-full rounded-2xl"
+                className="w-full rounded-xl shadow-lg"
               />
               
-              <div className="absolute -top-4 -right-4 bg-white p-4 rounded-2xl shadow-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-gray-800">متاح 24/7</p>
-                    <p className="text-xs text-gray-500">خدمة مستمرة بدون توقف</p>
+              <div className="mt-6 flex flex-col gap-4">
+                <div className="bg-white/10 backdrop-blur-sm p-4 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <div className="h-10 w-10 rounded-full bg-awfar-accent flex items-center justify-center flex-shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm text-white/80">عندك استفسار؟</p>
+                      <p className="font-medium">كيف يمكنني مساعدتك اليوم؟</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="absolute -bottom-4 -left-4 bg-white p-4 rounded-2xl shadow-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-awfar-primary rounded-full flex items-center justify-center text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
+                
+                <div className="bg-gradient-to-r from-awfar-accent/20 to-awfar-primary/20 backdrop-blur-sm p-4 rounded-xl ml-6">
+                  <div className="flex justify-end">
+                    <p className="text-sm">مرحبا، أريد معلومات عن منتجاتكم</p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-gray-800">عبر كل المنصات</p>
-                    <p className="text-xs text-gray-500">واتساب، فيسبوك، انستجرام</p>
+                </div>
+                
+                <div className="bg-white/10 backdrop-blur-sm p-4 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <div className="h-10 w-10 rounded-full bg-awfar-accent flex items-center justify-center flex-shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="font-medium">بالتأكيد! لدينا 3 باقات متميزة...</p>
+                    </div>
                   </div>
                 </div>
               </div>
