@@ -54,40 +54,22 @@ export const getSystemStatistics = async (): Promise<{
   
   for (const table of tables) {
     try {
-      // Use a more generic approach to avoid TypeScript errors
-      const result = await supabase.rpc('get_table_row_count', { table_name: table });
-      const count = result.data || 0;
+      // Use a direct count query for each table
+      const { count, error } = await supabase
+        .from(table as any)
+        .select('*', { count: 'exact', head: true });
       
-      if (!result.error) {
+      if (!error) {
         tableStats.push({
           table,
-          count: count
+          count: count || 0
         });
       } else {
-        // Fallback to a direct count if RPC is not available
-        try {
-          const { count: directCount, error } = await supabase
-            .from(table)
-            .select('*', { count: 'exact', head: true });
-          
-          if (!error) {
-            tableStats.push({
-              table,
-              count: directCount || 0
-            });
-          } else {
-            tableStats.push({
-              table,
-              count: 0
-            });
-          }
-        } catch (innerErr) {
-          console.error(`Error getting count for table ${table}:`, innerErr);
-          tableStats.push({
-            table,
-            count: 0
-          });
-        }
+        console.error(`Error getting count for table ${table}:`, error);
+        tableStats.push({
+          table,
+          count: 0
+        });
       }
     } catch (err) {
       console.error(`Error getting count for table ${table}:`, err);

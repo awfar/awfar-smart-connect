@@ -21,25 +21,23 @@ export const logActivity = async (
   details?: string
 ): Promise<void> => {
   try {
-    // Using a more direct approach to avoid type issues
-    await supabase.rpc('log_activity', {
-      p_entity_type: entityType,
-      p_entity_id: entityId,
-      p_action: action,
-      p_user_id: userId,
-      p_details: details
-    }).catch(async () => {
-      // Fallback to raw SQL if RPC is not available
-      await supabase.auth.mfa.challengeAndVerify({
-        factorId: 'placeholder',
-        code: 'placeholder',
-      }).catch(() => {
-        // This is just to trigger an authenticated request which will be used below
+    // Using a direct database insert approach
+    const { error } = await supabase
+      .from('activity_logs')
+      .insert({
+        entity_type: entityType,
+        entity_id: entityId,
+        action: action,
+        user_id: userId,
+        details: details
       });
-      
-      const { error } = await supabase.auth.getSession();
-      console.log(`Activity logged: ${action} on ${entityType} ${entityId}`);
-    });
+    
+    if (error) {
+      console.error("Error logging activity:", error);
+      return;
+    }
+    
+    console.log(`Activity logged: ${action} on ${entityType} ${entityId}`);
   } catch (err) {
     console.error("Error logging activity:", err);
   }
@@ -48,25 +46,32 @@ export const logActivity = async (
 // Get recent activities from the system
 export const getRecentActivities = async (limit = 10): Promise<ActivityLog[]> => {
   try {
-    // Using a prepared statement to get activities with joins
+    // Using a direct query approach
     const { data, error } = await supabase
-      .rpc('get_recent_activities', { p_limit: limit })
-      .catch(async () => {
-        // Fallback to mock data if RPC is not available
-        return { data: getMockActivities(limit), error: null };
-      });
+      .from('activity_logs')
+      .select(`
+        id,
+        entity_type,
+        entity_id,
+        action,
+        user_id,
+        details,
+        created_at
+      `)
+      .order('created_at', { ascending: false })
+      .limit(limit);
     
     if (error) throw error;
     
     return (data || []).map((log: any) => ({
       id: log.id,
-      entityType: log.entity_type || log.entityType,
-      entityId: log.entity_id || log.entityId,
+      entityType: log.entity_type,
+      entityId: log.entity_id,
       action: log.action,
-      userId: log.user_id || log.userId,
-      userName: log.user_name || log.userName,
+      userId: log.user_id,
+      userName: 'مستخدم', // Default name since we don't have user profile join
       details: log.details,
-      createdAt: log.created_at || log.createdAt
+      createdAt: log.created_at
     }));
   } catch (err) {
     console.error("Error fetching recent activities:", err);
@@ -81,23 +86,51 @@ export const getActivityAnalytics = async (): Promise<{
   entityCounts: { entityType: string; count: number }[];
 }> => {
   try {
-    // Using prepared statements for analytics
-    const { data, error } = await supabase
-      .rpc('get_activity_analytics')
-      .catch(() => ({ data: null, error: new Error('RPC not available') }));
+    // Get action counts
+    const { data: actionData, error: actionError } = await supabase
+      .from('activity_logs')
+      .select('action, count')
+      .group('action');
     
-    if (error) throw error;
+    if (actionError) throw actionError;
     
-    if (data) {
-      return {
-        actionCounts: data.action_counts || [],
-        userCounts: data.user_counts || [],
-        entityCounts: data.entity_counts || []
-      };
-    }
+    // Get user counts
+    const { data: userData, error: userError } = await supabase
+      .from('activity_logs')
+      .select('user_id, count')
+      .group('user_id');
     
-    // Fallback to mock data
-    return getMockActivityAnalytics();
+    if (userError) throw userError;
+    
+    // Get entity counts
+    const { data: entityData, error: entityError } = await supabase
+      .from('activity_logs')
+      .select('entity_type, count')
+      .group('entity_type');
+    
+    if (entityError) throw entityError;
+    
+    const actionCounts = actionData.map((item: any) => ({
+      action: item.action,
+      count: parseInt(item.count)
+    }));
+    
+    const userCounts = userData.map((item: any) => ({
+      userId: item.user_id,
+      userName: 'مستخدم', // Default name 
+      count: parseInt(item.count)
+    }));
+    
+    const entityCounts = entityData.map((item: any) => ({
+      entityType: item.entity_type,
+      count: parseInt(item.count)
+    }));
+    
+    return {
+      actionCounts,
+      userCounts,
+      entityCounts
+    };
   } catch (err) {
     console.error("Error getting activity analytics:", err);
     return getMockActivityAnalytics();

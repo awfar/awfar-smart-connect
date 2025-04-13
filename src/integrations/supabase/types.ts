@@ -1176,6 +1176,23 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_recent_activities: {
+        Args: { p_limit?: number }
+        Returns: {
+          id: string
+          entity_type: string
+          entity_id: string
+          action: string
+          user_id: string
+          user_name: string
+          details: string
+          created_at: string
+        }[]
+      }
+      get_table_row_count: {
+        Args: { table_name: string }
+        Returns: number
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: string
@@ -1191,6 +1208,25 @@ export type Database = {
       is_team_manager: {
         Args: { user_id: string; team_id: string }
         Returns: boolean
+      }
+      log_activity: {
+        Args: {
+          p_entity_type: string
+          p_entity_id: string
+          p_action: string
+          p_user_id: string
+          p_details?: string
+        }
+        Returns: undefined
+      }
+      log_invoice_action: {
+        Args: {
+          p_invoice_id: string
+          p_action: string
+          p_user_id: string
+          p_details?: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

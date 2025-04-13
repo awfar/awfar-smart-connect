@@ -25,17 +25,16 @@ export interface Invoice {
   notes?: string;
 }
 
+// Log activity function imported from loggingService
+import { logActivity } from "../loggingService";
+
 // Get all invoices
 export const getInvoices = async (): Promise<Invoice[]> => {
   // First try to get data from Supabase
   try {
     const { data, error } = await supabase
-      .rpc('get_all_invoices')
-      .catch(() => {
-        return supabase
-          .from('invoices')
-          .select('*');
-      });
+      .from('invoices')
+      .select('*');
     
     if (error) throw error;
     
@@ -97,14 +96,10 @@ export const getInvoiceById = async (id: string): Promise<Invoice | null> => {
   try {
     // First try to get from Supabase
     const { data, error } = await supabase
-      .rpc('get_invoice_by_id', { p_invoice_id: id })
-      .catch(() => {
-        return supabase
-          .from('invoices')
-          .select('*')
-          .eq('id', id)
-          .single();
-      });
+      .from('invoices')
+      .select('*')
+      .eq('id', id)
+      .single();
     
     if (error) {
       if (error.code === 'PGRST116') return null; // No rows found
@@ -162,6 +157,15 @@ export const createInvoice = async (invoice: Omit<Invoice, 'id'>): Promise<Invoi
     
     if (error) throw error;
     
+    // Log the activity
+    await logActivity(
+      'invoice',
+      data.id,
+      'create',
+      'system',
+      `تم إنشاء فاتورة جديدة للعميل ${invoice.customerName}`
+    );
+    
     return {
       id: data.id,
       customerId: data.customer_id,
@@ -198,6 +202,15 @@ export const updateInvoiceStatus = async (id: string, status: Invoice['status'],
       .single();
     
     if (error) throw error;
+    
+    // Log the activity
+    await logActivity(
+      'invoice',
+      id,
+      'update_status',
+      'system',
+      `تم تغيير حالة الفاتورة إلى ${status}`
+    );
     
     return {
       id: data.id,
@@ -239,16 +252,7 @@ export const generateInvoiceForSubscription = async (subscriptionId: string, cus
 // Log action performed on invoice
 export const logInvoiceAction = async (invoiceId: string, action: string, userId: string, details?: string): Promise<void> => {
   try {
-    await supabase.rpc('log_invoice_action', {
-      p_invoice_id: invoiceId,
-      p_action: action,
-      p_user_id: userId,
-      p_details: details
-    }).catch(async () => {
-      // Fallback to direct logging if RPC is not available
-      await logActivity('invoice', invoiceId, action, userId, details);
-    });
-    
+    await logActivity('invoice', invoiceId, action, userId, details);
     console.log(`Logged action: ${action} on invoice ${invoiceId}`);
   } catch (err) {
     console.error("Error logging invoice action:", err);
@@ -263,22 +267,16 @@ export const getInvoiceAnalytics = async (): Promise<{
   monthlyRevenue: { month: string; amount: number }[];
 }> => {
   try {
-    const { data, error } = await supabase.rpc('get_invoice_analytics')
-      .catch(() => {
-        // If RPC fails, try to get data directly
-        return supabase.from('invoices').select('*');
-      });
+    // Get all invoices for analysis
+    const { data, error } = await supabase
+      .from('invoices')
+      .select('*');
     
     if (error) throw error;
     
-    if (data) {
-      if ('totalCount' in data) {
-        // RPC returned formatted data
-        return data as any;
-      } else if (Array.isArray(data)) {
-        // Calculate analytics from raw data
-        return calculateInvoiceAnalytics(data);
-      }
+    if (data && Array.isArray(data)) {
+      // Calculate analytics from data
+      return calculateInvoiceAnalytics(data);
     }
     
     return {

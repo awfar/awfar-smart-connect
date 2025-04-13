@@ -15,7 +15,9 @@ export interface SystemModule {
 // Get all system modules
 export const getSystemModules = async (): Promise<SystemModule[]> => {
   try {
-    const { data, error } = await supabase.rpc('get_system_modules');
+    const { data, error } = await supabase
+      .from('system_modules')
+      .select('*');
     
     if (error) throw error;
     
@@ -24,7 +26,7 @@ export const getSystemModules = async (): Promise<SystemModule[]> => {
         id: module.id,
         name: module.name,
         description: module.description,
-        status: module.status,
+        status: module.status as SystemModule['status'],
         lastSyncTime: module.last_sync_time,
         errorMessage: module.error_message
       }));
@@ -40,12 +42,27 @@ export const getSystemModules = async (): Promise<SystemModule[]> => {
 // Sync module data
 export const syncModuleData = async (moduleId: string, userId: string): Promise<SystemModule> => {
   try {
-    const { data, error } = await supabase.rpc('sync_module', {
-      p_module_id: moduleId,
-      p_user_id: userId
-    });
+    // First get the current module data
+    const { data: moduleData, error: moduleError } = await supabase
+      .from('system_modules')
+      .select('*')
+      .eq('id', moduleId)
+      .single();
     
-    if (error) throw error;
+    if (moduleError) throw moduleError;
+    
+    // Update the module with new sync time
+    const { data: updatedModule, error: updateError } = await supabase
+      .from('system_modules')
+      .update({
+        last_sync_time: new Date().toISOString(),
+        status: 'active'
+      })
+      .eq('id', moduleId)
+      .select()
+      .single();
+    
+    if (updateError) throw updateError;
     
     // Log the sync activity
     await logActivity(
@@ -53,17 +70,17 @@ export const syncModuleData = async (moduleId: string, userId: string): Promise<
       moduleId,
       'sync',
       userId,
-      `تم مزامنة وحدة ${data?.name || moduleId}`
+      `تم مزامنة وحدة ${moduleData?.name || moduleId}`
     );
     
-    if (data) {
+    if (updatedModule) {
       return {
-        id: data.id,
-        name: data.name,
-        description: data.description,
-        status: data.status,
-        lastSyncTime: data.last_sync_time,
-        errorMessage: data.error_message
+        id: updatedModule.id,
+        name: updatedModule.name,
+        description: updatedModule.description,
+        status: updatedModule.status as SystemModule['status'],
+        lastSyncTime: updatedModule.last_sync_time,
+        errorMessage: updatedModule.error_message
       };
     }
     
