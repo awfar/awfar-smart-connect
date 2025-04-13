@@ -44,6 +44,15 @@ interface InvoiceFormProps {
   onSuccess: () => void;
 }
 
+// تعريف عنصر فاتورة افتراضي كثابت خارج الدالة الرئيسية
+const DEFAULT_INVOICE_ITEM: InvoiceItem = {
+  productId: "",
+  productName: "",
+  quantity: 1,
+  unitPrice: 0,
+  totalPrice: 0
+};
+
 export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
   // Initialize form with default values or provided invoice data
   const form = useForm<InvoiceFormValues>({
@@ -57,15 +66,7 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
       : {
           customerId: "",
           customerName: "",
-          items: [
-            {
-              productId: "",
-              productName: "",
-              quantity: 1,
-              unitPrice: 0,
-              totalPrice: 0
-            } as InvoiceItem
-          ],
+          items: [DEFAULT_INVOICE_ITEM],
           status: "draft",
           issueDate: new Date(),
           dueDate: addDays(new Date(), 30),

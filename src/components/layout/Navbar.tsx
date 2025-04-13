@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
@@ -7,6 +7,21 @@ import { cn } from "@/lib/utils";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+
+  // تحقق من حجم الشاشة عند التحميل وعند التغيير
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkIsMobile);
+    };
+  }, []);
 
   const menuItems = [
     {
@@ -47,13 +62,18 @@ const Navbar = () => {
     setIsOpen(!isOpen);
   };
 
+  // إغلاق القائمة عند النقر على أي عنصر فيها
+  const closeMenu = () => {
+    setIsOpen(false);
+  };
+
   return (
     <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm rtl">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <div className="flex items-center">
-            <Link to="/" className="flex-shrink-0">
+          <div className="flex-shrink-0">
+            <Link to="/" className="flex items-center" onClick={closeMenu}>
               <img 
                 src="/lovable-uploads/3020e17e-f138-47f6-ad1e-029e32c4540f.png" 
                 alt="Awfar Logo" 
@@ -62,31 +82,8 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-4 rtl:space-x-reverse">
-            {menuItems.map((item, index) => (
-              <Link
-                key={index}
-                to={item.path}
-                className="text-gray-700 hover:text-awfar-primary px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                {item.title}
-              </Link>
-            ))}
-          </div>
-
-          {/* Desktop Auth Buttons */}
-          <div className="hidden md:flex items-center">
-            <Button asChild variant="outline" className="mr-3">
-              <Link to="/login">دخول</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/register">تسجيل</Link>
-            </Button>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden">
+          {/* Mobile Menu Button - أزرار التنقل للجوال */}
+          <div className="flex items-center md:hidden">
             <button
               onClick={toggleMenu}
               type="button"
@@ -100,22 +97,47 @@ const Navbar = () => {
               )}
             </button>
           </div>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center justify-between flex-grow mx-8">
+            <div className="flex items-center space-x-4 rtl:space-x-reverse">
+              {menuItems.map((item, index) => (
+                <Link
+                  key={index}
+                  to={item.path}
+                  className="text-gray-700 hover:text-awfar-primary px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  {item.title}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Desktop Auth Buttons */}
+          <div className="hidden md:flex items-center">
+            <Button asChild variant="outline" className="mr-3">
+              <Link to="/login">دخول</Link>
+            </Button>
+            <Button asChild>
+              <Link to="/register">تسجيل</Link>
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Mobile Menu */}
       <div
         className={cn(
-          "md:hidden fixed inset-x-0 top-20 bg-white shadow-lg z-20 transition-all",
-          isOpen ? "block" : "hidden"
+          "md:hidden fixed inset-x-0 top-20 bg-white shadow-lg z-50 transition-transform duration-300 ease-in-out transform",
+          isOpen ? "translate-y-0" : "-translate-y-full"
         )}
       >
-        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+        <div className="px-4 py-3 space-y-1">
           {menuItems.map((item, index) => (
             <Link
               key={index}
               to={item.path}
-              onClick={toggleMenu}
+              onClick={closeMenu}
               className="block text-gray-700 hover:bg-gray-50 hover:text-awfar-primary px-3 py-2 rounded-md text-base font-medium"
             >
               {item.title}
@@ -123,13 +145,13 @@ const Navbar = () => {
           ))}
         </div>
         {/* Mobile Auth Buttons */}
-        <div className="pt-4 pb-3 border-t border-gray-200">
-          <div className="flex flex-col px-4 space-y-2">
+        <div className="pt-4 pb-3 border-t border-gray-200 px-4">
+          <div className="flex flex-col space-y-2">
             <Button asChild variant="outline" className="w-full">
-              <Link to="/login" onClick={toggleMenu}>دخول</Link>
+              <Link to="/login" onClick={closeMenu}>دخول</Link>
             </Button>
             <Button asChild className="w-full">
-              <Link to="/register" onClick={toggleMenu}>تسجيل</Link>
+              <Link to="/register" onClick={closeMenu}>تسجيل</Link>
             </Button>
           </div>
         </div>
