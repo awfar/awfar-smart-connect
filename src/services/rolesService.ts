@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { PermissionDefinition } from "./permissions/permissionTypes";
@@ -112,8 +111,7 @@ export const fetchRoleById = async (id: string): Promise<Role | null> => {
             permissions (*)
           )
         `)
-        .eq('id', id)
-        .single();
+        .eq('id', id);
       
       if (error) {
         if (error.code === 'PGRST116') {
@@ -130,36 +128,52 @@ export const fetchRoleById = async (id: string): Promise<Role | null> => {
         throw error;
       }
       
-      if (data && data.role_permissions) {
-        // Check if data.role_permissions is an error object
-        if (typeof data.role_permissions === 'object' && !Array.isArray(data.role_permissions) && 'code' in data.role_permissions) {
-          // This is an error object, not an array
-          console.error("Error in role permissions join:", data.role_permissions);
+      // Fixed: Check if data exists and has at least one item before trying to access data[0]
+      if (data && data.length > 0) {
+        const roleData = data[0];
+        
+        if (roleData && roleData.role_permissions) {
+          // Check if data.role_permissions is an error object
+          if (typeof roleData.role_permissions === 'object' && !Array.isArray(roleData.role_permissions) && 'code' in roleData.role_permissions) {
+            // This is an error object, not an array
+            console.error("Error in role permissions join:", roleData.role_permissions);
+            
+            // Return just the role data without permissions
+            return {
+              id: roleData.id,
+              name: roleData.name,
+              description: roleData.description,
+              created_at: roleData.created_at,
+              updated_at: roleData.updated_at
+            };
+          }
           
-          // Return just the role data without permissions
-          return {
-            id: data.id,
-            name: data.name,
-            description: data.description,
-            created_at: data.created_at,
-            updated_at: data.updated_at
-          };
+          // This is a valid array of permissions
+          if (Array.isArray(roleData.role_permissions)) {
+            const permissions = roleData.role_permissions.map((rp: any) => rp.permissions);
+            return {
+              ...roleData,
+              permissions
+            };
+          } else {
+            console.error("Unexpected role_permissions structure:", roleData.role_permissions);
+            return roleData;
+          }
         }
         
-        // This is a valid array of permissions
-        if (Array.isArray(data.role_permissions)) {
-          const permissions = data.role_permissions.map((rp: any) => rp.permissions);
-          return {
-            ...data,
-            permissions
-          };
-        } else {
-          console.error("Unexpected role_permissions structure:", data.role_permissions);
-          return data;
-        }
+        return roleData;
       }
       
-      return data;
+      // Fallback to simple query if the join returns no results
+      const { data: simpleData, error: simpleError } = await supabase
+        .from('roles')
+        .select('*')
+        .eq('id', id)
+        .single();
+        
+      if (simpleError) throw simpleError;
+      return simpleData;
+      
     } catch (error) {
       console.error("Error fetching role by ID:", error);
       

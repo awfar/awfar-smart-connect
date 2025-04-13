@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,7 @@ const PermissionForm = ({ permissionId, isEditing = false, onSave }: PermissionF
       if (selectedObject) {
         const permissionDef = selectedObject.permissions.find(p => p.level === level);
         if (permissionDef) {
+          // Fixed: ensure proper typing by explicitly casting to PermissionScope[]
           setAvailableScopes(permissionDef.scopes);
           
           if (!permissionDef.scopes.includes(scope)) {

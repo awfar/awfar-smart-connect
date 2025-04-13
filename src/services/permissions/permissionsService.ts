@@ -1,105 +1,91 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { PermissionDefinition, PermissionLevel, PermissionScope } from "./permissionTypes";
+import { PermissionDefinition, PermissionLevel, PermissionScope, ObjectPermission, SystemObject } from "./permissionTypes";
 
-const mapDbPermissionToDefinition = (permission: any): PermissionDefinition => {
-  const nameParts = permission.name?.split('_') || [];
-  const level = nameParts.length > 1 ? nameParts[1] as PermissionLevel : 'read-only';
-  const scope = nameParts.length > 2 ? nameParts[2] as PermissionScope : 'own';
-  let object = nameParts.length > 0 ? nameParts[0] : '';
-  
-  return {
-    id: permission.id,
-    name: permission.name,
-    description: permission.description,
-    object: object,
-    level: level,
-    scope: scope
-  };
+// This function will be used by usePermissions hook
+export const checkUserHasPermission = async (
+  object: string, 
+  level: PermissionLevel, 
+  scope: PermissionScope = 'own'
+): Promise<boolean> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+    
+    // Get user role from profiles
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+    
+    if (!profile) return false;
+    
+    // Check if role has the required permission
+    const { data: rolePermission } = await supabase
+      .from('role_permissions')
+      .select(`
+        permissions (id, name, object, level, scope)
+      `)
+      .eq('role', profile.role)
+      .eq('permissions.object', object)
+      .eq('permissions.level', level)
+      .eq('permissions.scope', scope)
+      .single();
+    
+    return !!rolePermission;
+  } catch (error) {
+    console.error("Error checking permission:", error);
+    return false;
+  }
 };
 
-export const getSystemObjects = () => [
-  {
-    name: 'contacts',
-    label: 'جهات الاتصال',
-    permissions: [
-      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض جهات الاتصال' },
-      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض وتعديل جهات الاتصال' },
-      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'وصول كامل لجهات الاتصال' },
-    ]
-  },
-  {
-    name: 'companies',
-    label: 'الشركات',
-    permissions: [
-      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض الشركات' },
-      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض وتعديل الشركات' },
-      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'وصول كامل للشركات' },
-    ]
-  },
-  {
-    name: 'deals',
-    label: 'الصفقات',
-    permissions: [
-      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض الصفقات' },
-      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض وتعديل الصفقات' },
-      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'وصول كامل للصفقات' },
-    ]
-  },
-  {
-    name: 'tickets',
-    label: 'التذاكر',
-    permissions: [
-      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض التذاكر' },
-      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض وتعديل التذاكر' },
-      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'وصول كامل للتذاكر' },
-    ]
-  },
-  {
-    name: 'tasks',
-    label: 'المهام',
-    permissions: [
-      { level: 'read-only', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض المهام' },
-      { level: 'read-edit', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'عرض وتعديل المهام' },
-      { level: 'full-access', scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[], description: 'وصول كامل للمهام' },
-    ]
-  },
-  {
-    name: 'emails',
-    label: 'البريد الإلكتروني',
-    permissions: [
-      { level: 'read-only', scopes: ['own', 'team', 'all'] as PermissionScope[], description: 'عرض رسائل البريد الإلكتروني' },
-      { level: 'read-edit', scopes: ['own', 'team', 'all'] as PermissionScope[], description: 'عرض وتعديل رسائل البريد الإلكتروني' },
-      { level: 'full-access', scopes: ['own', 'team', 'all'] as PermissionScope[], description: 'وصول كامل لرسائل البريد الإلكتروني' },
-    ]
-  },
-  {
-    name: 'meetings',
-    label: 'الاجتماعات',
-    permissions: [
-      { level: 'read-only', scopes: ['own', 'team', 'all'] as PermissionScope[], description: 'عرض الاجتماعات' },
-      { level: 'read-edit', scopes: ['own', 'team', 'all'] as PermissionScope[], description: 'عرض وتعديل الاجت��اعات' },
-      { level: 'full-access', scopes: ['own', 'team', 'all'] as PermissionScope[], description: 'وصول كامل للاجتماعات' },
-    ]
-  },
-  {
-    name: 'calls',
-    label: 'المكالمات',
-    permissions: [
-      { level: 'read-only', scopes: ['own', 'team', 'all'] as PermissionScope[], description: 'عرض المكالمات' },
-      { level: 'read-edit', scopes: ['own', 'team', 'all'] as PermissionScope[], description: 'عرض وتعديل المكالمات' },
-      { level: 'full-access', scopes: ['own', 'team', 'all'] as PermissionScope[], description: 'وصول كامل للمكالمات' },
-    ]
+// Initialize system permissions if they don't exist
+export const initializeSystemPermissions = async (): Promise<void> => {
+  try {
+    // Check if permissions already exist
+    const { count } = await supabase
+      .from('permissions')
+      .select('*', { count: 'exact', head: true });
+    
+    if (count && count > 0) {
+      console.log("Permissions already initialized");
+      return;
+    }
+    
+    // Get all system objects
+    const systemObjects = getSystemObjects();
+    const permissionsToCreate: Omit<PermissionDefinition, 'id'>[] = [];
+    
+    // Create permissions for each object, level, and scope
+    systemObjects.forEach(obj => {
+      obj.permissions.forEach(perm => {
+        perm.scopes.forEach(scope => {
+          permissionsToCreate.push({
+            name: `${obj.name}_${perm.level}_${scope}`,
+            description: `${getPermissionDescription(obj.label, perm.level, scope)}`,
+            object: obj.name,
+            level: perm.level,
+            scope: scope
+          });
+        });
+      });
+    });
+    
+    // Insert permissions in batches to avoid request size limits
+    const batchSize = 50;
+    for (let i = 0; i < permissionsToCreate.length; i += batchSize) {
+      const batch = permissionsToCreate.slice(i, i + batchSize);
+      const { error } = await supabase.from('permissions').insert(batch);
+      if (error) throw error;
+    }
+    
+    console.log(`Initialized ${permissionsToCreate.length} system permissions`);
+  } catch (error) {
+    console.error("Error initializing permissions:", error);
+    toast.error("فشل في تهيئة صلاحيات النظام");
   }
-];
-
-export const getAvailableScopesForLevel = (object: string, level: PermissionLevel): PermissionScope[] => {
-  const objectDefinition = getSystemObjects().find(obj => obj.name === object);
-  if (!objectDefinition) return [];
-  
-  const permissionDefinition = objectDefinition.permissions.find(p => p.level === level);
-  return permissionDefinition?.scopes || [];
 };
 
 export const fetchPermissions = async (): Promise<PermissionDefinition[]> => {
@@ -116,7 +102,7 @@ export const fetchPermissions = async (): Promise<PermissionDefinition[]> => {
     }
     
     console.log("Permissions fetched:", data);
-    return (data || []).map(mapDbPermissionToDefinition);
+    return data;
   } catch (error) {
     console.error("خطأ في جلب الصلاحيات:", error);
     toast.error("فشل في جلب قائمة الصلاحيات");
@@ -124,22 +110,21 @@ export const fetchPermissions = async (): Promise<PermissionDefinition[]> => {
   }
 };
 
-export const fetchPermissionById = async (permissionId: string): Promise<PermissionDefinition | null> => {
+export const fetchPermissionById = async (id: string): Promise<PermissionDefinition | null> => {
   try {
-    console.log("Fetching permission by ID:", permissionId);
+    console.log("Fetching permission by ID:", id);
     const { data, error } = await supabase
       .from('permissions')
       .select('*')
-      .eq('id', permissionId)
+      .eq('id', id)
       .single();
     
     if (error) {
-      console.error("Error fetching permission by ID:", error);
+      console.error("Error fetching permission:", error);
       throw error;
     }
     
-    console.log("Permission fetched:", data);
-    return mapDbPermissionToDefinition(data);
+    return data;
   } catch (error) {
     console.error("خطأ في جلب تفاصيل الصلاحية:", error);
     toast.error("فشل في جلب تفاصيل الصلاحية");
@@ -147,16 +132,12 @@ export const fetchPermissionById = async (permissionId: string): Promise<Permiss
   }
 };
 
-export const createPermission = async (permission: Omit<PermissionDefinition, "id">): Promise<PermissionDefinition | null> => {
+export const createPermission = async (permission: Omit<PermissionDefinition, 'id'>): Promise<PermissionDefinition | null> => {
   try {
     console.log("Creating permission:", permission);
-    
     const { data, error } = await supabase
       .from('permissions')
-      .insert([{
-        name: permission.name,
-        description: permission.description || permission.name
-      }])
+      .insert([permission])
       .select()
       .single();
     
@@ -165,18 +146,10 @@ export const createPermission = async (permission: Omit<PermissionDefinition, "i
       throw error;
     }
     
-    console.log("Permission created successfully:", data);
-    toast.success("تم إضافة الصلاحية بنجاح");
-    return mapDbPermissionToDefinition(data);
-  } catch (error: any) {
+    return data;
+  } catch (error) {
     console.error("خطأ في إضافة الصلاحية:", error);
-    
-    if (error.code === '23505') {
-      toast.error("اسم الصلاحية موجود بالفعل");
-    } else {
-      toast.error("فشل في إضافة الصلاحية");
-    }
-    
+    toast.error("فشل في إضافة الصلاحية");
     return null;
   }
 };
@@ -184,12 +157,14 @@ export const createPermission = async (permission: Omit<PermissionDefinition, "i
 export const updatePermission = async (permission: PermissionDefinition): Promise<PermissionDefinition | null> => {
   try {
     console.log("Updating permission:", permission);
-    
     const { data, error } = await supabase
       .from('permissions')
       .update({
         name: permission.name,
-        description: permission.description
+        description: permission.description,
+        object: permission.object,
+        level: permission.level,
+        scope: permission.scope
       })
       .eq('id', permission.id)
       .select()
@@ -200,18 +175,10 @@ export const updatePermission = async (permission: PermissionDefinition): Promis
       throw error;
     }
     
-    console.log("Permission updated successfully:", data);
-    toast.success("تم تحديث الصلاحية بنجاح");
-    return mapDbPermissionToDefinition(data);
-  } catch (error: any) {
+    return data;
+  } catch (error) {
     console.error("خطأ في تحديث الصلاحية:", error);
-    
-    if (error.code === '23505') {
-      toast.error("اسم الصلاحية موجود بالفعل");
-    } else {
-      toast.error("فشل في تحديث الصلاحية");
-    }
-    
+    toast.error("فشل في تحديث الصلاحية");
     return null;
   }
 };
@@ -219,23 +186,6 @@ export const updatePermission = async (permission: PermissionDefinition): Promis
 export const deletePermission = async (id: string): Promise<boolean> => {
   try {
     console.log("Deleting permission:", id);
-    
-    const { count, error: countError } = await supabase
-      .from('role_permissions')
-      .select('role', { count: 'exact', head: true })
-      .eq('permission_id', id);
-    
-    if (countError) {
-      console.error("Error checking role permissions:", countError);
-      throw countError;
-    }
-    
-    if (count && count > 0) {
-      console.log("Cannot delete permission assigned to roles:", count);
-      toast.error("لا يمكن حذف الصلاحية لأنها مرتبطة بأدوار في النظام");
-      return false;
-    }
-    
     const { error } = await supabase
       .from('permissions')
       .delete()
@@ -246,8 +196,6 @@ export const deletePermission = async (id: string): Promise<boolean> => {
       throw error;
     }
     
-    console.log("Permission deleted successfully");
-    toast.success("تم حذف الصلاحية بنجاح");
     return true;
   } catch (error) {
     console.error("خطأ في حذف الصلاحية:", error);
@@ -256,72 +204,113 @@ export const deletePermission = async (id: string): Promise<boolean> => {
   }
 };
 
-export const checkUserHasPermission = async (object: string, level: PermissionLevel, scope: PermissionScope): Promise<boolean> => {
-  try {
-    const { data: user } = await supabase.auth.getUser();
-    if (!user?.user) return false;
-    
-    const permissionName = `${object}_${level}_${scope}`;
-    
-    const { data, error } = await supabase
-      .rpc('has_permission', {
-        user_id: user.user.id,
-        permission_name: permissionName
-      });
-    
-    if (error) {
-      console.error("Error checking permission:", error);
-      throw error;
-    }
-    
-    return !!data;
-  } catch (error) {
-    console.error("Error checking permission:", error);
-    return false;
-  }
+export const getSystemObjects = (): SystemObject[] => {
+  return [
+    {
+      name: 'leads',
+      label: 'العملاء المحتملين',
+      permissions: [
+        {
+          level: 'read-only',
+          scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[]
+        },
+        {
+          level: 'read-edit',
+          scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[]
+        },
+        {
+          level: 'full-access',
+          scopes: ['own', 'team', 'all'] as PermissionScope[]
+        }
+      ]
+    },
+    {
+      name: 'deals',
+      label: 'الصفقات',
+      permissions: [
+        {
+          level: 'read-only',
+          scopes: ['own', 'team', 'all'] as PermissionScope[]
+        },
+        {
+          level: 'read-edit',
+          scopes: ['own', 'team', 'all'] as PermissionScope[]
+        },
+        {
+          level: 'full-access',
+          scopes: ['own', 'team', 'all'] as PermissionScope[]
+        }
+      ]
+    },
+    {
+      name: 'tickets',
+      label: 'التذاكر',
+      permissions: [
+        {
+          level: 'read-only',
+          scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[]
+        },
+        {
+          level: 'read-edit',
+          scopes: ['own', 'team', 'all', 'unassigned'] as PermissionScope[]
+        },
+        {
+          level: 'full-access',
+          scopes: ['own', 'team', 'all'] as PermissionScope[]
+        }
+      ]
+    },
+    {
+      name: 'users',
+      label: 'المستخدمين',
+      permissions: [
+        {
+          level: 'read-only',
+          scopes: ['team', 'all'] as PermissionScope[]
+        },
+        {
+          level: 'read-edit',
+          scopes: ['team', 'all'] as PermissionScope[]
+        },
+        {
+          level: 'full-access',
+          scopes: ['all'] as PermissionScope[]
+        }
+      ]
+    },
+  ];
 };
 
-export const initializeSystemPermissions = async (): Promise<boolean> => {
-  try {
-    const { count, error: countError } = await supabase
-      .from('permissions')
-      .select('*', { count: 'exact', head: true });
-    
-    if (countError) throw countError;
-    
-    if (count && count > 0) {
-      console.log("Permissions already initialized, count:", count);
-      return true;
-    }
-    
-    console.log("Initializing system permissions...");
-    
-    const systemObjects = getSystemObjects();
-    const permissionsToCreate = [];
-    
-    for (const obj of systemObjects) {
-      for (const perm of obj.permissions) {
-        for (const scope of perm.scopes) {
-          const permName = `${obj.name}_${perm.level}_${scope}`;
-          permissionsToCreate.push({
-            name: permName,
-            description: `${perm.description} (${scope})`
-          });
-        }
-      }
-    }
-    
-    if (permissionsToCreate.length > 0) {
-      const { error: insertError } = await supabase
-        .from('permissions')
-        .insert(permissionsToCreate);
-      
-      if (insertError) throw insertError;
-    }
-    
-    return true;
-  } catch (error) {
-    console.error("Error initializing permissions:", error);
-    return false;
+const getPermissionDescription = (objectLabel: string, level: PermissionLevel, scope: PermissionScope): string => {
+  let levelDesc = '';
+  let scopeDesc = '';
+  
+  switch (level) {
+    case 'read-only':
+      levelDesc = 'عرض';
+      break;
+    case 'read-edit':
+      levelDesc = 'عرض وتعديل';
+      break;
+    case 'full-access':
+      levelDesc = 'تحكم كامل في';
+      break;
   }
+  
+  switch (scope) {
+    case 'own':
+      scopeDesc = 'الخاصة بالمستخدم';
+      break;
+    case 'team':
+      scopeDesc = 'الخاصة بفريق المستخدم';
+      break;
+    case 'all':
+      scopeDesc = 'جميع';
+      break;
+    case 'unassigned':
+      scopeDesc = 'غير المسندة';
+      break;
+  }
+  
+  return `${levelDesc} ${scopeDesc} ${objectLabel}`;
 };

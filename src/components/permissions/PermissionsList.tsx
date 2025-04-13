@@ -1,19 +1,8 @@
 
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { 
-  Edit, 
-  Trash2, 
-  MoreVertical, 
-  Shield
-} from "lucide-react";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
-import { deletePermission } from "@/services/permissions/permissionsService";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,112 +13,163 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState } from "react";
-import { toast } from "sonner";
+import { Pencil, Trash2, RefreshCw, MoreVertical } from "lucide-react";
+import { deletePermission } from "@/services/permissions/permissionsService";
 import { PermissionDefinition } from "@/services/permissions/permissionTypes";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface PermissionsListProps {
   permissions: PermissionDefinition[];
   isLoading: boolean;
-  onEdit: (permissionId: string) => void;
+  onEdit: (id: string) => void;
   onRefresh: () => void;
 }
 
 const PermissionsList = ({ permissions, isLoading, onEdit, onRefresh }: PermissionsListProps) => {
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [permissionToDelete, setPermissionToDelete] = useState<string | null>(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [selectedPermissionId, setSelectedPermissionId] = useState("");
 
-  const handleDeleteClick = (permissionId: string) => {
-    setPermissionToDelete(permissionId);
-    setDeleteDialogOpen(true);
+  const handleDeleteClick = (id: string) => {
+    setSelectedPermissionId(id);
+    setConfirmDialogOpen(true);
   };
 
-  const confirmDelete = async () => {
-    if (!permissionToDelete) return;
-    
+  const handleDeleteConfirm = async () => {
     try {
-      await deletePermission(permissionToDelete);
-      toast.success("تم حذف الصلاحية بنجاح");
+      await deletePermission(selectedPermissionId);
       onRefresh();
+      toast.success("تم حذف الصلاحية بنجاح");
     } catch (error) {
-      console.error("خطأ في حذف الصلاحية:", error);
-      toast.error("حدث خطأ أثناء محاولة حذف الصلاحية");
+      console.error("Failed to delete permission:", error);
+      toast.error("فشل حذف الصلاحية");
+    } finally {
+      setConfirmDialogOpen(false);
     }
-    
-    setDeleteDialogOpen(false);
-    setPermissionToDelete(null);
   };
 
-  if (isLoading) {
-    return <div className="text-center py-10">جاري تحميل البيانات...</div>;
-  }
+  const getLevelLabel = (level: string): string => {
+    switch (level) {
+      case 'read-only':
+        return 'قراءة فقط';
+      case 'read-edit':
+        return 'قراءة وتعديل';
+      case 'full-access':
+        return 'وصول كامل';
+      default:
+        return level;
+    }
+  };
 
-  if (!permissions || permissions.length === 0) {
-    return (
-      <div className="text-center py-10">
-        <Shield className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-        <h3 className="text-lg font-medium">لا توجد صلاحيات</h3>
-        <p className="text-gray-500 mt-1">لم يتم إضافة أي صلاحيات بعد</p>
-      </div>
-    );
-  }
+  const getScopeLabel = (scope: string): string => {
+    switch (scope) {
+      case 'own':
+        return 'سجلاته';
+      case 'team':
+        return 'فريقه';
+      case 'all':
+        return 'الكل';
+      case 'unassigned':
+        return 'غير مسندة';
+      default:
+        return scope;
+    }
+  };
 
   return (
-    <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>الاسم</TableHead>
-            <TableHead>الوصف</TableHead>
-            <TableHead>إجراءات</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {permissions.map((permission) => (
-            <TableRow key={permission.id}>
-              <TableCell className="font-medium">{permission.name}</TableCell>
-              <TableCell>{permission.description || ''}</TableCell>
-              <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onEdit(permission.id)}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      <span>تعديل</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleDeleteClick(permission.id)}>
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      <span>حذف</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          {!isLoading && (
+            <p className="text-sm text-muted-foreground">
+              إجمالي الصلاحيات: {permissions.length}
+            </p>
+          )}
+        </div>
+        <Button variant="outline" size="sm" onClick={onRefresh}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          تحديث
+        </Button>
+      </div>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent className="rtl">
+      {isLoading ? (
+        <div className="text-center py-10">
+          <div className="inline-block animate-spin rounded-full border-2 border-primary border-t-transparent h-8 w-8 mb-4"></div>
+          <p className="text-muted-foreground">جاري تحميل البيانات...</p>
+        </div>
+      ) : permissions.length === 0 ? (
+        <div className="text-center py-10 border rounded-md">
+          <p className="text-muted-foreground">لا توجد صلاحيات</p>
+        </div>
+      ) : (
+        <div className="border rounded-md">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>الوحدة</TableHead>
+                <TableHead>مستوى الصلاحية</TableHead>
+                <TableHead>نطاق الصلاحية</TableHead>
+                <TableHead>الوصف</TableHead>
+                <TableHead className="text-left">إجراءات</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {permissions.map((permission) => (
+                <TableRow key={permission.id}>
+                  <TableCell>{permission.object}</TableCell>
+                  <TableCell>{getLevelLabel(permission.level)}</TableCell>
+                  <TableCell>{getScopeLabel(permission.scope)}</TableCell>
+                  <TableCell>{permission.description}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => onEdit(permission.id)}>
+                          <Pencil className="mr-2 h-4 w-4" />
+                          <span>تعديل</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteClick(permission.id)}
+                          className="text-red-600 focus:text-red-600"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>حذف</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>هل أنت متأكد من حذف هذه الصلاحية؟</AlertDialogTitle>
             <AlertDialogDescription>
-              سيتم حذف الصلاحية بشكل نهائي. قد يؤثر ذلك على المستخدمين الذين لديهم هذه الصلاحية.
+              هذا الإجراء لا يمكن التراجع عنه. سيؤدي حذف هذه الصلاحية إلى إزالتها من جميع الأدوار المرتبطة بها.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>إلغاء</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
-              تأكيد الحذف
+            <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={handleDeleteConfirm}>
+              حذف
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </div>
   );
 };
 
