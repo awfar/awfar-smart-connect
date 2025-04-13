@@ -1,30 +1,7 @@
 
-import { Link, useLocation } from 'react-router-dom';
-import { 
-  BarChart, 
-  Calendar, 
-  Contact, 
-  DollarSign, 
-  FileText, 
-  Home, 
-  LayoutDashboard, 
-  Mail, 
-  Settings, 
-  UserCog, 
-  Users, 
-  FileEdit, 
-  DatabaseZap,
-  FormInput,
-  ShoppingBag,
-  Package,
-  Receipt,
-  Bookmark,
-  X
-} from 'lucide-react';
-import { cn } from "@/lib/utils";
-import { Button } from '../ui/button';
-import { Sheet, SheetContent, SheetClose } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
+import DesktopNav from './DesktopNav';
+import MobileNav from './MobileNav';
 
 interface DashboardNavProps {
   mobileOpen?: boolean;
@@ -32,178 +9,15 @@ interface DashboardNavProps {
 }
 
 const DashboardNav = ({ mobileOpen = false, onClose }: DashboardNavProps) => {
-  const { pathname } = useLocation();
   const isMobile = useIsMobile();
-
-  const navItems = [
-    {
-      href: '/dashboard',
-      label: 'لوحة التحكم',
-      icon: LayoutDashboard,
-    },
-    {
-      href: '/leads',
-      label: 'العملاء المحتملين',
-      icon: Users,
-    },
-    {
-      href: '/deals',
-      label: 'الصفقات',
-      icon: DollarSign,
-    },
-    {
-      href: '/companies',
-      label: 'الشركات',
-      icon: Home,
-    },
-    {
-      href: '/appointments',
-      label: 'المواعيد',
-      icon: Calendar,
-    },
-    {
-      href: '/tasks',
-      label: 'المهام',
-      icon: FileText,
-    },
-    {
-      href: '/tickets',
-      label: 'تذاكر الدعم',
-      icon: Mail,
-    },
-    {
-      href: '/reports',
-      label: 'التقارير',
-      icon: BarChart,
-    },
-    {
-      href: '/users',
-      label: 'المستخدمين',
-      icon: Contact,
-    },
-    {
-      href: '/catalog',
-      label: 'إدارة الكتالوج',
-      icon: ShoppingBag,
-    },
-    {
-      href: '/subscriptions',
-      label: 'إدارة الاشتراكات',
-      icon: Bookmark,
-    },
-    {
-      href: '/packages',
-      label: 'إدارة الباقات',
-      icon: Package,
-    },
-    {
-      href: '/invoices',
-      label: 'الفواتير',
-      icon: Receipt,
-    },
-    {
-      href: '/properties',
-      label: 'إدارة الخصائص',
-      icon: DatabaseZap,
-    },
-    {
-      href: '/form-builder',
-      label: 'بناء النماذج',
-      icon: FormInput,
-    },
-    {
-      href: '/cms',
-      label: 'إدارة المحتوى',
-      icon: FileEdit,
-    },
-    {
-      href: '/settings',
-      label: 'الإعدادات',
-      icon: Settings,
-    }
-  ];
 
   // For desktop view
   if (!isMobile) {
-    return (
-      <div className="h-full w-64 border-l p-4 bg-awfar-primary text-white">
-        <div className="flex justify-center mb-6 pt-2">
-          <img 
-            src="/lovable-uploads/2469fa9e-f2ef-495c-b429-586ab2bf0574.png" 
-            alt="Awfar Logo" 
-            className="h-9" 
-          />
-        </div>
-        <div className="space-y-1">
-          {navItems.map((item) => (
-            <Link key={item.href} to={item.href}>
-              <Button
-                variant={pathname === item.href ? "secondary" : "ghost"}
-                className={cn(
-                  "w-full justify-start gap-2 text-right",
-                  pathname === item.href
-                    ? "bg-awfar-accent text-awfar-primary hover:bg-awfar-accent/90"
-                    : "text-white hover:bg-awfar-primary/50 hover:text-gray-200"
-                )}
-              >
-                <item.icon className="h-4 w-4" />
-                {item.label}
-              </Button>
-            </Link>
-          ))}
-        </div>
-      </div>
-    );
+    return <DesktopNav />;
   }
 
   // For mobile view
-  return (
-    <Sheet open={mobileOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="rtl p-0 w-[80%] sm:max-w-sm bg-awfar-primary text-white">
-        <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-4 border-b border-gray-700">
-            <h2 className="font-semibold text-white">القائمة</h2>
-            <SheetClose asChild>
-              <Button variant="ghost" size="icon" onClick={onClose} className="text-white hover:bg-awfar-primary/50">
-                <X className="h-4 w-4" />
-              </Button>
-            </SheetClose>
-          </div>
-          
-          <div className="flex justify-center my-4">
-            <img 
-              src="/lovable-uploads/2469fa9e-f2ef-495c-b429-586ab2bf0574.png" 
-              alt="Awfar Logo" 
-              className="h-9" 
-            />
-          </div>
-          
-          <div className="flex-1 overflow-y-auto p-4">
-            <div className="space-y-1">
-              {navItems.map((item) => (
-                <SheetClose key={item.href} asChild>
-                  <Link to={item.href} onClick={onClose}>
-                    <Button
-                      variant={pathname === item.href ? "secondary" : "ghost"}
-                      className={cn(
-                        "w-full justify-start gap-2 text-right",
-                        pathname === item.href
-                          ? "bg-awfar-accent text-awfar-primary hover:bg-awfar-accent/90"
-                          : "text-white hover:bg-awfar-primary/50 hover:text-gray-200"
-                      )}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {item.label}
-                    </Button>
-                  </Link>
-                </SheetClose>
-              ))}
-            </div>
-          </div>
-        </div>
-      </SheetContent>
-    </Sheet>
-  );
+  return <MobileNav isOpen={mobileOpen} onClose={onClose || (() => {})} />;
 };
 
 export default DashboardNav;
