@@ -1,12 +1,11 @@
 
-import { useState, useEffect } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Accordion } from "@/components/ui/accordion";
 import { PermissionDefinition, ModulePermission, PermissionScope, PermissionAction } from "@/services/permissions/permissionTypes";
 import { getSystemModules } from "@/services/permissions/permissionsService";
+import ModuleAccordionItem from "./ModuleAccordionItem";
 
 interface PermissionMatrixProps {
   permissions: PermissionDefinition[];
@@ -145,65 +144,16 @@ const PermissionMatrix = ({ permissions, selectedPermissions, onChange }: Permis
         <div className="p-4 space-y-4">
           <Accordion type="multiple" className="w-full">
             {filteredModules.map(module => (
-              <AccordionItem key={module} value={module}>
-                <AccordionTrigger className="text-lg font-medium hover:no-underline">
-                  {getModuleLabel(module)}
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="pt-2">
-                    <table className="w-full text-sm">
-                      <thead className="bg-muted">
-                        <tr>
-                          <th className="text-right py-2 px-3">الصلاحية</th>
-                          <th className="text-center py-2 px-3">لا صلاحية</th>
-                          {['own', 'team', 'all'].map(scope => (
-                            <th key={scope} className="text-center py-2 px-3">
-                              {scopeLabels[scope as PermissionScope]}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {(['create', 'read', 'update', 'delete'] as PermissionAction[]).map(action => {
-                          const availableScopes = getAvailableScopesForAction(module, action);
-                          if (availableScopes.length === 0) return null;
-                          
-                          return (
-                            <tr key={`${module}_${action}`} className="border-b">
-                              <td className="py-3 px-3 font-medium">
-                                {actionLabels[action]}
-                              </td>
-                              <td className="text-center">
-                                <Checkbox 
-                                  checked={!isPermissionSelected(module, action, 'own') && 
-                                           !isPermissionSelected(module, action, 'team') &&
-                                           !isPermissionSelected(module, action, 'all')}
-                                  onCheckedChange={() => togglePermission(module, action, null)}
-                                />
-                              </td>
-                              {(['own', 'team', 'all'] as PermissionScope[]).map(scope => {
-                                const isAvailable = availableScopes.includes(scope);
-                                return (
-                                  <td key={`${module}_${action}_${scope}`} className="text-center">
-                                    {isAvailable ? (
-                                      <Checkbox 
-                                        checked={isPermissionSelected(module, action, scope)}
-                                        onCheckedChange={(checked) => togglePermission(module, action, checked ? scope : null)}
-                                      />
-                                    ) : (
-                                      <span className="text-muted-foreground">-</span>
-                                    )}
-                                  </td>
-                                );
-                              })}
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
+              <ModuleAccordionItem
+                key={module}
+                module={module}
+                moduleLabel={getModuleLabel(module)}
+                getAvailableScopesForAction={getAvailableScopesForAction}
+                isPermissionSelected={isPermissionSelected}
+                togglePermission={togglePermission}
+                actionLabels={actionLabels}
+                scopeLabels={scopeLabels}
+              />
             ))}
           </Accordion>
           
