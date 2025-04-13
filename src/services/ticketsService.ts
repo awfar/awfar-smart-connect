@@ -81,8 +81,10 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     }
     
     console.log("Tickets fetched:", data);
-    // Map the database tickets to our Ticket interface
-    return (data || []).map(mapDBTicketToTicket);
+    
+    // Explicitly cast the data to TicketFromDB[] before mapping
+    const typedData = data as TicketFromDB[];
+    return typedData.map(mapDBTicketToTicket);
   } catch (error) {
     console.error("خطأ في جلب التذاكر:", error);
     toast.error("فشل في جلب قائمة التذاكر");
