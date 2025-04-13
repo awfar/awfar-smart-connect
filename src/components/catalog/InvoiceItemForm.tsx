@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { InvoiceFormValues } from "./InvoiceForm";
 import { InvoiceItemRow } from "./InvoiceItemRow";
+import { InvoiceItem } from "@/services/catalog/invoiceService";
 
 interface InvoiceItemFormProps {
   calculateTotal: () => number;
@@ -20,13 +21,15 @@ export function InvoiceItemForm({ calculateTotal }: InvoiceItemFormProps) {
 
   // Add a new item to the invoice
   const addItem = () => {
-    append({ 
+    const newItem: InvoiceItem = { 
       productId: "", 
       productName: "", 
       quantity: 1, 
       unitPrice: 0, 
       totalPrice: 0 
-    });
+    };
+    
+    append(newItem);
   };
 
   // Remove an item from the invoice
