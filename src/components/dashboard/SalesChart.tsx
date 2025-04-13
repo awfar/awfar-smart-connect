@@ -52,20 +52,20 @@ const SalesChart = () => {
   ];
   
   return (
-    <Card className="shadow-md border border-gray-100 overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-gray-50 to-white pb-2">
-        <CardTitle className="text-lg font-medium">أداء المبيعات</CardTitle>
+    <Card className="shadow-lg border-0 bg-gradient-to-br from-white to-gray-50 overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-awfar-primary/5 to-white pb-2 border-b border-gray-100">
+        <CardTitle className="text-lg font-medium text-awfar-primary">أداء المبيعات</CardTitle>
       </CardHeader>
-      <CardContent className="p-4">
-        <div className={`${isMobile ? 'h-[250px]' : 'h-[300px]'}`}>
+      <CardContent className="p-5">
+        <div className={`${isMobile ? 'h-[250px]' : 'h-[320px]'}`}>
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={data}
               margin={{
-                top: 10,
-                right: 30,
+                top: 20,
+                right: 20,
                 left: 0,
-                bottom: 0,
+                bottom: 10,
               }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -74,9 +74,9 @@ const SalesChart = () => {
               <Tooltip 
                 contentStyle={{
                   backgroundColor: "white",
-                  borderRadius: "0.5rem",
+                  borderRadius: "0.75rem",
                   border: "1px solid #f0f0f0",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
+                  boxShadow: "0 4px 16px rgba(0,0,0,0.08)"
                 }}
               />
               <Legend />
@@ -86,7 +86,7 @@ const SalesChart = () => {
                 stackId="1"
                 stroke="#4361EE"
                 fill="#4361EE"
-                fillOpacity={0.6}
+                fillOpacity={0.7}
               />
               <Area
                 type="monotone"
@@ -94,7 +94,7 @@ const SalesChart = () => {
                 stackId="1"
                 stroke="#2B0A3D"
                 fill="#2B0A3D"
-                fillOpacity={0.5}
+                fillOpacity={0.6}
               />
               <Area
                 type="monotone"
@@ -102,7 +102,7 @@ const SalesChart = () => {
                 stackId="1"
                 stroke="#8aff00"
                 fill="#8aff00"
-                fillOpacity={0.2}
+                fillOpacity={0.3}
               />
             </AreaChart>
           </ResponsiveContainer>
