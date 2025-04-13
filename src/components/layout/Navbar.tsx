@@ -4,6 +4,14 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -99,7 +107,7 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center justify-between flex-grow mx-8">
+          <div className="hidden md:flex md:items-center md:justify-between md:flex-grow mx-8">
             <div className="flex items-center space-x-4 rtl:space-x-reverse">
               {menuItems.map((item, index) => (
                 <Link
