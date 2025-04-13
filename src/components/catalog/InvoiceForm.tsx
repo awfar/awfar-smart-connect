@@ -45,13 +45,13 @@ interface InvoiceFormProps {
   onSuccess: () => void;
 }
 
-// تعريف عنصر فاتورة افتراضي - making sure all required properties are explicitly defined
+// تعريف عنصر فاتورة افتراضي مع تحديد جميع الخصائص المطلوبة بشكل صريح
 const DEFAULT_INVOICE_ITEM: InvoiceItem = {
   productId: "",
   productName: "",
   quantity: 1,
   unitPrice: 0,
-  totalPrice: 0,
+  totalPrice: 0
 };
 
 export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
@@ -63,22 +63,21 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
           ...invoice,
           issueDate: new Date(invoice.issueDate),
           dueDate: new Date(invoice.dueDate),
-          // Ensure each item is explicitly typed as InvoiceItem with all required properties
+          // التأكد من تحويل كل عنصر إلى نوع InvoiceItem بشكل صحيح
           items: Array.isArray(invoice.items) 
-            ? invoice.items.map(item => ({
-                productId: item.productId,
-                productName: item.productName,
-                quantity: item.quantity,
-                unitPrice: item.unitPrice,
-                totalPrice: item.totalPrice
-              } as InvoiceItem))
+            ? invoice.items.map((item): InvoiceItem => ({
+                productId: item.productId || "",
+                productName: item.productName || "",
+                quantity: item.quantity || 1,
+                unitPrice: item.unitPrice || 0,
+                totalPrice: item.totalPrice || 0
+              }))
             : [DEFAULT_INVOICE_ITEM]
         }
       : {
           customerId: "",
           customerName: "",
-          // Explicitly create a new copy with all required properties
-          items: [{ ...DEFAULT_INVOICE_ITEM }] as InvoiceItem[],
+          items: [DEFAULT_INVOICE_ITEM], // استخدام العنصر الافتراضي مباشرة
           status: "draft",
           issueDate: new Date(),
           dueDate: addDays(new Date(), 30),

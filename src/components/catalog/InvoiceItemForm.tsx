@@ -21,16 +21,16 @@ export function InvoiceItemForm({ calculateTotal }: InvoiceItemFormProps) {
 
   // إضافة عنصر جديد إلى الفاتورة مع تعيين جميع الخصائص المطلوبة بشكل صريح
   const addItem = () => {
-    // Create a new item with all required properties explicitly defined
-    const newItem: InvoiceItem = { 
-      productId: "", 
-      productName: "", 
-      quantity: 1, 
-      unitPrice: 0, 
-      totalPrice: 0 
+    // إنشاء عنصر جديد مع تحديد جميع الخصائص المطلوبة
+    const newItem: InvoiceItem = {
+      productId: "",
+      productName: "",
+      quantity: 1,
+      unitPrice: 0,
+      totalPrice: 0
     };
     
-    // Append the new item to the form
+    // إضافة العنصر الجديد إلى النموذج
     append(newItem);
   };
 
@@ -45,8 +45,15 @@ export function InvoiceItemForm({ calculateTotal }: InvoiceItemFormProps) {
     const items = form.getValues("items");
     const item = items[index];
     const totalPrice = item.quantity * item.unitPrice;
-    items[index].totalPrice = totalPrice;
-    form.setValue("items", [...items]);
+    
+    // نسخ المصفوفة وتحديث العنصر المحدد
+    const updatedItems = [...items];
+    updatedItems[index] = {
+      ...item,
+      totalPrice
+    };
+    
+    form.setValue("items", updatedItems);
     calculateTotal();
   };
 
