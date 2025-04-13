@@ -64,7 +64,7 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
               quantity: 1,
               unitPrice: 0,
               totalPrice: 0
-            } as InvoiceItem  // Required explicit cast to satisfy TypeScript
+            } as InvoiceItem
           ],
           status: "draft",
           issueDate: new Date(),

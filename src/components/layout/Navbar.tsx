@@ -85,8 +85,8 @@ const Navbar = () => {
             </Button>
           </div>
 
-          {/* Mobile Menu Button - Moved to the right side */}
-          <div className="flex md:hidden">
+          {/* Mobile Menu Button */}
+          <div className="md:hidden">
             <button
               onClick={toggleMenu}
               type="button"
@@ -103,10 +103,10 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu - Fixed positioning for better mobile experience */}
+      {/* Mobile Menu */}
       <div
         className={cn(
-          "md:hidden bg-white absolute top-20 left-0 right-0 w-full z-20 shadow-lg transition-all duration-300 ease-in-out",
+          "md:hidden fixed inset-x-0 top-20 bg-white shadow-lg z-20 transition-all",
           isOpen ? "block" : "hidden"
         )}
       >
@@ -116,13 +116,13 @@ const Navbar = () => {
               key={index}
               to={item.path}
               onClick={toggleMenu}
-              className="text-gray-700 hover:bg-gray-50 hover:text-awfar-primary block px-3 py-2 rounded-md text-base font-medium"
+              className="block text-gray-700 hover:bg-gray-50 hover:text-awfar-primary px-3 py-2 rounded-md text-base font-medium"
             >
               {item.title}
             </Link>
           ))}
         </div>
-        {/* Mobile Auth Buttons - Inside the menu */}
+        {/* Mobile Auth Buttons */}
         <div className="pt-4 pb-3 border-t border-gray-200">
           <div className="flex flex-col px-4 space-y-2">
             <Button asChild variant="outline" className="w-full">
