@@ -57,47 +57,52 @@ export const fetchActivityAnalytics = async (type: 'action' | 'user' | 'entity')
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
     
-    let functionName = '';
     switch (type) {
-      case 'action':
-        // Usamos una consulta directa en lugar de funciones RPC no tipadas
-        const { data: actionData, error: actionError } = await supabase
+      case 'action': {
+        // Usar SQL directa en lugar de group()
+        const { data, error } = await supabase
           .from('activity_logs')
+          .select('action, count')
           .select('action, count(*)')
-          .group('action');
+          .groupBy('action');
         
-        if (actionError) throw actionError;
+        if (error) throw error;
         
-        return actionData.map((item: any) => ({
+        return data.map(item => ({
           name: item.action || 'غير معروف',
-          count: item.count
+          count: parseInt(item.count)
         }));
+      }
       
-      case 'user':
-        const { data: userData, error: userError } = await supabase
+      case 'user': {
+        const { data, error } = await supabase
           .from('activity_logs')
+          .select('user_id, count')
           .select('user_id, count(*)')
-          .group('user_id');
+          .groupBy('user_id');
           
-        if (userError) throw userError;
+        if (error) throw error;
         
-        return userData.map((item: any) => ({
+        return data.map(item => ({
           name: item.user_id || 'غير معروف',
-          count: item.count
+          count: parseInt(item.count)
         }));
+      }
         
-      case 'entity':
-        const { data: entityData, error: entityError } = await supabase
+      case 'entity': {
+        const { data, error } = await supabase
           .from('activity_logs')
+          .select('entity_type, count')
           .select('entity_type, count(*)')
-          .group('entity_type');
+          .groupBy('entity_type');
           
-        if (entityError) throw entityError;
+        if (error) throw error;
         
-        return entityData.map((item: any) => ({
+        return data.map(item => ({
           name: item.entity_type || 'غير معروف',
-          count: item.count
+          count: parseInt(item.count)
         }));
+      }
         
       default:
         return [];
