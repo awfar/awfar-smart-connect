@@ -68,6 +68,7 @@ const Navbar = () => {
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
+    console.log("Menu toggled, isOpen:", !isOpen); // إضافة سجل للتتبع
   };
 
   // إغلاق القائمة عند النقر على أي عنصر فيها
@@ -90,8 +91,8 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Mobile Menu Button - وضع في الطرف الأيمن */}
-          <div className="flex md:hidden">
+          {/* Mobile Menu Button */}
+          <div className="md:hidden order-last">
             <button
               onClick={toggleMenu}
               type="button"
@@ -152,7 +153,7 @@ const Navbar = () => {
             </Link>
           ))}
         </div>
-        {/* Mobile Auth Buttons - تم نقلها إلى داخل القائمة المنسدلة */}
+        {/* Mobile Auth Buttons - داخل القائمة المنسدلة */}
         <div className="pt-4 pb-3 border-t border-gray-200 px-4">
           <div className="flex flex-col space-y-2">
             <Button asChild variant="outline" className="w-full">
