@@ -2,71 +2,78 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export interface ActivityAnalytic {
-  id: string;
   label: string;
   count: number;
 }
 
-// استرجاع إحصائيات النشاط حسب نوع النشاط
-export const fetchActivityAnalytics = async (): Promise<{ 
-  byType: ActivityAnalytic[],
-  byUser: ActivityAnalytic[],
-  byEntity: ActivityAnalytic[]
-}> => {
+export interface ActivityAnalyticsData {
+  byType: ActivityAnalytic[];
+  byUser: ActivityAnalytic[];
+  byEntity: ActivityAnalytic[];
+}
+
+export const fetchActivityAnalytics = async (): Promise<ActivityAnalyticsData> => {
   try {
-    // الإحصائيات حسب نوع النشاط
-    const { data: typeData, error: typeError } = await supabase
+    // 1. Получаем аналитику по типам действий (create, update, delete, и т.д.)
+    const { data: byTypeData, error: typeError } = await supabase
       .from('activity_logs')
-      .select('action, count(*)')
-      .order('count', { ascending: false })
-      .limit(5);
+      .select('action, count')
+      .order('action')
+      .group('action');
     
     if (typeError) throw typeError;
-    
-    // الإحصائيات حسب المستخدم
-    const { data: userData, error: userError } = await supabase
+
+    // 2. Получаем аналитику по пользователям
+    const { data: userActivities, error: userError } = await supabase
       .from('activity_logs')
-      .select('user_id, count(*)')
+      .select(`
+        user_id,
+        profiles:user_id(first_name, last_name),
+        count
+      `)
       .order('count', { ascending: false })
-      .limit(5);
+      .group('user_id, profiles.first_name, profiles.last_name')
+      .limit(10);
     
     if (userError) throw userError;
-    
-    // الإحصائيات حسب الكيان
+
+    // 3. Получаем аналитику по типам сущностей (leads, deals, и т.д.)
     const { data: entityData, error: entityError } = await supabase
       .from('activity_logs')
-      .select('entity_type, count(*)')
+      .select('entity_type, count')
       .order('count', { ascending: false })
-      .limit(5);
+      .group('entity_type');
     
     if (entityError) throw entityError;
-    
-    // تحويل النتائج إلى الشكل المطلوب
-    const byType: ActivityAnalytic[] = typeData.map((item: any) => ({
-      id: item.action,
+
+    // Форматируем данные для графиков
+    const byType: ActivityAnalytic[] = (byTypeData || []).map(item => ({
       label: item.action,
-      count: typeof item.count === 'number' ? item.count : parseInt(item.count)
+      count: parseInt(item.count)
     }));
-    
-    const byUser: ActivityAnalytic[] = userData.map((item: any) => ({
-      id: item.user_id,
-      label: item.user_id,
-      count: typeof item.count === 'number' ? item.count : parseInt(item.count)
-    }));
-    
-    const byEntity: ActivityAnalytic[] = entityData.map((item: any) => ({
-      id: item.entity_type,
+
+    const byUser: ActivityAnalytic[] = (userActivities || []).map(item => {
+      const name = item.profiles 
+        ? `${item.profiles.first_name || ''} ${item.profiles.last_name || ''}`.trim() 
+        : 'مستخدم غير معروف';
+      return {
+        label: name || item.user_id,
+        count: parseInt(item.count)
+      };
+    });
+
+    const byEntity: ActivityAnalytic[] = (entityData || []).map(item => ({
       label: item.entity_type,
-      count: typeof item.count === 'number' ? item.count : parseInt(item.count)
+      count: parseInt(item.count)
     }));
-    
+
     return {
       byType,
       byUser,
       byEntity
     };
   } catch (error) {
-    console.error("Error fetching activity analytics:", error);
+    console.error("خطأ في جلب بيانات تحليل النشاط:", error);
     return {
       byType: [],
       byUser: [],

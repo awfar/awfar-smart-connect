@@ -7,7 +7,7 @@ const DesktopNav = () => {
   const { pathname } = useLocation();
   
   return (
-    <div className="h-full w-64 border-l p-4 bg-awfar-primary text-white">
+    <div className="h-full w-64 border-l p-4 bg-awfar-primary text-white overflow-y-auto">
       <div className="flex justify-center mb-6 pt-2">
         <img 
           src="/lovable-uploads/2469fa9e-f2ef-495c-b429-586ab2bf0574.png" 
@@ -23,6 +23,8 @@ const DesktopNav = () => {
             label={item.label}
             icon={item.icon}
             isActive={pathname === item.href}
+            subItems={item.subItems}
+            expanded={item.expanded}
           />
         ))}
       </div>

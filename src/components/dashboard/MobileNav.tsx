@@ -46,6 +46,8 @@ const MobileNav = ({ isOpen, onClose }: MobileNavProps) => {
                   isActive={pathname === item.href}
                   isMobile={true}
                   onClose={onClose}
+                  subItems={item.subItems}
+                  expanded={item.expanded}
                 />
               ))}
             </div>

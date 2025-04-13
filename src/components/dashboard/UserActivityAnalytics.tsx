@@ -14,7 +14,7 @@ const UserActivityAnalytics: React.FC = () => {
 
   const { data, isLoading } = useQuery({
     queryKey: ['activityAnalytics'],
-    queryFn: () => fetchActivityAnalytics(),
+    queryFn: fetchActivityAnalytics,
   });
 
   const colors = ['#4361EE', '#3A0CA3', '#7209B7', '#F72585', '#4CC9F0'];

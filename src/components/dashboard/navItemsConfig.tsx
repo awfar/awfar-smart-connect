@@ -19,13 +19,18 @@ import {
   Bookmark,
   Shield,
   Building2,
-  UserCog
+  UserCog,
+  UserPlus,
+  Lock,
+  UsersRound
 } from 'lucide-react';
 
 export interface NavItemConfig {
   href: string;
   label: string;
   icon: any;
+  subItems?: NavItemConfig[];
+  expanded?: boolean;
 }
 
 export const navItems: NavItemConfig[] = [
@@ -70,9 +75,37 @@ export const navItems: NavItemConfig[] = [
     icon: BarChart,
   },
   {
-    href: '/users',
-    label: 'المستخدمين',
-    icon: Contact,
+    href: '/users-management',
+    label: 'إدارة المستخدمين',
+    icon: UsersRound,
+    expanded: true,
+    subItems: [
+      {
+        href: '/users',
+        label: 'المستخدمين',
+        icon: UserPlus,
+      },
+      {
+        href: '/roles',
+        label: 'الأدوار والصلاحيات',
+        icon: Shield,
+      },
+      {
+        href: '/permissions',
+        label: 'إدارة الصلاحيات',
+        icon: Lock,
+      },
+      {
+        href: '/departments',
+        label: 'الأقسام',
+        icon: Building2,
+      },
+      {
+        href: '/teams',
+        label: 'الفرق',
+        icon: UserCog,
+      }
+    ]
   },
   {
     href: '/catalog',
@@ -108,21 +141,6 @@ export const navItems: NavItemConfig[] = [
     href: '/cms',
     label: 'إدارة المحتوى',
     icon: FileEdit,
-  },
-  {
-    href: '/roles',
-    label: 'الأدوار والصلاحيات',
-    icon: Shield,
-  },
-  {
-    href: '/departments',
-    label: 'الأقسام',
-    icon: Building2,
-  },
-  {
-    href: '/teams',
-    label: 'الفرق',
-    icon: UserCog,
   },
   {
     href: '/settings',
