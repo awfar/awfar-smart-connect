@@ -15,6 +15,38 @@ export interface Ticket {
   created_at?: string;
   updated_at?: string;
   resolved_at?: string | null;
+  profiles?: {
+    first_name: string;
+    last_name: string;
+  } | null;
+}
+
+interface TicketFromDB {
+  id: string;
+  subject: string;
+  description: string;
+  status: string;
+  priority: string;
+  category?: string;
+  assigned_to?: string;
+  client_id?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+  resolved_at: string | null;
+  profiles?: {
+    first_name: string;
+    last_name: string;
+  } | null;
+}
+
+// Helper function to map database tickets to our Ticket interface
+function mapDBTicketToTicket(ticket: TicketFromDB): Ticket {
+  return {
+    ...ticket,
+    status: ticket.status === 'open' ? 'open' : 'closed',
+    priority: (ticket.priority || 'متوسط') as Ticket['priority']
+  };
 }
 
 export const fetchTickets = async (statusFilter?: string, priorityFilter?: string, categoryFilter?: string): Promise<Ticket[]> => {
@@ -48,7 +80,8 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     }
     
     console.log("Tickets fetched:", data);
-    return data || [];
+    // Map the database tickets to our Ticket interface
+    return (data || []).map(mapDBTicketToTicket);
   } catch (error) {
     console.error("خطأ في جلب التذاكر:", error);
     toast.error("فشل في جلب قائمة التذاكر");
@@ -85,7 +118,7 @@ export const createTicket = async (ticketData: Omit<Ticket, 'id' | 'created_at' 
     
     console.log("Ticket created:", data);
     toast.success("تم إنشاء التذكرة بنجاح");
-    return data;
+    return mapDBTicketToTicket(data);
   } catch (error) {
     console.error("خطأ في إنشاء التذكرة:", error);
     toast.error("فشل في إنشاء التذكرة");
@@ -115,7 +148,7 @@ export const updateTicket = async (id: string, ticketData: Partial<Ticket>): Pro
     
     console.log("Ticket updated:", data);
     toast.success("تم تحديث التذكرة بنجاح");
-    return data;
+    return mapDBTicketToTicket(data);
   } catch (error) {
     console.error("خطأ في تحديث التذكرة:", error);
     toast.error("فشل في تحديث التذكرة");
