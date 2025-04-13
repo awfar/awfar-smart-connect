@@ -6,7 +6,7 @@ import { useForm, FormProvider } from "react-hook-form";
 import { Invoice, InvoiceItem } from "@/services/catalog/invoice/types";
 import { createInvoice } from "@/services/catalog/invoice/crud";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { toast } from "sonner";
 import { format, addDays } from "date-fns";
@@ -136,7 +136,18 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
     <FormProvider {...form}>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="mb-6 flex justify-center">
+            <img 
+              src="/lovable-uploads/c404f91d-42bc-4601-8675-47a02888d011.png" 
+              alt="Awfar Logo" 
+              className="h-14" 
+            />
+          </div>
+          
           <Card>
+            <CardHeader className="bg-awfar-primary text-white py-4">
+              <div className="text-center text-lg font-semibold">فاتورة خدمات أوفر</div>
+            </CardHeader>
             <CardContent className="pt-6">
               <div className="grid grid-cols-1 gap-6">
                 <InvoiceHeader statusOptions={statusOptions} />
@@ -152,7 +163,9 @@ export default function InvoiceForm({ invoice, onSuccess }: InvoiceFormProps) {
             <Button type="button" variant="outline" onClick={onSuccess}>
               إلغاء
             </Button>
-            <Button type="submit">إنشاء الفاتورة</Button>
+            <Button type="submit" className="bg-awfar-primary hover:bg-awfar-primary/90">
+              إنشاء الفاتورة
+            </Button>
           </div>
         </form>
       </Form>

@@ -127,6 +127,13 @@ const DashboardNav = ({ mobileOpen = false, onClose }: DashboardNavProps) => {
   if (!isMobile) {
     return (
       <div className="h-full w-64 border-l p-4 bg-white dark:bg-gray-900">
+        <div className="flex justify-center mb-6 pt-2">
+          <img 
+            src="/lovable-uploads/c404f91d-42bc-4601-8675-47a02888d011.png" 
+            alt="Awfar Logo" 
+            className="h-9" 
+          />
+        </div>
         <div className="space-y-1">
           {navItems.map((item) => (
             <Link key={item.href} to={item.href}>
@@ -135,7 +142,7 @@ const DashboardNav = ({ mobileOpen = false, onClose }: DashboardNavProps) => {
                 className={cn(
                   "w-full justify-start gap-2 text-right",
                   pathname === item.href
-                    ? "bg-muted hover:bg-muted"
+                    ? "bg-awfar-primary text-white hover:bg-awfar-primary/90"
                     : "hover:bg-transparent hover:underline"
                 )}
               >
@@ -163,6 +170,14 @@ const DashboardNav = ({ mobileOpen = false, onClose }: DashboardNavProps) => {
             </SheetClose>
           </div>
           
+          <div className="flex justify-center my-4">
+            <img 
+              src="/lovable-uploads/c404f91d-42bc-4601-8675-47a02888d011.png" 
+              alt="Awfar Logo" 
+              className="h-9" 
+            />
+          </div>
+          
           <div className="flex-1 overflow-y-auto p-4">
             <div className="space-y-1">
               {navItems.map((item) => (
@@ -173,7 +188,7 @@ const DashboardNav = ({ mobileOpen = false, onClose }: DashboardNavProps) => {
                       className={cn(
                         "w-full justify-start gap-2 text-right",
                         pathname === item.href
-                          ? "bg-muted hover:bg-muted"
+                          ? "bg-awfar-primary text-white hover:bg-awfar-primary/90"
                           : "hover:bg-transparent hover:underline"
                       )}
                     >

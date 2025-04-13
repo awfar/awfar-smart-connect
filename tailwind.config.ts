@@ -66,11 +66,14 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Custom colors for Awfar
+				// Custom colors for Awfar - تحديث ألوان العلامة التجارية
 				awfar: {
-					primary: '#2B0A3D',
-					secondary: '#4361EE',
-					accent: '#4ADE80',
+					primary: '#2B0A3D',     // اللون الأساسي لأوفر
+					secondary: '#4361EE',   // اللون الثانوي
+					accent: '#8aff00',      // لون التمييز الأخضر من الشعار
+					light: '#ffffff',       // اللون الأبيض
+					gray: '#8E9196',        // اللون الرمادي المحايد
+					lightPurple: '#D6BCFA', // اللون الأرجواني الفاتح
 				},
 			},
 			borderRadius: {
@@ -108,6 +111,7 @@ export default {
 			backgroundImage: {
 				'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
 				'hero-pattern': 'linear-gradient(to right, #2B0A3D, #4361EE)',
+				'awfar-gradient': 'linear-gradient(135deg, #2B0A3D 0%, #4361EE 100%)',
 			}
 		}
 	},

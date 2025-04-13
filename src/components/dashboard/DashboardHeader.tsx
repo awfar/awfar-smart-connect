@@ -19,6 +19,14 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuToggle }) => {
             <Menu className="h-5 w-5" />
           </Button>
           
+          <div className="mr-4 flex items-center">
+            <img 
+              src="/lovable-uploads/c404f91d-42bc-4601-8675-47a02888d011.png" 
+              alt="Awfar Logo" 
+              className="h-9" 
+            />
+          </div>
+          
           <div className="relative hidden md:flex items-center">
             <Search className="absolute right-3 h-4 w-4 text-muted-foreground" />
             <input

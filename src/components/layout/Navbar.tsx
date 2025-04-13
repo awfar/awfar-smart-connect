@@ -83,7 +83,7 @@ const Navbar = () => {
           <div className="flex-shrink-0">
             <Link to="/" className="flex items-center" onClick={closeMenu}>
               <img 
-                src="/lovable-uploads/3020e17e-f138-47f6-ad1e-029e32c4540f.png" 
+                src="/lovable-uploads/c404f91d-42bc-4601-8675-47a02888d011.png" 
                 alt="Awfar Logo" 
                 className="h-10" 
               />
@@ -107,8 +107,8 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex md:items-center md:justify-between md:flex-grow mx-8">
-            <div className="flex items-center space-x-4 rtl:space-x-reverse">
+          <div className="hidden md:block md:flex-1">
+            <div className="flex items-center justify-center space-x-4 rtl:space-x-reverse">
               {menuItems.map((item, index) => (
                 <Link
                   key={index}
