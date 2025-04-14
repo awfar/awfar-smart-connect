@@ -41,28 +41,31 @@ export const fetchTickets = async (
     
     console.log("Fetched tickets data:", data);
     
-    // Convert the data to plain objects to avoid any circular references
-    // Using a simple approach to break the type instantiation chain
-    const plainTickets = JSON.parse(JSON.stringify(data || []));
+    // Break the type instantiation chain by converting raw data to a known structure
+    const ticketsArray = [];
     
-    // Map the tickets to the expected format
-    return plainTickets.map((ticket: any) => {
-      return mapDBTicketToTicket({
-        id: ticket.id,
-        subject: ticket.subject,
-        description: ticket.description,
-        status: ticket.status,
-        priority: ticket.priority,
-        category: ticket.category,
-        client_id: ticket.client_id,
-        assigned_to: ticket.assigned_to,
-        created_by: ticket.created_by,
-        created_at: ticket.created_at,
-        updated_at: ticket.updated_at,
-        resolved_at: ticket.resolved_at,
-        profiles: ticket.profiles
-      });
-    });
+    if (data && Array.isArray(data)) {
+      for (const ticket of data) {
+        // Manually extract only the fields we need
+        ticketsArray.push(mapDBTicketToTicket({
+          id: ticket.id,
+          subject: ticket.subject,
+          description: ticket.description,
+          status: ticket.status,
+          priority: ticket.priority,
+          category: ticket.category,
+          client_id: ticket.client_id,
+          assigned_to: ticket.assigned_to,
+          created_by: ticket.created_by,
+          created_at: ticket.created_at,
+          updated_at: ticket.updated_at,
+          resolved_at: ticket.resolved_at,
+          profiles: ticket.profiles
+        } as TicketFromDB));
+      }
+    }
+    
+    return ticketsArray;
   } catch (error) {
     console.error("Error in fetchTickets:", error);
     return [];
@@ -94,25 +97,22 @@ export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
     // Safe conversion to avoid type errors
     if (!data) return null;
     
-    // Break type references to prevent deep instantiation issues
-    const plainData = JSON.parse(JSON.stringify(data));
-    
     // Map directly to Ticket type to avoid excessive type recursion
     return mapDBTicketToTicket({
-      id: plainData.id,
-      subject: plainData.subject,
-      description: plainData.description,
-      status: plainData.status,
-      priority: plainData.priority,
-      category: plainData.category,
-      client_id: plainData.client_id,
-      assigned_to: plainData.assigned_to,
-      created_by: plainData.created_by,
-      created_at: plainData.created_at,
-      updated_at: plainData.updated_at,
-      resolved_at: plainData.resolved_at,
-      profiles: plainData.profiles
-    });
+      id: data.id,
+      subject: data.subject,
+      description: data.description,
+      status: data.status,
+      priority: data.priority,
+      category: data.category,
+      client_id: data.client_id,
+      assigned_to: data.assigned_to,
+      created_by: data.created_by,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      resolved_at: data.resolved_at,
+      profiles: data.profiles
+    } as TicketFromDB);
   } catch (error) {
     console.error("Error in fetchTicketById:", error);
     return null;
