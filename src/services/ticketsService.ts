@@ -82,12 +82,12 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     
     console.log("Tickets fetched:", data);
     
-    // Completely break the type dependency chain by casting to any first
-    // This prevents TypeScript from trying to deeply analyze the nested structure
-    const safeData = (data || []) as any[];
+    // Fix the excessive type instantiation depth error
+    // First, break the complex type chain by explicitly casting to a simple array type
+    const simpleArray: Record<string, any>[] = data || [];
     
-    // Then map using our helper function with a clean type path
-    return safeData.map(item => mapDBTicketToTicket(item as TicketFromDB));
+    // Then map each item using our helper function
+    return simpleArray.map(item => mapDBTicketToTicket(item as TicketFromDB));
   } catch (error) {
     console.error("خطأ في جلب التذاكر:", error);
     toast.error("فشل في جلب قائمة التذاكر");
