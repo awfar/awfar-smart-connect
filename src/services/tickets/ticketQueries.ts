@@ -27,17 +27,13 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
       queryBuilder = queryBuilder.eq('category', categoryFilter);
     }
     
-    // Execute the query and completely break the type chain
-    // Use a raw fetch approach to ensure TypeScript doesn't try to infer complex types
-    const { data: rawData, error } = await queryBuilder
-      .order('created_at', { ascending: false })
-      // Cast to any immediately to break the deep type inference chain
-      .then((response) => {
-        return { 
-          data: response.data as any, 
-          error: response.error 
-        };
-      });
+    // Use a two-step approach to completely break the type chain
+    // First, execute the query and get the raw response
+    const response = await queryBuilder.order('created_at', { ascending: false });
+    
+    // Then, extract the data without type inference
+    const rawData = response.data as any[] | null;
+    const error = response.error;
     
     if (error) {
       console.error("Error fetching tickets:", error);
