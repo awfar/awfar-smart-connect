@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -94,11 +93,11 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
         industry: formData.industry || "",
         website: formData.website || "",
         country: formData.country || "",
-        // Additional required fields based on the Company type
+        phone: "",
+        address: "",
         type: "customer",
         contacts: [],
         status: "active"
-        // Removed createdAt as it's automatically handled by the service
       });
       
       console.log("Company created:", newCompany);
