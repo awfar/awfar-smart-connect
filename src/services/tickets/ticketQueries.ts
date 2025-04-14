@@ -42,9 +42,8 @@ export const fetchTickets = async (
       filters['category'] = categoryFilter;
     }
     
-    // Execute the query without chaining to avoid deep type inference
-    // Use type assertion to any to bypass TypeScript's type checking for the query
-    const result = await (supabase as any)
+    // Execute query using a type assertion to avoid deep type inference issues
+    const { data: rawData, error } = await (supabase
       .from('tickets')
       .select(`
         *,
@@ -52,33 +51,30 @@ export const fetchTickets = async (
           first_name,
           last_name
         )
-      `)
+      `) as any)
       .order('created_at', { ascending: false });
-      
-    // Apply filters after query execution if needed
-    let rawData = result.data || [];
-    const error = result.error;
     
     if (error) {
       console.error("Error fetching tickets:", error);
       throw error;
     }
     
-    // Apply manual filtering instead of in the query if filters exist
+    // Filter results based on criteria if needed
+    let filteredData = rawData || [];
     if (Object.keys(filters).length > 0) {
-      rawData = rawData.filter((ticket: any) => {
+      filteredData = filteredData.filter((ticket: any) => {
         return Object.entries(filters).every(([key, value]) => ticket[key] === value);
       });
     }
     
-    console.log("Fetched tickets data:", rawData);
+    console.log("Fetched tickets data:", filteredData);
     
     // Manually transform data to avoid deep type inference
     const ticketsArray: Ticket[] = [];
     
     // Safely process the data with manual transformation
-    for (let i = 0; i < rawData.length; i++) {
-      const transformedTicket = safeTransformTicket(rawData[i]);
+    for (let i = 0; i < filteredData.length; i++) {
+      const transformedTicket = safeTransformTicket(filteredData[i]);
       ticketsArray.push(mapDBTicketToTicket(transformedTicket));
     }
     
@@ -91,8 +87,8 @@ export const fetchTickets = async (
 
 export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
   try {
-    // Execute query with explicit type casting to avoid deep inference
-    const result = await (supabase as any)
+    // Use type casting to avoid deep type inference
+    const { data: rawData, error } = await (supabase
       .from('tickets')
       .select(`
         *,
@@ -100,12 +96,9 @@ export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
           first_name,
           last_name
         )
-      `)
+      `) as any)
       .eq('id', id)
       .single();
-    
-    const rawData = result.data;
-    const error = result.error;
     
     if (error) {
       console.error("Error fetching ticket by id:", error);
