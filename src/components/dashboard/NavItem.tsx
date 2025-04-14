@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { LucideIcon, ChevronDown, ChevronLeft } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Button } from '../ui/button';
@@ -29,6 +29,7 @@ const NavItem = ({
   expanded: defaultExpanded = false
 }: NavItemProps) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
+  const location = useLocation();
 
   const handleToggleExpand = (e: React.MouseEvent) => {
     if (subItems && subItems.length > 0) {
@@ -37,8 +38,9 @@ const NavItem = ({
     }
   };
 
-  // Определяем, активен ли элемент или любой из его дочерних элементов
-  const isActiveItem = isActive || (subItems?.some(item => window.location.pathname === item.href) ?? false);
+  // Check if current path matches this item or any of its children
+  const isActiveItem = isActive || location.pathname.startsWith(href) || 
+    (subItems?.some(item => location.pathname.startsWith(item.href)) ?? false);
   
   const renderContent = () => (
     <Button
@@ -73,10 +75,10 @@ const NavItem = ({
                   <SheetClose key={item.href} asChild>
                     <Link to={item.href} onClick={onClose} className="block w-full">
                       <Button
-                        variant={window.location.pathname === item.href ? "secondary" : "ghost"}
+                        variant={location.pathname.startsWith(item.href) ? "secondary" : "ghost"}
                         className={cn(
                           "w-full justify-start gap-2 text-right mt-1",
-                          window.location.pathname === item.href
+                          location.pathname.startsWith(item.href)
                             ? "bg-awfar-accent text-awfar-primary hover:bg-awfar-accent/90"
                             : "text-white hover:bg-awfar-primary/50 hover:text-gray-200"
                         )}
@@ -114,10 +116,10 @@ const NavItem = ({
               {subItems.map((item) => (
                 <Link key={item.href} to={item.href} className="block w-full">
                   <Button
-                    variant={window.location.pathname === item.href ? "secondary" : "ghost"}
+                    variant={location.pathname.startsWith(item.href) ? "secondary" : "ghost"}
                     className={cn(
                       "w-full justify-start gap-2 text-right mt-1",
-                      window.location.pathname === item.href
+                      location.pathname.startsWith(item.href)
                         ? "bg-awfar-accent text-awfar-primary hover:bg-awfar-accent/90"
                         : "text-white hover:bg-awfar-primary/50 hover:text-gray-200"
                     )}

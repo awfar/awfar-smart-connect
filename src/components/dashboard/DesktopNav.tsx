@@ -4,7 +4,7 @@ import { navItems } from './navItemsConfig';
 import NavItem from './NavItem';
 
 const DesktopNav = () => {
-  const { pathname } = useLocation();
+  const location = useLocation();
   
   return (
     <div className="h-full w-64 border-l p-4 bg-awfar-primary text-white overflow-y-auto">
@@ -22,9 +22,9 @@ const DesktopNav = () => {
             href={item.href}
             label={item.label}
             icon={item.icon}
-            isActive={pathname === item.href}
+            isActive={location.pathname === item.href}
             subItems={item.subItems}
-            expanded={item.expanded}
+            expanded={item.expanded || location.pathname.startsWith(item.href)}
           />
         ))}
       </div>

@@ -22,7 +22,8 @@ import {
   UserCog,
   UserPlus,
   Lock,
-  UsersRound
+  UsersRound,
+  MessageSquare
 } from 'lucide-react';
 
 export interface NavItemConfig {
@@ -40,110 +41,115 @@ export const navItems: NavItemConfig[] = [
     icon: LayoutDashboard,
   },
   {
-    href: '/leads',
+    href: '/dashboard/leads',
     label: 'العملاء المحتملين',
     icon: Users,
   },
   {
-    href: '/deals',
+    href: '/dashboard/deals',
     label: 'الصفقات',
     icon: DollarSign,
   },
   {
-    href: '/companies',
+    href: '/dashboard/companies',
     label: 'الشركات',
-    icon: Home,
+    icon: Building2,
   },
   {
-    href: '/appointments',
+    href: '/dashboard/appointments',
     label: 'المواعيد',
     icon: Calendar,
   },
   {
-    href: '/tasks',
+    href: '/dashboard/tasks',
     label: 'المهام',
     icon: FileText,
   },
   {
-    href: '/tickets',
+    href: '/dashboard/tickets',
     label: 'تذاكر الدعم',
     icon: Mail,
   },
   {
-    href: '/reports',
+    href: '/dashboard/chats',
+    label: 'المحادثات',
+    icon: MessageSquare,
+  },
+  {
+    href: '/dashboard/reports',
     label: 'التقارير',
     icon: BarChart,
   },
   {
-    href: '/users-management',
+    href: '/dashboard/users-management',
     label: 'إدارة المستخدمين',
     icon: UsersRound,
     expanded: true,
     subItems: [
       {
-        href: '/users',
+        href: '/dashboard/users',
         label: 'المستخدمين',
         icon: UserPlus,
       },
       {
-        href: '/roles',
+        href: '/dashboard/roles',
         label: 'الأدوار والصلاحيات',
         icon: Shield,
       },
       {
-        href: '/permissions',
+        href: '/dashboard/permissions',
         label: 'إدارة الصلاحيات',
         icon: Lock,
       },
       {
-        href: '/departments',
+        href: '/dashboard/departments',
         label: 'الأقسام',
         icon: Building2,
       },
       {
-        href: '/teams',
+        href: '/dashboard/teams',
         label: 'الفرق',
         icon: UserCog,
       }
     ]
   },
   {
-    href: '/catalog',
+    href: '/dashboard/catalog',
     label: 'إدارة الكتالوج',
     icon: ShoppingBag,
   },
   {
-    href: '/subscriptions',
+    href: '/dashboard/subscriptions',
     label: 'إدارة الاشتراكات',
     icon: Bookmark,
   },
   {
-    href: '/packages',
+    href: '/dashboard/packages',
     label: 'إدارة الباقات',
     icon: Package,
   },
   {
-    href: '/invoices',
+    href: '/dashboard/invoices',
     label: 'الفواتير',
     icon: Receipt,
   },
   {
-    href: '/properties',
+    href: '/dashboard/properties',
     label: 'إدارة الخصائص',
     icon: DatabaseZap,
   },
   {
-    href: '/form-builder',
+    href: '/dashboard/forms',
     label: 'بناء النماذج',
     icon: FormInput,
   },
   {
-    href: '/cms',
+    href: '/dashboard/cms',
     label: 'إدارة المحتوى',
     icon: FileEdit,
   },
   {
-    href: '/settings',
+    href: '/dashboard/settings',
     label: 'الإعدادات',
     icon: Settings,
   }
