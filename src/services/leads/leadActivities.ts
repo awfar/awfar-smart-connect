@@ -2,38 +2,40 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LeadActivity } from "../types/leadTypes";
+import { v4 as uuidv4 } from 'uuid';
+import { mockLeads } from "./mockData";
 
+// Mock activities for demo mode
+const mockActivities: LeadActivity[] = [];
+
+// Get activities for a lead
 export const getLeadActivities = async (leadId: string): Promise<LeadActivity[]> => {
   try {
+    console.log("Fetching activities for lead:", leadId);
+    
+    // Check if we should use mock data
+    const { data: userData } = await supabase.auth.getUser().catch(() => ({ data: null }));
+    const useMockData = !userData || !userData.user || leadId.startsWith('lead-');
+    
+    if (useMockData) {
+      console.log("Using mock data for activities");
+      // Return activities that match this lead ID
+      return mockActivities.filter(activity => activity.lead_id === leadId);
+    }
+    
+    // Real implementation using Supabase
     const { data, error } = await supabase
       .from('lead_activities')
-      .select(`
-        *,
-        profiles:created_by (first_name, last_name)
-      `)
+      .select('*')
       .eq('lead_id', leadId)
       .order('created_at', { ascending: false });
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching lead activities:", error);
+      throw error;
+    }
     
-    return data.map(activity => {
-      // Safely transform the profiles data
-      let createdByInfo = null;
-      if (activity.profiles) {
-        const firstName = activity.profiles.first_name || '';
-        const lastName = activity.profiles.last_name || '';
-        createdByInfo = {
-          id: activity.created_by,
-          first_name: firstName,
-          last_name: lastName
-        };
-      }
-
-      return {
-        ...activity,
-        created_by: createdByInfo
-      };
-    }) || [];
+    return data || [];
   } catch (error) {
     console.error("Error fetching lead activities:", error);
     toast.error("فشل في جلب أنشطة العميل المحتمل");
@@ -41,29 +43,38 @@ export const getLeadActivities = async (leadId: string): Promise<LeadActivity[]>
   }
 };
 
+// Add new activity
 export const addLeadActivity = async (activity: Partial<LeadActivity>): Promise<LeadActivity | null> => {
   try {
-    const { data: userData } = await supabase.auth.getUser();
+    console.log("Adding activity:", activity);
     
-    // Make sure we have a user before proceeding
-    if (!userData.user) {
-      console.error("No authenticated user found when creating activity");
-      throw new Error("User authentication required");
+    // Check if we should use mock data
+    const { data: userData } = await supabase.auth.getUser().catch(() => ({ data: null }));
+    const useMockData = !userData || !userData.user || (activity.lead_id && activity.lead_id.startsWith('lead-'));
+    
+    if (useMockData) {
+      console.log("Using mock data for adding activity");
+      
+      // Create a new mock activity
+      const newActivity: LeadActivity = {
+        id: uuidv4(),
+        lead_id: activity.lead_id || '',
+        type: activity.type || 'note',
+        description: activity.description || '',
+        created_at: new Date().toISOString(),
+        created_by: 'current-user',
+        scheduled_at: activity.scheduled_at || null,
+        completed_at: null
+      };
+      
+      // Add to mock activities
+      mockActivities.unshift(newActivity);
+      
+      toast.success("تم إضافة النشاط بنجاح");
+      return newActivity;
     }
     
-    // Validate required fields
-    if (!activity.lead_id) {
-      throw new Error("Lead ID is required");
-    }
-    
-    if (!activity.type) {
-      throw new Error("Activity type is required");
-    }
-    
-    if (!activity.description) {
-      throw new Error("Activity description is required");
-    }
-    
+    // Real implementation using Supabase
     const { data, error } = await supabase
       .from('lead_activities')
       .insert([{
@@ -71,19 +82,17 @@ export const addLeadActivity = async (activity: Partial<LeadActivity>): Promise<
         type: activity.type,
         description: activity.description,
         scheduled_at: activity.scheduled_at,
-        created_by: userData.user.id,
-        completed_at: activity.completed_at || null
+        created_by: (await supabase.auth.getUser()).data.user?.id
       }])
       .select()
       .single();
     
-    if (error) throw error;
-    
-    // Only show success toast for user-facing activities (not system activities)
-    if (activity.type !== "create" && activity.type !== "update" && activity.type !== "delete") {
-      toast.success("تم إضافة النشاط بنجاح");
+    if (error) {
+      console.error("Error creating lead activity:", error);
+      throw error;
     }
     
+    toast.success("تم إضافة النشاط بنجاح");
     return data;
   } catch (error) {
     console.error("Error creating lead activity:", error);
@@ -92,8 +101,26 @@ export const addLeadActivity = async (activity: Partial<LeadActivity>): Promise<
   }
 };
 
+// Complete an activity
 export const completeLeadActivity = async (activityId: string): Promise<LeadActivity | null> => {
   try {
+    console.log("Completing activity:", activityId);
+    
+    // Find if it's a mock activity
+    const mockActivityIndex = mockActivities.findIndex(a => a.id === activityId);
+    const useMockData = mockActivityIndex !== -1;
+    
+    if (useMockData) {
+      console.log("Using mock data for completing activity");
+      
+      // Update the mock activity
+      mockActivities[mockActivityIndex].completed_at = new Date().toISOString();
+      
+      toast.success("تم إكمال النشاط بنجاح");
+      return mockActivities[mockActivityIndex];
+    }
+    
+    // Real implementation using Supabase
     const { data, error } = await supabase
       .from('lead_activities')
       .update({
@@ -103,7 +130,10 @@ export const completeLeadActivity = async (activityId: string): Promise<LeadActi
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error completing lead activity:", error);
+      throw error;
+    }
     
     toast.success("تم إكمال النشاط بنجاح");
     return data;
@@ -112,72 +142,4 @@ export const completeLeadActivity = async (activityId: string): Promise<LeadActi
     toast.error("فشل في إكمال النشاط");
     return null;
   }
-};
-
-// Add a new note to a lead
-export const addLeadNote = async (
-  leadId: string, 
-  noteText: string
-): Promise<LeadActivity | null> => {
-  return addLeadActivity({
-    lead_id: leadId,
-    type: "note",
-    description: noteText,
-    completed_at: new Date().toISOString() // Notes are completed when created
-  });
-};
-
-// Schedule a call with a lead
-export const scheduleLeadCall = async (
-  leadId: string, 
-  description: string,
-  scheduledAt: string
-): Promise<LeadActivity | null> => {
-  return addLeadActivity({
-    lead_id: leadId,
-    type: "call",
-    description: description,
-    scheduled_at: scheduledAt
-  });
-};
-
-// Schedule a meeting with a lead
-export const scheduleLeadMeeting = async (
-  leadId: string, 
-  description: string,
-  scheduledAt: string
-): Promise<LeadActivity | null> => {
-  return addLeadActivity({
-    lead_id: leadId,
-    type: "meeting",
-    description: description,
-    scheduled_at: scheduledAt
-  });
-};
-
-// Add a task related to a lead
-export const addLeadTask = async (
-  leadId: string, 
-  taskDescription: string,
-  dueDate: string
-): Promise<LeadActivity | null> => {
-  return addLeadActivity({
-    lead_id: leadId,
-    type: "task",
-    description: taskDescription,
-    scheduled_at: dueDate
-  });
-};
-
-// Add an email activity to a lead
-export const logLeadEmail = async (
-  leadId: string, 
-  emailSubject: string
-): Promise<LeadActivity | null> => {
-  return addLeadActivity({
-    lead_id: leadId,
-    type: "email",
-    description: emailSubject,
-    completed_at: new Date().toISOString() // Emails are completed when logged
-  });
 };

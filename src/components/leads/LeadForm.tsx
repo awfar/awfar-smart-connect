@@ -29,6 +29,7 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    console.log("Form submitted with data:", formData);
     
     if (!validateForm()) {
       toast.error("يرجى تصحيح الأخطاء في النموذج");
@@ -39,6 +40,7 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
 
     try {
       if (editMode && lead) {
+        console.log("Updating lead:", lead.id);
         // Preserve the ID and owner properties from the original lead
         const updatedLead = await updateLead({
           ...lead,
@@ -46,8 +48,11 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
           id: lead.id,
           updated_at: new Date().toISOString()
         });
+        console.log("Lead updated successfully:", updatedLead);
         onSuccess?.(updatedLead);
+        toast.success("تم تحديث العميل المحتمل بنجاح");
       } else {
+        console.log("Creating new lead");
         // Set current timestamp for creation
         const newLeadData = {
           ...formData,
@@ -57,19 +62,21 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
           assigned_to: formData.assigned_to === "unassigned" ? null : formData.assigned_to
         };
         
+        console.log("New lead data:", newLeadData);
         const newLead = await createLead(newLeadData as Omit<Lead, "id">);
+        console.log("Lead created successfully:", newLead);
         onSuccess?.(newLead);
+        toast.success("تم إضافة العميل المحتمل بنجاح");
       }
+
+      // Only close if no errors occurred
+      onClose?.();
     } catch (error) {
       console.error("Error submitting lead:", error);
       toast.error("حدث خطأ أثناء حفظ البيانات");
-      return; // Don't close the form on error
     } finally {
       setIsSubmitting(false);
     }
-    
-    // Only close if no errors occurred
-    onClose?.();
   };
 
   if (isLoading) {

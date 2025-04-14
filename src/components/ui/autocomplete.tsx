@@ -37,7 +37,7 @@ export interface AutocompleteProps {
 }
 
 export function Autocomplete({
-  options,
+  options = [],  // Default to empty array to prevent "undefined is not iterable" error
   value,
   onValueChange,
   placeholder = "Select...",
@@ -61,7 +61,7 @@ export function Autocomplete({
   );
 
   const selectedOption = React.useMemo(() => {
-    return options.find((option) => option.value === value);
+    return options?.find((option) => option.value === value);
   }, [options, value]);
 
   return (
@@ -108,7 +108,7 @@ export function Autocomplete({
             )}
           </CommandEmpty>
           <CommandGroup className="max-h-60 overflow-auto">
-            {options.map((option) => (
+            {options && options.map((option) => (
               <CommandItem
                 key={option.value}
                 value={option.value}

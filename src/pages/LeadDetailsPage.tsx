@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getLeadById, updateLead, deleteLead, Lead } from '@/services/leads';
+import { getLead, updateLead, deleteLead, Lead } from '@/services/leads';
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,7 +47,7 @@ const LeadDetailsPage = () => {
     refetch 
   } = useQuery({
     queryKey: ['lead', id],
-    queryFn: () => getLeadById(id as string),
+    queryFn: () => getLead(id as string),
     enabled: !!id,
   });
   

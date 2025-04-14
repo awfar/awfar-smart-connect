@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,11 +26,16 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
   handleSelectChange
 }) => {
   const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
+  const [companyOptions, setCompanyOptions] = useState<{label: string, value: string}[]>([]);
   
-  // Transform options for Autocomplete component
-  const companyOptions = formData.company 
-    ? [{ label: formData.company, value: formData.company }] 
-    : [];
+  // Transform company name to options format for Autocomplete
+  useEffect(() => {
+    if (formData.company) {
+      setCompanyOptions([{ label: formData.company, value: formData.company }]);
+    } else {
+      setCompanyOptions([]);
+    }
+  }, [formData.company]);
 
   const handleAddCompany = (companyName: string) => {
     handleSelectChange("company", companyName);
@@ -136,7 +141,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
         <div>
           <Label htmlFor="country">الدولة</Label>
           <Select 
-            value={formData.country || undefined} 
+            value={formData.country || ''} 
             onValueChange={(value) => handleSelectChange("country", value)}
           >
             <SelectTrigger id="country">
@@ -154,7 +159,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
         <div>
           <Label htmlFor="industry">القطاع</Label>
           <Select 
-            value={formData.industry || undefined} 
+            value={formData.industry || ''} 
             onValueChange={(value) => handleSelectChange("industry", value)}
           >
             <SelectTrigger id="industry">
@@ -193,7 +198,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
         <div>
           <Label htmlFor="source">المصدر</Label>
           <Select 
-            value={formData.source || undefined} 
+            value={formData.source || ''} 
             onValueChange={(value) => handleSelectChange("source", value)}
           >
             <SelectTrigger id="source">
@@ -214,14 +219,14 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
       <div>
         <Label htmlFor="assigned_to">المسؤول</Label>
         <Select 
-          value={formData.assigned_to || undefined} 
+          value={formData.assigned_to || ''} 
           onValueChange={(value) => handleSelectChange("assigned_to", value)}
         >
           <SelectTrigger id="assigned_to">
             <SelectValue placeholder="اختر المسؤول" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="unassigned">غير مخصص</SelectItem>
+            <SelectItem key="unassigned" value="unassigned">غير مخصص</SelectItem>
             {options.owners.map((owner) => (
               <SelectItem key={owner.id} value={owner.id}>
                 {owner.name}

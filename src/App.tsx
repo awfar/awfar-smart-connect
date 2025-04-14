@@ -18,6 +18,7 @@ import PackageManagement from "./pages/PackageManagement";
 import InvoiceManagement from "./pages/InvoiceManagement";
 import NotFound from "./pages/NotFound";
 import LeadManagement from "./pages/LeadManagement";
+import LeadDetailsPage from "./pages/LeadDetailsPage";
 import DealsManagement from "./pages/DealsManagement";
 import TasksManagement from "./pages/TasksManagement";
 import ReportsManagement from "./pages/ReportsManagement";
@@ -64,6 +65,14 @@ function App() {
           {
             path: "/leads",
             element: <LeadManagement />,
+          },
+          {
+            path: "/dashboard/leads",
+            element: <LeadManagement />,
+          },
+          {
+            path: "/dashboard/leads/:id",
+            element: <LeadDetailsPage />,
           },
           {
             path: "/deals",
