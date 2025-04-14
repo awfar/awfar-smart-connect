@@ -115,7 +115,7 @@ const ActivityForm: React.FC<ActivityFormProps> = ({
             <div className="mt-1">
               <DatePicker
                 date={scheduledDate}
-                setDate={handleDateChange}
+                onSelect={handleDateChange}
                 className="w-full"
               />
             </div>

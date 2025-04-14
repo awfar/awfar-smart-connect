@@ -16,7 +16,7 @@ import {
   CircleSlash,
   ArrowUpDown,
 } from 'lucide-react';
-import { ProductType, productTypeIconMap, productTypeLabels } from '@/services/catalogService';
+import { ProductType, productTypeIconMap, productTypeLabels } from '@/services/catalog/utils';
 
 interface CatalogFiltersProps {
   searchTerm: string;

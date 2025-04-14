@@ -2,7 +2,9 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { getProducts, getCategories, ProductType } from '@/services/catalogService';
+import { fetchProducts } from '@/services/catalog/products';
+import { fetchCategories } from '@/services/catalog/categories';
+import { ProductType } from '@/services/catalog/utils';
 import ProductGrid from '@/components/catalog/ProductGrid';
 import CatalogFilters from '@/components/catalog/CatalogFilters';
 import CatalogTabs from '@/components/catalog/CatalogTabs';
@@ -17,20 +19,20 @@ const CatalogManagement: React.FC = () => {
 
   const { data: products = [], isLoading: isLoadingProducts } = useQuery({
     queryKey: ['products'],
-    queryFn: getProducts
+    queryFn: fetchProducts
   });
 
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
-    queryFn: getCategories
+    queryFn: fetchCategories
   });
 
-  const filteredProducts = products.filter(product => {
+  const filteredProducts = Array.isArray(products) ? products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           product.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType === 'all' || product.type === filterType;
     return matchesSearch && matchesType;
-  });
+  }) : [];
 
   const handleProductSuccess = () => {
     setShowProductForm(false);

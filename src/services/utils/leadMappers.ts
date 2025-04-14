@@ -1,30 +1,26 @@
 
-import { Lead, LeadRow } from "../types/leadTypes";
+// This file should reference LeadDBRow instead of LeadRow
+import { Lead } from "../types/leadTypes";
+import { LeadDBRow } from "../types/leadTypes";
 
-// This function maps database rows (LeadRow) to our application model (Lead)
-export const mapRowToLead = (row: LeadRow): Lead => {
-  const { profiles, ...leadData } = row;
-  
-  // Create the owner object if profile data exists
-  const owner = profiles ? {
-    name: `${profiles.first_name || ''} ${profiles.last_name || ''}`.trim() || 'Unknown',
-    avatar: "/placeholder.svg",
-    initials: getInitials(profiles.first_name, profiles.last_name)
-  } : undefined;
-  
-  // Return mapped lead with renamed fields
+export function mapLeadFromDatabase(leadRow: LeadDBRow): Lead {
+  // Implement mapping logic here
   return {
-    ...leadData,
-    stage: leadData.status, // Map status to stage
-    country: leadData.country || '',
-    industry: leadData.industry || '',
-    owner
+    id: leadRow.id,
+    first_name: leadRow.first_name,
+    last_name: leadRow.last_name,
+    email: leadRow.email,
+    phone: leadRow.phone,
+    company: leadRow.company,
+    position: leadRow.position,
+    country: leadRow.country,
+    industry: leadRow.industry,
+    stage: leadRow.stage,
+    status: leadRow.status,
+    source: leadRow.source,
+    notes: leadRow.notes,
+    created_at: leadRow.created_at,
+    updated_at: leadRow.updated_at,
+    assigned_to: leadRow.assigned_to,
   };
-};
-
-// Helper function to get initials from name parts
-function getInitials(firstName?: string | null, lastName?: string | null): string {
-  const first = firstName?.charAt(0) || '';
-  const last = lastName?.charAt(0) || '';
-  return (first + last) || 'UN';
 }

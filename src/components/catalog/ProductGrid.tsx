@@ -3,7 +3,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Product, productTypeIconMap, productTypeLabels } from '@/services/catalogService';
+import { Product } from '@/services/catalog/products';
+import { productTypeIconMap, productTypeLabels } from '@/services/catalog/utils';
 
 interface ProductGridProps {
   products: Product[];
@@ -35,7 +36,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products, isLoading }) => {
     );
   }
 
-  if (products.length === 0) {
+  if (!Array.isArray(products) || products.length === 0) {
     return (
       <div className="col-span-3 py-8 text-center">
         <p className="text-gray-500">لا توجد منتجات متطابقة مع معايير البحث</p>
@@ -75,8 +76,8 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products, isLoading }) => {
                   </div>
                 )}
                 <div className="mt-4 flex justify-between items-center">
-                  <span className={`text-sm ${product.isActive ? 'text-green-600' : 'text-red-600'}`}>
-                    {product.isActive ? 'نشط' : 'غير نشط'}
+                  <span className={`text-sm ${product.is_active ? 'text-green-600' : 'text-red-600'}`}>
+                    {product.is_active ? 'نشط' : 'غير نشط'}
                   </span>
                   <Button variant="ghost" size="sm">
                     تفاصيل

@@ -17,7 +17,7 @@ export const getLeads = async (filters?: Record<string, any>): Promise<Lead[]> =
       .select(`
         *,
         profiles:assigned_to (first_name, last_name)
-      `);
+      `) as any; // Use type assertion to bypass deep type instantiation
     
     // Apply filters if provided
     if (filters) {
@@ -59,7 +59,7 @@ export const getLeads = async (filters?: Record<string, any>): Promise<Lead[]> =
     
     // Transform data before returning
     if (data && data.length > 0) {
-      return data.map(lead => transformLeadFromSupabase(lead as LeadDBRow));
+      return data.map((lead: any) => transformLeadFromSupabase(lead as LeadDBRow));
     }
     
     console.log("No data found in Supabase, using mock data");
@@ -75,14 +75,14 @@ export const getLeads = async (filters?: Record<string, any>): Promise<Lead[]> =
 export const getLeadById = async (id: string): Promise<Lead | null> => {
   try {
     console.log(`Fetching lead with id ${id} from Supabase...`);
-    const { data, error } = await supabase
+    const { data, error } = await (supabase
       .from('leads')
       .select(`
         *,
         profiles:assigned_to (first_name, last_name)
       `)
       .eq('id', id)
-      .maybeSingle();
+      .maybeSingle() as any); // Use type assertion to bypass deep type instantiation
     
     if (error) {
       console.error("Error fetching lead by ID:", error);
@@ -134,19 +134,22 @@ export const getLeadSources = async (): Promise<string[]> => {
 // Get industries list
 export const getIndustries = async (): Promise<string[]> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase
       .from('leads')
       .select('industry')
-      .not('industry', 'is', null);
+      .not('industry', 'is', null) as any);
     
     if (error) throw error;
     
-    // Extract unique industries
-    const industries = data
-      .map(item => item.industry as string)
-      .filter(Boolean)
-      .filter((value, index, self) => self.indexOf(value) === index)
-      .sort();
+    // Extract unique industries - safely access data with type checking
+    const industries = data && Array.isArray(data)
+      ? data
+        .filter(item => item && typeof item === 'object' && 'industry' in item)
+        .map(item => item.industry as string)
+        .filter(Boolean)
+        .filter((value, index, self) => self.indexOf(value) === index)
+        .sort()
+      : [];
     
     return industries.length > 0 ? industries : getDefaultIndustries();
   } catch (error) {
@@ -158,19 +161,22 @@ export const getIndustries = async (): Promise<string[]> => {
 // Get available countries
 export const getCountries = async (): Promise<string[]> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase
       .from('leads')
       .select('country')
-      .not('country', 'is', null);
+      .not('country', 'is', null) as any);
     
     if (error) throw error;
     
-    // Extract unique countries
-    const countries = data
-      .map(item => item.country as string)
-      .filter(Boolean)
-      .filter((value, index, self) => self.indexOf(value) === index)
-      .sort();
+    // Extract unique countries - safely access data with type checking
+    const countries = data && Array.isArray(data)
+      ? data
+        .filter(item => item && typeof item === 'object' && 'country' in item)
+        .map(item => item.country as string)
+        .filter(Boolean)
+        .filter((value, index, self) => self.indexOf(value) === index)
+        .sort()
+      : [];
     
     return countries.length > 0 ? countries : getDefaultCountries();
   } catch (error) {
@@ -182,19 +188,22 @@ export const getCountries = async (): Promise<string[]> => {
 // Get available stages
 export const getLeadStages = async (): Promise<string[]> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase
       .from('leads')
       .select('stage')
-      .not('stage', 'is', null);
+      .not('stage', 'is', null) as any);
     
     if (error) throw error;
     
-    // Extract unique stages
-    const stages = data
-      .map(item => item.stage as string)
-      .filter(Boolean)
-      .filter((value, index, self) => self.indexOf(value) === index)
-      .sort();
+    // Extract unique stages - safely access data with type checking
+    const stages = data && Array.isArray(data)
+      ? data
+        .filter(item => item && typeof item === 'object' && 'stage' in item)
+        .map(item => item.stage as string)
+        .filter(Boolean)
+        .filter((value, index, self) => self.indexOf(value) === index)
+        .sort()
+      : [];
     
     return stages.length > 0 ? stages : getDefaultStages();
   } catch (error) {

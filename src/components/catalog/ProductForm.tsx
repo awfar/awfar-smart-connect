@@ -3,7 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Product, ProductType, productTypeLabels, createProduct, updateProduct, getCategories } from '@/services/catalogService';
+import { Product } from '@/services/catalog/products';
+import { ProductType, productTypeLabels } from '@/services/catalog/utils';
+import { fetchCategories } from '@/services/catalog/categories';
+import { createProduct, updateProduct } from '@/services/catalog/productService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -39,29 +42,46 @@ interface ProductFormProps {
 export default function ProductForm({ product, onSuccess }: ProductFormProps) {
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
-    queryFn: getCategories,
+    queryFn: fetchCategories,
   });
+
+  // Convert product from DB format to form values format
+  const getDefaultValues = (): ProductFormValues => {
+    if (product) {
+      return {
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        type: product.type as ProductType,
+        sku: product.sku,
+        isActive: product.is_active,
+        imageUrl: product.image_url,
+        inventory: product.inventory,
+        categoryId: product.category_id,
+      };
+    }
+    
+    return {
+      name: "",
+      description: "",
+      price: 0,
+      type: 'physical' as ProductType,
+      sku: "",
+      isActive: true,
+      imageUrl: "",
+      inventory: undefined,
+      categoryId: undefined,
+    };
+  };
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
-    defaultValues: product
-      ? { 
-          ...product,
-        }
-      : {
-          name: "",
-          description: "",
-          price: 0,
-          type: 'physical' as ProductType,
-          sku: "",
-          isActive: true,
-          imageUrl: "",
-          inventory: undefined,
-          categoryId: undefined,
-        },
+    defaultValues: getDefaultValues(),
   });
 
-  const [showInventoryField, setShowInventoryField] = useState<boolean>(form.getValues().type === 'physical');
+  const [showInventoryField, setShowInventoryField] = useState<boolean>(
+    form.getValues().type === 'physical'
+  );
 
   const watchType = form.watch('type');
 
@@ -71,17 +91,17 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
 
   const onSubmit = async (data: ProductFormValues) => {
     try {
-      // Ensure all required fields are present
-      const productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'> = {
+      // Convert from form values to DB format
+      const productData = {
         name: data.name,
         description: data.description,
         price: data.price,
         type: data.type,
         sku: data.sku,
-        isActive: data.isActive,
-        imageUrl: data.imageUrl,
+        is_active: data.isActive,
+        image_url: data.imageUrl,
         inventory: data.type === 'physical' ? data.inventory : undefined,
-        categoryId: data.categoryId
+        category_id: data.categoryId
       };
       
       if (product) {
@@ -207,7 +227,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {categories.map(category => (
+                          {categories && Array.isArray(categories) && categories.map(category => (
                             <SelectItem key={category.id} value={category.id}>
                               {category.name}
                             </SelectItem>
