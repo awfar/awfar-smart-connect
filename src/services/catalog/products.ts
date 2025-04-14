@@ -33,8 +33,10 @@ export const fetchProducts = async (): Promise<Product[]> => {
     if (error) throw error;
     
     // Transform the data to add camelCase properties for consistency
+    // and ensure the type is cast to ProductType
     return (data || []).map(item => ({
       ...item,
+      type: item.type as ProductType, // Explicitly cast to ProductType
       isActive: item.is_active,
       createdAt: item.created_at,
       updatedAt: item.updated_at
@@ -58,9 +60,10 @@ export const fetchProductById = async (id: string): Promise<Product | null> => {
     
     if (!data) return null;
     
-    // Transform the data to add camelCase properties
+    // Transform the data to add camelCase properties and ensure type casting
     return {
       ...data,
+      type: data.type as ProductType, // Explicitly cast to ProductType
       isActive: data.is_active,
       createdAt: data.created_at,
       updatedAt: data.updated_at
@@ -76,7 +79,17 @@ export const createProduct = async (product: Omit<Product, 'id' | 'created_at' |
   try {
     const { data, error } = await supabase
       .from('products')
-      .insert([product])
+      .insert([{
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        type: product.type,
+        sku: product.sku,
+        is_active: product.is_active,
+        image_url: product.image_url || null,
+        inventory: product.inventory || null,
+        category_id: product.category_id || null
+      }])
       .select()
       .single();
     
@@ -87,6 +100,7 @@ export const createProduct = async (product: Omit<Product, 'id' | 'created_at' |
     // Transform the data to add camelCase properties
     return {
       ...data,
+      type: data.type as ProductType, // Explicitly cast to ProductType
       isActive: data.is_active,
       createdAt: data.created_at,
       updatedAt: data.updated_at
@@ -100,9 +114,23 @@ export const createProduct = async (product: Omit<Product, 'id' | 'created_at' |
 
 export const updateProduct = async (id: string, product: Partial<Product>): Promise<Product | null> => {
   try {
+    // Extract and prepare the snake_case properties for the database update
+    const updateData: any = {};
+    
+    if (product.name !== undefined) updateData.name = product.name;
+    if (product.description !== undefined) updateData.description = product.description;
+    if (product.price !== undefined) updateData.price = product.price;
+    if (product.type !== undefined) updateData.type = product.type;
+    if (product.sku !== undefined) updateData.sku = product.sku;
+    if (product.is_active !== undefined) updateData.is_active = product.is_active;
+    if (product.isActive !== undefined) updateData.is_active = product.isActive;
+    if (product.image_url !== undefined) updateData.image_url = product.image_url;
+    if (product.inventory !== undefined) updateData.inventory = product.inventory;
+    if (product.category_id !== undefined) updateData.category_id = product.category_id;
+
     const { data, error } = await supabase
       .from('products')
-      .update(product)
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
@@ -114,6 +142,7 @@ export const updateProduct = async (id: string, product: Partial<Product>): Prom
     // Transform the data to add camelCase properties
     return {
       ...data,
+      type: data.type as ProductType, // Explicitly cast to ProductType
       isActive: data.is_active,
       createdAt: data.created_at,
       updatedAt: data.updated_at
