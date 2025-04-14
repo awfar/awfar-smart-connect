@@ -10,6 +10,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CompanyQuickAddDialog from "@/components/companies/CompanyQuickAddDialog";
 import { getCompanies } from "@/services/companiesService";
+import { toast } from "sonner";
 
 interface LeadFormFieldsProps {
   formData: any;
@@ -28,29 +29,43 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
 }) => {
   const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
   const [companyOptions, setCompanyOptions] = useState<{label: string, value: string}[]>([]);
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
   
-  // نحاول تحميل الشركات الموجودة والبحث عنها عند تحميل المكون
+  // Load companies when component mounts
   useEffect(() => {
     const loadCompanies = async () => {
       try {
+        setIsLoadingCompanies(true);
         const companies = await getCompanies();
-        const companyOpts = companies.map(c => ({
-          label: c.name,
-          value: c.name
-        }));
-        setCompanyOptions(companyOpts);
+        
+        // Make sure companies is an array before mapping
+        if (Array.isArray(companies)) {
+          const companyOpts = companies.map(c => ({
+            label: c.name,
+            value: c.name
+          }));
+          setCompanyOptions(companyOpts);
+        } else {
+          console.error("Companies data is not an array:", companies);
+          setCompanyOptions([]);
+        }
       } catch (error) {
         console.error("Error loading companies:", error);
+        toast.error("لم نتمكن من تحميل قائمة الشركات");
         setCompanyOptions([]);
+      } finally {
+        setIsLoadingCompanies(false);
       }
     };
     
     loadCompanies();
   }, []);
 
-  // أضف الشركة المحددة حالياً إلى خيارات الشركات إذا كانت موجودة
+  // Add the company selected in the form to the options if it doesn't exist yet
   useEffect(() => {
-    if (formData.company && companyOptions.findIndex(c => c.value === formData.company) === -1) {
+    if (formData.company && 
+        companyOptions.length > 0 && 
+        companyOptions.findIndex(c => c.value === formData.company) === -1) {
       setCompanyOptions(prev => [
         ...prev,
         { label: formData.company, value: formData.company }
@@ -59,16 +74,18 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
   }, [formData.company, companyOptions]);
 
   const handleAddCompany = (companyName: string) => {
-    if (companyName) {
-      // أضف الشركة الجديدة إلى خيارات الشركات
-      setCompanyOptions(prev => [
-        ...prev,
-        { label: companyName, value: companyName }
-      ]);
-      
-      // حدد الشركة الجديدة في النموذج
-      handleSelectChange("company", companyName);
+    if (!companyName) return;
+    
+    // أضف الشركة الجديدة إلى خيارات الشركات
+    const newOption = { label: companyName, value: companyName };
+    
+    // تأكد من عدم وجود الشركة بالفعل
+    if (!companyOptions.some(opt => opt.value === companyName)) {
+      setCompanyOptions(prev => [...prev, newOption]);
     }
+    
+    // حدد الشركة الجديدة في النموذج
+    handleSelectChange("company", companyName);
   };
 
   return (
@@ -148,11 +165,12 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
           options={companyOptions}
           value={formData.company || ''}
           onValueChange={(value) => handleSelectChange("company", value)}
-          placeholder="اختر أو اكتب اسم الشركة"
+          placeholder={isLoadingCompanies ? "جاري التحميل..." : "اختر أو اكتب اسم الشركة"}
           emptyMessage="لم يتم العثور على نتائج"
           disableCreate={false}
           onCreateNew={() => setIsAddCompanyOpen(true)}
           createNewLabel="إضافة شركة جديدة"
+          disabled={isLoadingCompanies}
         />
       </div>
 
@@ -178,7 +196,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر الدولة" />
             </SelectTrigger>
             <SelectContent>
-              {(options.countries || []).map((country) => (
+              {Array.isArray(options.countries) && options.countries.map((country) => (
                 <SelectItem key={country} value={country}>
                   {country}
                 </SelectItem>
@@ -196,7 +214,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر القطاع" />
             </SelectTrigger>
             <SelectContent>
-              {(options.industries || []).map((industry) => (
+              {Array.isArray(options.industries) && options.industries.map((industry) => (
                 <SelectItem key={industry} value={industry}>
                   {industry}
                 </SelectItem>
@@ -217,7 +235,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر المرحلة" />
             </SelectTrigger>
             <SelectContent>
-              {(options.stages || []).map((stage) => (
+              {Array.isArray(options.stages) && options.stages.map((stage) => (
                 <SelectItem key={stage} value={stage}>
                   {stage}
                 </SelectItem>
@@ -235,7 +253,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر المصدر" />
             </SelectTrigger>
             <SelectContent>
-              {(options.sources || []).map((source) => (
+              {Array.isArray(options.sources) && options.sources.map((source) => (
                 <SelectItem key={source} value={source}>
                   {source}
                 </SelectItem>
@@ -256,7 +274,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="unassigned">غير مخصص</SelectItem>
-            {(options.owners || []).map((owner) => (
+            {Array.isArray(options.owners) && options.owners.map((owner) => (
               <SelectItem key={owner.id} value={owner.id}>
                 {owner.name}
               </SelectItem>
