@@ -471,7 +471,7 @@ export const deleteLead = async (id: string): Promise<boolean> => {
   } catch (error) {
     console.error("Error deleting lead:", error);
     
-    // في حالة الخطأ، نحذف من البيانات المحلية فقط
+    // في حالة الخطأ�� نحذف من البيانات المحلية فقط
     const index = mockLeads.findIndex((l) => l.id === id);
     if (index >= 0) {
       mockLeads.splice(index, 1);
@@ -533,7 +533,7 @@ export const getIndustries = async (): Promise<string[]> => {
     // استخراج القطاعات الفريدة
     if (result.data && result.data.length > 0) {
       const industries = result.data
-        .map(record => record.industry as string)
+        .map(item => item.industry as string)
         .filter(Boolean)
         .filter((value, index, self) => self.indexOf(value) === index)
         .sort();
