@@ -3,7 +3,13 @@ import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Info } from "lucide-react";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export interface TestModule {
   id: string;
@@ -161,7 +167,8 @@ const TestSelectionTable: React.FC<TestSelectionTableProps> = ({ modules, onSele
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-between">
+        <h2 className="text-xl font-bold">اختيار الاختبارات</h2>
         <Button 
           variant="outline" 
           size="sm" 
@@ -173,33 +180,49 @@ const TestSelectionTable: React.FC<TestSelectionTableProps> = ({ modules, onSele
         </Button>
       </div>
       
-      <div className="border rounded-md overflow-hidden">
+      <div className="border rounded-md overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[50px] text-center">اختيار</TableHead>
               <TableHead>الوحدة / الإجراء</TableHead>
-              <TableHead>تسجيل</TableHead>
-              <TableHead>عرض</TableHead>
-              <TableHead>تأكد من تسجيله</TableHead>
-              <TableHead>ظهور في لوحة التحكم</TableHead>
-              <TableHead>تعديل</TableHead>
-              <TableHead>حذف</TableHead>
+              <TableHead className="text-center">تسجيل</TableHead>
+              <TableHead className="text-center">عرض</TableHead>
+              <TableHead className="text-center">تأكد من تسجيله</TableHead>
+              <TableHead className="text-center">ظهور في لوحة التحكم</TableHead>
+              <TableHead className="text-center">تعديل</TableHead>
+              <TableHead className="text-center">حذف</TableHead>
             </TableRow>
           </TableHeader>
           
           <TableBody>
             {modules.map(module => (
-              <>
-                <TableRow key={module.id} className="bg-muted/20">
+              <React.Fragment key={module.id}>
+                <TableRow className="bg-muted/20">
                   <TableCell className="text-center">
                     <Checkbox
                       checked={selectedTests[module.id]?.selected || false}
                       onCheckedChange={(checked) => toggleModule(module.id, checked === true)}
                     />
                   </TableCell>
-                  <TableCell className="font-bold">{module.name}</TableCell>
-                  <TableCell colSpan={6}>{module.description}</TableCell>
+                  <TableCell className="font-bold">
+                    <div className="flex items-center">
+                      <span>{module.name}</span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 mr-2">
+                              <Info className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{module.description}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </TableCell>
+                  <TableCell colSpan={6}></TableCell>
                 </TableRow>
                 
                 {module.actions.map(action => (
@@ -210,20 +233,47 @@ const TestSelectionTable: React.FC<TestSelectionTableProps> = ({ modules, onSele
                         onCheckedChange={(checked) => toggleAction(module.id, action.id, checked === true)}
                       />
                     </TableCell>
-                    <TableCell className="pl-6">{action.name}</TableCell>
+                    <TableCell className="pr-6">
+                      <div className="flex items-center">
+                        <span>{action.name}</span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0 mr-2">
+                                <Info className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{action.description}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    </TableCell>
                     
+                    {/* Rendering validation checkboxes for each action */}
                     {action.validations.map(validation => (
-                      <TableCell key={`${module.id}-${action.id}-${validation.id}`}>
-                        <Checkbox
-                          checked={selectedTests[module.id]?.actions[action.id]?.validations[validation.id] || false}
-                          onCheckedChange={(checked) => toggleValidation(module.id, action.id, validation.id, checked === true)}
-                        />
-                        <span className="mr-2 text-sm">{validation.name}</span>
+                      <TableCell key={`${module.id}-${action.id}-${validation.id}`} className="text-center">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div>
+                                <Checkbox
+                                  checked={selectedTests[module.id]?.actions[action.id]?.validations[validation.id] || false}
+                                  onCheckedChange={(checked) => toggleValidation(module.id, action.id, validation.id, checked === true)}
+                                />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{validation.description}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </TableCell>
                     ))}
                   </TableRow>
                 ))}
-              </>
+              </React.Fragment>
             ))}
           </TableBody>
         </Table>

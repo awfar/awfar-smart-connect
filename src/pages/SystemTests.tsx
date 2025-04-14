@@ -8,6 +8,10 @@ const SystemTests: React.FC = () => {
     <DashboardLayout>
       <div className="flex flex-col gap-6">
         <h1 className="text-3xl font-bold">اختبار النظام الشامل</h1>
+        <p className="text-muted-foreground">
+          استخدم هذه الصفحة لإجراء اختبارات شاملة للنظام والتحقق من سلامة الوظائف والتكامل بين الوحدات المختلفة.
+          يمكنك اختيار الوحدات والعمليات التي ترغب في اختبارها والحصول على تقرير مفصل بالنتائج واقتراحات للتصحيح.
+        </p>
         <SystemTestRunner />
       </div>
     </DashboardLayout>

@@ -1,13 +1,14 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SystemTestingService, TestReport, TestResult } from "@/services/permissions/testingService";
-import { Download, CheckCircle2, XCircle, AlertCircle, Clock, FileText } from "lucide-react";
+import { Download, CheckCircle2, XCircle, AlertCircle, Clock, FileText, BarChart } from "lucide-react";
 import { toast } from "sonner";
 import TestSelectionTable, { TestModule, SelectedTests } from "./TestSelectionTable";
+import { Progress } from "@/components/ui/progress";
 
 /**
  * مكون واجهة المستخدم لتشغيل الاختبارات وعرض النتائج
@@ -18,6 +19,10 @@ const SystemTestRunner = () => {
   const [activeTab, setActiveTab] = useState<string>("all");
   const testingService = new SystemTestingService();
   const [selectedTests, setSelectedTests] = useState<SelectedTests>({});
+  const [progress, setProgress] = useState(0);
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [testStartTime, setTestStartTime] = useState<Date | null>(null);
+  const [testEndTime, setTestEndTime] = useState<Date | null>(null);
   
   // قائمة وحدات النظام للاختبار
   const testModules: TestModule[] = [
@@ -35,6 +40,17 @@ const SystemTestRunner = () => {
             { id: "display", name: "ظهور في الواجهة", description: "التأكد من ظهور البيانات في واجهة المستخدم" },
             { id: "validation", name: "التحقق من البيانات", description: "التأكد من صحة البيانات المدخلة" },
             { id: "notification", name: "الإشعارات", description: "التأكد من إرسال الإشعارات المناسبة" },
+            { id: "performance", name: "الأداء", description: "قياس زمن الاستجابة وأداء العملية" },
+            { id: "security", name: "الأمان", description: "التحقق من تطبيق قواعد الأمان" }
+          ]
+        },
+        {
+          id: "read",
+          name: "عرض العملاء المحتملين",
+          description: "عرض قائمة العملاء المحتملين في النظام",
+          validations: [
+            { id: "database", name: "قراءة من قاعدة البيانات", description: "التأكد من قراءة البيانات من قاعدة البيانات" },
+            { id: "display", name: "ظهور في الواجهة", description: "التأكد من ظهور البيانات في واجهة المستخدم" },
             { id: "performance", name: "الأداء", description: "قياس زمن الاستجابة وأداء العملية" },
             { id: "security", name: "الأمان", description: "التحقق من تطبيق قواعد الأمان" }
           ]
@@ -85,6 +101,17 @@ const SystemTestRunner = () => {
           ]
         },
         {
+          id: "read",
+          name: "عرض الصفقات",
+          description: "عرض قائمة الصفقات في النظام",
+          validations: [
+            { id: "database", name: "قراءة من قاعدة البيانات", description: "التأكد من قراءة البيانات من قاعدة البيانات" },
+            { id: "display", name: "ظهور في الواجهة", description: "التأكد من ظهور البيانات في واجهة المستخدم" },
+            { id: "performance", name: "الأداء", description: "قياس زمن الاستجابة وأداء العملية" },
+            { id: "security", name: "الأمان", description: "التحقق من تطبيق قواعد الأمان" }
+          ]
+        },
+        {
           id: "update",
           name: "تعديل صفقة",
           description: "تحديث بيانات صفقة موجودة",
@@ -125,6 +152,17 @@ const SystemTestRunner = () => {
             { id: "display", name: "ظهور في الواجهة", description: "التأكد من ظهور البيانات في واجهة المستخدم" },
             { id: "validation", name: "التحقق من البيانات", description: "التأكد من صحة البيانات المدخلة" },
             { id: "notification", name: "الإشعارات", description: "التأكد من إرسال الإشعارات المناسبة" },
+            { id: "performance", name: "الأداء", description: "قياس زمن الاستجابة وأداء العملية" },
+            { id: "security", name: "الأمان", description: "التحقق من تطبيق قواعد الأمان" }
+          ]
+        },
+        {
+          id: "read",
+          name: "عرض الشركات",
+          description: "عرض قائمة الشركات في النظام",
+          validations: [
+            { id: "database", name: "قراءة من قاعدة البيانات", description: "التأكد من قراءة البيانات من قاعدة البيانات" },
+            { id: "display", name: "ظهور في الواجهة", description: "التأكد من ظهور البيانات في واجهة المستخدم" },
             { id: "performance", name: "الأداء", description: "قياس زمن الاستجابة وأداء العملية" },
             { id: "security", name: "الأمان", description: "التحقق من تطبيق قواعد الأمان" }
           ]
@@ -175,6 +213,17 @@ const SystemTestRunner = () => {
           ]
         },
         {
+          id: "read",
+          name: "عرض التذاكر",
+          description: "عرض قائمة التذاكر في النظام",
+          validations: [
+            { id: "database", name: "قراءة من قاعدة البيانات", description: "التأكد من قراءة البيانات من قاعدة البيانات" },
+            { id: "display", name: "ظهور في الواجهة", description: "التأكد من ظهور البيانات في واجهة المستخدم" },
+            { id: "performance", name: "الأداء", description: "قياس زمن الاستجابة وأداء العملية" },
+            { id: "security", name: "الأمان", description: "التحقق من تطبيق قواعد الأمان" }
+          ]
+        },
+        {
           id: "update",
           name: "تعديل تذكرة",
           description: "تحديث بيانات تذكرة موجودة",
@@ -220,6 +269,17 @@ const SystemTestRunner = () => {
           ]
         },
         {
+          id: "read",
+          name: "عرض الأدوار",
+          description: "عرض قائمة الأدوار في النظام",
+          validations: [
+            { id: "database", name: "قراءة من قاعدة البيانات", description: "التأكد من قراءة البيانات من قاعدة البيانات" },
+            { id: "display", name: "ظهور في الواجهة", description: "التأكد من ظهور البيانات في واجهة المستخدم" },
+            { id: "performance", name: "الأداء", description: "قياس زمن الاستجابة وأداء العملية" },
+            { id: "security", name: "الأمان", description: "التحقق من تطبيق قواعد الأمان" }
+          ]
+        },
+        {
           id: "update",
           name: "تعديل دور",
           description: "تحديث بيانات دور موجود",
@@ -248,16 +308,45 @@ const SystemTestRunner = () => {
     }
   ];
 
+  // زيادة شريط التقدم تدريجيًا أثناء تشغيل الاختبارات
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    
+    if (isRunning) {
+      interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 95) {
+            clearInterval(interval);
+            return prev;
+          }
+          return prev + 1;
+        });
+      }, 300);
+    } else {
+      if (progress > 0 && progress < 100) {
+        setProgress(100);
+      }
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isRunning, progress]);
+
   /**
    * تشغيل الاختبارات الشاملة للنظام
    */
   const runTests = async () => {
     setIsRunning(true);
+    setProgress(0);
+    setTestStartTime(new Date());
+    setTestEndTime(null);
     toast.info("جاري تنفيذ الاختبارات الشاملة للنظام...");
     
     try {
-      const report = await testingService.runComprehensiveTest();
+      const report = await testingService.runComprehensiveTest(selectedTests);
       setTestReport(report);
+      setTestEndTime(new Date());
       
       if (report.success) {
         toast.success("تم اكتمال الاختبارات بنجاح");
@@ -267,6 +356,7 @@ const SystemTestRunner = () => {
     } catch (error) {
       console.error("خطأ في تنفيذ الاختبارات:", error);
       toast.error("حدث خطأ أثناء تنفيذ الاختبارات");
+      setTestEndTime(new Date());
     } finally {
       setIsRunning(false);
     }
@@ -282,6 +372,22 @@ const SystemTestRunner = () => {
     const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
     
     const exportFileDefaultName = `system-test-report-${new Date().toISOString().split('T')[0]}.json`;
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
+
+  /**
+   * تصدير تقرير الأخطاء كملف Markdown
+   */
+  const exportErrorReport = () => {
+    if (!testingService) return;
+    
+    const errorPrompt = testingService.generateErrorSummaryPrompt();
+    const dataUri = `data:text/markdown;charset=utf-8,${encodeURIComponent(errorPrompt)}`;
+    
+    const exportFileDefaultName = `error-analysis-${new Date().toISOString().split('T')[0]}.md`;
     const linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
@@ -399,6 +505,33 @@ const SystemTestRunner = () => {
   };
 
   /**
+   * عرض برومبت تحليل الأخطاء وطرق التصحيح
+   */
+  const renderErrorPrompt = () => {
+    if (!testingService) return null;
+    
+    const errorPrompt = testingService.generateErrorSummaryPrompt();
+    
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-between">
+          <h3 className="text-lg font-bold">برومبت تحليل الأخطاء وطرق التصحيح</h3>
+          <Button onClick={exportErrorReport} variant="outline" size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            تصدير كملف Markdown
+          </Button>
+        </div>
+        
+        <div className="border rounded-md bg-gray-50 p-4">
+          <pre className="whitespace-pre-wrap text-sm">
+            {errorPrompt}
+          </pre>
+        </div>
+      </div>
+    );
+  };
+
+  /**
    * تصفية النتائج بناءً على التبويب النشط
    */
   const getFilteredResults = (): TestResult[] => {
@@ -458,8 +591,8 @@ const SystemTestRunner = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <p className="text-muted-foreground">
-              هذه الأداة تقوم باختبار جميع وظائف النظام والتحقق من صحة عملها وترابطها مع بعضها البعض.
+            <p className="text-muted-foreground mb-4">
+              هذه الأداة تقوم باختبار جميع وظائف النظام والتحقق من صحة عملها وترابطها مع بعضها البعض. يمكنك اختيار الموديولات والعمليات التي ترغب في اختبارها.
             </p>
             
             <Tabs defaultValue="selection">
@@ -467,6 +600,7 @@ const SystemTestRunner = () => {
                 <TabsTrigger value="selection">اختيار الاختبارات</TabsTrigger>
                 {testReport && <TabsTrigger value="results">عرض النتائج</TabsTrigger>}
                 {testReport && <TabsTrigger value="report">تقرير الأخطاء</TabsTrigger>}
+                {testReport && <TabsTrigger value="prompt">برومبت للتصحيح</TabsTrigger>}
               </TabsList>
               
               <TabsContent value="selection" className="space-y-6">
@@ -474,6 +608,16 @@ const SystemTestRunner = () => {
                   modules={testModules}
                   onSelectionChange={handleSelectionChange}
                 />
+                
+                {isRunning && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span>جاري تنفيذ الاختبارات...</span>
+                      <span>{progress}%</span>
+                    </div>
+                    <Progress value={progress} className="h-2" />
+                  </div>
+                )}
                 
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button 
@@ -501,7 +645,7 @@ const SystemTestRunner = () => {
                       <CardTitle>ملخص نتائج الاختبارات</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                         <div className="bg-muted p-4 rounded-lg">
                           <p className="text-sm font-medium text-muted-foreground">إجمالي الاختبارات</p>
                           <p className="text-3xl font-bold">{stats.total}</p>
@@ -520,6 +664,19 @@ const SystemTestRunner = () => {
                         </div>
                       </div>
                       
+                      {testStartTime && testEndTime && (
+                        <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="bg-gray-50 p-4 rounded-lg">
+                            <p className="text-sm font-medium text-gray-600">وقت بدء الاختبار</p>
+                            <p className="text-lg font-medium">{testStartTime.toLocaleString('ar-SA')}</p>
+                          </div>
+                          <div className="bg-gray-50 p-4 rounded-lg">
+                            <p className="text-sm font-medium text-gray-600">وقت انتهاء الاختبار</p>
+                            <p className="text-lg font-medium">{testEndTime.toLocaleString('ar-SA')}</p>
+                          </div>
+                        </div>
+                      )}
+                      
                       <div className="mt-6 flex flex-wrap gap-2">
                         <Button variant="outline" onClick={exportResults} className="flex items-center gap-2">
                           <Download className="h-4 w-4" />
@@ -528,6 +685,10 @@ const SystemTestRunner = () => {
                         <Button variant="outline" onClick={exportAsPdf} className="flex items-center gap-2">
                           <FileText className="h-4 w-4" />
                           تصدير كـ PDF
+                        </Button>
+                        <Button variant="outline" onClick={exportErrorReport} className="flex items-center gap-2">
+                          <BarChart className="h-4 w-4" />
+                          تصدير تقرير الأخطاء
                         </Button>
                       </div>
                     </CardContent>
@@ -539,7 +700,7 @@ const SystemTestRunner = () => {
                     </CardHeader>
                     <CardContent>
                       <Tabs value={activeTab} onValueChange={setActiveTab}>
-                        <TabsList className="mb-4">
+                        <TabsList className="mb-4 flex flex-wrap">
                           <TabsTrigger value="all">الكل</TabsTrigger>
                           <TabsTrigger value="success">الناجحة</TabsTrigger>
                           <TabsTrigger value="failed">الفاشلة</TabsTrigger>
@@ -617,6 +778,19 @@ const SystemTestRunner = () => {
                     </CardHeader>
                     <CardContent>
                       {generateErrorReport()}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              )}
+              
+              {testReport && (
+                <TabsContent value="prompt">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>برومبت تصحيح أخطاء النظام</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {renderErrorPrompt()}
                     </CardContent>
                   </Card>
                 </TabsContent>
