@@ -1,16 +1,25 @@
 
-import { Ticket, TicketFromDB } from "./types";
+// إضافة مُرتِّبات التذاكر
+import { Ticket } from "./types";
 
-// Helper function to map database tickets to our Ticket interface
-export function mapDBTicketToTicket(ticket: TicketFromDB): Ticket {
+export const mapTicketFromDB = (data: any): Ticket => {
+  return {
+    id: data.id,
+    subject: data.subject,
+    description: data.description,
+    status: data.status,
+    priority: data.priority,
+    category: data.category,
+    client_id: data.client_id,
+    assigned_to: data.assigned_to,
+    created_at: data.created_at,
+    updated_at: data.updated_at
+  };
+};
+
+export const prepareTicketForDB = (ticket: Omit<Ticket, 'id' | 'created_at' | 'updated_at'>) => {
   return {
     ...ticket,
-    status: ticket.status === 'open' ? 'open' : 'closed',
-    priority: (ticket.priority || 'متوسط') as Ticket['priority']
+    updated_at: new Date().toISOString()
   };
-}
-
-// Helper to safely convert Supabase data to plain objects (breaks type inference chain)
-export function safeDataConversion<T>(data: any): T {
-  return JSON.parse(JSON.stringify(data)) as T;
-}
+};

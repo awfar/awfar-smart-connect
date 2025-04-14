@@ -1,29 +1,39 @@
 
+// إضافة خدمات الموظفين
 import { supabase } from "@/integrations/supabase/client";
 
-export interface StaffMember {
+export interface Staff {
   id: string;
   name: string;
+  email?: string;
+  role?: string;
+  department?: string;
 }
 
-export const fetchStaff = async (): Promise<StaffMember[]> => {
+export const fetchStaff = async (): Promise<Staff[]> => {
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name')
+      .select('id, first_name, last_name, email, role, department_id')
       .order('first_name');
     
     if (error) {
       console.error("Error fetching staff:", error);
-      return [];
+      throw error;
     }
     
-    return data?.map(staff => ({
-      id: staff.id,
-      name: `${staff.first_name} ${staff.last_name}`
+    // تنسيق البيانات لتناسب واجهة Staff
+    const formattedStaff = data?.map(profile => ({
+      id: profile.id,
+      name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
+      email: profile.email,
+      role: profile.role,
+      department: profile.department_id
     })) || [];
+    
+    return formattedStaff;
   } catch (error) {
-    console.error("خطأ في جلب الموظفين:", error);
+    console.error("Error in fetchStaff:", error);
     return [];
   }
 };

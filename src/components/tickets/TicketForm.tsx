@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { createTicket, fetchClients, fetchStaff, Ticket } from "@/services/tickets";
+import { createTicket, fetchClients, fetchStaff, Ticket } from "@/services/ticketsService";
 import { Loader2 } from "lucide-react";
 
 interface TicketFormProps {
@@ -33,12 +34,19 @@ const TicketForm: React.FC<TicketFormProps> = ({ onCancel, onSave }) => {
   const [staff, setStaff] = useState<{ id: string; name: string }[]>([]);
   
   useEffect(() => {
-    // Load clients and staff data when component mounts
+    // تحميل بيانات العملاء والموظفين عند تحميل المكون
     const loadData = async () => {
-      const clientsData = await fetchClients();
-      const staffData = await fetchStaff();
-      setClients(clientsData);
-      setStaff(staffData);
+      try {
+        const clientsData = await fetchClients();
+        const staffData = await fetchStaff();
+        setClients(clientsData);
+        setStaff(staffData);
+        console.log("Clients loaded:", clientsData);
+        console.log("Staff loaded:", staffData);
+      } catch (error) {
+        console.error("Error loading data:", error);
+        toast.error("حدث خطأ أثناء تحميل البيانات");
+      }
     };
     
     loadData();
@@ -65,11 +73,18 @@ const TicketForm: React.FC<TicketFormProps> = ({ onCancel, onSave }) => {
         assigned_to: assignedTo || undefined
       };
       
+      console.log("Submitting ticket:", ticketData);
       const result = await createTicket(ticketData);
       
       if (result) {
+        toast.success("تم إنشاء التذكرة بنجاح");
         onSave();
+      } else {
+        toast.error("حدث خطأ أثناء إنشاء التذكرة");
       }
+    } catch (error) {
+      console.error("Error creating ticket:", error);
+      toast.error("حدث خطأ أثناء إنشاء التذكرة");
     } finally {
       setLoading(false);
     }

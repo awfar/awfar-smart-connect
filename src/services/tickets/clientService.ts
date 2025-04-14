@@ -1,29 +1,30 @@
 
+// إضافة خدمات العملاء
 import { supabase } from "@/integrations/supabase/client";
 
 export interface Client {
   id: string;
   name: string;
+  email?: string;
+  phone?: string;
+  company?: string;
 }
 
 export const fetchClients = async (): Promise<Client[]> => {
   try {
     const { data, error } = await supabase
-      .from('leads')
-      .select('id, first_name, last_name')
-      .order('created_at', { ascending: false });
+      .from('companies')
+      .select('id, name, email, phone')
+      .order('name');
     
     if (error) {
       console.error("Error fetching clients:", error);
-      return [];
+      throw error;
     }
     
-    return data?.map(client => ({
-      id: client.id,
-      name: `${client.first_name} ${client.last_name}`
-    })) || [];
+    return data || [];
   } catch (error) {
-    console.error("خطأ في جلب العملاء:", error);
+    console.error("Error in fetchClients:", error);
     return [];
   }
 };

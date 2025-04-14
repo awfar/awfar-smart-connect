@@ -26,7 +26,7 @@ const TooltipContent = React.forwardRef<
 ))
 TooltipContent.displayName = TooltipPrimitive.Content.displayName
 
-// Enhanced tooltip with arrow - added TooltipProvider wrapper
+// مكون توولتيب مع سهم - مع إضافة TooltipProvider
 const TooltipContentWithArrow = React.forwardRef<
   React.ElementRef<typeof TooltipPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
@@ -46,7 +46,7 @@ const TooltipContentWithArrow = React.forwardRef<
 ))
 TooltipContentWithArrow.displayName = "TooltipContentWithArrow"
 
-// كما تم طلبه، نقوم بتصدير TooltipProvider بالإضافة إلى المكونات الأخرى
+// تأكد من تصدير TooltipProvider
 export { 
   Tooltip, 
   TooltipTrigger, 

@@ -9,8 +9,8 @@ import { X, Mail, Phone, MapPin, Building, Calendar, MessageCircle } from "lucid
 
 interface LeadOwner {
   name: string;
-  avatar: string;
-  initials: string;
+  avatar?: string;
+  initials?: string;
 }
 
 interface Lead {
@@ -35,8 +35,34 @@ interface LeadDetailsProps {
 }
 
 const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
-  // التحقق من وجود البيانات قبل استخدامها
+  // التحقق من وجود الريد قبل استخدامه
+  if (!lead) {
+    return (
+      <Card className="h-full">
+        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+          <CardTitle className="text-lg font-semibold">تفاصيل العميل المحتمل</CardTitle>
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center h-48">
+            <p className="text-muted-foreground">لا توجد بيانات متاحة</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // تحقق من وجود البيانات وإنشاء قيم افتراضية إذا كانت غير موجودة
   const fullName = lead.name || `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || "بدون اسم";
+  
+  // إنشاء بيانات افتراضية للمالك إذا لم يكن موجودًا
+  const owner = lead.owner || { 
+    name: "غير مخصص", 
+    avatar: "/placeholder.svg", 
+    initials: "؟" 
+  };
   
   // Mock activities for this lead
   const activities = [
@@ -45,21 +71,21 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
       type: "note",
       content: "تم التواصل هاتفيًا وطلب معلومات إضافية عن الباقة المتقدمة",
       date: "منذ 3 ساعات",
-      user: lead.owner || { name: "مستخدم النظام", avatar: "/placeholder.svg", initials: "م" },
+      user: owner,
     },
     {
       id: 2,
       type: "email",
       content: "تم إرسال بريد إلكتروني بتفاصيل الباقات والأسعار",
       date: "منذ يومين",
-      user: lead.owner || { name: "مستخدم النظام", avatar: "/placeholder.svg", initials: "م" },
+      user: owner,
     },
     {
       id: 3,
       type: "call",
       content: "مكالمة تعارف أولية - مهتم بحلول إدارة المحادثات عبر واتساب",
       date: "منذ 4 أيام",
-      user: lead.owner || { name: "مستخدم النظام", avatar: "/placeholder.svg", initials: "م" },
+      user: owner,
     },
   ];
 
@@ -70,14 +96,14 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
       title: "إرسال عرض سعر",
       due: "غدًا",
       status: "pending",
-      assigned_to: lead.owner?.name || "غير محدد",
+      assigned_to: owner?.name || "غير محدد",
     },
     {
       id: 2,
       title: "متابعة هاتفية",
       due: "بعد 3 أيام",
       status: "pending",
-      assigned_to: lead.owner?.name || "غير محدد",
+      assigned_to: owner?.name || "غير محدد",
     }
   ];
 
@@ -95,7 +121,7 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
           <div className="flex flex-col items-center text-center gap-2">
             <Avatar className="h-16 w-16">
               <AvatarImage src="/placeholder.svg" />
-              <AvatarFallback className="text-lg">{fullName.charAt(0) || "?"}</AvatarFallback>
+              <AvatarFallback className="text-lg">{fullName.charAt(0) || "؟"}</AvatarFallback>
             </Avatar>
             <div>
               <h3 className="text-lg font-semibold">{fullName}</h3>
@@ -136,10 +162,10 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
             <div className="text-sm text-muted-foreground">المالك</div>
             <div className="flex items-center gap-2">
               <Avatar className="h-6 w-6">
-                <AvatarImage src={lead.owner?.avatar || "/placeholder.svg"} />
-                <AvatarFallback>{lead.owner?.initials || "؟"}</AvatarFallback>
+                <AvatarImage src={owner?.avatar || "/placeholder.svg"} />
+                <AvatarFallback>{owner?.initials || "؟"}</AvatarFallback>
               </Avatar>
-              <span className="text-sm">{lead.owner?.name || "غير مخصص"}</span>
+              <span className="text-sm">{owner?.name || "غير مخصص"}</span>
             </div>
           </div>
 
