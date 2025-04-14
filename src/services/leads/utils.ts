@@ -40,7 +40,7 @@ export const transformLeadFromSupabase = (dbLead: LeadDBRow): Lead => {
 
 // Get color class for lead stage badges
 export const getStageColorClass = (stage: string): string => {
-  switch (stage.toLowerCase()) {
+  switch (stage?.toLowerCase()) {
     case 'جديد':
     case 'new':
     case 'تم استلامه':

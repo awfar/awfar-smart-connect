@@ -33,6 +33,7 @@ export const getLeads = async (filters?: Record<string, any>): Promise<Lead[]> =
         query = query.eq('assigned_to', filters.assigned_to);
       }
       
+      // Only apply these filters if the columns exist in the table
       if (filters.country && filters.country !== 'all') {
         query = query.eq('country', filters.country);
       }
@@ -184,6 +185,19 @@ export const getSalesOwners = async (): Promise<{id: string, name: string}[]> =>
 // Get countries for filtering
 export const getCountries = async (): Promise<string[]> => {
   try {
+    // Check if the country column exists on the leads table
+    const { data: columnInfo, error: columnError } = await supabase
+      .rpc('check_column_exists', { 
+        table_name: 'leads',
+        column_name: 'country'
+      });
+    
+    if (columnError || !columnInfo) {
+      console.log("Country column doesn't exist, returning default countries");
+      return getDefaultCountries();
+    }
+    
+    // If column exists, fetch distinct values
     const { data, error } = await supabase
       .from('leads')
       .select('country')
@@ -209,6 +223,19 @@ export const getCountries = async (): Promise<string[]> => {
 // Get industries for filtering
 export const getIndustries = async (): Promise<string[]> => {
   try {
+    // Check if the industry column exists on the leads table
+    const { data: columnInfo, error: columnError } = await supabase
+      .rpc('check_column_exists', { 
+        table_name: 'leads',
+        column_name: 'industry'
+      });
+    
+    if (columnError || !columnInfo) {
+      console.log("Industry column doesn't exist, returning default industries");
+      return getDefaultIndustries();
+    }
+    
+    // If column exists, fetch distinct values
     const { data, error } = await supabase
       .from('leads')
       .select('industry')
@@ -251,7 +278,9 @@ const getDefaultStages = (): string[] => {
     "مؤهل",
     "عرض سعر",
     "تفاوض",
-    "مغلق"
+    "مغلق مكسب",
+    "مغلق خسارة",
+    "مؤجل"
   ];
 };
 

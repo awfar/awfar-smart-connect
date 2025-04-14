@@ -8,7 +8,6 @@ import {
   getLeadSources, 
   getLeadStages,
   getSalesOwners,
-  getCompanies,
   getCountries,
   getIndustries
 } from "./leadQueries";
@@ -34,8 +33,6 @@ export {
   getLeadSources,
   getLeadStages,
   getSalesOwners,
-  getCompanies,
-  getLeadActivities,
   getCountries,
   getIndustries,
   
@@ -45,6 +42,7 @@ export {
   deleteLead,
   addLeadActivity,
   completeLeadActivity,
+  getLeadActivities
 };
 
 // Re-export all types
