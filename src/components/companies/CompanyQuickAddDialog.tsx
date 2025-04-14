@@ -91,14 +91,13 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
       // في هذه الحالة، سنقوم فقط بمحاكاة عملية الحفظ
       setTimeout(() => {
         console.log("Company created:", formData.name);
-        toast.success("تم إضافة الشركة بنجاح");
         
         // تأكد من إرسال اسم الشركة إلى الدالة onSuccess
         if (formData.name) {
           onSuccess(formData.name);
         }
         
-        // أغلق النافذة المنبثقة
+        // أغلق النافذة المنبثقة بعد النجاح
         onOpenChange(false);
       }, 500);
     } catch (error) {

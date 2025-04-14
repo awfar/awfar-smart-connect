@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -86,6 +85,9 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
     
     // حدد الشركة الجديدة في النموذج
     handleSelectChange("company", companyName);
+    
+    // Close the dialog and show success message
+    toast.success(`تمت إضافة الشركة "${companyName}" بنجاح`);
   };
 
   return (
