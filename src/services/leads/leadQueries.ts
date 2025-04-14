@@ -126,20 +126,20 @@ export const getLeadSources = async (): Promise<string[]> => {
 // Get industries
 export const getIndustries = async (): Promise<string[]> => {
   try {
-    const { data, error } = await supabase
+    const response = await supabase
       .from('leads')
       .select('industry')
       .not('industry', 'is', null);
     
     // التحقق من وجود خطأ في الاستعلام
-    if (error) {
-      console.error("Error fetching industries:", error);
+    if (response.error) {
+      console.error("Error fetching industries:", response.error);
       return getDefaultIndustries();
     }
     
     // استخراج القطاعات الفريدة
-    if (data && data.length > 0) {
-      const industries = data
+    if (response.data && response.data.length > 0) {
+      const industries = response.data
         .map(item => item.industry as string)
         .filter(Boolean)
         .filter((value, index, self) => self.indexOf(value) === index)
