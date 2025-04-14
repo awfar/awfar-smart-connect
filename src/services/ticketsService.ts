@@ -82,12 +82,12 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     
     console.log("Tickets fetched:", data);
     
-    // Fix the issue by avoiding complex type relationships
-    // First convert the data to a simple array type
-    const rawData = data as unknown[] || [];
+    // Completely break the type dependency chain by casting to any first
+    // This prevents TypeScript from trying to deeply analyze the nested structure
+    const safeData = (data || []) as any[];
     
-    // Then map each ticket using our helper function with proper type assertions
-    return rawData.map(item => mapDBTicketToTicket(item as TicketFromDB));
+    // Then map using our helper function with a clean type path
+    return safeData.map(item => mapDBTicketToTicket(item as TicketFromDB));
   } catch (error) {
     console.error("خطأ في جلب التذاكر:", error);
     toast.error("فشل في جلب قائمة التذاكر");
