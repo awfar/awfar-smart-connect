@@ -51,8 +51,10 @@ export const fetchTickets = async (
       query = query.eq('category', categoryFilter);
     }
     
-    // Directly get the data and error using type assertion to avoid deep inference
-    const { data, error } = await query.order('created_at', { ascending: false });
+    // Break the type inference chain by using a type assertion
+    const response = await query.order('created_at', { ascending: false });
+    const data = response.data;
+    const error = response.error;
     
     if (error) {
       console.error("Error fetching tickets:", error);
@@ -69,7 +71,7 @@ export const fetchTickets = async (
       for (let i = 0; i < data.length; i++) {
         const ticket = data[i];
         // Using our helper function with type assertion to break complex type chain
-        const transformedTicket = safeTransformTicket(ticket as Record<string, any>);
+        const transformedTicket = safeTransformTicket(ticket);
         ticketsArray.push(mapDBTicketToTicket(transformedTicket));
       }
     }
@@ -84,7 +86,8 @@ export const fetchTickets = async (
 // Implement the missing fetchTicketById function
 export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
   try {
-    const { data, error } = await supabase
+    // Break the type inference chain using a simple approach
+    const response = await supabase
       .from('tickets')
       .select(`
         *,
@@ -96,6 +99,9 @@ export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
       .eq('id', id)
       .single();
     
+    const data = response.data;
+    const error = response.error;
+    
     if (error) {
       console.error("Error fetching ticket by id:", error);
       throw error;
@@ -106,8 +112,8 @@ export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
     // Safe conversion to avoid type errors
     if (!data) return null;
     
-    // Using our helper function with type assertion to break complex type chain
-    const transformedTicket = safeTransformTicket(data as Record<string, any>);
+    // Using our helper function to break complex type chain
+    const transformedTicket = safeTransformTicket(data);
     return mapDBTicketToTicket(transformedTicket);
   } catch (error) {
     console.error("Error in fetchTicketById:", error);
