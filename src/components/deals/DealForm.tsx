@@ -54,12 +54,18 @@ const DealForm: React.FC<DealFormProps> = ({ onCancel, onSave }) => {
     e.preventDefault();
     
     if (!formData.name || !formData.stage) {
-      return; // وقف التقديم إذا كانت الحقول المطلوبة غير مملوءة
+      toast.error("يرجى تعبئة كافة الحقول المطلوبة");
+      return;
     }
     
     setIsSubmitting(true);
     
     try {
+      console.log("بيانات الصفقة التي سيتم إرسالها:", {
+        ...formData,
+        expected_close_date: expectedCloseDate ? expectedCloseDate.toISOString() : null
+      });
+      
       const dealToCreate = {
         ...formData,
         expected_close_date: expectedCloseDate ? expectedCloseDate.toISOString() : null
@@ -68,10 +74,14 @@ const DealForm: React.FC<DealFormProps> = ({ onCancel, onSave }) => {
       const result = await createDeal(dealToCreate);
       
       if (result) {
+        toast.success("تم إنشاء الصفقة بنجاح");
         onSave();
+      } else {
+        toast.error("حدث خطأ أثناء إنشاء الصفقة");
       }
     } catch (error) {
       console.error("خطأ في إنشاء الصفقة:", error);
+      toast.error("فشل في إنشاء الصفقة");
     } finally {
       setIsSubmitting(false);
     }

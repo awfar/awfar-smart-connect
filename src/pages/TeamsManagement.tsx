@@ -58,30 +58,40 @@ const TeamForm = ({ team, isEditing, onSave }: TeamFormProps) => {
     setLoading(true);
     
     try {
-      console.log("Creating team with data:", {
+      console.log("بيانات الفريق التي سيتم إرسالها:", {
         name,
         department_id: departmentId === "none" ? undefined : departmentId,
         manager_id: managerId === "none" ? undefined : managerId
       });
       
       if (isEditing && team) {
-        await updateTeam({
+        const result = await updateTeam({
           id: team.id,
           name,
           department_id: departmentId === "none" ? undefined : departmentId,
           manager_id: managerId === "none" ? undefined : managerId,
         });
-        toast.success("تم تحديث الفريق بنجاح");
+        
+        if (result) {
+          toast.success("تم تحديث الفريق بنجاح");
+          onSave();
+        } else {
+          toast.error("فشل في تحديث الفريق");
+        }
       } else {
-        await createTeam({
+        const result = await createTeam({
           name,
           department_id: departmentId === "none" ? undefined : departmentId,
           manager_id: managerId === "none" ? undefined : managerId,
         });
-        toast.success("تم إنشاء الفريق بنجاح");
+        
+        if (result) {
+          toast.success("تم إنشاء الفريق بنجاح");
+          onSave();
+        } else {
+          toast.error("فشل في إنشاء الفريق");
+        }
       }
-      
-      onSave();
     } catch (error: any) {
       console.error("خطأ في إضافة/تعديل الفريق:", error);
       toast.error(error.message || "حدث خطأ أثناء حفظ الفريق");
@@ -227,7 +237,7 @@ const TeamsManagement = () => {
               <div className="text-center py-10">
                 <UserCog className="mx-auto h-12 w-12 text-gray-400 mb-3" />
                 <h3 className="text-lg font-medium">لا توجد فرق</h3>
-                <p className="text-gray-500 mt-1">لم يتم إضافة أي فرق بعد</p>
+                <p className="text-gray-500 mt-1">لم يتم إضافة أي فريق بعد</p>
               </div>
             ) : (
               <Table>

@@ -141,10 +141,16 @@ const DepartmentsManagement = () => {
     if (!selectedDepartment) return;
     
     try {
-      await deleteDepartment(selectedDepartment.id);
-      refetch();
+      const deleted = await deleteDepartment(selectedDepartment.id);
+      if (deleted) {
+        toast.success("تم حذف القسم بنجاح");
+        refetch();
+      } else {
+        toast.error("فشل في حذف القسم");
+      }
     } catch (error) {
       console.error("خطأ في حذف القسم:", error);
+      toast.error("حدث خطأ أثناء محاولة حذف القسم");
     }
     
     setDeleteDialogOpen(false);
