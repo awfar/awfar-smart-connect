@@ -51,24 +51,30 @@ export const fetchTickets = async (
       query = query.eq('category', categoryFilter);
     }
     
-    // Completely avoid type inference by using vanilla JS approach
-    const result = await query.order('created_at', { ascending: false }) as any;
+    // Use Promise constructor and basic JS object to fully break type inference
+    const response: any = await new Promise((resolve) => {
+      query.order('created_at', { ascending: false })
+        .then(res => resolve(res))
+        .catch(err => {
+          console.error("Error in query:", err);
+          resolve({ data: [], error: err });
+        });
+    });
     
-    if (result.error) {
-      console.error("Error fetching tickets:", result.error);
-      throw result.error;
+    if (response.error) {
+      console.error("Error fetching tickets:", response.error);
+      throw response.error;
     }
     
-    console.log("Fetched tickets data:", result.data);
+    console.log("Fetched tickets data:", response.data);
     
-    // Create a simple array without complex typing
     const ticketsArray: Ticket[] = [];
     
-    if (result.data && Array.isArray(result.data)) {
-      // Use a simple for loop to avoid complex type inference
-      for (let i = 0; i < result.data.length; i++) {
-        const rawTicket = result.data[i];
-        // Explicitly map to our known structure
+    if (response.data && Array.isArray(response.data)) {
+      // Use traditional loop to avoid TypeScript inference issues
+      for (let i = 0; i < response.data.length; i++) {
+        // Cast to any to break the type chain completely
+        const rawTicket = response.data[i] as any;
         const transformedTicket = safeTransformTicket(rawTicket);
         ticketsArray.push(mapDBTicketToTicket(transformedTicket));
       }
@@ -84,31 +90,37 @@ export const fetchTickets = async (
 // Implement the missing fetchTicketById function
 export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
   try {
-    // Completely avoid type inference by using vanilla JS approach
-    const result = await supabase
-      .from('tickets')
-      .select(`
-        *,
-        profiles:assigned_to (
-          first_name,
-          last_name
-        )
-      `)
-      .eq('id', id)
-      .single() as any;
+    // Use Promise constructor to completely bypass TypeScript's type inference
+    const response: any = await new Promise((resolve) => {
+      supabase
+        .from('tickets')
+        .select(`
+          *,
+          profiles:assigned_to (
+            first_name,
+            last_name
+          )
+        `)
+        .eq('id', id)
+        .single()
+        .then(res => resolve(res))
+        .catch(err => {
+          console.error("Error in query:", err);
+          resolve({ data: null, error: err });
+        });
+    });
     
-    if (result.error) {
-      console.error("Error fetching ticket by id:", result.error);
-      throw result.error;
+    if (response.error) {
+      console.error("Error fetching ticket by id:", response.error);
+      throw response.error;
     }
     
-    console.log("Fetched ticket data:", result.data);
+    console.log("Fetched ticket data:", response.data);
     
-    // Safe conversion to avoid type errors
-    if (!result.data) return null;
+    if (!response.data) return null;
     
-    // Explicitly map to our known structure
-    const transformedTicket = safeTransformTicket(result.data);
+    // Use safeTransformTicket to ensure consistent typing
+    const transformedTicket = safeTransformTicket(response.data as any);
     return mapDBTicketToTicket(transformedTicket);
   } catch (error) {
     console.error("Error in fetchTicketById:", error);
