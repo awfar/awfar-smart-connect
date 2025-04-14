@@ -51,30 +51,20 @@ export const fetchTickets = async (
       query = query.eq('category', categoryFilter);
     }
     
-    // Use Promise constructor and basic JS object to fully break type inference
-    const response: any = await new Promise((resolve) => {
-      query.order('created_at', { ascending: false })
-        .then(res => resolve(res))
-        .catch(err => {
-          console.error("Error in query:", err);
-          resolve({ data: [], error: err });
-        });
-    });
+    const { data, error } = await query.order('created_at', { ascending: false });
     
-    if (response.error) {
-      console.error("Error fetching tickets:", response.error);
-      throw response.error;
+    if (error) {
+      console.error("Error fetching tickets:", error);
+      throw error;
     }
     
-    console.log("Fetched tickets data:", response.data);
+    console.log("Fetched tickets data:", data);
     
     const ticketsArray: Ticket[] = [];
     
-    if (response.data && Array.isArray(response.data)) {
-      // Use traditional loop to avoid TypeScript inference issues
-      for (let i = 0; i < response.data.length; i++) {
-        // Cast to any to break the type chain completely
-        const rawTicket = response.data[i] as any;
+    if (data && Array.isArray(data)) {
+      for (let i = 0; i < data.length; i++) {
+        const rawTicket = data[i];
         const transformedTicket = safeTransformTicket(rawTicket);
         ticketsArray.push(mapDBTicketToTicket(transformedTicket));
       }
@@ -90,37 +80,28 @@ export const fetchTickets = async (
 // Implement the missing fetchTicketById function
 export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
   try {
-    // Use Promise constructor to completely bypass TypeScript's type inference
-    const response: any = await new Promise((resolve) => {
-      supabase
-        .from('tickets')
-        .select(`
-          *,
-          profiles:assigned_to (
-            first_name,
-            last_name
-          )
-        `)
-        .eq('id', id)
-        .single()
-        .then(res => resolve(res))
-        .catch(err => {
-          console.error("Error in query:", err);
-          resolve({ data: null, error: err });
-        });
-    });
+    const { data, error } = await supabase
+      .from('tickets')
+      .select(`
+        *,
+        profiles:assigned_to (
+          first_name,
+          last_name
+        )
+      `)
+      .eq('id', id)
+      .single();
     
-    if (response.error) {
-      console.error("Error fetching ticket by id:", response.error);
-      throw response.error;
+    if (error) {
+      console.error("Error fetching ticket by id:", error);
+      throw error;
     }
     
-    console.log("Fetched ticket data:", response.data);
+    console.log("Fetched ticket data:", data);
     
-    if (!response.data) return null;
+    if (!data) return null;
     
-    // Use safeTransformTicket to ensure consistent typing
-    const transformedTicket = safeTransformTicket(response.data as any);
+    const transformedTicket = safeTransformTicket(data);
     return mapDBTicketToTicket(transformedTicket);
   } catch (error) {
     console.error("Error in fetchTicketById:", error);
