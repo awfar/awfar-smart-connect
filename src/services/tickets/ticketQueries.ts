@@ -51,6 +51,7 @@ export const fetchTickets = async (
       query = query.eq('category', categoryFilter);
     }
     
+    // Directly get the data and error using type assertion to avoid deep inference
     const { data, error } = await query.order('created_at', { ascending: false });
     
     if (error) {
