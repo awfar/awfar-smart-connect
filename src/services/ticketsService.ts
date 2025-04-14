@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -82,12 +81,9 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     
     console.log("Tickets fetched:", data);
     
-    // Fix the excessive type instantiation depth error
-    // First, break the complex type chain by explicitly casting to a simple array type
-    const simpleArray: Record<string, any>[] = data || [];
-    
-    // Then map each item using our helper function
-    return simpleArray.map(item => mapDBTicketToTicket(item as TicketFromDB));
+    // Break the type chain completely using unknown - this is the most effective
+    // approach to prevent TypeScript from analyzing nested types too deeply
+    return (data || []) as unknown[] as Ticket[];
   } catch (error) {
     console.error("خطأ في جلب التذاكر:", error);
     toast.error("فشل في جلب قائمة التذاكر");
