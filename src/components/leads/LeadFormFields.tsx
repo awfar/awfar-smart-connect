@@ -290,7 +290,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
       </div>
 
       <div>
-        <Label htmlFor="assigned_to">ا��مسؤول</Label>
+        <Label htmlFor="assigned_to">مسؤول</Label>
         <Select 
           value={formData.assigned_to || ''} 
           onValueChange={(value) => handleSelectChange("assigned_to", value)}

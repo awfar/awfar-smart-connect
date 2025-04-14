@@ -94,8 +94,8 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
         industry: formData.industry || "",
         website: formData.website || "",
         country: formData.country || "",
-        phone: "",
-        address: "",
+        phone: "", // Add required fields to fix the type error
+        address: "", // Add required fields to fix the type error
         type: "customer",
         contacts: [],
         status: "active"
@@ -106,9 +106,11 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
       // Ensure we're passing the company name back to the parent component
       if (newCompany && newCompany.name) {
         onSuccess(newCompany.name);
+        toast.success("تم إضافة الشركة بنجاح");
       } else if (formData.name) {
         // Fallback if company object doesn't have a name for some reason
         onSuccess(formData.name);
+        toast.success("تم إضافة الشركة بنجاح");
       }
       
       // Close the dialog after success
