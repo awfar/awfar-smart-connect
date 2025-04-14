@@ -35,16 +35,14 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     
     console.log("Tickets fetched:", data);
     
-    // Create an array to store the properly typed tickets
     const tickets: Ticket[] = [];
     
-    // Explicitly handle data as any to break type inference chain
+    // Break the type inference chain by treating data as a plain array of objects
     if (data && Array.isArray(data)) {
-      for (let i = 0; i < data.length; i++) {
-        // Use any type to completely break the type inference chain
-        const item: any = data[i];
-        
-        // Explicitly create a ticket using the mapper function
+      // Use explicit type assertion to disconnect from TypeScript's inference
+      const plainData = JSON.parse(JSON.stringify(data)) as Array<Record<string, any>>;
+      
+      for (const item of plainData) {
         const ticket = mapDBTicketToTicket({
           id: item.id,
           subject: item.subject,
@@ -105,24 +103,23 @@ export const createTicket = async (ticketData: Omit<Ticket, 'id' | 'created_at' 
     
     if (!data) return null;
     
-    // Use any type to break the type inference chain
-    const item: any = data;
+    // Disconnect from TypeScript's type inference by converting to plain object
+    const plainData = JSON.parse(JSON.stringify(data)) as Record<string, any>;
     
-    // Return a properly mapped ticket
     return mapDBTicketToTicket({
-      id: item.id,
-      subject: item.subject,
-      description: item.description,
-      status: item.status,
-      priority: item.priority,
-      category: item.category,
-      assigned_to: item.assigned_to,
-      client_id: item.client_id,
-      created_by: item.created_by,
-      created_at: item.created_at,
-      updated_at: item.updated_at,
-      resolved_at: item.resolved_at,
-      profiles: item.profiles
+      id: plainData.id,
+      subject: plainData.subject,
+      description: plainData.description,
+      status: plainData.status,
+      priority: plainData.priority,
+      category: plainData.category,
+      assigned_to: plainData.assigned_to,
+      client_id: plainData.client_id,
+      created_by: plainData.created_by,
+      created_at: plainData.created_at,
+      updated_at: plainData.updated_at,
+      resolved_at: plainData.resolved_at,
+      profiles: plainData.profiles
     });
   } catch (error) {
     console.error("خطأ في إنشاء التذكرة:", error);
@@ -156,24 +153,23 @@ export const updateTicket = async (id: string, ticketData: Partial<Ticket>): Pro
     
     if (!data) return null;
     
-    // Use any type to break the type inference chain
-    const item: any = data;
+    // Disconnect from TypeScript's type inference by converting to plain object
+    const plainData = JSON.parse(JSON.stringify(data)) as Record<string, any>;
     
-    // Return a properly mapped ticket
     return mapDBTicketToTicket({
-      id: item.id,
-      subject: item.subject,
-      description: item.description,
-      status: item.status,
-      priority: item.priority,
-      category: item.category,
-      assigned_to: item.assigned_to,
-      client_id: item.client_id,
-      created_by: item.created_by,
-      created_at: item.created_at,
-      updated_at: item.updated_at,
-      resolved_at: item.resolved_at,
-      profiles: item.profiles
+      id: plainData.id,
+      subject: plainData.subject,
+      description: plainData.description,
+      status: plainData.status,
+      priority: plainData.priority,
+      category: plainData.category,
+      assigned_to: plainData.assigned_to,
+      client_id: plainData.client_id,
+      created_by: plainData.created_by,
+      created_at: plainData.created_at,
+      updated_at: plainData.updated_at,
+      resolved_at: plainData.resolved_at,
+      profiles: plainData.profiles
     });
   } catch (error) {
     console.error("خطأ في تحديث التذكرة:", error);
