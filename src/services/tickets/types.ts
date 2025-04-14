@@ -38,12 +38,3 @@ export interface TicketFromDB {
     last_name: string;
   } | null;
 }
-
-// Helper function to map database tickets to our Ticket interface
-export function mapDBTicketToTicket(ticket: TicketFromDB): Ticket {
-  return {
-    ...ticket,
-    status: ticket.status === 'open' ? 'open' : 'closed',
-    priority: (ticket.priority || 'متوسط') as Ticket['priority']
-  };
-}

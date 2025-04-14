@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Ticket } from "./types";
+import { Ticket, TicketFromDB } from "./types";
 import { mapDBTicketToTicket, safeDataConversion } from "./ticketMappers";
 
 export const fetchTickets = async (statusFilter?: string, priorityFilter?: string, categoryFilter?: string): Promise<Ticket[]> => {
@@ -38,29 +38,27 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     
     const tickets: Ticket[] = [];
     
-    // Break the type inference chain by treating data as a plain array of objects
-    if (data && Array.isArray(data)) {
-      const plainData = safeDataConversion<Array<Record<string, any>>>(data);
+    // Break the type inference chain by converting to plain objects
+    const plainData = safeDataConversion<any[]>(data || []);
+    
+    for (const item of plainData) {
+      const ticket = mapDBTicketToTicket({
+        id: item.id,
+        subject: item.subject,
+        description: item.description,
+        status: item.status,
+        priority: item.priority,
+        category: item.category,
+        assigned_to: item.assigned_to,
+        client_id: item.client_id,
+        created_by: item.created_by,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        resolved_at: item.resolved_at,
+        profiles: item.profiles
+      });
       
-      for (const item of plainData) {
-        const ticket = mapDBTicketToTicket({
-          id: item.id,
-          subject: item.subject,
-          description: item.description,
-          status: item.status,
-          priority: item.priority,
-          category: item.category,
-          assigned_to: item.assigned_to,
-          client_id: item.client_id,
-          created_by: item.created_by,
-          created_at: item.created_at,
-          updated_at: item.updated_at,
-          resolved_at: item.resolved_at,
-          profiles: item.profiles
-        });
-        
-        tickets.push(ticket);
-      }
+      tickets.push(ticket);
     }
     
     return tickets;
