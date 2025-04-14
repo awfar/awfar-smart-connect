@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckCircle2, XCircle, AlertCircle, PlayCircle, ArrowRight } from 'lucide-react';
 import { TestService } from '@/services/permissions/testingService';
-import { TestResult } from '@/types/testing';
+import { TestResult } from '@/types/leads';
 
 const SystemTestRunner: React.FC = () => {
   const [results, setResults] = useState<TestResult[]>([]);
@@ -80,7 +79,7 @@ const SystemTestRunner: React.FC = () => {
             <p className="mb-4">اختبار التكامل بين الوحدات المختلفة مثل العملاء المحتملين والصفقات.</p>
           </TabsContent>
           <TabsContent value="performance" className="mt-0">
-            <p className="mb-4">اختبار أداء النظام مثل سرعة التحميل وزمن الاستجابة.</p>
+            <p className="mb-4">اختبار أداء النظام مثل سرعة التحميل وزمن ا��استجابة.</p>
           </TabsContent>
         </div>
 

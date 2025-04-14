@@ -1,4 +1,3 @@
-
 import { supabase } from "../integrations/supabase/client";
 import { Lead, LeadActivity } from "../types/leads";
 import { toast } from "sonner";
@@ -229,7 +228,7 @@ export const addLeadActivity = async (activity: Omit<LeadActivity, "id">): Promi
       throw error;
     }
     
-    // إذا نجحت العملية، نقوم بإرجاع النشاط المضاف
+    // إذا نجحت ال��ملية، نقوم بإرجاع النشاط المضاف
     if (data) {
       return {
         id: data.id,
@@ -527,16 +526,23 @@ export const getIndustries = async (): Promise<string[]> => {
       .select('industry')
       .not('industry', 'is', null);
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching industries:", error);
+      throw error;
+    }
     
     // استخراج القطاعات الفريدة
-    const industries = data
-      .map(item => item.industry as string)
-      .filter(Boolean)
-      .filter((value, index, self) => self.indexOf(value) === index)
-      .sort();
+    if (data) {
+      const industries = data
+        .map(item => item.industry as string)
+        .filter(Boolean)
+        .filter((value, index, self) => self.indexOf(value) === index)
+        .sort();
+      
+      return industries;
+    }
     
-    return industries;
+    return [];
   } catch (error) {
     console.error("Error fetching industries:", error);
     // قائمة قطاعات افتراضية
