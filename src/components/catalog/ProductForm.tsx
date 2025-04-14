@@ -112,6 +112,12 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         image_url: data.image_url || '',
         inventory: data.inventory || 0,
         category_id: data.category_id || '',
+        // Add these required properties with dummy values (they'll be properly set by the server)
+        isActive: data.is_active,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
       
       if (product) {

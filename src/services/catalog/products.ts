@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ProductType } from './utils';
@@ -31,7 +32,13 @@ export const fetchProducts = async (): Promise<Product[]> => {
     
     if (error) throw error;
     
-    return data || [];
+    // Transform the data to add camelCase properties for consistency
+    return (data || []).map(item => ({
+      ...item,
+      isActive: item.is_active,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at
+    }));
   } catch (error) {
     console.error("Error fetching products:", error);
     toast.error('فشل في جلب المنتجات');
@@ -49,7 +56,15 @@ export const fetchProductById = async (id: string): Promise<Product | null> => {
     
     if (error) throw error;
     
-    return data;
+    if (!data) return null;
+    
+    // Transform the data to add camelCase properties
+    return {
+      ...data,
+      isActive: data.is_active,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
   } catch (error) {
     console.error("Error fetching product:", error);
     toast.error('فشل في جلب المنتج');
@@ -57,7 +72,7 @@ export const fetchProductById = async (id: string): Promise<Product | null> => {
   }
 };
 
-export const createProduct = async (product: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Promise<Product | null> => {
+export const createProduct = async (product: Omit<Product, 'id' | 'created_at' | 'updated_at' | 'createdAt' | 'updatedAt'>): Promise<Product | null> => {
   try {
     const { data, error } = await supabase
       .from('products')
@@ -68,7 +83,14 @@ export const createProduct = async (product: Omit<Product, 'id' | 'created_at' |
     if (error) throw error;
     
     toast.success('تم إضافة المنتج بنجاح');
-    return data;
+    
+    // Transform the data to add camelCase properties
+    return {
+      ...data,
+      isActive: data.is_active,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
   } catch (error) {
     console.error("Error creating product:", error);
     toast.error('فشل في إضافة المنتج');
@@ -88,7 +110,14 @@ export const updateProduct = async (id: string, product: Partial<Product>): Prom
     if (error) throw error;
     
     toast.success('تم تحديث المنتج بنجاح');
-    return data;
+    
+    // Transform the data to add camelCase properties
+    return {
+      ...data,
+      isActive: data.is_active,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at
+    };
   } catch (error) {
     console.error("Error updating product:", error);
     toast.error('فشل في تحديث المنتج');

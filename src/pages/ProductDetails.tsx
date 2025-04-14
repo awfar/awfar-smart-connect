@@ -72,8 +72,8 @@ const ProductDetails = () => {
   });
 
   const toggleActiveMutation = useMutation({
-    mutationFn: (product: { id: string; isActive: boolean }) => 
-      updateProduct(product.id, { isActive: !product.isActive }),
+    mutationFn: (product: { id: string; is_active: boolean }) => 
+      updateProduct(product.id, { is_active: !product.is_active }),
     onSuccess: () => {
       toast.success("تم تحديث حالة المنتج بنجاح");
       queryClient.invalidateQueries({ queryKey: ['product', id] });
@@ -94,7 +94,7 @@ const ProductDetails = () => {
     if (product) {
       toggleActiveMutation.mutate({ 
         id: product.id, 
-        isActive: product.isActive 
+        is_active: product.is_active 
       });
     }
   };
@@ -171,10 +171,10 @@ const ProductDetails = () => {
           </div>
           <div className="flex space-x-2 space-x-reverse">
             <Button 
-              variant={product.isActive ? "outline" : "default"} 
+              variant={product.is_active ? "outline" : "default"} 
               onClick={handleToggleActive}
             >
-              {product.isActive ? (
+              {product.is_active ? (
                 <>
                   <XCircle className="ml-2" size={16} />
                   تعطيل المنتج
@@ -265,8 +265,8 @@ const ProductDetails = () => {
                 <div>
                   <h3 className="text-sm font-medium">الحالة</h3>
                   <div className="mt-1">
-                    <Badge variant={product.isActive ? "default" : "secondary"}>
-                      {product.isActive ? "نشط" : "غير نشط"}
+                    <Badge variant={product.is_active ? "default" : "secondary"}>
+                      {product.is_active ? "نشط" : "غير نشط"}
                     </Badge>
                   </div>
                 </div>
@@ -276,7 +276,7 @@ const ProductDetails = () => {
                   <div className="mt-1 flex items-center text-gray-600">
                     <Calendar className="ml-2" size={14} />
                     <span>
-                      {product.createdAt ? format(new Date(product.createdAt), 'dd/MM/yyyy') : 'غير محدد'}
+                      {product.created_at ? format(new Date(product.created_at), 'dd/MM/yyyy') : 'غير محدد'}
                     </span>
                   </div>
                 </div>
