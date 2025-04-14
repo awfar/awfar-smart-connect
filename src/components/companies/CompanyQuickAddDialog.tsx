@@ -97,8 +97,8 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
         // Additional required fields based on the Company type
         type: "customer",
         contacts: [],
-        status: "active",
-        createdAt: new Date().toISOString()
+        status: "active"
+        // Removed createdAt as it's automatically handled by the service
       });
       
       console.log("Company created:", newCompany);
