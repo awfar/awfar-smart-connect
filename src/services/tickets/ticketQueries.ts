@@ -27,13 +27,14 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
       queryBuilder = queryBuilder.eq('category', categoryFilter);
     }
     
-    // Use a two-step approach to completely break the type chain
-    // First, execute the query and get the raw response
-    const response = await queryBuilder.order('created_at', { ascending: false });
+    // Convert to plain query with explicit typing to break type inference chain
+    const query = queryBuilder.order('created_at', { ascending: false });
     
-    // Then, extract the data without type inference
-    const rawData = response.data as any[] | null;
-    const error = response.error;
+    // Execute the query as a plain fetch operation
+    const { data, error } = await query;
+    
+    // Explicitly type the result as unknown to break the chain
+    const rawTickets = data as unknown[];
     
     if (error) {
       console.error("Error fetching tickets:", error);
@@ -41,33 +42,36 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
       return [];
     }
     
-    console.log("Tickets fetched:", rawData);
+    console.log("Tickets fetched:", rawTickets);
     
     // Handle the null case
-    if (!rawData) return [];
+    if (!rawTickets) return [];
     
     // Initialize an empty array for our tickets
     const tickets: Ticket[] = [];
     
     // Map the raw data to our known type structure
-    for (const item of rawData) {
-      // Use type assertion to ensure TypeScript doesn't try to infer complex types
-      const rawItem = item as Record<string, any>;
+    for (const item of rawTickets) {
+      // Safely convert to a simple object type
+      const rawItem = item as Record<string, unknown>;
       
       const ticketData: TicketFromDB = {
-        id: rawItem.id,
-        subject: rawItem.subject,
-        description: rawItem.description,
-        status: rawItem.status,
-        priority: rawItem.priority,
-        category: rawItem.category,
-        assigned_to: rawItem.assigned_to,
-        client_id: rawItem.client_id,
-        created_by: rawItem.created_by,
-        created_at: rawItem.created_at,
-        updated_at: rawItem.updated_at,
-        resolved_at: rawItem.resolved_at,
-        profiles: rawItem.profiles
+        id: String(rawItem.id),
+        subject: String(rawItem.subject),
+        description: String(rawItem.description),
+        status: String(rawItem.status),
+        priority: String(rawItem.priority || 'متوسط'),
+        category: rawItem.category ? String(rawItem.category) : undefined,
+        assigned_to: rawItem.assigned_to ? String(rawItem.assigned_to) : undefined,
+        client_id: rawItem.client_id ? String(rawItem.client_id) : undefined,
+        created_by: rawItem.created_by ? String(rawItem.created_by) : undefined,
+        created_at: rawItem.created_at ? String(rawItem.created_at) : undefined,
+        updated_at: rawItem.updated_at ? String(rawItem.updated_at) : undefined,
+        resolved_at: rawItem.resolved_at ? String(rawItem.resolved_at) : null,
+        profiles: rawItem.profiles ? {
+          first_name: String((rawItem.profiles as Record<string, unknown>).first_name || ''),
+          last_name: String((rawItem.profiles as Record<string, unknown>).last_name || '')
+        } : null
       };
       
       const ticket = mapDBTicketToTicket(ticketData);
