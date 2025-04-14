@@ -36,12 +36,18 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     
     console.log("Tickets fetched:", data);
     
+    // Initialize an empty array for our tickets
     const tickets: Ticket[] = [];
     
-    // Break the type inference chain properly to avoid deep type instantiation
-    const plainData = JSON.parse(JSON.stringify(data || [])) as any[];
+    // Avoid deep type instantiation by converting to any first
+    // and then explicitly reconstructing our known types
+    if (!data) return [];
     
-    for (const item of plainData) {
+    // Use any[] to break the TypeScript inference chain
+    const dataArray: any[] = data;
+    
+    for (const item of dataArray) {
+      // Explicitly construct a TicketFromDB object with known structure
       const ticketData: TicketFromDB = {
         id: item.id,
         subject: item.subject,
