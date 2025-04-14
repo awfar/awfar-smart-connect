@@ -140,8 +140,14 @@ export const getIndustries = async (): Promise<string[]> => {
     // استخراج القطاعات الفريدة
     if (response.data && response.data.length > 0) {
       const industries = response.data
-        .map(item => item.industry as string)
-        .filter(Boolean)
+        .map(item => {
+          // Explicitly check if industry exists and is a string
+          if (item && typeof item.industry === 'string') {
+            return item.industry;
+          }
+          return null;
+        })
+        .filter(Boolean) // Filter out null values
         .filter((value, index, self) => self.indexOf(value) === index)
         .sort();
       
