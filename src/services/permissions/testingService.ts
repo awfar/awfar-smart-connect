@@ -218,7 +218,11 @@ export class SystemTestingService {
         stage: "جديدة",
         status: "active",
         description: "صفقة تم إنشاؤها للاختبار",
-        expected_close_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        expected_close_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        // إضافة الحقول المطلوبة المفقودة
+        company_id: null,
+        contact_id: null,
+        owner_id: null
       };
 
       const startCreateTime = performance.now();
@@ -313,11 +317,14 @@ export class SystemTestingService {
         country: "sa",
         phone: "+966550000000",
         website: "www.test-company.com",
-        address: "الرياض، السعودية"
+        address: "الرياض، السعودية",
+        // إضافة الحقل المطلوب المفقود
+        status: "نشط",
+        contacts: []
       };
 
       const startCreateTime = performance.now();
-      const createdCompany = await createCompany({ ...testCompany, contacts: [] });
+      const createdCompany = await createCompany(testCompany);
       const createTime = performance.now() - startCreateTime;
 
       if (!createdCompany || !createdCompany.id) {
