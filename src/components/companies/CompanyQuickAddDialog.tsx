@@ -124,6 +124,7 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
               value={formData.name}
               onChange={handleChange}
               className={formErrors.name ? "border-red-500" : ""}
+              autoFocus
             />
             {formErrors.name && (
               <p className="text-red-500 text-xs mt-1">{formErrors.name}</p>

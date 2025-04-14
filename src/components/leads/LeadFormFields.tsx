@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LeadFormOptions } from "@/hooks/useLeadForm";
 import { Autocomplete } from "@/components/ui/autocomplete";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CompanyQuickAddDialog from "@/components/companies/CompanyQuickAddDialog";
 import { getCompanies } from "@/services/companiesService";
@@ -29,12 +29,14 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
   const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
   const [companyOptions, setCompanyOptions] = useState<{label: string, value: string}[]>([]);
   const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
+  const [loadCompanyError, setLoadCompanyError] = useState<string | null>(null);
   
   // Load companies when component mounts
   useEffect(() => {
     const loadCompanies = async () => {
       try {
         setIsLoadingCompanies(true);
+        setLoadCompanyError(null);
         const companies = await getCompanies();
         
         // Make sure companies is an array before mapping
@@ -50,7 +52,9 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
         }
       } catch (error) {
         console.error("Error loading companies:", error);
+        setLoadCompanyError("لم نتمكن من تحميل قائمة الشركات");
         toast.error("لم نتمكن من تحميل قائمة الشركات");
+        // Always set an empty array as fallback
         setCompanyOptions([]);
       } finally {
         setIsLoadingCompanies(false);
@@ -64,7 +68,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
   useEffect(() => {
     if (formData.company && 
         companyOptions.length > 0 && 
-        companyOptions.findIndex(c => c.value === formData.company) === -1) {
+        !companyOptions.some(c => c.value === formData.company)) {
       setCompanyOptions(prev => [
         ...prev,
         { label: formData.company, value: formData.company }
@@ -86,7 +90,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
     // حدد الشركة الجديدة في النموذج
     handleSelectChange("company", companyName);
     
-    // Close the dialog and show success message
+    // Show success message
     toast.success(`تمت إضافة الشركة "${companyName}" بنجاح`);
   };
 
@@ -168,12 +172,18 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
           value={formData.company || ''}
           onValueChange={(value) => handleSelectChange("company", value)}
           placeholder={isLoadingCompanies ? "جاري التحميل..." : "اختر أو اكتب اسم الشركة"}
-          emptyMessage="لم يتم العثور على نتائج"
+          emptyMessage={loadCompanyError ? loadCompanyError : "لم يتم العثور على نتائج"}
           disableCreate={false}
           onCreateNew={() => setIsAddCompanyOpen(true)}
           createNewLabel="إضافة شركة جديدة"
           disabled={isLoadingCompanies}
         />
+        {isLoadingCompanies && (
+          <div className="flex items-center mt-1 text-xs text-muted-foreground">
+            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+            جاري تحميل قائمة الشركات...
+          </div>
+        )}
       </div>
 
       <div>
@@ -198,11 +208,11 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر الدولة" />
             </SelectTrigger>
             <SelectContent>
-              {Array.isArray(options.countries) && options.countries.map((country) => (
+              {Array.isArray(options.countries) ? options.countries.map((country) => (
                 <SelectItem key={country} value={country}>
                   {country}
                 </SelectItem>
-              ))}
+              )) : null}
             </SelectContent>
           </Select>
         </div>
@@ -216,11 +226,11 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر القطاع" />
             </SelectTrigger>
             <SelectContent>
-              {Array.isArray(options.industries) && options.industries.map((industry) => (
+              {Array.isArray(options.industries) ? options.industries.map((industry) => (
                 <SelectItem key={industry} value={industry}>
                   {industry}
                 </SelectItem>
-              ))}
+              )) : null}
             </SelectContent>
           </Select>
         </div>
@@ -237,11 +247,11 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر المرحلة" />
             </SelectTrigger>
             <SelectContent>
-              {Array.isArray(options.stages) && options.stages.map((stage) => (
+              {Array.isArray(options.stages) ? options.stages.map((stage) => (
                 <SelectItem key={stage} value={stage}>
                   {stage}
                 </SelectItem>
-              ))}
+              )) : null}
             </SelectContent>
           </Select>
         </div>
@@ -255,11 +265,11 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر المصدر" />
             </SelectTrigger>
             <SelectContent>
-              {Array.isArray(options.sources) && options.sources.map((source) => (
+              {Array.isArray(options.sources) ? options.sources.map((source) => (
                 <SelectItem key={source} value={source}>
                   {source}
                 </SelectItem>
-              ))}
+              )) : null}
             </SelectContent>
           </Select>
         </div>
@@ -276,11 +286,11 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="unassigned">غير مخصص</SelectItem>
-            {Array.isArray(options.owners) && options.owners.map((owner) => (
+            {Array.isArray(options.owners) ? options.owners.map((owner) => (
               <SelectItem key={owner.id} value={owner.id}>
                 {owner.name}
               </SelectItem>
-            ))}
+            )) : null}
           </SelectContent>
         </Select>
       </div>
