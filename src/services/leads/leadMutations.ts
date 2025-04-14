@@ -74,8 +74,8 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     // Prepare lead data for Supabase
     const { owner, ...leadToCreate } = lead as any;
     
-    // Clean assigned_to field if empty to prevent uuid type error
-    if (leadToCreate.assigned_to === '') {
+    // Clean assigned_to field if empty or invalid to prevent uuid type error
+    if (!leadToCreate.assigned_to || leadToCreate.assigned_to === '') {
       leadToCreate.assigned_to = null;
     }
     

@@ -3,6 +3,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MobileOptimizedContainer from '@/components/ui/mobile-optimized-container';
 import LeadForm from '@/components/leads/LeadForm';
+import { toast } from "sonner";
 
 interface AddLeadDialogProps {
   isOpen: boolean;
@@ -15,6 +16,11 @@ const AddLeadDialog: React.FC<AddLeadDialogProps> = ({
   onOpenChange,
   onSuccess
 }) => {
+  const handleSuccess = () => {
+    toast.success("تم إضافة العميل المحتمل بنجاح");
+    onSuccess();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
@@ -25,7 +31,7 @@ const AddLeadDialog: React.FC<AddLeadDialogProps> = ({
           <MobileOptimizedContainer>
             <LeadForm 
               onClose={() => onOpenChange(false)}
-              onSuccess={onSuccess}
+              onSuccess={handleSuccess}
             />
           </MobileOptimizedContainer>
         </div>

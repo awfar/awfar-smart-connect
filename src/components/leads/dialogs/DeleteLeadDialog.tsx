@@ -10,6 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 interface DeleteLeadDialogProps {
   isOpen: boolean;
@@ -22,6 +23,11 @@ const DeleteLeadDialog: React.FC<DeleteLeadDialogProps> = ({
   onOpenChange,
   onConfirm
 }) => {
+  const handleConfirm = () => {
+    onConfirm();
+    toast.success("تم حذف العميل المحتمل بنجاح");
+  };
+
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
       <AlertDialogContent>
@@ -33,7 +39,7 @@ const DeleteLeadDialog: React.FC<DeleteLeadDialogProps> = ({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>إلغاء</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} className="bg-red-500 hover:bg-red-600">
+          <AlertDialogAction onClick={handleConfirm} className="bg-red-500 hover:bg-red-600">
             حذف
           </AlertDialogAction>
         </AlertDialogFooter>

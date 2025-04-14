@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import MobileOptimizedContainer from '@/components/ui/mobile-optimized-container';
 import LeadForm from '@/components/leads/LeadForm';
 import { Lead } from "@/services/leads";
+import { toast } from "sonner";
 
 interface EditLeadDialogProps {
   isOpen: boolean;
@@ -18,6 +19,11 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
   lead,
   onSuccess
 }) => {
+  const handleSuccess = () => {
+    toast.success("تم تحديث بيانات العميل المحتمل بنجاح");
+    onSuccess();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
@@ -30,7 +36,7 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
               <LeadForm 
                 lead={lead}
                 onClose={() => onOpenChange(false)}
-                onSuccess={onSuccess}
+                onSuccess={handleSuccess}
               />
             )}
           </MobileOptimizedContainer>

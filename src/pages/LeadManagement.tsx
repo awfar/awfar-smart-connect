@@ -18,6 +18,7 @@ import EditLeadDialog from "@/components/leads/dialogs/EditLeadDialog";
 import DeleteLeadDialog from "@/components/leads/dialogs/DeleteLeadDialog";
 
 const LeadManagement = () => {
+  // State management
   const [selectedView, setSelectedView] = useState<string>("all");
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [selectedLead, setSelectedLead] = useState<string | null>(null);
@@ -118,7 +119,6 @@ const LeadManagement = () => {
         setSelectedLead(null);
       }
       refetch();
-      toast.success("تم حذف العميل المحتمل بنجاح");
     } catch (error) {
       console.error("Error deleting lead:", error);
       toast.error("فشل في حذف العميل المحتمل");

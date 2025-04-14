@@ -16,7 +16,24 @@ export const getLeadActivities = async (leadId: string): Promise<LeadActivity[]>
     
     if (error) throw error;
     
-    return data || [];
+    return data.map(activity => {
+      // Safely transform the profiles data
+      let createdByInfo = null;
+      if (activity.profiles) {
+        const firstName = activity.profiles.first_name || '';
+        const lastName = activity.profiles.last_name || '';
+        createdByInfo = {
+          id: activity.created_by,
+          first_name: firstName,
+          last_name: lastName
+        };
+      }
+
+      return {
+        ...activity,
+        created_by: createdByInfo
+      };
+    }) || [];
   } catch (error) {
     console.error("Error fetching lead activities:", error);
     toast.error("فشل في جلب أنشطة العميل المحتمل");
