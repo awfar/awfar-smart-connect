@@ -228,7 +228,7 @@ export const addLeadActivity = async (activity: Omit<LeadActivity, "id">): Promi
       throw error;
     }
     
-    // إذا نجحت الع��لية، نقوم بإرجاع النشاط المضاف
+    // إذا نجحت الع���لية، نقوم بإرجاع النشاط المضاف
     if (data) {
       return {
         id: data.id,
@@ -351,7 +351,7 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
       leadToCreate.updated_at = new Date().toISOString();
     }
     
-    // محاولة إنشاء العميل المحتمل في Supabase
+    // م��اولة إنشاء العميل المحتمل في Supabase
     const { data, error } = await supabase
       .from('leads')
       .insert(leadToCreate)
@@ -482,8 +482,6 @@ export const deleteLead = async (id: string): Promise<boolean> => {
   }
 };
 
-// ======= وظائف إضافية لدعم متطلبات المشروع =======
-
 // الحصول على قائمة المصادر المستخدمة
 export const getLeadSources = async (): Promise<string[]> => {
   try {
@@ -521,19 +519,20 @@ export const getLeadSources = async (): Promise<string[]> => {
 // الحصول على قائمة القطاعات المستخدمة
 export const getIndustries = async (): Promise<string[]> => {
   try {
-    const { data, error } = await supabase
+    const result = await supabase
       .from('leads')
       .select('industry')
       .not('industry', 'is', null);
     
-    if (error) {
-      console.error("Error fetching industries:", error);
-      throw error;
+    // التحقق من وجود خطأ في الاستعلام
+    if (result.error) {
+      console.error("Error fetching industries:", result.error);
+      throw result.error;
     }
     
     // استخراج القطاعات الفريدة
-    if (data && data.length > 0) {
-      const industries = data
+    if (result.data && result.data.length > 0) {
+      const industries = result.data
         .map(record => record.industry as string)
         .filter(Boolean)
         .filter((value, index, self) => self.indexOf(value) === index)
