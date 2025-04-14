@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -87,7 +88,7 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
     setIsSubmitting(true);
 
     try {
-      // Use the actual service to create a company in the database
+      // Use the service to create a company in the database
       const newCompany = await createCompany({
         name: formData.name,
         industry: formData.industry || "",
@@ -103,7 +104,10 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
       console.log("Company created:", newCompany);
       
       // Ensure we're passing the company name back to the parent component
-      if (formData.name) {
+      if (newCompany && newCompany.name) {
+        onSuccess(newCompany.name);
+      } else if (formData.name) {
+        // Fallback if company object doesn't have a name for some reason
         onSuccess(formData.name);
       }
       

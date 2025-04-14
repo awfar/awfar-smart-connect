@@ -12,20 +12,8 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
   try {
     console.log("Updating lead:", lead);
     
-    // Check if it's a mock lead or we're in demo mode
-    if (lead.id.startsWith('lead-') || !supabase.auth.getUser) {
-      console.log("Using mock data for demo mode (update lead)");
-      // Update mock lead for development
-      const index = mockLeads.findIndex((l) => l.id === lead.id);
-      if (index >= 0) {
-        mockLeads[index] = lead;
-        toast.success("تم تحديث العميل المحتمل بنجاح");
-        return lead;
-      }
-      throw new Error("Lead not found");
-    }
-    
-    // Prepare lead data for Supabase (remove owner property)
+    // IMPORTANT: Always update in Supabase first, not just mock data
+    // Try updating the lead in Supabase regardless of lead ID format
     const { owner, ...leadToUpdate } = lead;
     
     // Remove any null or empty string values for UUID fields to prevent errors
@@ -49,6 +37,17 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
     
     if (error) {
       console.error("Error updating lead in Supabase:", error);
+      // Fall back to mock data only if it's a mock lead or a development environment
+      if (lead.id.startsWith('lead-') || process.env.NODE_ENV === 'development') {
+        console.log("Falling back to mock data for development (update lead)");
+        const index = mockLeads.findIndex((l) => l.id === lead.id);
+        if (index >= 0) {
+          mockLeads[index] = lead;
+          toast.success("تم تحديث العميل المحتمل بنجاح");
+          return lead;
+        }
+        throw new Error("Lead not found in mock data");
+      }
       throw error;
     }
     
@@ -85,37 +84,8 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
   try {
     console.log("Creating new lead:", lead);
     
-    // Check if we should use mock data (if not authenticated or in development mode)
-    const { data: userData } = await supabase.auth.getUser().catch(() => ({ data: null }));
-    const useMockData = !userData || !userData.user;
-    
-    if (useMockData) {
-      console.log("Using mock data for demo mode (create lead)");
-      // Create a new mock lead with a generated ID
-      const newId = `lead-${mockLeads.length + 1}`;
-      const createdAt = new Date().toISOString();
-      const newLead = {
-        ...lead,
-        id: newId,
-        created_at: createdAt,
-        updated_at: createdAt,
-        // Add owner information for display
-        owner: {
-          name: "أنت",
-          avatar: "",
-          initials: "أنت"
-        }
-      } as Lead;
-      
-      // Add to mock data
-      mockLeads.unshift(newLead);
-      
-      toast.success("تم إضافة العميل المحتمل بنجاح");
-      console.log("Created mock lead:", newLead);
-      return newLead;
-    }
-    
-    // Regular flow for authenticated users
+    // IMPORTANT: Always create in Supabase first, not just mock data
+    // Regular flow for all users - try to create in Supabase first
     // Prepare lead data for Supabase
     const { owner, ...leadToCreate } = lead as any;
     
@@ -150,6 +120,34 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     
     if (error) {
       console.error("Error creating lead in Supabase:", error);
+      
+      // Only fall back to mock data in development
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Falling back to mock data for demo mode (create lead)");
+        // Create a new mock lead with a generated ID
+        const newId = `lead-${mockLeads.length + 1}`;
+        const createdAt = new Date().toISOString();
+        const newLead = {
+          ...lead,
+          id: newId,
+          created_at: createdAt,
+          updated_at: createdAt,
+          // Add owner information for display
+          owner: {
+            name: "أنت",
+            avatar: "",
+            initials: "أنت"
+          }
+        } as Lead;
+        
+        // Add to mock data
+        mockLeads.unshift(newLead);
+        
+        toast.success("تم إضافة العميل المحتمل بنجاح (وضع تجريبي)");
+        console.log("Created mock lead:", newLead);
+        return newLead;
+      }
+      
       throw error;
     }
     
@@ -201,21 +199,10 @@ export const deleteLead = async (id: string): Promise<boolean> => {
   try {
     console.log("Deleting lead with ID:", id);
     
-    // Check if it's a mock lead or we're in demo mode
-    if (id.startsWith('lead-') || !supabase.auth.getUser) {
-      console.log("Using mock data for demo mode (delete lead)");
-      // Remove from mock data for development
-      const index = mockLeads.findIndex((l) => l.id === id);
-      if (index >= 0) {
-        mockLeads.splice(index, 1);
-        toast.success("تم حذف العميل المحتمل بنجاح");
-        return true;
-      }
-      throw new Error("Lead not found");
-    }
-    
-    // Log the deletion activity before deleting the lead
+    // IMPORTANT: Always delete from Supabase first, regardless of ID format
+    // Try deleting the lead from Supabase (even if it might be a mock ID)
     try {
+      // Log the deletion activity before deleting the lead
       const { data: userData } = await supabase.auth.getUser();
       await addLeadActivity({
         lead_id: id,
@@ -228,7 +215,6 @@ export const deleteLead = async (id: string): Promise<boolean> => {
       // Continue with deletion even if activity logging fails
     }
     
-    // Try deleting the lead from Supabase
     const { error } = await supabase
       .from('leads')
       .delete()
@@ -236,6 +222,20 @@ export const deleteLead = async (id: string): Promise<boolean> => {
     
     if (error) {
       console.error("Error deleting lead from Supabase:", error);
+      
+      // Only fall back to mock deletion if it's a mock ID or in development
+      if (id.startsWith('lead-') || process.env.NODE_ENV === 'development') {
+        console.log("Using mock data for demo mode (delete lead)");
+        // Remove from mock data for development
+        const index = mockLeads.findIndex((l) => l.id === id);
+        if (index >= 0) {
+          mockLeads.splice(index, 1);
+          toast.success("تم حذف العميل المحتمل بنجاح");
+          return true;
+        }
+        throw new Error("Lead not found in mock data");
+      }
+      
       throw error;
     }
     

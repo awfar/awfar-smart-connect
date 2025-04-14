@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,13 +48,14 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
           setCompanyOptions(companyOpts);
         } else {
           console.error("Companies data is not an array:", companies);
+          // Initialize with empty array rather than undefined
           setCompanyOptions([]);
         }
       } catch (error) {
         console.error("Error loading companies:", error);
         setLoadCompanyError("لم نتمكن من تحميل قائمة الشركات");
         toast.error("لم نتمكن من تحميل قائمة الشركات");
-        // Always set an empty array as fallback
+        // Always set an empty array as fallback, never undefined
         setCompanyOptions([]);
       } finally {
         setIsLoadingCompanies(false);
@@ -68,6 +68,8 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
   // Add the company selected in the form to the options if it doesn't exist yet
   useEffect(() => {
     if (formData.company && 
+        // Ensure companyOptions is an array before checking
+        Array.isArray(companyOptions) && 
         companyOptions.length > 0 && 
         !companyOptions.some(c => c.value === formData.company)) {
       setCompanyOptions(prev => [
@@ -83,8 +85,8 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
     // Add the new company to company options
     const newOption = { label: companyName, value: companyName };
     
-    // Make sure company doesn't already exist
-    if (!companyOptions.some(opt => opt.value === companyName)) {
+    // Ensure companyOptions is an array before checking
+    if (Array.isArray(companyOptions) && !companyOptions.some(opt => opt.value === companyName)) {
       setCompanyOptions(prev => [...prev, newOption]);
     }
     
@@ -94,6 +96,9 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
     // Show success message
     toast.success(`تمت إضافة الشركة "${companyName}" بنجاح`);
   };
+
+  // Ensure companyOptions is never undefined to prevent "undefined is not iterable" error
+  const safeCompanyOptions = Array.isArray(companyOptions) ? companyOptions : [];
 
   return (
     <>
@@ -169,7 +174,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
           </Button>
         </Label>
         <Autocomplete
-          options={companyOptions}
+          options={safeCompanyOptions}
           value={formData.company || ''}
           onValueChange={(value) => handleSelectChange("company", value)}
           placeholder={isLoadingCompanies ? "جاري التحميل..." : "اختر أو اكتب اسم الشركة"}
@@ -285,7 +290,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
       </div>
 
       <div>
-        <Label htmlFor="assigned_to">المسؤول</Label>
+        <Label htmlFor="assigned_to">ا��مسؤول</Label>
         <Select 
           value={formData.assigned_to || ''} 
           onValueChange={(value) => handleSelectChange("assigned_to", value)}

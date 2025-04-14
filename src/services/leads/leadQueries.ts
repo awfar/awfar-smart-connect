@@ -1,52 +1,14 @@
-
 import { Lead } from "../types/leadTypes";
 import { mockLeads } from "./mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { transformLeadFromSupabase } from "./utils";
 
-// Get all leads or filter by criteria
+// Get all leads or filter by criteria - Always try Supabase first
 export const getLeads = async (filters: Record<string, any> = {}): Promise<Lead[]> => {
   try {
     console.log("Fetching leads with filters:", filters);
     
-    // Check if we should use mock data (not authenticated or in dev mode)
-    const { data: userData } = await supabase.auth.getUser().catch(() => ({ data: null }));
-    const useMockData = !userData || !userData.user;
-    
-    if (useMockData) {
-      console.log("Using mock data for getLeads");
-      // Apply filters to mock data
-      let filteredLeads = [...mockLeads];
-      
-      // Apply search filter
-      if (filters.search) {
-        const searchTerm = filters.search.toLowerCase();
-        filteredLeads = filteredLeads.filter(lead => {
-          return (
-            lead.first_name?.toLowerCase().includes(searchTerm) ||
-            lead.last_name?.toLowerCase().includes(searchTerm) ||
-            lead.company?.toLowerCase().includes(searchTerm) ||
-            lead.email?.toLowerCase().includes(searchTerm)
-          );
-        });
-      }
-      
-      // Apply other filters
-      Object.entries(filters).forEach(([key, value]) => {
-        if (key !== 'search' && value) {
-          filteredLeads = filteredLeads.filter(lead => {
-            // Handle special case for "current-user-id"
-            if (key === 'assigned_to' && value === 'current-user-id') {
-              return true; // In mock mode, consider all leads as assigned to current user
-            }
-            return lead[key as keyof Lead] === value;
-          });
-        }
-      });
-      
-      return filteredLeads;
-    }
-    
+    // Always attempt to fetch from Supabase first
     // Build query for Supabase
     let query = supabase
       .from('leads')
@@ -100,6 +62,11 @@ export const getLeads = async (filters: Record<string, any> = {}): Promise<Lead[
     
     if (error) {
       console.error("Error fetching leads from Supabase:", error);
+      // Fall back to mock data only in development
+      if (process.env.NODE_ENV === 'development') {
+        console.warn("⚠️ Falling back to mock data due to Supabase error");
+        return filterMockLeads(mockLeads, filters);
+      }
       throw error;
     }
     
@@ -110,25 +77,52 @@ export const getLeads = async (filters: Record<string, any> = {}): Promise<Lead[
     return [];
   } catch (error) {
     console.error("Error fetching leads:", error);
-    // Fallback to mock data if there's an error
-    console.log("Falling back to mock data due to error");
-    return mockLeads;
+    // Fallback to mock data only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn("⚠️ Falling back to mock data due to error");
+      return filterMockLeads(mockLeads, filters);
+    }
+    return [];
   }
 };
 
-// Get a single lead by ID
+// Helper function to filter mock leads (used only as fallback)
+const filterMockLeads = (leads: Lead[], filters: Record<string, any>): Lead[] => {
+  let filteredLeads = [...leads];
+  
+  // Apply search filter
+  if (filters.search) {
+    const searchTerm = filters.search.toLowerCase();
+    filteredLeads = filteredLeads.filter(lead => {
+      return (
+        lead.first_name?.toLowerCase().includes(searchTerm) ||
+        lead.last_name?.toLowerCase().includes(searchTerm) ||
+        lead.company?.toLowerCase().includes(searchTerm) ||
+        lead.email?.toLowerCase().includes(searchTerm)
+      );
+    });
+  }
+  
+  // Apply other filters
+  Object.entries(filters).forEach(([key, value]) => {
+    if (key !== 'search' && value) {
+      filteredLeads = filteredLeads.filter(lead => {
+        // Handle special case for "current-user-id"
+        if (key === 'assigned_to' && value === 'current-user-id') {
+          return true; // In mock mode, consider all leads as assigned to current user
+        }
+        return lead[key as keyof Lead] === value;
+      });
+    }
+  });
+  
+  return filteredLeads;
+};
+
+// Get a single lead by ID - Always try Supabase first
 export const getLead = async (id: string): Promise<Lead | null> => {
   try {
-    // Check if we should use mock data or we're looking for a mock lead
-    const { data: userData } = await supabase.auth.getUser().catch(() => ({ data: null }));
-    const useMockData = !userData || !userData.user || id.startsWith('lead-');
-    
-    if (useMockData) {
-      console.log("Using mock data for getLead");
-      const lead = mockLeads.find(l => l.id === id);
-      return lead || null;
-    }
-    
+    // Always try to fetch from Supabase first, regardless of ID format
     const { data, error } = await supabase
       .from('leads')
       .select(`
@@ -140,6 +134,13 @@ export const getLead = async (id: string): Promise<Lead | null> => {
     
     if (error) {
       console.error("Error fetching lead from Supabase:", error);
+      
+      // If it's a mock lead ID, return from mock data as fallback
+      if (id.startsWith('lead-') || process.env.NODE_ENV === 'development') {
+        console.warn("⚠️ Falling back to mock data for lead");
+        return mockLeads.find(l => l.id === id) || null;
+      }
+      
       throw error;
     }
     
@@ -151,8 +152,9 @@ export const getLead = async (id: string): Promise<Lead | null> => {
   } catch (error) {
     console.error(`Error fetching lead with ID ${id}:`, error);
     
-    // If it's a mock lead ID, return from mock data
-    if (id.startsWith('lead-')) {
+    // If it's a mock lead ID, return from mock data as fallback
+    if (id.startsWith('lead-') || process.env.NODE_ENV === 'development') {
+      console.warn("⚠️ Falling back to mock data for lead due to error");
       return mockLeads.find(l => l.id === id) || null;
     }
     
