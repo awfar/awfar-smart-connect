@@ -3,7 +3,7 @@ import React from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Subscription, BillingCycle, createSubscription, updateSubscription } from "@/services/catalogService";
+import { fetchSubscriptionById, createSubscription, updateSubscription, Subscription, BillingCycle } from "@/services/catalogService";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -37,7 +37,12 @@ export default function SubscriptionForm({ subscription, onSuccess }: Subscripti
     resolver: zodResolver(subscriptionSchema),
     defaultValues: subscription
       ? {
-          ...subscription,
+          name: subscription.name,
+          description: subscription.description,
+          price: subscription.price,
+          billingCycle: subscription.billingCycle as BillingCycle,
+          features: subscription.features,
+          isActive: subscription.isActive,
         }
       : {
           name: "",
@@ -68,13 +73,15 @@ export default function SubscriptionForm({ subscription, onSuccess }: Subscripti
       const filteredFeatures = data.features.filter((feature) => feature.trim() !== "");
       
       // Ensure all required fields are present
-      const subscriptionData: Omit<Subscription, 'id'> = {
+      const subscriptionData = {
         name: data.name,
         description: data.description,
         price: data.price,
         billingCycle: data.billingCycle,
         features: filteredFeatures,
-        isActive: data.isActive
+        isActive: data.isActive,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
       
       if (subscription) {

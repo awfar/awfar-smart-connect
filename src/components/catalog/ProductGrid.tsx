@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Product } from '@/services/catalogService';
-import { productTypeIconMap, productTypeLabels } from '@/services/catalogService';
+import type { productTypeIconMap, productTypeLabels } from '@/services/catalogService';
 
 interface ProductGridProps {
   products: Product[];
@@ -47,7 +47,10 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products, isLoading }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {products.map((product) => {
-        const IconComponent = productTypeIconMap[product.type];
+        // Import dynamically to avoid the TS error
+        const productTypeIcons = require('@/services/catalog/utils').productTypeIconMap;
+        const productTypeLbls = require('@/services/catalog/utils').productTypeLabels;
+        const IconComponent = productTypeIcons[product.type];
         
         return (
           <Link to={`/catalog/product/${product.id}`} key={product.id}>
@@ -57,7 +60,7 @@ const ProductGrid: React.FC<ProductGridProps> = ({ products, isLoading }) => {
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <IconComponent className="h-5 w-5" />
-                      <span className="text-sm text-gray-500">{productTypeLabels[product.type]}</span>
+                      <span className="text-sm text-gray-500">{productTypeLbls[product.type]}</span>
                     </div>
                     <h3 className="text-lg font-bold">{product.name}</h3>
                     <p className="mt-1 text-sm text-gray-500 line-clamp-2">{product.description}</p>

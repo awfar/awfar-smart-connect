@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Subscription, getSubscriptions } from '@/services/catalogService';
+import { Subscription, fetchSubscriptions } from '@/services/catalogService';
 import { Plus, Check, RefreshCw, Pencil, X } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import SubscriptionForm from '@/components/catalog/SubscriptionForm';
@@ -23,7 +23,7 @@ const SubscriptionManagement: React.FC = () => {
   
   const { data: subscriptions = [], isLoading, refetch } = useQuery({
     queryKey: ['subscriptions'],
-    queryFn: getSubscriptions
+    queryFn: fetchSubscriptions
   });
 
   const handleEditSubscription = (subscription: Subscription) => {
@@ -73,7 +73,7 @@ const SubscriptionManagement: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {subscriptions.map((subscription) => (
+            {Array.isArray(subscriptions) && subscriptions.map((subscription) => (
               <SubscriptionCard 
                 key={subscription.id} 
                 subscription={subscription} 
@@ -112,7 +112,7 @@ const SubscriptionManagement: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                {subscriptions.reduce((sum, sub) => {
+                {Array.isArray(subscriptions) && subscriptions.reduce((sum, sub) => {
                   let multiplier = 1;
                   if (sub.billingCycle === 'quarterly') multiplier = 1/3;
                   if (sub.billingCycle === 'annually') multiplier = 1/12;
@@ -135,7 +135,7 @@ const SubscriptionManagement: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">
-                {subscriptions.length ? 
+                {Array.isArray(subscriptions) && subscriptions.length ? 
                   (subscriptions.reduce((sum, sub) => sum + sub.price, 0) / subscriptions.length).toFixed(2) 
                   : '0'} ر.س
               </div>

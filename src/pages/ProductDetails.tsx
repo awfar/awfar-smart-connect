@@ -4,7 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { 
-  getProductById, 
+  fetchProductById, 
   productTypeIconMap, 
   productTypeLabels,
   updateProduct
@@ -51,7 +51,7 @@ const ProductDetails: React.FC = () => {
   
   const { data: product, isLoading, error } = useQuery({
     queryKey: ['product', productId],
-    queryFn: () => getProductById(productId || ''),
+    queryFn: () => fetchProductById(productId || ''),
     enabled: !!productId
   });
 
@@ -110,7 +110,7 @@ const ProductDetails: React.FC = () => {
     );
   }
 
-  const createdDate = new Date(product.createdAt || product.created_at);
+  const createdDate = new Date(product.created_at);
   const timeAgo = formatDistanceToNow(createdDate, { addSuffix: true, locale: ar });
   
   // Get the correct icon component based on the product type
@@ -146,8 +146,8 @@ const ProductDetails: React.FC = () => {
                   <IconComponent className="h-5 w-5" />
                   {productTypeLabels[product.type]}
                 </Badge>
-                <Badge variant={product.isActive || product.is_active ? 'success' : 'destructive'}>
-                  {product.isActive || product.is_active ? 'نشط' : 'غير نشط'}
+                <Badge variant={product.is_active ? 'success' : 'destructive'}>
+                  {product.is_active ? 'نشط' : 'غير نشط'}
                 </Badge>
               </div>
 

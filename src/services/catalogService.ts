@@ -1,6 +1,6 @@
 
 // Re-export specific functions from the catalog module to avoid conflicts
-export { ProductType, productTypeIconMap, productTypeLabels } from './catalog/utils';
+export type { ProductType, productTypeIconMap, productTypeLabels } from './catalog/utils';
 
 // Export from products.ts
 export {
@@ -9,8 +9,8 @@ export {
   createProduct as createProductLegacy,
   updateProduct as updateProductLegacy,
   deleteProduct,
-  Product
 } from './catalog/products';
+export type { Product } from './catalog/products';
 
 // Export from categories.ts
 export {
@@ -19,8 +19,8 @@ export {
   createCategory,
   updateCategory,
   deleteCategory,
-  Category
 } from './catalog/categories';
+export type { Category } from './catalog/categories';
 
 // Export from productService.ts (newer versions)
 export {
@@ -28,8 +28,8 @@ export {
   getProducts,
   createProduct,
   updateProduct,
-  Product as ProductNew
 } from './catalog/productService';
+export type { Product as ProductNew } from './catalog/productService';
 
 // Export from subscriptions.ts
 export {
@@ -38,6 +38,5 @@ export {
   createSubscription,
   updateSubscription,
   deleteSubscription,
-  Subscription,
-  BillingCycle
 } from './catalog/subscriptions';
+export type { Subscription, BillingCycle } from './catalog/subscriptions';

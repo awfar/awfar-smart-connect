@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -31,7 +30,6 @@ const LeadDetails = () => {
   const [showActivityForm, setShowActivityForm] = useState<boolean>(false);
   const [isEditLeadOpen, setIsEditLeadOpen] = useState<boolean>(false);
   
-  // Fetch lead data
   const { 
     data: lead,
     isLoading: isLoadingLead,
@@ -43,7 +41,6 @@ const LeadDetails = () => {
     enabled: !!id
   });
   
-  // Fetch activities
   const { 
     data: activities = [],
     isLoading: isLoadingActivities
@@ -53,7 +50,6 @@ const LeadDetails = () => {
     enabled: !!id
   });
   
-  // Complete activity mutation
   const completeMutation = useMutation({
     mutationFn: completeLeadActivity,
     onSuccess: () => {
@@ -69,7 +65,7 @@ const LeadDetails = () => {
     setShowActivityForm(true);
   };
 
-  const handleActivitySuccess = (activity: LeadActivity) => {
+  const handleActivitySuccess = () => {
     setShowActivityForm(false);
     queryClient.invalidateQueries({ queryKey: ['leadActivities', id] });
   };
@@ -88,7 +84,6 @@ const LeadDetails = () => {
     toast.success("تم تحديث بيانات العميل المحتمل بنجاح");
   };
 
-  // Get lead name safely
   const getLeadName = () => {
     if (!lead) return "جاري التحميل...";
     return `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || "بدون اسم";

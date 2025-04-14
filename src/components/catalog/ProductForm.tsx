@@ -58,10 +58,10 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         price: product.price,
         type: product.type as ProductType,
         sku: product.sku,
-        is_active: product.is_active || product.isActive || false,
-        image_url: product.image_url || product.imageUrl || '',
+        is_active: product.is_active || false,
+        image_url: product.image_url || '',
         inventory: product.inventory,
-        category_id: product.category_id || product.categoryId,
+        category_id: product.category_id,
       };
     }
     
@@ -217,13 +217,13 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
 
                 <FormField
                   control={form.control}
-                  name="categoryId"
+                  name="category_id"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>التصنيف</FormLabel>
                       <Select
                         onValueChange={field.onChange}
-                        value={field.value}
+                        value={field.value || ''}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -262,7 +262,7 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
 
               <FormField
                 control={form.control}
-                name="imageUrl"
+                name="image_url"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>رابط الصورة</FormLabel>
@@ -276,13 +276,13 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
 
               <FormField
                 control={form.control}
-                name="isActive"
+                name="is_active"
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between gap-2">
                     <FormLabel>نشط</FormLabel>
                     <FormControl>
                       <Switch
-                        checked={field.value}
+                        checked={Boolean(field.value)}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>

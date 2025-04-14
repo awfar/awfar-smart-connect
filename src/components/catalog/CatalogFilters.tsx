@@ -16,7 +16,7 @@ import {
   CircleSlash,
   ArrowUpDown,
 } from 'lucide-react';
-import { 
+import type { 
   ProductType, 
   productTypeIconMap, 
   productTypeLabels 
