@@ -1,6 +1,6 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ProductType } from './utils';
 
 export interface Product {
   id: string;
@@ -9,12 +9,17 @@ export interface Product {
   price: number;
   category_id?: string;
   sku: string;
-  type: string;
+  type: ProductType;
   inventory?: number;
   image_url?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  
+  // Add these properties for consistency
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export const fetchProducts = async (): Promise<Product[]> => {

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ProductType } from "./utils";
 
@@ -15,6 +14,13 @@ export interface Product {
   categoryId?: string;
   createdAt: string;
   updatedAt: string;
+  
+  // Add these properties for database compatibility
+  is_active: boolean;
+  image_url?: string;
+  category_id?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export const getProducts = async (): Promise<Product[]> => {
@@ -37,7 +43,14 @@ export const getProducts = async (): Promise<Product[]> => {
     inventory: item.inventory,
     categoryId: item.category_id,
     createdAt: item.created_at,
-    updatedAt: item.updated_at
+    updatedAt: item.updated_at,
+    
+    // Keep database column names for compatibility
+    is_active: item.is_active,
+    image_url: item.image_url,
+    category_id: item.category_id,
+    created_at: item.created_at,
+    updated_at: item.updated_at
   }));
 };
 
@@ -67,7 +80,14 @@ export const getProductById = async (id: string): Promise<Product | null> => {
     inventory: data.inventory,
     categoryId: data.category_id,
     createdAt: data.created_at,
-    updatedAt: data.updated_at
+    updatedAt: data.updated_at,
+    
+    // Keep database column names
+    is_active: data.is_active,
+    image_url: data.image_url,
+    category_id: data.category_id,
+    created_at: data.created_at,
+    updated_at: data.updated_at
   };
 };
 
@@ -102,7 +122,14 @@ export const createProduct = async (product: Omit<Product, 'id' | 'createdAt' | 
     inventory: data.inventory,
     categoryId: data.category_id,
     createdAt: data.created_at,
-    updatedAt: data.updated_at
+    updatedAt: data.updated_at,
+    
+    // Keep database column names
+    is_active: data.is_active,
+    image_url: data.image_url,
+    category_id: data.category_id,
+    created_at: data.created_at,
+    updated_at: data.updated_at
   };
 };
 
@@ -140,6 +167,13 @@ export const updateProduct = async (id: string, product: Partial<Omit<Product, '
     inventory: data.inventory,
     categoryId: data.category_id,
     createdAt: data.created_at,
-    updatedAt: data.updated_at
+    updatedAt: data.updated_at,
+    
+    // Keep database column names
+    is_active: data.is_active,
+    image_url: data.image_url,
+    category_id: data.category_id,
+    created_at: data.created_at,
+    updated_at: data.updated_at
   };
 };
