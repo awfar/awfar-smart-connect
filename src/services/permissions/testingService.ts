@@ -84,20 +84,27 @@ export class SystemTestingService {
   private async testDatabaseConnection(): Promise<void> {
     try {
       const startTime = performance.now();
-      const { data, error } = await supabase.from('profiles').select('count(*)', { count: 'exact', head: true });
+      
+      // استخدم جدول activity_logs لأنه موجود بالفعل بدلاً من profiles
+      const { data, error } = await supabase
+        .from('activity_logs')
+        .select('count')
+        .limit(1)
+        .maybeSingle();
       
       const endTime = performance.now();
       const responseTime = endTime - startTime;
       
       if (error) {
         this.logTestResult({
-          name: "اختبار الاتصال بقاعدة البيانات",
+          name: "ا��تبار الاتصال بقاعدة البيانات",
           success: false,
           details: `فشل الاتصال: ${error.message}`,
           component: "Database",
           responseTimeMs: responseTime
         });
-        throw new Error(`فشل الاتصال بقاعدة البيانات: ${error.message}`);
+        console.error("خطأ في اختبار الاتصال بقاعدة البيانات:", error);
+        return;
       }
 
       this.logTestResult({
@@ -108,14 +115,17 @@ export class SystemTestingService {
         responseTimeMs: responseTime
       });
     } catch (error) {
+      console.error("خطأ غير متوقع في اختبار الاتصال بقاعدة البيانات:", error);
+      const errorMessage = error instanceof Error ? error.message : 'خطأ غير معروف';
+      
       this.logTestResult({
         name: "اختبار الاتصال بقاعدة البيانات",
         success: false,
-        details: `خطأ غير متوقع: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`,
+        details: `خطأ غير متوقع: ${errorMessage}`,
         component: "Database",
-        responseTimeMs: 0
+        responseTimeMs: 0,
+        error
       });
-      throw error;
     }
   }
 
@@ -613,7 +623,7 @@ export class SystemTestingService {
         prompt += `- **زمن الاستجابة:** ${error.responseTimeMs.toFixed(2)}ms\n`;
         
         // إضافة اقتراحات للإصلاح حسب نوع المكون والخطأ
-        prompt += `- **اقتراحات للإصلاح:**\n`;
+        prompt += `- **اق��راحات للإصلاح:**\n`;
         
         if (component === "Database") {
           prompt += `  - تحقق من اتصال قاعدة البيانات والإعدادات.\n`;
