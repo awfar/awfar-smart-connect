@@ -11,4 +11,5 @@ export interface Ticket {
   assigned_to?: string;
   created_at?: string;
   updated_at?: string;
+  assignedStaffName?: string;
 }

@@ -14,7 +14,7 @@ export const fetchStaff = async (): Promise<Staff[]> => {
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name, email, role, department_id')
+      .select('id, first_name, last_name, role, department_id')
       .order('first_name');
     
     if (error) {
@@ -23,13 +23,13 @@ export const fetchStaff = async (): Promise<Staff[]> => {
     }
     
     // تنسيق البيانات لتناسب واجهة Staff
-    const formattedStaff = data?.map(profile => ({
+    const formattedStaff = (data || []).map(profile => ({
       id: profile.id,
       name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
-      email: profile.email,
+      email: '', // Email not selected in the query
       role: profile.role,
       department: profile.department_id
-    })) || [];
+    }));
     
     return formattedStaff;
   } catch (error) {

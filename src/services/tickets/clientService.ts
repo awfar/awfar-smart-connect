@@ -14,7 +14,7 @@ export const fetchClients = async (): Promise<Client[]> => {
   try {
     const { data, error } = await supabase
       .from('companies')
-      .select('id, name, email, phone')
+      .select('id, name, phone')
       .order('name');
     
     if (error) {
@@ -22,7 +22,13 @@ export const fetchClients = async (): Promise<Client[]> => {
       throw error;
     }
     
-    return data || [];
+    return (data || []).map(company => ({
+      id: company.id,
+      name: company.name,
+      phone: company.phone,
+      email: '', // Not available in companies table
+      company: company.name
+    }));
   } catch (error) {
     console.error("Error in fetchClients:", error);
     return [];
