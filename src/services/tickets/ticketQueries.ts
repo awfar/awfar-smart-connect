@@ -8,31 +8,29 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
   try {
     console.log("Fetching tickets with filters:", { statusFilter, priorityFilter, categoryFilter });
     
-    // Build the query
-    let queryBuilder = supabase
+    // بناء استعلام قاعدة البيانات الأساسي
+    let query = supabase
       .from('tickets')
       .select('*, profiles!assigned_to(first_name, last_name)');
       
-    // Apply filters
+    // تطبيق الفلاتر
     if (statusFilter && statusFilter !== 'all') {
       const status = statusFilter === 'open' ? 'open' : 'closed';
-      queryBuilder = queryBuilder.eq('status', status);
+      query = query.eq('status', status);
     }
     
     if (priorityFilter && priorityFilter !== 'all') {
-      queryBuilder = queryBuilder.eq('priority', priorityFilter);
+      query = query.eq('priority', priorityFilter);
     }
     
     if (categoryFilter && categoryFilter !== 'all') {
-      queryBuilder = queryBuilder.eq('category', categoryFilter);
+      query = query.eq('category', categoryFilter);
     }
     
-    // Execute the query without type inference
-    // First, get the SQL query as a string to completely break the type chain
-    const orderBy = { ascending: false };
-    const { data: rawData, error } = await (queryBuilder as any)
-      .order('created_at', orderBy)
-      .then((response: any) => response);
+    // تنفيذ الاستعلام وترتيب النتائج
+    const { data, error } = await query
+      .order('created_at', { ascending: false })
+      .returns<unknown[]>();
     
     if (error) {
       console.error("Error fetching tickets:", error);
@@ -40,42 +38,35 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
       return [];
     }
     
-    console.log("Tickets fetched:", rawData);
+    console.log("Tickets fetched:", data);
     
-    // Handle the null case
-    if (!rawData) return [];
+    if (!data || !Array.isArray(data)) {
+      return [];
+    }
     
-    // Initialize an empty array for our tickets
-    const tickets: Ticket[] = [];
-    
-    // Map the raw data to our known type structure using explicit casting
-    for (const item of rawData) {
-      // Cast to a simple record type to avoid deep type inference
-      const rawItem: Record<string, any> = item;
-      
-      // Create ticket data with explicit type casting for each property
-      const ticketData: TicketFromDB = {
-        id: String(rawItem.id || ''),
-        subject: String(rawItem.subject || ''),
-        description: String(rawItem.description || ''),
-        status: String(rawItem.status || 'open'),
-        priority: String(rawItem.priority || 'متوسط'),
-        category: rawItem.category ? String(rawItem.category) : undefined,
-        assigned_to: rawItem.assigned_to ? String(rawItem.assigned_to) : undefined,
-        client_id: rawItem.client_id ? String(rawItem.client_id) : undefined,
-        created_by: rawItem.created_by ? String(rawItem.created_by) : undefined,
-        created_at: rawItem.created_at ? String(rawItem.created_at) : undefined,
-        updated_at: rawItem.updated_at ? String(rawItem.updated_at) : undefined,
-        resolved_at: rawItem.resolved_at ? String(rawItem.resolved_at) : null,
-        profiles: rawItem.profiles ? {
-          first_name: String((rawItem.profiles as Record<string, any>).first_name || ''),
-          last_name: String((rawItem.profiles as Record<string, any>).last_name || '')
+    // تحويل البيانات الخام إلى كائنات من نوع Ticket
+    const tickets = data.map(rawTicket => {
+      const ticket: TicketFromDB = {
+        id: String(rawTicket?.id || ''),
+        subject: String(rawTicket?.subject || ''),
+        description: String(rawTicket?.description || ''),
+        status: String(rawTicket?.status || 'open'),
+        priority: String(rawTicket?.priority || 'متوسط'),
+        category: rawTicket?.category ? String(rawTicket.category) : undefined,
+        assigned_to: rawTicket?.assigned_to ? String(rawTicket.assigned_to) : undefined,
+        client_id: rawTicket?.client_id ? String(rawTicket.client_id) : undefined,
+        created_by: rawTicket?.created_by ? String(rawTicket.created_by) : undefined,
+        created_at: rawTicket?.created_at ? String(rawTicket.created_at) : undefined,
+        updated_at: rawTicket?.updated_at ? String(rawTicket.updated_at) : undefined,
+        resolved_at: rawTicket?.resolved_at ? String(rawTicket.resolved_at) : null,
+        profiles: rawTicket?.profiles ? {
+          first_name: String(rawTicket.profiles?.first_name || ''),
+          last_name: String(rawTicket.profiles?.last_name || '')
         } : null
       };
       
-      const ticket = mapDBTicketToTicket(ticketData);
-      tickets.push(ticket);
-    }
+      return mapDBTicketToTicket(ticket);
+    });
     
     return tickets;
   } catch (error) {
