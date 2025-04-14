@@ -5,6 +5,7 @@ import { mockLeads } from "./mockData";
 import { toast } from "sonner";
 import { addLeadActivity } from "./leadActivities";
 import { transformLeadFromSupabase } from "./utils";
+import { v4 as uuidv4 } from 'uuid';
 
 // Update lead
 export const updateLead = async (lead: Lead): Promise<Lead> => {
@@ -26,6 +27,11 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
     
     // Prepare lead data for Supabase (remove owner property)
     const { owner, ...leadToUpdate } = lead;
+    
+    // Clean assigned_to field if empty to prevent uuid type error
+    if (leadToUpdate.assigned_to === '') {
+      leadToUpdate.assigned_to = null;
+    }
     
     // Try updating the lead in Supabase
     const { data, error } = await supabase
@@ -67,6 +73,11 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     
     // Prepare lead data for Supabase
     const { owner, ...leadToCreate } = lead as any;
+    
+    // Clean assigned_to field if empty to prevent uuid type error
+    if (leadToCreate.assigned_to === '') {
+      leadToCreate.assigned_to = null;
+    }
     
     // Ensure dates are set
     if (!leadToCreate.created_at) {

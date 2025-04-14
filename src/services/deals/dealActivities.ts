@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DealActivity } from "../types/dealTypes";
@@ -19,14 +20,13 @@ export const getDealActivities = async (dealId: string): Promise<DealActivity[]>
     return data.map(activity => {
       let creatorName = '';
       
-      // Null-safe check for profiles
-      if (activity.profiles) {
-        // Type assertion and null check
-        const profileData = activity.profiles as { first_name?: string; last_name?: string } | null;
+      // Null-safe check for profiles with explicit null check
+      if (activity.profiles !== null) {
+        // Type assertion for the profile data
+        const profileData = activity.profiles as { first_name?: string; last_name?: string };
         
-        if (profileData) {
-          creatorName = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim();
-        }
+        // We know profiles is not null here, so we can safely access its properties
+        creatorName = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim();
       }
       
       return {
