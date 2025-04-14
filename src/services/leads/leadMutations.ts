@@ -2,8 +2,7 @@
 // Functions for modifying lead data
 import { supabase } from "../../integrations/supabase/client";
 import { Lead, LeadActivity } from "./types";
-import { mockLeads } from "./mockData";
-import { mockActivities } from "./mockData";
+import { mockLeads, mockActivities } from "./mockData";
 import { toast } from "sonner";
 import { addLeadActivity } from "./leadActivities";
 
@@ -183,7 +182,9 @@ export const deleteLead = async (id: string): Promise<boolean> => {
     }
     
     // حذف الأنشطة المرتبطة بالعميل المحتمل
-    delete mockActivities[id];
+    if (mockActivities[id]) {
+      delete mockActivities[id];
+    }
     
     // حذف العميل المحتمل من البيانات المحلية أيضًا
     const index = mockLeads.findIndex((l) => l.id === id);
@@ -199,7 +200,9 @@ export const deleteLead = async (id: string): Promise<boolean> => {
     const index = mockLeads.findIndex((l) => l.id === id);
     if (index >= 0) {
       mockLeads.splice(index, 1);
-      delete mockActivities[id];
+      if (mockActivities[id]) {
+        delete mockActivities[id];
+      }
       return Promise.resolve(true);
     }
     return Promise.resolve(false);

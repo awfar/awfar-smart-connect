@@ -134,7 +134,8 @@ export const getIndustries = async (): Promise<string[]> => {
     // التحقق من وجود خطأ في الاستعلام
     if (error) {
       console.error("Error fetching industries:", error);
-      throw error;
+      // Return default industries on error instead of trying to access error properties
+      return getDefaultIndustries();
     }
     
     // استخراج القطاعات الفريدة
@@ -145,26 +146,30 @@ export const getIndustries = async (): Promise<string[]> => {
         .filter((value, index, self) => self.indexOf(value) === index)
         .sort();
       
-      return industries;
+      return industries.length > 0 ? industries : getDefaultIndustries();
     }
     
-    return [];
+    return getDefaultIndustries();
   } catch (error) {
     console.error("Error fetching industries:", error);
-    // قائمة قطاعات افتراضية
-    return [
-      "تكنولوجيا المعلومات",
-      "الرعاية الصحية",
-      "التعليم",
-      "التجارة الإلكترونية",
-      "المالية والمصرفية",
-      "العقارات",
-      "الإعلام والترفيه",
-      "التصنيع",
-      "الخدمات المهنية",
-      "البيع بالتجزئة"
-    ];
+    return getDefaultIndustries();
   }
+};
+
+// Helper function to return default industries
+const getDefaultIndustries = (): string[] => {
+  return [
+    "تكنولوجيا المعلومات",
+    "الرعاية الصحية",
+    "التعليم",
+    "التجارة الإلكترونية",
+    "المالية والمصرفية",
+    "العقارات",
+    "الإعلام والترفيه",
+    "التصنيع",
+    "الخدمات المهنية",
+    "البيع بالتجزئة"
+  ];
 };
 
 // Add alias for backward compatibility
