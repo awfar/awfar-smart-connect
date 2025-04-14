@@ -38,11 +38,11 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     
     const tickets: Ticket[] = [];
     
-    // Break the type inference chain by converting to plain objects
-    const plainData = safeDataConversion<any[]>(data || []);
+    // Break the type inference chain properly to avoid deep type instantiation
+    const plainData = JSON.parse(JSON.stringify(data || [])) as any[];
     
     for (const item of plainData) {
-      const ticket = mapDBTicketToTicket({
+      const ticketData: TicketFromDB = {
         id: item.id,
         subject: item.subject,
         description: item.description,
@@ -56,8 +56,9 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
         updated_at: item.updated_at,
         resolved_at: item.resolved_at,
         profiles: item.profiles
-      });
+      };
       
+      const ticket = mapDBTicketToTicket(ticketData);
       tickets.push(ticket);
     }
     
