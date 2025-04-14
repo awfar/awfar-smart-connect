@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Check, Clock, List, Mail, Phone, User } from "lucide-react";
 import { toast } from "sonner";
-import { getLeadById } from "@/services/leadsService";
+import { fetchLeadById, getLeadActivities, addLeadActivity } from "@/services/leadsService";
 import type { Lead } from "@/types/leads";
 import ActivityForm from "@/components/leads/ActivityForm";
-import { LeadActivity } from "@/services/types/leadTypes";
+import { LeadActivity } from "@/types/leads";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
 const LeadDetails = () => {
@@ -18,28 +19,7 @@ const LeadDetails = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<string>("info");
   const [showActivityForm, setShowActivityForm] = useState<boolean>(false);
-  const [activities, setActivities] = useState<LeadActivity[]>([
-    {
-      id: "1",
-      lead_id: id || "",
-      type: "note",
-      description: "تم الاتصال بالعميل لمناقشة احتياجاته",
-      scheduled_at: "2023-05-15",
-      completed_at: "2023-05-15",
-      created_at: "2023-05-14",
-      created_by: "أحمد محمد"
-    },
-    {
-      id: "2",
-      lead_id: id || "",
-      type: "call",
-      description: "مكالمة متابعة للتحقق من رضا العميل",
-      scheduled_at: "2023-05-20",
-      completed_at: null,
-      created_at: "2023-05-14",
-      created_by: "سارة أحمد"
-    }
-  ]);
+  const [activities, setActivities] = useState<LeadActivity[]>([]);
 
   useEffect(() => {
     const loadLead = async () => {
@@ -47,9 +27,11 @@ const LeadDetails = () => {
       
       setIsLoading(true);
       try {
-        const data = await getLeadById(id);
+        const data = await fetchLeadById(id);
         if (data) {
           setLead(data);
+          // بعد تحميل بيانات العميل، نحمل الأنشطة المرتبطة به
+          loadActivities(id);
         } else {
           toast.error("لم يتم العثور على العميل المحتمل");
           navigate("/dashboard/leads");
@@ -65,6 +47,16 @@ const LeadDetails = () => {
     loadLead();
   }, [id, navigate]);
 
+  const loadActivities = async (leadId: string) => {
+    try {
+      const leadActivities = await getLeadActivities(leadId);
+      setActivities(leadActivities);
+    } catch (error) {
+      console.error("Error fetching lead activities:", error);
+      toast.error("حدث خطأ أثناء تحميل أنشطة العميل المحتمل");
+    }
+  };
+
   const handleAddActivity = () => {
     setShowActivityForm(true);
   };
@@ -75,15 +67,28 @@ const LeadDetails = () => {
     toast.success("تم إضافة النشاط بنجاح");
   };
 
-  const handleCompleteActivity = (activityId: string) => {
-    setActivities(prev =>
-      prev.map(activity =>
-        activity.id === activityId
-          ? { ...activity, completed_at: new Date().toISOString() }
-          : activity
-      )
-    );
-    toast.success("تم إكمال النشاط بنجاح");
+  const handleCompleteActivity = async (activityId: string) => {
+    try {
+      // هنا يجب أن نضيف خدمة لتحديث حالة النشاط في قاعدة البيانات
+      // ولكن حاليًا سنقوم بتحديث الواجهة فقط
+      setActivities(prev =>
+        prev.map(activity =>
+          activity.id === activityId
+            ? { ...activity, completed_at: new Date().toISOString() }
+            : activity
+        )
+      );
+      toast.success("تم إكمال النشاط بنجاح");
+    } catch (error) {
+      console.error("Error completing activity:", error);
+      toast.error("حدث خطأ أثناء تحديث حالة النشاط");
+    }
+  };
+
+  // التأكد من وجود البيانات المطلوبة لعرض تفاصيل العميل
+  const getLeadName = () => {
+    if (!lead) return "جاري التحميل...";
+    return `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || "بدون اسم";
   };
 
   return (
@@ -94,13 +99,13 @@ const LeadDetails = () => {
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={() => navigate("/dashboard/leads")}
+              onClick={() => navigate("/leads")}
             >
               <ArrowLeft className="h-4 w-4 ml-1" />
               العودة
             </Button>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-              {isLoading ? "جاري التحميل..." : lead?.first_name + " " + lead?.last_name}
+              {isLoading ? "جاري التحميل..." : getLeadName()}
             </h1>
           </div>
           
@@ -146,11 +151,11 @@ const LeadDetails = () => {
                           <div className="space-y-1">
                             <h3 className="text-sm font-medium text-gray-500">المعلومات الشخصية</h3>
                             
-                            <div className="grid grid-cols-1 gap-4">
+                            <div className="grid gap-4">
                               <div className="flex items-start gap-2">
                                 <User className="h-4 w-4 text-gray-400 mt-1" />
                                 <div>
-                                  <div className="text-sm font-medium">{lead.first_name} {lead.last_name}</div>
+                                  <div className="text-sm font-medium">{`${lead.first_name || ''} ${lead.last_name || ''}`.trim() || "غير محدد"}</div>
                                   <div className="text-xs text-gray-500">{lead.position || "غير محدد"}</div>
                                 </div>
                               </div>
@@ -288,7 +293,7 @@ const LeadDetails = () => {
                                            activity.type === 'email' ? 'بريد إلكتروني' : 
                                            activity.type === 'task' ? 'مهمة' : 'ملاحظة'}
                                         </span>
-                                        <span className="text-xs text-gray-500">{activity.created_at}</span>
+                                        <span className="text-xs text-gray-500">{activity.created_at || activity.createdAt}</span>
                                       </div>
                                       <p className="text-sm mt-1">{activity.description}</p>
                                       <div className="flex items-center gap-2 mt-2">
@@ -364,12 +369,16 @@ const LeadDetails = () => {
                     
                     <div>
                       <div className="text-sm font-medium">تاريخ الإضافة</div>
-                      <div className="text-sm mt-1">{new Date(lead.created_at).toLocaleDateString()}</div>
+                      <div className="text-sm mt-1">
+                        {lead.created_at ? new Date(lead.created_at).toLocaleDateString() : "غير محدد"}
+                      </div>
                     </div>
                     
                     <div>
                       <div className="text-sm font-medium">آخر تحديث</div>
-                      <div className="text-sm mt-1">{new Date(lead.updated_at).toLocaleDateString()}</div>
+                      <div className="text-sm mt-1">
+                        {lead.updated_at ? new Date(lead.updated_at).toLocaleDateString() : "غير محدد"}
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -382,7 +391,7 @@ const LeadDetails = () => {
               <p className="text-gray-500">لم يتم العثور على العميل المحتمل</p>
               <Button 
                 className="mt-4"
-                onClick={() => navigate("/dashboard/leads")}
+                onClick={() => navigate("/leads")}
               >
                 العودة إلى قائمة العملاء المحتملين
               </Button>

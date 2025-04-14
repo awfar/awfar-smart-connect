@@ -15,15 +15,17 @@ interface LeadOwner {
 
 interface Lead {
   id: string;
-  name: string;
-  company: string;
-  email: string;
-  phone: string;
-  country: string;
-  industry: string;
-  stage: string;
-  source: string;
-  owner: LeadOwner;
+  name?: string;
+  first_name?: string;
+  last_name?: string;
+  company?: string;
+  email?: string;
+  phone?: string;
+  country?: string;
+  industry?: string;
+  stage?: string;
+  source?: string;
+  owner?: LeadOwner;
   created_at: string;
 }
 
@@ -33,6 +35,9 @@ interface LeadDetailsProps {
 }
 
 const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
+  // التحقق من وجود البيانات قبل استخدامها
+  const fullName = lead.name || `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || "بدون اسم";
+  
   // Mock activities for this lead
   const activities = [
     {
@@ -40,21 +45,21 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
       type: "note",
       content: "تم التواصل هاتفيًا وطلب معلومات إضافية عن الباقة المتقدمة",
       date: "منذ 3 ساعات",
-      user: lead.owner,
+      user: lead.owner || { name: "مستخدم النظام", avatar: "/placeholder.svg", initials: "م" },
     },
     {
       id: 2,
       type: "email",
       content: "تم إرسال بريد إلكتروني بتفاصيل الباقات والأسعار",
       date: "منذ يومين",
-      user: lead.owner,
+      user: lead.owner || { name: "مستخدم النظام", avatar: "/placeholder.svg", initials: "م" },
     },
     {
       id: 3,
       type: "call",
       content: "مكالمة تعارف أولية - مهتم بحلول إدارة المحادثات عبر واتساب",
       date: "منذ 4 أيام",
-      user: lead.owner,
+      user: lead.owner || { name: "مستخدم النظام", avatar: "/placeholder.svg", initials: "م" },
     },
   ];
 
@@ -65,14 +70,14 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
       title: "إرسال عرض سعر",
       due: "غدًا",
       status: "pending",
-      assigned_to: lead.owner.name,
+      assigned_to: lead.owner?.name || "غير محدد",
     },
     {
       id: 2,
       title: "متابعة هاتفية",
       due: "بعد 3 أيام",
       status: "pending",
-      assigned_to: lead.owner.name,
+      assigned_to: lead.owner?.name || "غير محدد",
     }
   ];
 
@@ -90,11 +95,11 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
           <div className="flex flex-col items-center text-center gap-2">
             <Avatar className="h-16 w-16">
               <AvatarImage src="/placeholder.svg" />
-              <AvatarFallback className="text-lg">{lead.name.charAt(0)}</AvatarFallback>
+              <AvatarFallback className="text-lg">{fullName.charAt(0) || "?"}</AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="text-lg font-semibold">{lead.name}</h3>
-              <p className="text-sm text-muted-foreground">{lead.company}</p>
+              <h3 className="text-lg font-semibold">{fullName}</h3>
+              <p className="text-sm text-muted-foreground">{lead.company || "بدون شركة"}</p>
             </div>
             <Badge className={`
               ${lead.stage === "جديد" ? "bg-blue-50 text-blue-700 border-blue-200" : ""}
@@ -102,27 +107,28 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
               ${lead.stage === "فرصة" ? "bg-green-50 text-green-700 border-green-200" : ""}
               ${lead.stage === "عرض سعر" ? "bg-amber-50 text-amber-700 border-amber-200" : ""}
               ${lead.stage === "تفاوض" ? "bg-orange-50 text-orange-700 border-orange-200" : ""}
+              ${!lead.stage ? "bg-gray-50 text-gray-700 border-gray-200" : ""}
             `}>
-              {lead.stage}
+              {lead.stage || "غير محدد"}
             </Badge>
           </div>
 
           <div className="grid gap-3">
             <div className="flex items-center gap-2">
               <Mail className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm">{lead.email}</p>
+              <p className="text-sm">{lead.email || "غير محدد"}</p>
             </div>
             <div className="flex items-center gap-2">
               <Phone className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm">{lead.phone}</p>
+              <p className="text-sm">{lead.phone || "غير محدد"}</p>
             </div>
             <div className="flex items-center gap-2">
               <MapPin className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm">{lead.country}</p>
+              <p className="text-sm">{lead.country || "غير محدد"}</p>
             </div>
             <div className="flex items-center gap-2">
               <Building className="h-4 w-4 text-muted-foreground" />
-              <p className="text-sm">{lead.industry}</p>
+              <p className="text-sm">{lead.industry || "غير محدد"}</p>
             </div>
           </div>
 
@@ -130,10 +136,10 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
             <div className="text-sm text-muted-foreground">المالك</div>
             <div className="flex items-center gap-2">
               <Avatar className="h-6 w-6">
-                <AvatarImage src={lead.owner.avatar} />
-                <AvatarFallback>{lead.owner.initials}</AvatarFallback>
+                <AvatarImage src={lead.owner?.avatar || "/placeholder.svg"} />
+                <AvatarFallback>{lead.owner?.initials || "؟"}</AvatarFallback>
               </Avatar>
-              <span className="text-sm">{lead.owner.name}</span>
+              <span className="text-sm">{lead.owner?.name || "غير مخصص"}</span>
             </div>
           </div>
 
@@ -149,10 +155,10 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
                 <div key={activity.id} className="border-b pb-3">
                   <div className="flex items-center gap-2 mb-2">
                     <Avatar className="h-6 w-6">
-                      <AvatarImage src={activity.user.avatar} />
-                      <AvatarFallback>{activity.user.initials}</AvatarFallback>
+                      <AvatarImage src={activity.user?.avatar || "/placeholder.svg"} />
+                      <AvatarFallback>{activity.user?.initials || "؟"}</AvatarFallback>
                     </Avatar>
-                    <span className="text-sm font-medium">{activity.user.name}</span>
+                    <span className="text-sm font-medium">{activity.user?.name || "غير معروف"}</span>
                     <Badge variant="outline" className="text-xs">
                       {activity.type === "note" && "ملاحظة"}
                       {activity.type === "email" && "بريد"}
