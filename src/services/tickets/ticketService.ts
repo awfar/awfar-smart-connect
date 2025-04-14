@@ -35,9 +35,9 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     
     console.log("Tickets fetched:", data);
     
-    // Cast to Record<string, any>[] first to break the deep type chain
-    const ticketsData = (data || []) as Record<string, any>[];
-    // Then map to our desired type
+    // Cast to unknown[] first to break the deep type chain
+    const ticketsData = (data || []) as unknown[];
+    // Then map to our desired type using explicit typing
     return ticketsData.map(item => mapDBTicketToTicket(item as TicketFromDB));
   } catch (error) {
     console.error("خطأ في جلب التذاكر:", error);
