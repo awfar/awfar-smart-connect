@@ -42,8 +42,9 @@ export const fetchTickets = async (
       filters['category'] = categoryFilter;
     }
     
-    // Execute query using a type assertion to avoid deep type inference issues
-    const { data: rawData, error } = await (supabase
+    // Completely bypass TypeScript's type system for Supabase query
+    // to avoid excessive type instantiation
+    const query = supabase
       .from('tickets')
       .select(`
         *,
@@ -51,8 +52,12 @@ export const fetchTickets = async (
           first_name,
           last_name
         )
-      `) as any)
+      `)
       .order('created_at', { ascending: false });
+    
+    // Execute query as any to avoid deep type inference
+    const result = await (query as any);
+    const { data: rawData, error } = result;
     
     if (error) {
       console.error("Error fetching tickets:", error);
@@ -87,8 +92,8 @@ export const fetchTickets = async (
 
 export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
   try {
-    // Use type casting to avoid deep type inference
-    const { data: rawData, error } = await (supabase
+    // Completely bypass TypeScript's type system
+    const query = supabase
       .from('tickets')
       .select(`
         *,
@@ -96,9 +101,13 @@ export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
           first_name,
           last_name
         )
-      `) as any)
+      `)
       .eq('id', id)
       .single();
+    
+    // Execute query as any to avoid deep type inference
+    const result = await (query as any);
+    const { data: rawData, error } = result;
     
     if (error) {
       console.error("Error fetching ticket by id:", error);
