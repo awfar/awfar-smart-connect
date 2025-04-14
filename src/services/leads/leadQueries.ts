@@ -183,27 +183,18 @@ export const getSalesOwners = async (): Promise<{id: string, name: string}[]> =>
   }
 };
 
-// Get countries for filtering
+// Get countries for filtering - Fixed approach to avoid deep type instantiation
 export const getCountries = async (): Promise<string[]> => {
   try {
-    // Use a raw query to check if the column exists
-    const { data: columnCheckResult, error: columnCheckError } = await supabase
-      .rpc('get_table_row_count', { table_name: 'leads' });
+    // First check if table exists
+    const { count } = await supabase.rpc('get_table_row_count', { table_name: 'leads' });
     
-    if (columnCheckError || !columnCheckResult) {
-      console.log("Error checking leads table, returning default countries");
+    if (!count) {
+      console.log("Leads table not found or empty, returning default countries");
       return getDefaultCountries();
     }
     
-    // Perform a raw query to check if the column exists
-    const { data: columnCheck, error: rawError } = await supabase
-      .rpc('get_table_row_count', { table_name: 'leads' });
-    
-    if (rawError || !columnCheck) {
-      return getDefaultCountries();
-    }
-    
-    // If table exists, try to fetch countries
+    // Try to query the country column
     try {
       const { data, error } = await supabase
         .from('leads')
@@ -211,14 +202,13 @@ export const getCountries = async (): Promise<string[]> => {
         .not('country', 'is', null)
         .not('country', 'eq', '');
       
-      if (error) {
-        // If error is related to column not existing
-        if (error.message && error.message.includes("column") && error.message.includes("does not exist")) {
-          console.log("Country column doesn't exist, returning default countries");
-          return getDefaultCountries();
-        }
-        throw error;
+      // If error contains 'column not found', return defaults
+      if (error && error.message && error.message.includes("column") && error.message.includes("does not exist")) {
+        console.log("Country column doesn't exist, returning default countries");
+        return getDefaultCountries();
       }
+      
+      if (error) throw error;
       
       // Extract unique countries
       const countries = data
@@ -228,7 +218,7 @@ export const getCountries = async (): Promise<string[]> => {
         .sort();
       
       return countries.length > 0 ? countries : getDefaultCountries();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching countries:", error);
       return getDefaultCountries();
     }
@@ -238,19 +228,18 @@ export const getCountries = async (): Promise<string[]> => {
   }
 };
 
-// Get industries for filtering
+// Get industries for filtering - Fixed approach to avoid deep type instantiation
 export const getIndustries = async (): Promise<string[]> => {
   try {
-    // Check if the table exists first
-    const { data: tableCheck, error: tableError } = await supabase
-      .rpc('get_table_row_count', { table_name: 'leads' });
+    // First check if table exists
+    const { count } = await supabase.rpc('get_table_row_count', { table_name: 'leads' });
     
-    if (tableError || !tableCheck) {
-      console.log("Error checking leads table, returning default industries");
+    if (!count) {
+      console.log("Leads table not found or empty, returning default industries");
       return getDefaultIndustries();
     }
     
-    // If table exists, try to fetch industries
+    // Try to query the industry column
     try {
       const { data, error } = await supabase
         .from('leads')
@@ -258,14 +247,13 @@ export const getIndustries = async (): Promise<string[]> => {
         .not('industry', 'is', null)
         .not('industry', 'eq', '');
       
-      if (error) {
-        // If error is related to column not existing
-        if (error.message && error.message.includes("column") && error.message.includes("does not exist")) {
-          console.log("Industry column doesn't exist, returning default industries");
-          return getDefaultIndustries();
-        }
-        throw error;
+      // If error contains 'column not found', return defaults
+      if (error && error.message && error.message.includes("column") && error.message.includes("does not exist")) {
+        console.log("Industry column doesn't exist, returning default industries");
+        return getDefaultIndustries();
       }
+      
+      if (error) throw error;
       
       // Extract unique industries
       const industries = data

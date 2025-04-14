@@ -1,37 +1,42 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LeadActivity } from "../types/leadTypes";
+import { DealActivity } from "../types/dealTypes";
 
-export const getLeadActivities = async (leadId: string): Promise<LeadActivity[]> => {
+export const getDealActivities = async (dealId: string): Promise<DealActivity[]> => {
   try {
     const { data, error } = await supabase
-      .from('lead_activities')
+      .from('deal_activities')
       .select(`
         *,
         profiles:created_by (first_name, last_name)
       `)
-      .eq('lead_id', leadId)
+      .eq('deal_id', dealId)
       .order('created_at', { ascending: false });
     
     if (error) throw error;
     
-    return data || [];
+    return data.map(activity => ({
+      ...activity,
+      creator: activity.profiles ? {
+        name: `${activity.profiles.first_name || ''} ${activity.profiles.last_name || ''}`.trim(),
+      } : undefined
+    })) || [];
   } catch (error) {
-    console.error("Error fetching lead activities:", error);
-    toast.error("فشل في جلب أنشطة العميل المحتمل");
+    console.error("Error fetching deal activities:", error);
+    toast.error("فشل في جلب أنشطة الصفقة");
     return [];
   }
 };
 
-export const addLeadActivity = async (activity: Partial<LeadActivity>): Promise<LeadActivity | null> => {
+export const addDealActivity = async (activity: Partial<DealActivity>): Promise<DealActivity | null> => {
   try {
     const { data: userData } = await supabase.auth.getUser();
     
     const { data, error } = await supabase
-      .from('lead_activities')
+      .from('deal_activities')
       .insert([{
-        lead_id: activity.lead_id,
+        deal_id: activity.deal_id,
         type: activity.type,
         description: activity.description,
         scheduled_at: activity.scheduled_at,
@@ -45,16 +50,16 @@ export const addLeadActivity = async (activity: Partial<LeadActivity>): Promise<
     toast.success("تم إضافة النشاط بنجاح");
     return data;
   } catch (error) {
-    console.error("Error creating lead activity:", error);
+    console.error("Error creating deal activity:", error);
     toast.error("فشل في إضافة النشاط");
     return null;
   }
 };
 
-export const completeLeadActivity = async (activityId: string): Promise<LeadActivity | null> => {
+export const completeDealActivity = async (activityId: string): Promise<DealActivity | null> => {
   try {
     const { data, error } = await supabase
-      .from('lead_activities')
+      .from('deal_activities')
       .update({
         completed_at: new Date().toISOString()
       })
@@ -67,7 +72,7 @@ export const completeLeadActivity = async (activityId: string): Promise<LeadActi
     toast.success("تم إكمال النشاط بنجاح");
     return data;
   } catch (error) {
-    console.error("Error completing lead activity:", error);
+    console.error("Error completing deal activity:", error);
     toast.error("فشل في إكمال النشاط");
     return null;
   }
