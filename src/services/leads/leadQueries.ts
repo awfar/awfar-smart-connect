@@ -17,24 +17,16 @@ export const getLeads = async (filters?: Record<string, any>): Promise<Lead[]> =
       .select(`
         *,
         profiles:assigned_to (first_name, last_name)
-      `) as any; // Use type assertion to bypass deep type instantiation
+      `);
     
     // Apply filters if provided
     if (filters) {
       if (filters.stage && filters.stage !== 'all') {
-        query = query.eq('stage', filters.stage);
+        query = query.eq('status', filters.stage);
       }
       
       if (filters.source && filters.source !== 'all') {
         query = query.eq('source', filters.source);
-      }
-      
-      if (filters.country && filters.country !== 'all') {
-        query = query.eq('country', filters.country);
-      }
-      
-      if (filters.industry && filters.industry !== 'all') {
-        query = query.eq('industry', filters.industry);
       }
       
       if (filters.assigned_to && filters.assigned_to !== 'all') {
@@ -59,7 +51,7 @@ export const getLeads = async (filters?: Record<string, any>): Promise<Lead[]> =
     
     // Transform data before returning
     if (data && data.length > 0) {
-      return data.map((lead: any) => transformLeadFromSupabase(lead as LeadDBRow));
+      return data.map((lead: LeadDBRow) => transformLeadFromSupabase(lead));
     }
     
     console.log("No data found in Supabase, using mock data");
@@ -75,14 +67,14 @@ export const getLeads = async (filters?: Record<string, any>): Promise<Lead[]> =
 export const getLeadById = async (id: string): Promise<Lead | null> => {
   try {
     console.log(`Fetching lead with id ${id} from Supabase...`);
-    const { data, error } = await (supabase
+    const { data, error } = await supabase
       .from('leads')
       .select(`
         *,
         profiles:assigned_to (first_name, last_name)
       `)
       .eq('id', id)
-      .maybeSingle() as any); // Use type assertion to bypass deep type instantiation
+      .maybeSingle();
     
     if (error) {
       console.error("Error fetching lead by ID:", error);
@@ -131,83 +123,26 @@ export const getLeadSources = async (): Promise<string[]> => {
   }
 };
 
-// Get industries list
-export const getIndustries = async (): Promise<string[]> => {
-  try {
-    const { data, error } = await (supabase
-      .from('leads')
-      .select('industry')
-      .not('industry', 'is', null) as any);
-    
-    if (error) throw error;
-    
-    // Extract unique industries - safely access data with type checking
-    const industries = data && Array.isArray(data)
-      ? data
-        .filter(item => item && typeof item === 'object' && 'industry' in item)
-        .map(item => item.industry as string)
-        .filter(Boolean)
-        .filter((value, index, self) => self.indexOf(value) === index)
-        .sort()
-      : [];
-    
-    return industries.length > 0 ? industries : getDefaultIndustries();
-  } catch (error) {
-    console.error("Error fetching industries:", error);
-    return getDefaultIndustries();
-  }
-};
-
-// Get available countries
-export const getCountries = async (): Promise<string[]> => {
-  try {
-    const { data, error } = await (supabase
-      .from('leads')
-      .select('country')
-      .not('country', 'is', null) as any);
-    
-    if (error) throw error;
-    
-    // Extract unique countries - safely access data with type checking
-    const countries = data && Array.isArray(data)
-      ? data
-        .filter(item => item && typeof item === 'object' && 'country' in item)
-        .map(item => item.country as string)
-        .filter(Boolean)
-        .filter((value, index, self) => self.indexOf(value) === index)
-        .sort()
-      : [];
-    
-    return countries.length > 0 ? countries : getDefaultCountries();
-  } catch (error) {
-    console.error("Error fetching countries:", error);
-    return getDefaultCountries();
-  }
-};
-
-// Get available stages
+// Get available statuses
 export const getLeadStages = async (): Promise<string[]> => {
   try {
-    const { data, error } = await (supabase
+    const { data, error } = await supabase
       .from('leads')
-      .select('stage')
-      .not('stage', 'is', null) as any);
+      .select('status')
+      .not('status', 'is', null);
     
     if (error) throw error;
     
-    // Extract unique stages - safely access data with type checking
-    const stages = data && Array.isArray(data)
-      ? data
-        .filter(item => item && typeof item === 'object' && 'stage' in item)
-        .map(item => item.stage as string)
-        .filter(Boolean)
-        .filter((value, index, self) => self.indexOf(value) === index)
-        .sort()
-      : [];
+    // Extract unique statuses
+    const statuses = data
+      .map(item => item.status as string)
+      .filter(Boolean)
+      .filter((value, index, self) => self.indexOf(value) === index)
+      .sort();
     
-    return stages.length > 0 ? stages : getDefaultStages();
+    return statuses.length > 0 ? statuses : getDefaultStages();
   } catch (error) {
-    console.error("Error fetching stages:", error);
+    console.error("Error fetching lead stages:", error);
     return getDefaultStages();
   }
 };
@@ -257,36 +192,6 @@ const getDefaultSources = (): string[] => {
     "إعلان",
     "مكالمة هاتفية",
     "شريك أعمال",
-    "أخرى"
-  ];
-};
-
-const getDefaultIndustries = (): string[] => {
-  return [
-    "تكنولوجيا المعلومات",
-    "الرعاية الصحية",
-    "التعليم",
-    "التجارة الإلكترونية",
-    "المالية والمصرفية",
-    "العقارات",
-    "الإعلام والترفيه",
-    "التصنيع",
-    "الخدمات المهنية",
-    "البيع بالتجزئة"
-  ];
-};
-
-const getDefaultCountries = (): string[] => {
-  return [
-    "المملكة العربية السعودية",
-    "الإمارات العربية المتحدة",
-    "قطر",
-    "الكويت",
-    "البحرين",
-    "عمان",
-    "مصر",
-    "الأردن",
-    "لبنان",
     "أخرى"
   ];
 };

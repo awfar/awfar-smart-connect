@@ -51,12 +51,14 @@ export const getLeadActivities = async (leadId: string): Promise<LeadActivity[]>
 // Add a new activity for a lead
 export const addLeadActivity = async (activity: Omit<LeadActivity, "id" | "created_at">): Promise<LeadActivity> => {
   try {
+    console.log("Adding new lead activity:", activity);
+    
     // Make sure we're using lead_id (not leadId)
     const normalizedActivity = {
       lead_id: activity.lead_id,
       type: activity.type,
       description: activity.description,
-      created_by: activity.created_by,
+      created_by: activity.created_by || (await supabase.auth.getUser()).data.user?.id,
       scheduled_at: activity.scheduled_at,
       completed_at: activity.completed_at
     };
@@ -122,6 +124,8 @@ export const addLeadActivity = async (activity: Omit<LeadActivity, "id" | "creat
 // Mark an activity as completed
 export const completeLeadActivity = async (id: string): Promise<LeadActivity | null> => {
   try {
+    console.log("Marking activity as completed:", id);
+    
     // Try updating the activity in Supabase
     const { data, error } = await supabase
       .from('lead_activities')

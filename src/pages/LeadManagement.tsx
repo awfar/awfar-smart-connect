@@ -10,29 +10,11 @@ import LeadHeader from "@/components/leads/LeadHeader";
 import LeadSearchBar from "@/components/leads/LeadSearchBar";
 import LeadCardHeader from "@/components/leads/LeadCardHeader";
 import LeadTable from "@/components/leads/LeadTable";
-import { getLeads } from "@/services/leads";
+import { getLeads, Lead } from "@/services/leads";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import LeadForm from "@/components/leads/LeadForm";
 import MobileOptimizedContainer from '@/components/ui/mobile-optimized-container';
 import DashboardLayout from "@/components/layout/DashboardLayout";
-
-// Create compatibility interface to handle the type mismatch
-interface Lead {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  position?: string;
-  source?: string;
-  status: string;
-  notes?: string;
-  assigned_to?: string;
-  created_at?: string;
-  updated_at?: string;
-  landing_page_id?: string;
-}
 
 const LeadManagement = () => {
   const [selectedView, setSelectedView] = useState<string>("all");
@@ -49,8 +31,26 @@ const LeadManagement = () => {
     isError, 
     refetch 
   } = useQuery({
-    queryKey: ['leads', filters],
-    queryFn: () => getLeads(filters),
+    queryKey: ['leads', selectedView, filters, searchTerm],
+    queryFn: () => {
+      // Combine view filter with other filters
+      const combinedFilters = { ...filters };
+      
+      if (selectedView === "my") {
+        // In a real app, this would be the current user's ID
+        combinedFilters.assigned_to = "current-user-id";
+      } else if (selectedView === "new") {
+        combinedFilters.stage = "جديد";
+      } else if (selectedView === "qualified") {
+        combinedFilters.stage = "مؤهل";
+      }
+      
+      if (searchTerm) {
+        combinedFilters.search = searchTerm;
+      }
+      
+      return getLeads(combinedFilters);
+    },
   });
 
   const handleLeadClick = (leadId: string) => {
@@ -72,7 +72,6 @@ const LeadManagement = () => {
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    setFilters(prev => ({ ...prev, search: term }));
   };
 
   const handleFilterChange = (newFilters: Record<string, any>) => {
@@ -130,7 +129,7 @@ const LeadManagement = () => {
                   </div>
                 ) : (
                   <LeadTable 
-                    leads={leads as any[]} 
+                    leads={leads as Lead[]} 
                     selectedLead={selectedLead}
                     onLeadSelect={handleLeadClick}
                   />
@@ -142,7 +141,7 @@ const LeadManagement = () => {
           {selectedLead && Array.isArray(leads) && (
             <div className="w-full lg:w-[400px]">
               <LeadDetails 
-                lead={leads.find(l => l.id === selectedLead) as any} 
+                lead={leads.find(l => l.id === selectedLead) as Lead} 
                 onClose={() => setSelectedLead(null)} 
               />
             </div>

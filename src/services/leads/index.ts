@@ -6,8 +6,6 @@ import {
   getLeadById, 
   fetchLeadById, 
   getLeadSources, 
-  getIndustries,
-  getCountries,
   getLeadStages,
   getSalesOwners,
   getCompanies
@@ -25,17 +23,13 @@ import {
   completeLeadActivity
 } from "./leadActivities";
 
-// Re-export all types and functions
-export type { Lead, LeadActivity };
-
+// Re-export all functions
 export {
   // Query functions
   getLeads,
   getLeadById,
   fetchLeadById,
   getLeadSources,
-  getIndustries,
-  getCountries,
   getLeadStages,
   getSalesOwners,
   getCompanies,
@@ -48,3 +42,6 @@ export {
   addLeadActivity,
   completeLeadActivity,
 };
+
+// Re-export all types
+export type { Lead, LeadActivity };

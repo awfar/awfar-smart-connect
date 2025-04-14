@@ -12,8 +12,8 @@ export interface Lead {
   position?: string | null;
   country?: string;
   industry?: string;
-  stage?: string;
-  status?: string;
+  stage?: string; // Used in UI (maps to status in DB)
+  status?: string; // Used in DB
   source?: string | null;
   notes?: string | null;
   created_at?: string;
@@ -34,16 +34,6 @@ export interface LeadActivity {
   completed_at?: string | null;
 }
 
-// Filter options for leads
-export interface LeadFilters {
-  stage?: string;
-  source?: string;
-  country?: string;
-  industry?: string;
-  assigned_to?: string;
-  date_range?: string;
-}
-
 // Database representation of a lead
 export interface LeadDBRow {
   id: string;
@@ -55,7 +45,6 @@ export interface LeadDBRow {
   position?: string | null;
   country?: string | null;
   industry?: string | null;
-  stage?: string;
   status?: string;
   source?: string | null;
   notes?: string | null;

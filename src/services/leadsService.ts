@@ -6,8 +6,6 @@ export {
   getLeadById,
   fetchLeadById,
   getLeadSources,
-  getIndustries,
-  getCountries,
   getLeadStages,
   getSalesOwners,
   getCompanies,

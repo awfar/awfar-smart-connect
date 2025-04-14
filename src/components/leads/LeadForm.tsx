@@ -9,9 +9,7 @@ import {
   createLead, 
   updateLead, 
   getLeadSources, 
-  getIndustries, 
   getLeadStages,
-  getCountries,
   getSalesOwners,
   Lead 
 } from "@/services/leads";
@@ -21,23 +19,21 @@ import { Loader2 } from "lucide-react";
 interface LeadFormProps {
   lead?: Lead;
   onClose?: () => void;
-  onSuccess?: (lead: Lead) => void;
+  onSuccess?: (lead?: Lead) => void;
 }
 
 const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
   const editMode = !!lead;
 
-  const [formData, setFormData] = useState<Omit<Lead, "id">>({
+  const [formData, setFormData] = useState<Partial<Lead>>({
     first_name: lead?.first_name || "",
     last_name: lead?.last_name || "",
     company: lead?.company || "",
     email: lead?.email || "",
     phone: lead?.phone || "",
-    country: lead?.country || "",
-    industry: lead?.industry || "",
-    stage: lead?.stage || "جديد",
-    source: lead?.source || "",
     position: lead?.position || "",
+    source: lead?.source || "",
+    status: lead?.status || lead?.stage || "جديد",
     notes: lead?.notes || "",
     assigned_to: lead?.assigned_to || "",
     created_at: lead?.created_at || new Date().toISOString(),
@@ -46,31 +42,26 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
 
   // State for dropdown options
   const [sources, setSources] = useState<string[]>([]);
-  const [industries, setIndustries] = useState<string[]>([]);
   const [stages, setStages] = useState<string[]>([]);
-  const [countries, setCountries] = useState<string[]>([]);
   const [owners, setOwners] = useState<{id: string, name: string}[]>([]);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Fetch options for dropdown menus
   useEffect(() => {
     const fetchOptions = async () => {
       try {
         setIsLoading(true);
-        const [sourcesData, industriesData, stagesData, countriesData, ownersData] = await Promise.all([
+        const [sourcesData, stagesData, ownersData] = await Promise.all([
           getLeadSources(),
-          getIndustries(),
           getLeadStages(),
-          getCountries(),
           getSalesOwners()
         ]);
         
         setSources(sourcesData);
-        setIndustries(industriesData);
         setStages(stagesData);
-        setCountries(countriesData);
         setOwners(ownersData);
       } catch (error) {
         console.error("Error fetching form options:", error);
@@ -89,6 +80,11 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
       ...prev,
       [name]: value,
     }));
+    
+    // Clear validation error when field is changed
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: "" }));
+    }
   };
 
   const handleSelectChange = (name: string, value: string) => {
@@ -96,22 +92,56 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
       ...prev,
       [name]: value,
     }));
+    
+    // Clear validation error when field is changed
+    if (formErrors[name]) {
+      setFormErrors(prev => ({ ...prev, [name]: "" }));
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+    
+    if (!formData.first_name) {
+      errors.first_name = "الاسم الأول مطلوب";
+    }
+    
+    if (!formData.last_name) {
+      errors.last_name = "اسم العائلة مطلوب";
+    }
+    
+    if (!formData.email) {
+      errors.email = "البريد الإلكتروني مطلوب";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "البريد الإلكتروني غير صالح";
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    
+    if (!validateForm()) {
+      toast.error("يرجى تصحيح الأخطاء في النموذج");
+      return;
+    }
+    
     setIsSubmitting(true);
 
     try {
       if (editMode && lead) {
+        // Preserve the ID and owner properties from the original lead
         const updatedLead = await updateLead({
+          ...lead,
           ...formData,
           id: lead.id,
         });
         toast.success("تم تحديث بيانات العميل المحتمل بنجاح");
         onSuccess?.(updatedLead);
       } else {
-        const newLead = await createLead(formData);
+        const newLead = await createLead(formData as Omit<Lead, "id">);
         toast.success("تم إضافة عميل محتمل جديد بنجاح");
         onSuccess?.(newLead);
       }
@@ -144,8 +174,11 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
             name="first_name"
             value={formData.first_name}
             onChange={handleChange}
-            required
+            className={formErrors.first_name ? "border-red-500" : ""}
           />
+          {formErrors.first_name && (
+            <p className="text-red-500 text-xs mt-1">{formErrors.first_name}</p>
+          )}
         </div>
         <div>
           <Label htmlFor="last_name">اسم العائلة *</Label>
@@ -155,8 +188,11 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
             name="last_name"
             value={formData.last_name}
             onChange={handleChange}
-            required
+            className={formErrors.last_name ? "border-red-500" : ""}
           />
+          {formErrors.last_name && (
+            <p className="text-red-500 text-xs mt-1">{formErrors.last_name}</p>
+          )}
         </div>
       </div>
 
@@ -168,8 +204,11 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
           name="email"
           value={formData.email}
           onChange={handleChange}
-          required
+          className={formErrors.email ? "border-red-500" : ""}
         />
+        {formErrors.email && (
+          <p className="text-red-500 text-xs mt-1">{formErrors.email}</p>
+        )}
       </div>
 
       <div>
@@ -208,51 +247,12 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="industry">القطاع</Label>
+          <Label htmlFor="status">المرحلة</Label>
           <Select 
-            value={formData.industry || ''} 
-            onValueChange={(value) => handleSelectChange("industry", value)}
+            value={formData.status || 'جديد'} 
+            onValueChange={(value) => handleSelectChange("status", value)}
           >
-            <SelectTrigger id="industry">
-              <SelectValue placeholder="اختر القطاع" />
-            </SelectTrigger>
-            <SelectContent>
-              {industries.map((industry) => (
-                <SelectItem key={industry} value={industry}>
-                  {industry}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="country">الدولة</Label>
-          <Select 
-            value={formData.country || ''} 
-            onValueChange={(value) => handleSelectChange("country", value)}
-          >
-            <SelectTrigger id="country">
-              <SelectValue placeholder="اختر الدولة" />
-            </SelectTrigger>
-            <SelectContent>
-              {countries.map((country) => (
-                <SelectItem key={country} value={country}>
-                  {country}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="stage">المرحلة</Label>
-          <Select 
-            value={formData.stage || 'جديد'} 
-            onValueChange={(value) => handleSelectChange("stage", value)}
-          >
-            <SelectTrigger id="stage">
+            <SelectTrigger id="status">
               <SelectValue placeholder="اختر المرحلة" />
             </SelectTrigger>
             <SelectContent>
@@ -274,6 +274,7 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
               <SelectValue placeholder="اختر المصدر" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="">غير محدد</SelectItem>
               {sources.map((source) => (
                 <SelectItem key={source} value={source}>
                   {source}
@@ -294,6 +295,7 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
             <SelectValue placeholder="اختر المسؤول" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="">غير مخصص</SelectItem>
             {owners.map((owner) => (
               <SelectItem key={owner.id} value={owner.id}>
                 {owner.name}

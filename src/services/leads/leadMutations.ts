@@ -5,6 +5,7 @@ import { Lead } from "../types/leadTypes";
 import { mockLeads } from "./mockData";
 import { toast } from "sonner";
 import { addLeadActivity } from "./leadActivities";
+import { transformLeadFromSupabase } from "./utils";
 
 // Update lead
 export const updateLead = async (lead: Lead): Promise<Lead> => {
@@ -33,10 +34,7 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
     // If operation was successful, return the updated lead
     if (data) {
       toast.success("تم تحديث العميل المحتمل بنجاح");
-      return {
-        ...data,
-        owner // Keep the owner information from the provided data
-      };
+      return transformLeadFromSupabase(data);
     }
     
     // Fallback to mock data
@@ -76,9 +74,9 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
       leadToCreate.updated_at = new Date().toISOString();
     }
     
-    // Set default stage if not provided
-    if (!leadToCreate.stage) {
-      leadToCreate.stage = 'جديد';
+    // Set default status if not provided
+    if (!leadToCreate.status) {
+      leadToCreate.status = 'جديد';
     }
     
     // Try creating the lead in Supabase
@@ -112,10 +110,7 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
       }
       
       toast.success("تم إنشاء العميل المحتمل بنجاح");
-      return {
-        ...data,
-        owner // Keep owner information if provided
-      };
+      return transformLeadFromSupabase(data);
     }
     
     // Fallback to mock data

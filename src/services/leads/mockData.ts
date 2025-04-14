@@ -1,159 +1,163 @@
 
 import { Lead, LeadActivity } from "../types/leadTypes";
 
-// Mock data for leads when Supabase is not available
+// Mock leads data for testing
 export const mockLeads: Lead[] = [
   {
     id: "lead-1",
-    first_name: "محمد",
-    last_name: "العمري",
-    email: "mohammed@example.com",
+    first_name: "أحمد",
+    last_name: "محمد",
+    email: "ahmed@example.com",
     phone: "+966501234567",
-    company: "شركة التقنية المتقدمة",
+    company: "شركة الإبداع للتقنية",
     position: "مدير تقنية المعلومات",
-    country: "المملكة العربية السعودية",
-    industry: "تكنولوجيا المعلومات",
-    stage: "مؤهل",
     source: "موقع إلكتروني",
-    notes: "عميل مهتم بباقات إدارة العملاء",
-    created_at: "2025-03-10T10:20:30Z",
-    updated_at: "2025-03-12T14:25:00Z",
+    status: "جديد",
+    notes: "عميل محتمل مهتم بخدمات إدارة علاقات العملاء",
+    created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date().toISOString(),
     owner: {
-      name: "أحمد الشمري",
+      name: "محمد علي",
       avatar: "/placeholder.svg",
-      initials: "أ"
+      initials: "مع"
     }
   },
   {
     id: "lead-2",
-    first_name: "سارة",
-    last_name: "القحطاني",
-    email: "sara@example.com",
+    first_name: "نورة",
+    last_name: "العتيبي",
+    email: "norah@example.com",
     phone: "+966512345678",
-    company: "مؤسسة النجاح للتجارة",
-    position: "مديرة تسويق",
-    country: "الإمارات العربية المتحدة",
-    industry: "التجارة الإلكترونية",
-    stage: "جديد",
-    source: "وسائل التواصل الاجتماعي",
-    notes: "تبحث عن حلول إدارة علاقات العملاء للمتاجر الإلكترونية",
-    created_at: "2025-04-01T09:15:00Z",
-    updated_at: "2025-04-01T09:15:00Z",
+    company: "مؤسسة النور للتجارة",
+    position: "مديرة التسويق",
+    source: "معرض تجاري",
+    status: "مؤهل",
+    notes: "تبحث عن حلول لإدارة الحملات التسويقية",
+    created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     owner: {
-      name: "نورة المطيري",
+      name: "سارة القحطاني",
       avatar: "/placeholder.svg",
-      initials: "ن"
+      initials: "سق"
     }
   },
   {
     id: "lead-3",
     first_name: "خالد",
-    last_name: "السالم",
+    last_name: "الشمري",
     email: "khalid@example.com",
     phone: "+966523456789",
-    company: "مستشفى الرعاية الطبية",
-    position: "المدير التنفيذي",
-    country: "المملكة العربية السعودية",
-    industry: "الرعاية الصحية",
-    stage: "عرض سعر",
-    source: "معرض تجاري",
-    notes: "يحتاج إلى نظام إدارة المرضى والعملاء",
-    created_at: "2025-03-20T13:40:00Z",
-    updated_at: "2025-04-05T10:30:00Z",
+    company: "مجموعة الخليج للاستثمار",
+    position: "مدير عام",
+    source: "توصية",
+    status: "عرض سعر",
+    notes: "مهتم بالباقة المتكاملة لحلول الأعمال",
+    created_at: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     owner: {
-      name: "بدر العتيبي",
+      name: "فيصل الدوسري",
       avatar: "/placeholder.svg",
-      initials: "ب"
+      initials: "فد"
     }
   }
 ];
 
-// Mock data for lead activities when Supabase is not available
+// Mock activities for testing
 export const mockActivities: Record<string, LeadActivity[]> = {
   "lead-1": [
     {
-      id: "act-1",
+      id: "activity-1-1",
       lead_id: "lead-1",
       type: "call",
-      description: "تم التواصل هاتفياً وإرسال تفاصيل الباقات",
-      created_at: "2025-03-12T14:25:00Z",
+      description: "اتصال تعريفي، مهتم بمعرفة المزيد عن الخدمات",
+      created_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
       created_by: "user-1",
-      scheduled_at: "2025-03-12T14:00:00Z",
-      completed_at: "2025-03-12T14:25:00Z"
+      scheduled_at: null,
+      completed_at: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString()
     },
     {
-      id: "act-2",
+      id: "activity-1-2",
       lead_id: "lead-1",
       type: "email",
-      description: "تم إرسال عرض سعر مخصص",
-      created_at: "2025-03-13T09:30:00Z",
+      description: "إرسال عرض تقديمي عن خدماتنا وأسعارنا",
+      created_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
       created_by: "user-1",
-      scheduled_at: "2025-03-13T09:00:00Z",
-      completed_at: "2025-03-13T09:30:00Z"
+      scheduled_at: null,
+      completed_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString()
     },
     {
-      id: "act-3",
+      id: "activity-1-3",
       lead_id: "lead-1",
       type: "meeting",
-      description: "اجتماع متابعة لمناقشة العرض المقدم",
-      created_at: "2025-03-15T10:00:00Z",
+      description: "اجتماع متابعة لاستعراض العرض المقدم",
+      created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       created_by: "user-1",
-      scheduled_at: "2025-03-20T14:00:00Z",
+      scheduled_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
       completed_at: null
     }
   ],
   "lead-2": [
     {
-      id: "act-4",
+      id: "activity-2-1",
       lead_id: "lead-2",
-      type: "call",
-      description: "مكالمة ترحيبية وتعريف بالخدمات",
-      created_at: "2025-04-01T10:00:00Z",
+      type: "note",
+      description: "العميل يبحث عن حلول متكاملة لإدارة التسويق الرقمي",
+      created_at: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000).toISOString(),
       created_by: "user-2",
-      scheduled_at: "2025-04-01T10:00:00Z",
-      completed_at: "2025-04-01T10:15:00Z"
+      scheduled_at: null,
+      completed_at: null
     },
     {
-      id: "act-5",
+      id: "activity-2-2",
       lead_id: "lead-2",
-      type: "email",
-      description: "إرسال كتيب تعريفي بالخدمات",
-      created_at: "2025-04-02T09:00:00Z",
+      type: "call",
+      description: "نقاش حول احتياجات التسويق الرقمي والباقات المتوفرة",
+      created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
       created_by: "user-2",
-      scheduled_at: "2025-04-02T09:00:00Z",
-      completed_at: "2025-04-02T09:05:00Z"
+      scheduled_at: null,
+      completed_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      id: "activity-2-3",
+      lead_id: "lead-2",
+      type: "task",
+      description: "إعداد عرض سعر مفصل للخدمات المطلوبة",
+      created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      created_by: "user-2",
+      scheduled_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      completed_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
     }
   ],
   "lead-3": [
     {
-      id: "act-6",
-      lead_id: "lead-3",
-      type: "meeting",
-      description: "اجتماع استعراض متطلبات العميل",
-      created_at: "2025-03-25T11:00:00Z",
-      created_by: "user-3",
-      scheduled_at: "2025-03-25T11:00:00Z",
-      completed_at: "2025-03-25T12:30:00Z"
-    },
-    {
-      id: "act-7",
+      id: "activity-3-1",
       lead_id: "lead-3",
       type: "email",
-      description: "إرسال عرض سعر مفصل",
-      created_at: "2025-04-02T15:00:00Z",
+      description: "إرسال معلومات تفصيلية عن الباقة المتكاملة",
+      created_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
       created_by: "user-3",
-      scheduled_at: "2025-04-02T15:00:00Z",
-      completed_at: "2025-04-02T15:10:00Z"
+      scheduled_at: null,
+      completed_at: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString()
     },
     {
-      id: "act-8",
+      id: "activity-3-2",
       lead_id: "lead-3",
-      type: "call",
-      description: "متابعة العرض المقدم",
-      created_at: "2025-04-05T10:30:00Z",
+      type: "meeting",
+      description: "اجتماع مع فريق العميل لشرح ميزات النظام",
+      created_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
       created_by: "user-3",
-      scheduled_at: "2025-04-05T10:30:00Z",
-      completed_at: "2025-04-05T10:45:00Z"
+      scheduled_at: null,
+      completed_at: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      id: "activity-3-3",
+      lead_id: "lead-3",
+      type: "task",
+      description: "إعداد وإرسال العقد النهائي",
+      created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+      created_by: "user-3",
+      scheduled_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      completed_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
     }
   ]
 };
