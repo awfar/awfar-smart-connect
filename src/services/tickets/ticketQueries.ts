@@ -27,14 +27,12 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
       queryBuilder = queryBuilder.eq('category', categoryFilter);
     }
     
-    // Convert to plain query with explicit typing to break type inference chain
-    const query = queryBuilder.order('created_at', { ascending: false });
-    
-    // Execute the query as a plain fetch operation
-    const { data, error } = await query;
-    
-    // Explicitly type the result as unknown to break the chain
-    const rawTickets = data as unknown[];
+    // Execute the query without type inference
+    // First, get the SQL query as a string to completely break the type chain
+    const orderBy = { ascending: false };
+    const { data: rawData, error } = await (queryBuilder as any)
+      .order('created_at', orderBy)
+      .then((response: any) => response);
     
     if (error) {
       console.error("Error fetching tickets:", error);
@@ -42,24 +40,25 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
       return [];
     }
     
-    console.log("Tickets fetched:", rawTickets);
+    console.log("Tickets fetched:", rawData);
     
     // Handle the null case
-    if (!rawTickets) return [];
+    if (!rawData) return [];
     
     // Initialize an empty array for our tickets
     const tickets: Ticket[] = [];
     
-    // Map the raw data to our known type structure
-    for (const item of rawTickets) {
-      // Safely convert to a simple object type
-      const rawItem = item as Record<string, unknown>;
+    // Map the raw data to our known type structure using explicit casting
+    for (const item of rawData) {
+      // Cast to a simple record type to avoid deep type inference
+      const rawItem: Record<string, any> = item;
       
+      // Create ticket data with explicit type casting for each property
       const ticketData: TicketFromDB = {
-        id: String(rawItem.id),
-        subject: String(rawItem.subject),
-        description: String(rawItem.description),
-        status: String(rawItem.status),
+        id: String(rawItem.id || ''),
+        subject: String(rawItem.subject || ''),
+        description: String(rawItem.description || ''),
+        status: String(rawItem.status || 'open'),
         priority: String(rawItem.priority || 'متوسط'),
         category: rawItem.category ? String(rawItem.category) : undefined,
         assigned_to: rawItem.assigned_to ? String(rawItem.assigned_to) : undefined,
@@ -69,8 +68,8 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
         updated_at: rawItem.updated_at ? String(rawItem.updated_at) : undefined,
         resolved_at: rawItem.resolved_at ? String(rawItem.resolved_at) : null,
         profiles: rawItem.profiles ? {
-          first_name: String((rawItem.profiles as Record<string, unknown>).first_name || ''),
-          last_name: String((rawItem.profiles as Record<string, unknown>).last_name || '')
+          first_name: String((rawItem.profiles as Record<string, any>).first_name || ''),
+          last_name: String((rawItem.profiles as Record<string, any>).last_name || '')
         } : null
       };
       
