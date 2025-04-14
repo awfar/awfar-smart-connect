@@ -43,7 +43,16 @@ export const createDeal = async (dealData: Partial<Deal>): Promise<Deal | null> 
     }
 
     toast.success("تم إنشاء الصفقة بنجاح");
-    return transformDealFromSupabase(data);
+    
+    // Handle potentially missing profile data
+    if (data) {
+      const dealWithDefaults = {
+        ...data,
+        profiles: data.profiles || { first_name: '', last_name: '' }
+      };
+      return transformDealFromSupabase(dealWithDefaults);
+    }
+    return null;
   } catch (error) {
     console.error("Error in createDeal:", error);
     toast.error("فشل في إنشاء الصفقة");
@@ -74,7 +83,16 @@ export const updateDeal = async (id: string, dealData: Partial<Deal>): Promise<D
     }
 
     toast.success("تم تحديث الصفقة بنجاح");
-    return transformDealFromSupabase(data);
+    
+    // Handle potentially missing profile data
+    if (data) {
+      const dealWithDefaults = {
+        ...data,
+        profiles: data.profiles || { first_name: '', last_name: '' }
+      };
+      return transformDealFromSupabase(dealWithDefaults);
+    }
+    return null;
   } catch (error) {
     console.error("Error in updateDeal:", error);
     toast.error("فشل في تحديث الصفقة");

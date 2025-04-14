@@ -63,6 +63,6 @@ export interface DealActivity {
     name: string;
     avatar?: string;
   };
-  scheduled_at?: string;
-  completed_at?: string;
+  scheduled_at?: string | null;
+  completed_at?: string | null;
 }

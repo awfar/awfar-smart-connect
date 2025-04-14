@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -6,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import DealsList from "@/components/deals/DealsList";
 import DealForm from "@/components/deals/DealForm";
 import DealFilters from "@/components/deals/DealFilters";
-import { fetchDeals, filterDeals, Deal } from "@/services/dealsService";
+import { getDeals, Deal } from "@/services/dealsService";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
@@ -19,7 +18,7 @@ const DealsManagement = () => {
   
   const { data: allDeals, isLoading, refetch } = useQuery({
     queryKey: ['deals'],
-    queryFn: () => fetchDeals(),
+    queryFn: () => getDeals(),
   });
 
   useEffect(() => {

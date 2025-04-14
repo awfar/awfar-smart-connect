@@ -2,6 +2,10 @@
 import { Deal, DealDBRow } from "../types/dealTypes";
 
 export const transformDealFromSupabase = (deal: DealDBRow): Deal => {
+  // Ensure profiles exists with default values if missing
+  const profiles = deal.profiles || { first_name: '', last_name: '' };
+  const fullName = `${profiles.first_name || ''} ${profiles.last_name || ''}`.trim();
+  
   return {
     id: deal.id,
     name: deal.name,
@@ -11,17 +15,18 @@ export const transformDealFromSupabase = (deal: DealDBRow): Deal => {
     status: deal.status,
     expected_close_date: deal.expected_close_date,
     owner_id: deal.owner_id,
-    owner: deal.profiles ? {
-      id: deal.owner_id || "",
-      name: `${deal.profiles.first_name || ''} ${deal.profiles.last_name || ''}`.trim(),
-      initials: getInitials(`${deal.profiles.first_name || ''} ${deal.profiles.last_name || ''}`.trim()),
+    owner: deal.owner_id ? {
+      id: deal.owner_id,
+      name: fullName || 'غير معين',
+      initials: getInitials(fullName || 'غير معين'),
     } : undefined,
     company_id: deal.company_id,
     company_name: deal.companies?.name,
     contact_id: deal.contact_id,
     contact_name: deal.company_contacts?.name,
     created_at: deal.created_at,
-    updated_at: deal.updated_at
+    updated_at: deal.updated_at,
+    lead_id: deal.lead_id
   };
 };
 
