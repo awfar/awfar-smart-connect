@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import MobileOptimizedContainer from '@/components/ui/mobile-optimized-container';
 import LeadForm from '@/components/leads/LeadForm';
 import { Lead } from "@/services/leads";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 
 interface EditLeadDialogProps {
   isOpen: boolean;
@@ -22,9 +22,14 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
   const handleSuccess = (updatedLead?: Lead) => {
     if (updatedLead) {
       const fullName = `${updatedLead.first_name} ${updatedLead.last_name}`.trim();
-      toast.success(`تم تحديث بيانات العميل المحتمل "${fullName}" بنجاح`);
+      toast({
+        title: "تم تحديث بيانات العميل المحتمل بنجاح",
+        description: `تم تحديث بيانات "${fullName}"`,
+      });
     } else {
-      toast.success("تم تحديث بيانات العميل المحتمل بنجاح");
+      toast({
+        title: "تم تحديث بيانات العميل المحتمل بنجاح",
+      });
     }
     onSuccess();
   };
