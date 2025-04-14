@@ -35,15 +35,17 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     
     console.log("Tickets fetched:", data);
     
-    // Create a completely decoupled array to avoid type inference issues
+    // Create an array to store the properly typed tickets
     const tickets: Ticket[] = [];
     
-    // Use basic iteration without relying on TypeScript's complex type inference
+    // Explicitly handle data as any to break type inference chain
     if (data && Array.isArray(data)) {
       for (let i = 0; i < data.length; i++) {
-        // Explicitly break the type chain using a simple object assignment approach
-        const item = data[i];
-        const rawItem = {
+        // Use any type to completely break the type inference chain
+        const item: any = data[i];
+        
+        // Explicitly create a ticket using the mapper function
+        const ticket = mapDBTicketToTicket({
           id: item.id,
           subject: item.subject,
           description: item.description,
@@ -57,10 +59,8 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
           updated_at: item.updated_at,
           resolved_at: item.resolved_at,
           profiles: item.profiles
-        };
+        });
         
-        // Now map this simplified object structure
-        const ticket = mapDBTicketToTicket(rawItem);
         tickets.push(ticket);
       }
     }
@@ -103,27 +103,27 @@ export const createTicket = async (ticketData: Omit<Ticket, 'id' | 'created_at' 
     console.log("Ticket created:", data);
     toast.success("تم إنشاء التذكرة بنجاح");
     
-    // Break the type chain using simple object
     if (!data) return null;
     
-    // Manual simplified mapping to avoid deep type instantiations
-    const rawData = {
-      id: data.id,
-      subject: data.subject,
-      description: data.description,
-      status: data.status,
-      priority: data.priority,
-      category: data.category,
-      assigned_to: data.assigned_to,
-      client_id: data.client_id,
-      created_by: data.created_by,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-      resolved_at: data.resolved_at,
-      profiles: data.profiles
-    };
+    // Use any type to break the type inference chain
+    const item: any = data;
     
-    return mapDBTicketToTicket(rawData);
+    // Return a properly mapped ticket
+    return mapDBTicketToTicket({
+      id: item.id,
+      subject: item.subject,
+      description: item.description,
+      status: item.status,
+      priority: item.priority,
+      category: item.category,
+      assigned_to: item.assigned_to,
+      client_id: item.client_id,
+      created_by: item.created_by,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+      resolved_at: item.resolved_at,
+      profiles: item.profiles
+    });
   } catch (error) {
     console.error("خطأ في إنشاء التذكرة:", error);
     toast.error("فشل في إنشاء التذكرة");
@@ -154,27 +154,27 @@ export const updateTicket = async (id: string, ticketData: Partial<Ticket>): Pro
     console.log("Ticket updated:", data);
     toast.success("تم تحديث التذكرة بنجاح");
     
-    // Break the type chain using simple object
     if (!data) return null;
     
-    // Manual simplified mapping to avoid deep type instantiations
-    const rawData = {
-      id: data.id,
-      subject: data.subject,
-      description: data.description,
-      status: data.status,
-      priority: data.priority,
-      category: data.category,
-      assigned_to: data.assigned_to,
-      client_id: data.client_id,
-      created_by: data.created_by,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-      resolved_at: data.resolved_at,
-      profiles: data.profiles
-    };
+    // Use any type to break the type inference chain
+    const item: any = data;
     
-    return mapDBTicketToTicket(rawData);
+    // Return a properly mapped ticket
+    return mapDBTicketToTicket({
+      id: item.id,
+      subject: item.subject,
+      description: item.description,
+      status: item.status,
+      priority: item.priority,
+      category: item.category,
+      assigned_to: item.assigned_to,
+      client_id: item.client_id,
+      created_by: item.created_by,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+      resolved_at: item.resolved_at,
+      profiles: item.profiles
+    });
   } catch (error) {
     console.error("خطأ في تحديث التذكرة:", error);
     toast.error("فشل في تحديث التذكرة");
