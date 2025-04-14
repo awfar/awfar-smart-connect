@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { LeadActivity } from "../types/leadTypes";
-import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 
 // Get activities for a specific lead
@@ -44,7 +43,7 @@ export const addLeadActivity = async (activity: Omit<LeadActivity, "id" | "creat
       console.log("Using mock data for adding activity");
       const mockActivity = {
         ...activity,
-        id: uuidv4(),
+        id: generateMockId(),
         created_at: new Date().toISOString(),
       } as LeadActivity;
       
@@ -107,11 +106,17 @@ export const completeLeadActivity = async (activityId: string): Promise<LeadActi
   }
 };
 
+// Helper function to generate a random ID for mock data
+const generateMockId = (): string => {
+  return 'mock-' + Math.random().toString(36).substring(2, 15) + 
+         Math.random().toString(36).substring(2, 15);
+};
+
 // Helper function to generate mock activities for leads
 const getMockActivities = (leadId: string): LeadActivity[] => {
   return [
     {
-      id: `mock-activity-${uuidv4()}`,
+      id: `mock-activity-${generateMockId()}`,
       lead_id: leadId,
       type: "call",
       description: "اتصال أولي للتعريف بالخدمات",
@@ -121,7 +126,7 @@ const getMockActivities = (leadId: string): LeadActivity[] => {
       completed_at: new Date(Date.now() - 86400000 * 2).toISOString(),
     },
     {
-      id: `mock-activity-${uuidv4()}`,
+      id: `mock-activity-${generateMockId()}`,
       lead_id: leadId,
       type: "note",
       description: "العميل مهتم بباقة الأعمال المتكاملة",
@@ -131,7 +136,7 @@ const getMockActivities = (leadId: string): LeadActivity[] => {
       completed_at: null,
     },
     {
-      id: `mock-activity-${uuidv4()}`,
+      id: `mock-activity-${generateMockId()}`,
       lead_id: leadId,
       type: "meeting",
       description: "اجتماع لمناقشة تفاصيل المشروع",
