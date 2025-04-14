@@ -28,16 +28,20 @@ export const fetchTickets = async (
   categoryFilter?: string
 ): Promise<Ticket[]> => {
   try {
-    // Create the base query builder
-    let query = supabase
-      .from('tickets')
-      .select(`
-        *,
-        profiles:assigned_to (
-          first_name,
-          last_name
-        )
-      `);
+    // Create the base query builder but don't chain the query yet
+    const queryBuilder = supabase.from('tickets');
+    
+    // Build the select statement as a string to avoid deep type inference
+    const selectString = `
+      *,
+      profiles:assigned_to (
+        first_name,
+        last_name
+      )
+    `;
+    
+    // Start building the query
+    let query = queryBuilder.select(selectString);
     
     // Apply filters if provided
     if (statusFilter && statusFilter !== 'all') {
@@ -52,12 +56,8 @@ export const fetchTickets = async (
       query = query.eq('category', categoryFilter);
     }
     
-    // Execute the query with explicit type handling
-    const response = await query.order('created_at', { ascending: false });
-    
-    // Explicitly handle the response without relying on type inference
-    const rawData = response.data || [];
-    const error = response.error;
+    // Execute the query as a separate step
+    const { data: rawData, error } = await query.order('created_at', { ascending: false });
     
     if (error) {
       console.error("Error fetching tickets:", error);
@@ -66,13 +66,15 @@ export const fetchTickets = async (
     
     console.log("Fetched tickets data:", rawData);
     
-    // Manually transform data to avoid deep type inference
+    // Use explicit type assertions and manual transformation
     const ticketsArray: Ticket[] = [];
     
-    for (let i = 0; i < rawData.length; i++) {
-      // Use our safe transformer to control the typing
-      const transformedTicket = safeTransformTicket(rawData[i]);
-      ticketsArray.push(mapDBTicketToTicket(transformedTicket));
+    // Safely process the data with type assertions
+    if (rawData) {
+      for (let i = 0; i < rawData.length; i++) {
+        const transformedTicket = safeTransformTicket(rawData[i]);
+        ticketsArray.push(mapDBTicketToTicket(transformedTicket));
+      }
     }
     
     return ticketsArray;
@@ -84,22 +86,23 @@ export const fetchTickets = async (
 
 export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
   try {
-    // Execute query with explicit type handling
-    const response = await supabase
-      .from('tickets')
-      .select(`
-        *,
-        profiles:assigned_to (
-          first_name,
-          last_name
-        )
-      `)
+    // Build the query with separate steps to avoid deep type inference
+    const queryBuilder = supabase.from('tickets');
+    
+    // Use string for select to avoid type inference issues
+    const selectString = `
+      *,
+      profiles:assigned_to (
+        first_name,
+        last_name
+      )
+    `;
+    
+    // Execute the query as a separate step with destructuring assignment
+    const { data: rawData, error } = await queryBuilder
+      .select(selectString)
       .eq('id', id)
       .single();
-    
-    // Explicitly handle the response without relying on type inference
-    const rawData = response.data;
-    const error = response.error;
     
     if (error) {
       console.error("Error fetching ticket by id:", error);
