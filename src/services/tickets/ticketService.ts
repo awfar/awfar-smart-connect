@@ -35,17 +35,17 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     
     console.log("Tickets fetched:", data);
     
-    // Simplified approach: treat data as a raw array without complex typing
+    // Create a simple array and manually map each item to avoid deep type inference
     const tickets: Ticket[] = [];
     
     if (data) {
-      // Process each item individually to avoid complex type chains
-      data.forEach(item => {
-        // Force cast to any to break the complex type chain
-        const rawItem = item as any;
+      // Use plain JavaScript array processing without complex typing
+      for (let i = 0; i < data.length; i++) {
+        // Use type assertion directly to any to completely break the type chain
+        const rawItem: any = data[i];
         const ticket = mapDBTicketToTicket(rawItem);
         tickets.push(ticket);
-      });
+      }
     }
     
     return tickets;
@@ -85,6 +85,7 @@ export const createTicket = async (ticketData: Omit<Ticket, 'id' | 'created_at' 
     
     console.log("Ticket created:", data);
     toast.success("تم إنشاء التذكرة بنجاح");
+    // Use direct type assertion to any
     return mapDBTicketToTicket(data as any);
   } catch (error) {
     console.error("خطأ في إنشاء التذكرة:", error);
@@ -115,6 +116,7 @@ export const updateTicket = async (id: string, ticketData: Partial<Ticket>): Pro
     
     console.log("Ticket updated:", data);
     toast.success("تم تحديث التذكرة بنجاح");
+    // Use direct type assertion to any
     return mapDBTicketToTicket(data as any);
   } catch (error) {
     console.error("خطأ في تحديث التذكرة:", error);
