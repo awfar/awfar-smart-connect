@@ -6,6 +6,18 @@ import NavItem from './NavItem';
 const DesktopNav = () => {
   const location = useLocation();
   
+  // Check if a path is active, considering both exact matches and subpaths
+  const isPathActive = (path: string) => {
+    // Home page (dashboard) special case
+    if (path === '/dashboard' && location.pathname === '/dashboard') {
+      return true;
+    }
+    
+    // For other paths, check if the current path starts with this path
+    // But only if it's not the dashboard path (to avoid matching all dashboard/* paths)
+    return path !== '/dashboard' && location.pathname.startsWith(path);
+  };
+  
   return (
     <div className="h-full w-64 border-l p-4 bg-awfar-primary text-white overflow-y-auto">
       <div className="flex justify-center mb-6 pt-2">
@@ -22,9 +34,9 @@ const DesktopNav = () => {
             href={item.href}
             label={item.label}
             icon={item.icon}
-            isActive={location.pathname === item.href}
+            isActive={isPathActive(item.href)}
             subItems={item.subItems}
-            expanded={item.expanded || location.pathname.startsWith(item.href)}
+            expanded={item.expanded || isPathActive(item.href)}
           />
         ))}
       </div>

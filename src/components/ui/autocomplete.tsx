@@ -54,7 +54,7 @@ export function Autocomplete({
   const [open, setOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
 
-  // Ensure options is always a valid array
+  // Ensure options is always a valid array even if undefined or null is passed
   const safeOptions = React.useMemo(() => {
     return Array.isArray(options) ? options : [];
   }, [options]);
@@ -75,6 +75,14 @@ export function Autocomplete({
 
   // Safe label for display
   const displayLabel = selectedOption ? selectedOption.label : "";
+
+  // Filter options based on search term
+  const filteredOptions = React.useMemo(() => {
+    if (!searchTerm) return safeOptions;
+    return safeOptions.filter(option => 
+      option.label.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [safeOptions, searchTerm]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -103,43 +111,44 @@ export function Autocomplete({
             value={searchTerm}
             onValueChange={setSearchTerm}
           />
-          <CommandEmpty>
-            {isLoading ? "جاري التحميل..." : emptyMessage}
-            {!disableCreate && searchTerm && !isLoading && (
-              <Button 
-                variant="ghost" 
-                className="flex w-full items-center justify-start mt-2"
-                onClick={() => {
-                  if (onCreateNew) {
-                    onCreateNew();
-                  }
-                  setOpen(false);
-                }}
-              >
-                <PlusCircle className="ml-2 h-4 w-4" />
-                {createNewLabel} &quot;{searchTerm}&quot;
-              </Button>
-            )}
-          </CommandEmpty>
-          <CommandGroup className="max-h-60 overflow-auto">
-            {safeOptions.filter(option => 
-              option.label.toLowerCase().includes(searchTerm.toLowerCase())
-            ).map((option) => (
-              <CommandItem
-                key={option.value}
-                value={option.value}
-                onSelect={() => handleSelect(option.value)}
-              >
-                <CheckIcon
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    value === option.value ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                {option.label}
-              </CommandItem>
-            ))}
-          </CommandGroup>
+          {filteredOptions.length === 0 ? (
+            <CommandEmpty>
+              {isLoading ? "جاري التحميل..." : emptyMessage}
+              {!disableCreate && searchTerm && !isLoading && (
+                <Button 
+                  variant="ghost" 
+                  className="flex w-full items-center justify-start mt-2"
+                  onClick={() => {
+                    if (onCreateNew) {
+                      onCreateNew();
+                    }
+                    setOpen(false);
+                  }}
+                >
+                  <PlusCircle className="ml-2 h-4 w-4" />
+                  {createNewLabel} &quot;{searchTerm}&quot;
+                </Button>
+              )}
+            </CommandEmpty>
+          ) : (
+            <CommandGroup className="max-h-60 overflow-auto">
+              {filteredOptions.map((option) => (
+                <CommandItem
+                  key={option.value}
+                  value={option.value}
+                  onSelect={() => handleSelect(option.value)}
+                >
+                  <CheckIcon
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      value === option.value ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {option.label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
         </Command>
       </PopoverContent>
     </Popover>

@@ -38,9 +38,9 @@ const NavItem = ({
     }
   };
 
-  // Check if current path matches this item or any of its children
-  const isActiveItem = isActive || location.pathname.startsWith(href) || 
-    (subItems?.some(item => location.pathname.startsWith(item.href)) ?? false);
+  // Check if current path or any subitem path is active
+  const isActiveItem = isActive || 
+    (subItems?.some(item => location.pathname === item.href || location.pathname.startsWith(item.href)) ?? false);
   
   const renderContent = () => (
     <Button
@@ -63,6 +63,11 @@ const NavItem = ({
     </Button>
   );
 
+  // Check if a subitem path is active
+  const isSubItemActive = (subItemHref: string) => {
+    return location.pathname === subItemHref || location.pathname.startsWith(subItemHref);
+  };
+
   if (isMobile) {
     return (
       <>
@@ -75,10 +80,10 @@ const NavItem = ({
                   <SheetClose key={item.href} asChild>
                     <Link to={item.href} onClick={onClose} className="block w-full">
                       <Button
-                        variant={location.pathname.startsWith(item.href) ? "secondary" : "ghost"}
+                        variant={isSubItemActive(item.href) ? "secondary" : "ghost"}
                         className={cn(
                           "w-full justify-start gap-2 text-right mt-1",
-                          location.pathname.startsWith(item.href)
+                          isSubItemActive(item.href)
                             ? "bg-awfar-accent text-awfar-primary hover:bg-awfar-accent/90"
                             : "text-white hover:bg-awfar-primary/50 hover:text-gray-200"
                         )}
@@ -116,10 +121,10 @@ const NavItem = ({
               {subItems.map((item) => (
                 <Link key={item.href} to={item.href} className="block w-full">
                   <Button
-                    variant={location.pathname.startsWith(item.href) ? "secondary" : "ghost"}
+                    variant={isSubItemActive(item.href) ? "secondary" : "ghost"}
                     className={cn(
                       "w-full justify-start gap-2 text-right mt-1",
-                      location.pathname.startsWith(item.href)
+                      isSubItemActive(item.href)
                         ? "bg-awfar-accent text-awfar-primary hover:bg-awfar-accent/90"
                         : "text-white hover:bg-awfar-primary/50 hover:text-gray-200"
                     )}
