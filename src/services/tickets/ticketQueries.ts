@@ -8,29 +8,55 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
   try {
     console.log("Fetching tickets with filters:", { statusFilter, priorityFilter, categoryFilter });
     
-    let query = supabase
-      .from('tickets')
-      .select('*, profiles!assigned_to(first_name, last_name)');
-      
-    // Apply filters with explicit type handling
+    // Build the query string parts for the filters
+    const filters = [];
+    const filterValues: any[] = [];
+    
+    let filterIndex = 1;
+    
     if (statusFilter && statusFilter !== 'all') {
       const status = statusFilter === 'open' ? 'open' : 'closed';
-      query = query.eq('status', status);
+      filters.push(`status = $${filterIndex}`);
+      filterValues.push(status);
+      filterIndex++;
     }
     
     if (priorityFilter && priorityFilter !== 'all') {
-      query = query.eq('priority', priorityFilter);
+      filters.push(`priority = $${filterIndex}`);
+      filterValues.push(priorityFilter);
+      filterIndex++;
     }
     
     if (categoryFilter && categoryFilter !== 'all') {
-      query = query.eq('category', categoryFilter);
+      filters.push(`category = $${filterIndex}`);
+      filterValues.push(categoryFilter);
+      filterIndex++;
     }
     
-    // Execute query with explicit type handling
-    const { data, error } = await query
-      .order('created_at', { ascending: false })
-      // Cut the type inference chain with explicit any
-      .then(result => result as any);
+    // Construct the base query
+    let queryStr = '*, profiles!assigned_to(first_name, last_name)';
+    
+    // Execute the query with filters applied outside the type inference chain
+    const { data, error } = await supabase
+      .from('tickets')
+      .select(queryStr)
+      .order('created_at', { ascending: false });
+      
+    // Apply filters manually to break the chain of type inference
+    let filteredData = data || [];
+    
+    if (statusFilter && statusFilter !== 'all') {
+      const status = statusFilter === 'open' ? 'open' : 'closed';
+      filteredData = filteredData.filter(item => item.status === status);
+    }
+    
+    if (priorityFilter && priorityFilter !== 'all') {
+      filteredData = filteredData.filter(item => item.priority === priorityFilter);
+    }
+    
+    if (categoryFilter && categoryFilter !== 'all') {
+      filteredData = filteredData.filter(item => item.category === categoryFilter);
+    }
     
     if (error) {
       console.error("Error fetching tickets:", error);
@@ -38,16 +64,16 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
       return [];
     }
     
-    console.log("Tickets fetched:", data);
+    console.log("Tickets fetched:", filteredData);
     
-    if (!data || !Array.isArray(data)) {
+    if (!filteredData || !Array.isArray(filteredData)) {
       return [];
     }
     
     // Map the raw data to typed Ticket objects with explicit casting
     const tickets: Ticket[] = [];
     
-    for (const rawItem of data) {
+    for (const rawItem of filteredData) {
       // Treat as plain object to avoid type inference issues
       const rawTicket = rawItem as any;
       
