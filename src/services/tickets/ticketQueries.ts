@@ -8,28 +8,29 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
   try {
     console.log("Fetching tickets with filters:", { statusFilter, priorityFilter, categoryFilter });
     
-    // Start query construction
-    let queryBuilder = supabase
+    let query = supabase
       .from('tickets')
       .select('*, profiles!assigned_to(first_name, last_name)');
       
-    // Apply filters
+    // Apply filters with explicit type handling
     if (statusFilter && statusFilter !== 'all') {
       const status = statusFilter === 'open' ? 'open' : 'closed';
-      queryBuilder = queryBuilder.eq('status', status);
+      query = query.eq('status', status);
     }
     
     if (priorityFilter && priorityFilter !== 'all') {
-      queryBuilder = queryBuilder.eq('priority', priorityFilter);
+      query = query.eq('priority', priorityFilter);
     }
     
     if (categoryFilter && categoryFilter !== 'all') {
-      queryBuilder = queryBuilder.eq('category', categoryFilter);
+      query = query.eq('category', categoryFilter);
     }
     
-    // Execute query with order
-    const { data, error } = await queryBuilder
-      .order('created_at', { ascending: false });
+    // Execute query with explicit type handling
+    const { data, error } = await query
+      .order('created_at', { ascending: false })
+      // Cut the type inference chain with explicit any
+      .then(result => result as any);
     
     if (error) {
       console.error("Error fetching tickets:", error);
@@ -43,14 +44,14 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
       return [];
     }
     
-    // Map the raw data to typed Ticket objects
+    // Map the raw data to typed Ticket objects with explicit casting
     const tickets: Ticket[] = [];
     
-    for (const item of data) {
-      // Use type assertion to break the inference chain
-      const rawTicket = item as Record<string, any>;
+    for (const rawItem of data) {
+      // Treat as plain object to avoid type inference issues
+      const rawTicket = rawItem as any;
       
-      // Create a well-defined TicketFromDB object
+      // Create a well-defined TicketFromDB object with explicit types
       const ticketFromDB: TicketFromDB = {
         id: String(rawTicket.id || ''),
         subject: String(rawTicket.subject || ''),
@@ -70,7 +71,7 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
         } : null
       };
       
-      // Use the mapper to convert TicketFromDB to Ticket and add to the result array
+      // Use the mapper to convert TicketFromDB to Ticket
       tickets.push(mapDBTicketToTicket(ticketFromDB));
     }
     
