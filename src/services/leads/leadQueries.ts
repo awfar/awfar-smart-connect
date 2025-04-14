@@ -130,24 +130,18 @@ export const getIndustries = async (): Promise<string[]> => {
       .select('industry')
       .not('industry', 'is', null);
     
-    // التحقق من وجود خطأ في الاستعلام
+    // Check for errors in the response
     if (response.error) {
       console.error("Error fetching industries:", response.error);
       return getDefaultIndustries();
     }
     
-    // استخراج القطاعات الفريدة
+    // استخراج القطاعات الفريدة (Extract unique industries)
     if (response.data && response.data.length > 0) {
-      // Extract all valid industry values
+      // Extract only valid industries where the property exists and is a string
       const industries = response.data
-        .map(item => {
-          // Safely check if the item has an industry property and it's a string
-          if (item && typeof item.industry === 'string') {
-            return item.industry;
-          }
-          return null;
-        })
-        .filter(Boolean) // Filter out null values
+        .filter(item => item && typeof item.industry === 'string')
+        .map(item => item.industry as string)
         .filter((value, index, self) => self.indexOf(value) === index)
         .sort();
       
