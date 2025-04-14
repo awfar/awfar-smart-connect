@@ -29,8 +29,7 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     
     // تنفيذ الاستعلام وترتيب النتائج
     const { data, error } = await query
-      .order('created_at', { ascending: false })
-      .returns<unknown[]>();
+      .order('created_at', { ascending: false });
     
     if (error) {
       console.error("Error fetching tickets:", error);
@@ -46,22 +45,24 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     
     // تحويل البيانات الخام إلى كائنات من نوع Ticket
     const tickets = data.map(rawTicket => {
+      const typedTicket = rawTicket as Record<string, any>;
+      
       const ticket: TicketFromDB = {
-        id: String(rawTicket?.id || ''),
-        subject: String(rawTicket?.subject || ''),
-        description: String(rawTicket?.description || ''),
-        status: String(rawTicket?.status || 'open'),
-        priority: String(rawTicket?.priority || 'متوسط'),
-        category: rawTicket?.category ? String(rawTicket.category) : undefined,
-        assigned_to: rawTicket?.assigned_to ? String(rawTicket.assigned_to) : undefined,
-        client_id: rawTicket?.client_id ? String(rawTicket.client_id) : undefined,
-        created_by: rawTicket?.created_by ? String(rawTicket.created_by) : undefined,
-        created_at: rawTicket?.created_at ? String(rawTicket.created_at) : undefined,
-        updated_at: rawTicket?.updated_at ? String(rawTicket.updated_at) : undefined,
-        resolved_at: rawTicket?.resolved_at ? String(rawTicket.resolved_at) : null,
-        profiles: rawTicket?.profiles ? {
-          first_name: String(rawTicket.profiles?.first_name || ''),
-          last_name: String(rawTicket.profiles?.last_name || '')
+        id: String(typedTicket.id || ''),
+        subject: String(typedTicket.subject || ''),
+        description: String(typedTicket.description || ''),
+        status: String(typedTicket.status || 'open'),
+        priority: String(typedTicket.priority || 'متوسط'),
+        category: typedTicket.category ? String(typedTicket.category) : undefined,
+        assigned_to: typedTicket.assigned_to ? String(typedTicket.assigned_to) : undefined,
+        client_id: typedTicket.client_id ? String(typedTicket.client_id) : undefined,
+        created_by: typedTicket.created_by ? String(typedTicket.created_by) : undefined,
+        created_at: typedTicket.created_at ? String(typedTicket.created_at) : undefined,
+        updated_at: typedTicket.updated_at ? String(typedTicket.updated_at) : undefined,
+        resolved_at: typedTicket.resolved_at ? String(typedTicket.resolved_at) : null,
+        profiles: typedTicket.profiles ? {
+          first_name: String(typedTicket.profiles.first_name || ''),
+          last_name: String(typedTicket.profiles.last_name || '')
         } : null
       };
       
