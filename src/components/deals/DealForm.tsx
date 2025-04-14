@@ -24,6 +24,7 @@ import { ar } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
 import { createDeal } from "@/services/dealsService";
 import type { Deal } from "@/services/dealsService";
+import { toast } from "sonner"; // Added the missing toast import
 
 interface DealFormProps {
   onCancel: () => void;
