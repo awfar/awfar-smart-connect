@@ -26,9 +26,13 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
       query = query.eq('category', categoryFilter);
     }
     
-    // Using a separate variable instead of chaining to avoid type depth issues
-    const result = await query.order('created_at', { ascending: false });
-    const { data, error } = result;
+    // Completely break the type chain by executing the query and storing the raw result
+    const rawResponse = await query.order('created_at', { ascending: false });
+    
+    // Extract data and error as plain objects
+    const error = rawResponse.error;
+    // Use any to break the type inference chain completely
+    const rawData: any = rawResponse.data;
     
     if (error) {
       console.error("Error fetching tickets:", error);
@@ -36,19 +40,16 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
       return [];
     }
     
-    console.log("Tickets fetched:", data);
+    console.log("Tickets fetched:", rawData);
     
     // Initialize an empty array for our tickets
     const tickets: Ticket[] = [];
     
     // Handle the null case
-    if (!data) return [];
-    
-    // Force type assertion to break TypeScript inference chain
-    const dataArray = data as any[];
+    if (!rawData) return [];
     
     // Explicitly map each item to our known type structure
-    for (const item of dataArray) {
+    for (const item of rawData) {
       const ticketData: TicketFromDB = {
         id: item.id,
         subject: item.subject,
