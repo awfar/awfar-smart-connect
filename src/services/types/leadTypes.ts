@@ -1,29 +1,28 @@
 
-// Common types used across lead-related services
+import { Owner } from "./commonTypes";
 
+// Core lead type definition used across the application
 export interface Lead {
   id: string;
   first_name: string;
   last_name: string;
-  company: string | null;
   email: string;
-  phone: string | null;
-  country: string;
-  industry: string;
-  stage: string;
-  source: string | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-  assigned_to?: string;
+  phone?: string | null;
+  company?: string | null;
   position?: string | null;
-  owner?: {
-    name: string;
-    avatar: string;
-    initials: string;
-  };
+  country?: string;
+  industry?: string;
+  stage?: string;
+  status?: string;
+  source?: string | null;
+  notes?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  assigned_to?: string;
+  owner?: Owner;
 }
 
+// Activity related to a lead
 export interface LeadActivity {
   id: string;
   lead_id: string;
@@ -35,6 +34,7 @@ export interface LeadActivity {
   completed_at?: string | null;
 }
 
+// Filter options for leads
 export interface LeadFilters {
   stage?: string;
   source?: string;
@@ -44,23 +44,24 @@ export interface LeadFilters {
   date_range?: string;
 }
 
-// Database row type definitions
-export interface LeadRow {
+// Database representation of a lead
+export interface LeadDBRow {
   id: string;
   first_name: string;
   last_name: string;
-  company: string | null;
   email: string;
-  phone: string | null;
+  phone?: string | null;
+  company?: string | null;
+  position?: string | null;
   country?: string | null;
   industry?: string | null;
-  status: string; // This is mapped to 'stage' in our interface
-  source: string | null;
-  notes: string | null;
+  stage?: string;
+  status?: string;
+  source?: string | null;
+  notes?: string | null;
   created_at: string;
   updated_at: string;
   assigned_to?: string | null;
-  position?: string | null;
   profiles?: {
     first_name: string | null;
     last_name: string | null;

@@ -1,18 +1,20 @@
 
-// Functions for lead activity operations
-import { supabase } from "../../integrations/supabase/client";
-import { LeadActivity } from "./types";
+import { supabase } from "@/integrations/supabase/client";
+import { LeadActivity } from "../types/leadTypes";
 import { mockActivities } from "./mockData";
+import { toast } from "sonner";
 
-// Get activities for a lead from Supabase or fallback to mock data
+// Get activities for a specific lead
 export const getLeadActivities = async (leadId: string): Promise<LeadActivity[]> => {
   try {
-    console.log(`Fetching activities for lead ${leadId} from Supabase...`);
     const { data, error } = await supabase
       .from('lead_activities')
       .select(`
         *,
-        profiles:created_by (first_name, last_name)
+        profiles:created_by (
+          first_name,
+          last_name
+        )
       `)
       .eq('lead_id', leadId)
       .order('created_at', { ascending: false });
@@ -22,110 +24,152 @@ export const getLeadActivities = async (leadId: string): Promise<LeadActivity[]>
       throw error;
     }
     
+    // Return data if found
     if (data && data.length > 0) {
       return data.map(activity => ({
+        ...activity,
         id: activity.id,
-        leadId: activity.lead_id,
         lead_id: activity.lead_id,
         type: activity.type,
         description: activity.description,
-        createdBy: activity.profiles ? `${activity.profiles.first_name || ''} ${activity.profiles.last_name || ''}` : undefined,
-        created_by: activity.created_by,
-        createdAt: activity.created_at,
         created_at: activity.created_at,
+        created_by: activity.created_by,
         scheduled_at: activity.scheduled_at,
         completed_at: activity.completed_at
       }));
     }
     
-    // استخدام البيانات المحلية في حالة عدم وجود بيانات في Supabase
-    console.log("No activities found in Supabase, using mock data");
-    return Promise.resolve(mockActivities[leadId] || []);
+    // Use mock data if no activities found in database
+    return mockActivities[leadId] || [];
   } catch (error) {
-    console.error("Error fetching lead activities:", error);
-    // استخدام البيانات المحلية في حالة حدوث خطأ
-    return Promise.resolve(mockActivities[leadId] || []);
+    console.error("Error in getLeadActivities:", error);
+    // Return mock data in case of error
+    return mockActivities[leadId] || [];
   }
 };
 
-// Add new activity to a lead
-export const addLeadActivity = async (activity: Omit<LeadActivity, "id">): Promise<LeadActivity> => {
+// Add a new activity for a lead
+export const addLeadActivity = async (activity: Omit<LeadActivity, "id" | "created_at">): Promise<LeadActivity> => {
   try {
-    console.log("Adding new activity:", activity);
-    
-    // تحضير البيانات للإرسال إلى Supabase
-    const activityToInsert = {
-      lead_id: activity.leadId || activity.lead_id,
+    // Make sure we're using lead_id (not leadId)
+    const normalizedActivity = {
+      lead_id: activity.lead_id,
       type: activity.type,
       description: activity.description,
-      created_by: activity.createdBy || activity.created_by || null,
+      created_by: activity.created_by,
       scheduled_at: activity.scheduled_at,
-      completed_at: null
+      completed_at: activity.completed_at
     };
     
-    // محاولة حفظ النشاط في Supabase
+    // Try adding the activity to Supabase
     const { data, error } = await supabase
       .from('lead_activities')
-      .insert(activityToInsert)
+      .insert(normalizedActivity)
       .select()
       .single();
     
     if (error) {
-      console.error("Error adding activity to Supabase:", error);
+      console.error("Error adding lead activity to Supabase:", error);
       throw error;
     }
     
-    // إذا نجحت العملية، نقوم بإرجاع النشاط المضاف
+    // Return the new activity from the database
     if (data) {
-      return {
-        id: data.id,
-        leadId: data.lead_id,
-        lead_id: data.lead_id,
-        type: data.type,
-        description: data.description,
-        createdBy: data.created_by,
-        created_by: data.created_by,
-        createdAt: data.created_at,
-        created_at: data.created_at,
-        scheduled_at: data.scheduled_at,
-        completed_at: data.completed_at
-      };
+      toast.success("تم إضافة النشاط بنجاح");
+      return data as LeadActivity;
     }
     
-    // في حالة عدم وجود بيانات مرجعة، نستخدم البيانات المحلية
+    // Fallback to mock data
     const newActivity: LeadActivity = {
-      id: `a${Date.now()}`,
+      id: `activity-${Date.now()}`,
       ...activity,
-      lead_id: activity.leadId || activity.lead_id,
-      created_by: activity.createdBy || activity.created_by,
-      created_at: new Date().toISOString(),
-      createdAt: new Date().toISOString()
-    };
+      created_at: new Date().toISOString()
+    } as LeadActivity;
     
-    if (!mockActivities[newActivity.leadId!]) {
-      mockActivities[newActivity.leadId!] = [];
+    // Initialize the array if it doesn't exist
+    if (!mockActivities[activity.lead_id]) {
+      mockActivities[activity.lead_id] = [];
     }
     
-    mockActivities[newActivity.leadId!].push(newActivity);
-    return Promise.resolve(newActivity);
+    // Add the new activity to the mock data
+    mockActivities[activity.lead_id].unshift(newActivity);
+    
+    toast.success("تم إضافة النشاط بنجاح");
+    return newActivity;
   } catch (error) {
-    console.error("Error adding lead activity:", error);
+    console.error("Error in addLeadActivity:", error);
+    toast.error("فشل في إضافة النشاط");
     
-    // في حالة الخطأ، نستخدم البيانات المحلية
+    // Create a mock activity in case of error
     const newActivity: LeadActivity = {
-      id: `a${Date.now()}`,
+      id: `activity-${Date.now()}`,
       ...activity,
-      lead_id: activity.leadId || activity.lead_id,
-      created_by: activity.createdBy || activity.created_by,
-      created_at: new Date().toISOString(),
-      createdAt: new Date().toISOString()
-    };
+      created_at: new Date().toISOString()
+    } as LeadActivity;
     
-    if (!mockActivities[newActivity.leadId!]) {
-      mockActivities[newActivity.leadId!] = [];
+    // Initialize the array if it doesn't exist
+    if (!mockActivities[activity.lead_id]) {
+      mockActivities[activity.lead_id] = [];
     }
     
-    mockActivities[newActivity.leadId!].push(newActivity);
-    return Promise.resolve(newActivity);
+    // Add the new activity to the mock data
+    mockActivities[activity.lead_id].unshift(newActivity);
+    
+    return newActivity;
+  }
+};
+
+// Mark an activity as completed
+export const completeLeadActivity = async (id: string): Promise<LeadActivity | null> => {
+  try {
+    // Try updating the activity in Supabase
+    const { data, error } = await supabase
+      .from('lead_activities')
+      .update({
+        completed_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error completing lead activity in Supabase:", error);
+      throw error;
+    }
+    
+    // Return the updated activity
+    if (data) {
+      toast.success("تم إكمال النشاط بنجاح");
+      return data as LeadActivity;
+    }
+    
+    // Fallback to mock data
+    // Find the activity in mock data
+    for (const leadId in mockActivities) {
+      const activityIndex = mockActivities[leadId].findIndex(a => a.id === id);
+      if (activityIndex >= 0) {
+        // Update the activity
+        mockActivities[leadId][activityIndex].completed_at = new Date().toISOString();
+        toast.success("تم إكمال النشاط بنجاح");
+        return mockActivities[leadId][activityIndex];
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error in completeLeadActivity:", error);
+    toast.error("فشل في إكمال النشاط");
+    
+    // Fallback to mock data in case of error
+    for (const leadId in mockActivities) {
+      const activityIndex = mockActivities[leadId].findIndex(a => a.id === id);
+      if (activityIndex >= 0) {
+        // Update the activity
+        mockActivities[leadId][activityIndex].completed_at = new Date().toISOString();
+        return mockActivities[leadId][activityIndex];
+      }
+    }
+    
+    return null;
   }
 };

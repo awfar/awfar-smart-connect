@@ -1,12 +1,16 @@
 
 // Main entry point for lead services - exports all functionality
-import { Lead, LeadActivity } from "./types";
+import { Lead, LeadActivity } from "../types/leadTypes";
 import { 
   getLeads, 
   getLeadById, 
   fetchLeadById, 
   getLeadSources, 
-  getIndustries 
+  getIndustries,
+  getCountries,
+  getLeadStages,
+  getSalesOwners,
+  getCompanies
 } from "./leadQueries";
 
 import { 
@@ -17,11 +21,11 @@ import {
 
 import { 
   getLeadActivities, 
-  addLeadActivity 
+  addLeadActivity,
+  completeLeadActivity
 } from "./leadActivities";
 
 // Re-export all types and functions
-// Using export type for type re-exports when isolatedModules is enabled
 export type { Lead, LeadActivity };
 
 export {
@@ -31,6 +35,10 @@ export {
   fetchLeadById,
   getLeadSources,
   getIndustries,
+  getCountries,
+  getLeadStages,
+  getSalesOwners,
+  getCompanies,
   getLeadActivities,
   
   // Mutation functions
@@ -38,4 +46,5 @@ export {
   createLead,
   deleteLead,
   addLeadActivity,
+  completeLeadActivity,
 };

@@ -2,57 +2,39 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useQuery } from "@tanstack/react-query";
+
 import LeadFilters from "@/components/leads/LeadFilters";
 import LeadDetails from "@/components/leads/LeadDetails";
 import LeadHeader from "@/components/leads/LeadHeader";
 import LeadSearchBar from "@/components/leads/LeadSearchBar";
 import LeadCardHeader from "@/components/leads/LeadCardHeader";
 import LeadTable from "@/components/leads/LeadTable";
-import { getLeads } from "@/services/leadsService";
-import { Lead } from "@/types/leads";
+import { getLeads } from "@/services/leads";
+import { Lead } from "@/services/types/leadTypes";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import LeadForm from "@/components/leads/LeadForm";
 import MobileOptimizedContainer from '@/components/ui/mobile-optimized-container';
 import DashboardLayout from "@/components/layout/DashboardLayout";
-
-// Define a conversion function to ensure type compatibility
-const convertLeadTypes = (lead: Lead): any => {
-  // Ensure required fields are present
-  return {
-    ...lead,
-    stage: lead.stage || "جديد",
-    name: `${lead.first_name || ''} ${lead.last_name || ''}`.trim(),
-  };
-};
 
 const LeadManagement = () => {
   const [selectedView, setSelectedView] = useState<string>("all");
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [selectedLead, setSelectedLead] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [leads, setLeads] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAddLeadOpen, setIsAddLeadOpen] = useState<boolean>(false);
+  const [filters, setFilters] = useState<Record<string, any>>({});
 
-  // Function to fetch leads
-  const fetchLeads = async () => {
-    setIsLoading(true);
-    try {
-      const fetchedLeads = await getLeads();
-      // Convert the leads to the expected format
-      const convertedLeads = fetchedLeads.map(convertLeadTypes);
-      setLeads(convertedLeads);
-    } catch (error) {
-      console.error("Error fetching leads:", error);
-      toast.error("حدث خطأ أثناء تحميل بيانات العملاء المحتملين");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchLeads();
-  }, []);
+  // Use react-query to fetch leads
+  const { 
+    data: leads = [], 
+    isLoading, 
+    isError, 
+    refetch 
+  } = useQuery({
+    queryKey: ['leads', filters],
+    queryFn: () => getLeads(filters),
+  });
 
   const handleLeadClick = (leadId: string) => {
     setSelectedLead(leadId === selectedLead ? null : leadId);
@@ -63,7 +45,7 @@ const LeadManagement = () => {
   };
 
   const handleRefresh = () => {
-    fetchLeads();
+    refetch();
     toast.success("تم تحديث البيانات بنجاح");
   };
 
@@ -73,13 +55,16 @@ const LeadManagement = () => {
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
-    // Implement search functionality here
+    setFilters(prev => ({ ...prev, search: term }));
+  };
+
+  const handleFilterChange = (newFilters: Record<string, any>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
   const handleLeadSuccess = () => {
     setIsAddLeadOpen(false);
-    fetchLeads();
-    toast.success("تم إضافة العميل المحتمل بنجاح");
+    refetch();
   };
 
   return (
@@ -105,12 +90,26 @@ const LeadManagement = () => {
                 </div>
               </CardHeader>
               
-              {showFilters && <LeadFilters />}
+              {showFilters && (
+                <LeadFilters 
+                  onFilterChange={handleFilterChange}
+                />
+              )}
 
               <CardContent>
                 {isLoading ? (
                   <div className="flex justify-center py-8">
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+                  </div>
+                ) : isError ? (
+                  <div className="text-center py-8 text-red-500">
+                    <p>حدث خطأ أثناء تحميل البيانات</p>
+                    <button 
+                      className="mt-2 text-primary hover:underline" 
+                      onClick={handleRefresh}
+                    >
+                      إعادة المحاولة
+                    </button>
                   </div>
                 ) : (
                   <LeadTable 

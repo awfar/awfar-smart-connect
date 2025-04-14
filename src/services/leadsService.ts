@@ -1,41 +1,25 @@
 
-// تصدير كل الوظائف من وحدات العملاء المحتملين بشكل صريح
-import {
-  getLeads,
-  getLeadById,
-  getLeadSources,
-  getIndustries,
-  fetchLeadById
-} from './leads/leadQueries';
-
-import {
-  createLead,
-  updateLead,
-  deleteLead
-} from './leads/leadMutations';
-
-import {
-  getLeadActivities,
-  addLeadActivity
-} from './leads/leadActivities';
-
-import { Lead, LeadActivity } from './leads/types';
-
-// تصدير الأنواع والوظائف
-export type { Lead, LeadActivity };
-
+// Export all functions from leads services
 export {
-  // وظائف الاستعلام
+  // Query functions
   getLeads,
   getLeadById,
   fetchLeadById,
   getLeadSources,
   getIndustries,
+  getCountries,
+  getLeadStages,
+  getSalesOwners,
+  getCompanies,
   getLeadActivities,
   
-  // وظائف التعديل
+  // Mutation functions
   updateLead,
   createLead,
   deleteLead,
   addLeadActivity,
-};
+  completeLeadActivity,
+} from './leads';
+
+// Export types
+export type { Lead, LeadActivity } from './types/leadTypes';

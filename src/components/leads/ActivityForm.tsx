@@ -2,142 +2,144 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from 'date-fns';
-import { ar } from 'date-fns/locale';
-import { CalendarIcon } from 'lucide-react';
-import { addLeadActivity } from '@/services/leadsService';
-import { LeadActivity } from '@/types/leads';
-import { toast } from 'sonner';
+import { DatePicker } from "@/components/ui/date-picker";
+import { addLeadActivity } from "@/services/leads";
+import { toast } from "sonner";
+import { LeadActivity } from "@/services/leads";
 
 interface ActivityFormProps {
   leadId: string;
   onClose: () => void;
-  onSuccess: (activity: LeadActivity) => void;
+  onSuccess?: (activity: LeadActivity) => void;
   title?: string;
 }
 
-const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, onClose, onSuccess, title = "إضافة نشاط" }) => {
-  const [activityType, setActivityType] = useState<string>('note');
-  const [description, setDescription] = useState<string>('');
+const ActivityForm: React.FC<ActivityFormProps> = ({ 
+  leadId, 
+  onClose, 
+  onSuccess, 
+  title = "إضافة نشاط"
+}) => {
+  const [formData, setFormData] = useState({
+    type: "call",
+    description: "",
+    scheduled_at: new Date().toISOString(),
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(new Date());
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const handleTypeChange = (value: string) => {
+    setFormData(prev => ({ ...prev, type: value }));
+  };
+
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setFormData(prev => ({ ...prev, description: e.target.value }));
+  };
+
+  const handleDateChange = (date: Date | undefined) => {
+    setScheduledDate(date);
+    if (date) {
+      setFormData(prev => ({ ...prev, scheduled_at: date.toISOString() }));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!description.trim()) {
-      toast.error('الرجاء إدخال وصف للنشاط');
+    
+    if (!formData.description.trim()) {
+      toast.error("الرجاء إدخال وصف للنشاط");
       return;
     }
-
-    setIsLoading(true);
+    
+    setIsSubmitting(true);
+    
     try {
-      const activity = await addLeadActivity({
-        leadId,
-        type: activityType,
-        description,
-        scheduled_at: scheduledDate ? scheduledDate.toISOString() : undefined,
-        createdBy: 'الحالي' // في نظام حقيقي، هذا سيكون معرف المستخدم الحالي
+      const newActivity = await addLeadActivity({
+        lead_id: leadId,
+        type: formData.type,
+        description: formData.description,
+        scheduled_at: formData.scheduled_at
       });
       
-      onSuccess(activity);
-      toast.success('تم إضافة النشاط بنجاح');
+      onSuccess?.(newActivity);
+      onClose();
     } catch (error) {
-      console.error('خطأ في إضافة النشاط:', error);
-      toast.error('حدث خطأ أثناء إضافة النشاط');
+      console.error("Error adding activity:", error);
+      toast.error("حدث خطأ أثناء إضافة النشاط");
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 border rounded-lg p-4 bg-card">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">{title}</h3>
-        <Button variant="ghost" size="sm" type="button" onClick={onClose}>إلغاء</Button>
-      </div>
-
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="activity-type">نوع النشاط</Label>
-          <Select 
-            value={activityType} 
-            onValueChange={setActivityType}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="اختر نوع النشاط" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="note">ملاحظة</SelectItem>
-              <SelectItem value="call">مكالمة</SelectItem>
-              <SelectItem value="meeting">اجتماع</SelectItem>
-              <SelectItem value="email">بريد إلكتروني</SelectItem>
-              <SelectItem value="task">مهمة</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <Label htmlFor="description">الوصف</Label>
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            placeholder="أدخل وصف النشاط هنا"
-            required
-          />
-        </div>
-
-        {activityType !== 'note' && (
+    <div className="bg-white p-4 rounded-lg border">
+      <h3 className="text-lg font-semibold mb-4">{title}</h3>
+      
+      <form onSubmit={handleSubmit}>
+        <div className="space-y-4">
           <div>
-            <Label htmlFor="scheduled-date">تاريخ الجدولة</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-right"
-                  id="scheduled-date"
-                >
-                  <CalendarIcon className="ml-2 h-4 w-4" />
-                  {scheduledDate ? (
-                    format(scheduledDate, 'PPP', { locale: ar })
-                  ) : (
-                    <span>اختر تاريخاً</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={scheduledDate}
-                  onSelect={setScheduledDate}
-                  locale={ar}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
+            <Label htmlFor="activity-type">نوع النشاط</Label>
+            <Select 
+              value={formData.type}
+              onValueChange={handleTypeChange}
+            >
+              <SelectTrigger id="activity-type">
+                <SelectValue placeholder="اختر نوع النشاط" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="call">مكالمة هاتفية</SelectItem>
+                <SelectItem value="meeting">اجتماع</SelectItem>
+                <SelectItem value="email">بريد إلكتروني</SelectItem>
+                <SelectItem value="task">مهمة</SelectItem>
+                <SelectItem value="note">ملاحظة</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        )}
-      </div>
-
-      <div className="flex justify-end">
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? (
-            <div className="flex items-center">
-              <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin ml-2"></div>
-              جاري الحفظ...
+          
+          <div>
+            <Label htmlFor="activity-description">الوصف</Label>
+            <Textarea
+              id="activity-description"
+              value={formData.description}
+              onChange={handleDescriptionChange}
+              rows={3}
+              placeholder="أدخل وصفاً للنشاط..."
+              className="resize-none"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="activity-date">تاريخ النشاط</Label>
+            <div className="mt-1">
+              <DatePicker
+                date={scheduledDate}
+                setDate={handleDateChange}
+                className="w-full"
+              />
             </div>
-          ) : (
-            'حفظ النشاط'
-          )}
-        </Button>
-      </div>
-    </form>
+          </div>
+          
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
+              إلغاء
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting || !formData.description.trim()}
+            >
+              {isSubmitting ? "جاري الحفظ..." : "حفظ النشاط"}
+            </Button>
+          </div>
+        </div>
+      </form>
+    </div>
   );
 };
 

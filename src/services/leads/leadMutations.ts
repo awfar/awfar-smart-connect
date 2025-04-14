@@ -1,8 +1,8 @@
 
 // Functions for modifying lead data
-import { supabase } from "../../integrations/supabase/client";
-import { Lead, LeadActivity } from "./types";
-import { mockLeads, mockActivities } from "./mockData";
+import { supabase } from "@/integrations/supabase/client";
+import { Lead } from "../types/leadTypes";
+import { mockLeads } from "./mockData";
 import { toast } from "sonner";
 import { addLeadActivity } from "./leadActivities";
 
@@ -11,10 +11,10 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
   try {
     console.log("Updating lead:", lead);
     
-    // تحضير البيانات للإرسال إلى Supabase
+    // Prepare lead data for Supabase (remove owner property)
     const { owner, ...leadToUpdate } = lead;
     
-    // محاولة تحديث العميل المحتمل في Supabase
+    // Try updating the lead in Supabase
     const { data, error } = await supabase
       .from('leads')
       .update({
@@ -30,29 +30,32 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
       throw error;
     }
     
-    // إذا نجحت العملية، نقوم بإرجاع العميل المحتمل المحدث
+    // If operation was successful, return the updated lead
     if (data) {
+      toast.success("تم تحديث العميل المحتمل بنجاح");
       return {
         ...data,
-        owner: lead.owner // نحتفظ بمعلومات المالك من البيانات المقدمة
+        owner // Keep the owner information from the provided data
       };
     }
     
-    // في حالة عدم وجود بيانات مرجعة، نستخدم البيانات المحلية
+    // Fallback to mock data
     const index = mockLeads.findIndex((l) => l.id === lead.id);
     if (index >= 0) {
       mockLeads[index] = lead;
     }
-    return Promise.resolve(lead);
+    toast.success("تم تحديث العميل المحتمل بنجاح");
+    return lead;
   } catch (error) {
     console.error("Error updating lead:", error);
+    toast.error("فشل في تحديث العميل المحتمل");
     
-    // في حالة الخطأ، نستخدم البيانات المحلية
+    // Fallback to mock data
     const index = mockLeads.findIndex((l) => l.id === lead.id);
     if (index >= 0) {
       mockLeads[index] = lead;
     }
-    return Promise.resolve(lead);
+    return lead;
   }
 };
 
@@ -61,20 +64,24 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
   try {
     console.log("Creating new lead:", lead);
     
-    // تحضير البيانات للإرسال إلى Supabase
+    // Prepare lead data for Supabase
     const { owner, ...leadToCreate } = lead as any;
     
-    // التأكد من وجود تاريخ الإنشاء
+    // Ensure dates are set
     if (!leadToCreate.created_at) {
       leadToCreate.created_at = new Date().toISOString();
     }
     
-    // التأكد من وجود تاريخ التحديث
     if (!leadToCreate.updated_at) {
       leadToCreate.updated_at = new Date().toISOString();
     }
     
-    // محاولة إنشاء العميل المحتمل في Supabase
+    // Set default stage if not provided
+    if (!leadToCreate.stage) {
+      leadToCreate.stage = 'جديد';
+    }
+    
+    // Try creating the lead in Supabase
     const { data, error } = await supabase
       .from('leads')
       .insert(leadToCreate)
@@ -86,82 +93,67 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
       throw error;
     }
     
-    // إذا نجحت العملية، نقوم بإرجاع العميل المحتمل الجديد
+    // If operation was successful, return the new lead
     if (data) {
-      // إنشاء نشاط تلقائي للمتابعة بعد 3 أيام
+      // Create automatic follow-up activity after 3 days
       const followupDate = new Date();
       followupDate.setDate(followupDate.getDate() + 3);
       
       try {
         await addLeadActivity({
-          leadId: data.id,
+          lead_id: data.id,
           type: "call",
           description: "متابعة هاتفية للعميل المحتمل الجديد",
           scheduled_at: followupDate.toISOString()
         });
-      } catch (error) {
-        console.error("Error creating follow-up activity:", error);
-        // لا نريد أن نوقف الإنشاء إذا فشلت إضافة النشاط
+      } catch (activityError) {
+        console.error("Error creating follow-up activity:", activityError);
+        // Don't block lead creation if activity creation fails
       }
       
-      const newLead = {
-        ...data,
-        owner // نستخدم معلومات المالك من البيانات المقدمة إذا كانت موجودة
-      };
-      
       toast.success("تم إنشاء العميل المحتمل بنجاح");
-      return newLead;
+      return {
+        ...data,
+        owner // Keep owner information if provided
+      };
     }
     
-    // في حالة عدم وجود بيانات مرجعة، نستخدم البيانات المحلية
+    // Fallback to mock data
     const newLead: Lead = {
       id: `lead-${Date.now()}`,
       ...lead,
     };
     mockLeads.push(newLead);
     
-    // إنشاء نشاط تلقائي للمتابعة بعد 3 أيام
+    // Create follow-up activity
     const followupDate = new Date();
     followupDate.setDate(followupDate.getDate() + 3);
-    
-    const followupActivity: Omit<LeadActivity, "id"> = {
-      leadId: newLead.id,
-      type: "call",
-      description: "متابعة هاتفية للعميل المحتمل الجديد",
-      scheduled_at: followupDate.toISOString()
-    };
-    
-    await addLeadActivity(followupActivity);
-    
-    return Promise.resolve(newLead);
-  } catch (error) {
-    console.error("Error creating lead:", error);
-    
-    // في حالة الخطأ، نستخدم البيانات المحلية
-    const newLead: Lead = {
-      id: `lead-${Date.now()}`,
-      ...lead,
-    };
-    mockLeads.push(newLead);
-    
-    // إنشاء نشاط تلقائي للمتابعة بعد 3 أيام
-    const followupDate = new Date();
-    followupDate.setDate(followupDate.getDate() + 3);
-    
-    const followupActivity: Omit<LeadActivity, "id"> = {
-      leadId: newLead.id,
-      type: "call",
-      description: "متابعة هاتفية للعميل المحتمل الجديد",
-      scheduled_at: followupDate.toISOString()
-    };
     
     try {
-      await addLeadActivity(followupActivity);
-    } catch (error) {
-      console.error("Error creating follow-up activity:", error);
+      await addLeadActivity({
+        lead_id: newLead.id,
+        type: "call",
+        description: "متابعة هاتفية للعميل المحتمل الجديد",
+        scheduled_at: followupDate.toISOString()
+      });
+    } catch (activityError) {
+      console.error("Error creating follow-up activity:", activityError);
     }
     
-    return Promise.resolve(newLead);
+    toast.success("تم إنشاء العميل المحتمل بنجاح");
+    return newLead;
+  } catch (error) {
+    console.error("Error creating lead:", error);
+    toast.error("فشل في إنشاء العميل المحتمل");
+    
+    // Fallback to mock data in case of error
+    const newLead: Lead = {
+      id: `lead-${Date.now()}`,
+      ...lead,
+    };
+    mockLeads.push(newLead);
+    
+    return newLead;
   }
 };
 
@@ -170,7 +162,7 @@ export const deleteLead = async (id: string): Promise<boolean> => {
   try {
     console.log("Deleting lead with ID:", id);
     
-    // محاولة حذف العميل المحتمل من Supabase
+    // Try deleting the lead from Supabase
     const { error } = await supabase
       .from('leads')
       .delete()
@@ -181,30 +173,24 @@ export const deleteLead = async (id: string): Promise<boolean> => {
       throw error;
     }
     
-    // حذف الأنشطة المرتبطة بالعميل المحتمل
-    if (mockActivities[id]) {
-      delete mockActivities[id];
-    }
-    
-    // حذف العميل المحتمل من البيانات المحلية أيضًا
+    // Also remove from mock data
     const index = mockLeads.findIndex((l) => l.id === id);
     if (index >= 0) {
       mockLeads.splice(index, 1);
     }
     
-    return Promise.resolve(true);
+    toast.success("تم حذف العميل المحتمل بنجاح");
+    return true;
   } catch (error) {
     console.error("Error deleting lead:", error);
+    toast.error("فشل في حذف العميل المحتمل");
     
-    // في حالة الخطأ، نحذف من البيانات المحلية فقط
+    // Fallback to mock data in case of error
     const index = mockLeads.findIndex((l) => l.id === id);
     if (index >= 0) {
       mockLeads.splice(index, 1);
-      if (mockActivities[id]) {
-        delete mockActivities[id];
-      }
-      return Promise.resolve(true);
+      return true;
     }
-    return Promise.resolve(false);
+    return false;
   }
 };

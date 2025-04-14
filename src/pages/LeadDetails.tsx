@@ -1,91 +1,94 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Check, Clock, List, Mail, Phone, User } from "lucide-react";
+import { ArrowLeft, Check, Clock, List, Mail, Phone, User, Building, MapPin, Briefcase } from "lucide-react";
 import { toast } from "sonner";
-import { fetchLeadById, getLeadActivities, addLeadActivity } from "@/services/leadsService";
-import type { Lead } from "@/types/leads";
+import { 
+  fetchLeadById, 
+  getLeadActivities, 
+  addLeadActivity,
+  updateLead,
+  completeLeadActivity,
+  Lead 
+} from "@/services/leads";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import ActivityForm from "@/components/leads/ActivityForm";
-import { LeadActivity } from "@/types/leads";
+import LeadForm from "@/components/leads/LeadForm";
+import { LeadActivity } from "@/services/types/leadTypes";
+import { getStageColorClass } from "@/services/leads/utils";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 
 const LeadDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [lead, setLead] = useState<Lead | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<string>("info");
   const [showActivityForm, setShowActivityForm] = useState<boolean>(false);
-  const [activities, setActivities] = useState<LeadActivity[]>([]);
-
-  useEffect(() => {
-    const loadLead = async () => {
-      if (!id) return;
-      
-      setIsLoading(true);
-      try {
-        const data = await fetchLeadById(id);
-        if (data) {
-          setLead(data);
-          // بعد تحميل بيانات العميل، نحمل الأنشطة المرتبطة به
-          loadActivities(id);
-        } else {
-          toast.error("لم يتم العثور على العميل المحتمل");
-          navigate("/dashboard/leads");
-        }
-      } catch (error) {
-        console.error("Error fetching lead:", error);
-        toast.error("حدث خطأ أثناء تحميل بيانات العميل المحتمل");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    loadLead();
-  }, [id, navigate]);
-
-  const loadActivities = async (leadId: string) => {
-    try {
-      const leadActivities = await getLeadActivities(leadId);
-      setActivities(leadActivities);
-    } catch (error) {
-      console.error("Error fetching lead activities:", error);
-      toast.error("حدث خطأ أثناء تحميل أنشطة العميل المحتمل");
+  const [isEditLeadOpen, setIsEditLeadOpen] = useState<boolean>(false);
+  
+  // Fetch lead data
+  const { 
+    data: lead,
+    isLoading: isLoadingLead,
+    isError: isErrorLead, 
+    error: leadError
+  } = useQuery({
+    queryKey: ['lead', id],
+    queryFn: () => id ? fetchLeadById(id) : null,
+    enabled: !!id
+  });
+  
+  // Fetch activities
+  const { 
+    data: activities = [],
+    isLoading: isLoadingActivities
+  } = useQuery({
+    queryKey: ['leadActivities', id],
+    queryFn: () => id ? getLeadActivities(id) : [],
+    enabled: !!id
+  });
+  
+  // Complete activity mutation
+  const completeMutation = useMutation({
+    mutationFn: completeLeadActivity,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leadActivities', id] });
+      toast.success("تم إكمال النشاط بنجاح");
+    },
+    onError: () => {
+      toast.error("حدث خطأ أثناء تحديث النشاط");
     }
-  };
-
+  });
+  
   const handleAddActivity = () => {
     setShowActivityForm(true);
   };
 
   const handleActivitySuccess = (activity: LeadActivity) => {
-    setActivities(prev => [activity, ...prev]);
     setShowActivityForm(false);
-    toast.success("تم إضافة النشاط بنجاح");
+    queryClient.invalidateQueries({ queryKey: ['leadActivities', id] });
   };
 
-  const handleCompleteActivity = async (activityId: string) => {
-    try {
-      // هنا يجب أن نضيف خدمة لتحديث حالة النشاط في قاعدة البيانات
-      // ولكن حاليًا سنقوم بتحديث الواجهة فقط
-      setActivities(prev =>
-        prev.map(activity =>
-          activity.id === activityId
-            ? { ...activity, completed_at: new Date().toISOString() }
-            : activity
-        )
-      );
-      toast.success("تم إكمال النشاط بنجاح");
-    } catch (error) {
-      console.error("Error completing activity:", error);
-      toast.error("حدث خطأ أثناء تحديث حالة النشاط");
-    }
+  const handleCompleteActivity = (activityId: string) => {
+    completeMutation.mutate(activityId);
   };
 
-  // التأكد من وجود البيانات المطلوبة لعرض تفاصيل العميل
+  const handleEditLead = () => {
+    setIsEditLeadOpen(true);
+  };
+
+  const handleLeadUpdate = (updatedLead: Lead) => {
+    setIsEditLeadOpen(false);
+    queryClient.invalidateQueries({ queryKey: ['lead', id] });
+    toast.success("تم تحديث بيانات العميل المحتمل بنجاح");
+  };
+
+  // Get lead name safely
   const getLeadName = () => {
     if (!lead) return "جاري التحميل...";
     return `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || "بدون اسم";
@@ -99,23 +102,23 @@ const LeadDetails = () => {
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={() => navigate("/leads")}
+              onClick={() => navigate("/dashboard/leads")}
             >
               <ArrowLeft className="h-4 w-4 ml-1" />
               العودة
             </Button>
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-              {isLoading ? "جاري التحميل..." : getLeadName()}
+              {isLoadingLead ? "جاري التحميل..." : getLeadName()}
             </h1>
           </div>
           
           <div className="flex gap-2">
-            <Button variant="outline">تحرير</Button>
+            <Button variant="outline" onClick={handleEditLead}>تحرير</Button>
             <Button>إنشاء فرصة</Button>
           </div>
         </div>
 
-        {isLoading ? (
+        {isLoadingLead ? (
           <Card>
             <CardContent className="p-8 text-center">
               <div className="animate-pulse">
@@ -123,6 +126,21 @@ const LeadDetails = () => {
                 <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto mb-4"></div>
                 <div className="h-4 bg-gray-200 rounded w-5/6 mx-auto"></div>
               </div>
+            </CardContent>
+          </Card>
+        ) : isErrorLead ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <p className="text-red-500">حدث خطأ أثناء تحميل بيانات العميل المحتمل</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                {(leadError as Error)?.message || "لم يتم العثور على البيانات المطلوبة"}
+              </p>
+              <Button 
+                className="mt-4"
+                onClick={() => navigate("/dashboard/leads")}
+              >
+                العودة إلى قائمة العملاء المحتملين
+              </Button>
             </CardContent>
           </Card>
         ) : lead ? (
@@ -155,7 +173,7 @@ const LeadDetails = () => {
                               <div className="flex items-start gap-2">
                                 <User className="h-4 w-4 text-gray-400 mt-1" />
                                 <div>
-                                  <div className="text-sm font-medium">{`${lead.first_name || ''} ${lead.last_name || ''}`.trim() || "غير محدد"}</div>
+                                  <div className="text-sm font-medium">{getLeadName()}</div>
                                   <div className="text-xs text-gray-500">{lead.position || "غير محدد"}</div>
                                 </div>
                               </div>
@@ -182,19 +200,28 @@ const LeadDetails = () => {
                             <h3 className="text-sm font-medium text-gray-500">معلومات الشركة</h3>
                             
                             <div className="grid gap-4">
-                              <div>
-                                <div className="text-sm font-medium">{lead.company || "غير محدد"}</div>
-                                <div className="text-xs text-gray-500">الشركة</div>
+                              <div className="flex items-start gap-2">
+                                <Building className="h-4 w-4 text-gray-400 mt-1" />
+                                <div>
+                                  <div className="text-sm font-medium">{lead.company || "غير محدد"}</div>
+                                  <div className="text-xs text-gray-500">الشركة</div>
+                                </div>
                               </div>
                               
-                              <div>
-                                <div className="text-sm">{lead.industry || "غير محدد"}</div>
-                                <div className="text-xs text-gray-500">القطاع</div>
+                              <div className="flex items-start gap-2">
+                                <Briefcase className="h-4 w-4 text-gray-400 mt-1" />
+                                <div>
+                                  <div className="text-sm">{lead.industry || "غير محدد"}</div>
+                                  <div className="text-xs text-gray-500">القطاع</div>
+                                </div>
                               </div>
                               
-                              <div>
-                                <div className="text-sm">{lead.country || "غير محدد"}</div>
-                                <div className="text-xs text-gray-500">الدولة</div>
+                              <div className="flex items-start gap-2">
+                                <MapPin className="h-4 w-4 text-gray-400 mt-1" />
+                                <div>
+                                  <div className="text-sm">{lead.country || "غير محدد"}</div>
+                                  <div className="text-xs text-gray-500">الدولة</div>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -206,9 +233,9 @@ const LeadDetails = () => {
                             
                             <div className="grid gap-4">
                               <div>
-                                <div className="inline-flex px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                <Badge className={getStageColorClass(lead.stage || 'جديد')}>
                                   {lead.stage || "جديد"}
-                                </div>
+                                </Badge>
                                 <div className="text-xs text-gray-500 mt-1">المرحلة</div>
                               </div>
                               
@@ -259,7 +286,11 @@ const LeadDetails = () => {
                         )}
                         
                         <div className="space-y-3">
-                          {activities.length > 0 ? (
+                          {isLoadingActivities ? (
+                            <div className="flex justify-center py-8">
+                              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+                            </div>
+                          ) : activities.length > 0 ? (
                             activities.map((activity) => (
                               <div 
                                 key={activity.id} 
@@ -293,13 +324,19 @@ const LeadDetails = () => {
                                            activity.type === 'email' ? 'بريد إلكتروني' : 
                                            activity.type === 'task' ? 'مهمة' : 'ملاحظة'}
                                         </span>
-                                        <span className="text-xs text-gray-500">{activity.created_at || activity.createdAt}</span>
+                                        <span className="text-xs text-gray-500">
+                                          {activity.created_at ? new Date(activity.created_at).toLocaleString('ar-SA') : ''}
+                                        </span>
                                       </div>
                                       <p className="text-sm mt-1">{activity.description}</p>
-                                      <div className="flex items-center gap-2 mt-2">
-                                        <Clock className="h-3 w-3 text-gray-400" />
-                                        <span className="text-xs text-gray-500">{activity.scheduled_at}</span>
-                                      </div>
+                                      {activity.scheduled_at && (
+                                        <div className="flex items-center gap-2 mt-2">
+                                          <Clock className="h-3 w-3 text-gray-400" />
+                                          <span className="text-xs text-gray-500">
+                                            {new Date(activity.scheduled_at).toLocaleString('ar-SA')}
+                                          </span>
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
                                   
@@ -308,6 +345,7 @@ const LeadDetails = () => {
                                       size="sm" 
                                       variant="ghost"
                                       onClick={() => handleCompleteActivity(activity.id)}
+                                      disabled={completeMutation.isPending}
                                     >
                                       إكمال
                                     </Button>
@@ -348,9 +386,9 @@ const LeadDetails = () => {
                   <div className="space-y-4">
                     <div>
                       <div className="text-sm font-medium">المرحلة الحالية</div>
-                      <div className="inline-flex px-2 py-1 mt-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                      <Badge className={getStageColorClass(lead.stage || 'جديد')}>
                         {lead.stage || "جديد"}
-                      </div>
+                      </Badge>
                     </div>
                     
                     <div>
@@ -370,14 +408,31 @@ const LeadDetails = () => {
                     <div>
                       <div className="text-sm font-medium">تاريخ الإضافة</div>
                       <div className="text-sm mt-1">
-                        {lead.created_at ? new Date(lead.created_at).toLocaleDateString() : "غير محدد"}
+                        {lead.created_at ? new Date(lead.created_at).toLocaleDateString('ar-SA') : "غير محدد"}
                       </div>
                     </div>
                     
                     <div>
                       <div className="text-sm font-medium">آخر تحديث</div>
                       <div className="text-sm mt-1">
-                        {lead.updated_at ? new Date(lead.updated_at).toLocaleDateString() : "غير محدد"}
+                        {lead.updated_at ? new Date(lead.updated_at).toLocaleDateString('ar-SA') : "غير محدد"}
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t">
+                      <div className="flex flex-col gap-2">
+                        <Button variant="outline" size="sm">
+                          <Phone className="h-4 w-4 ml-2" />
+                          اتصال
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <Mail className="h-4 w-4 ml-2" />
+                          إرسال بريد
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <Check className="h-4 w-4 ml-2" />
+                          إكمال المهمة
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -391,7 +446,7 @@ const LeadDetails = () => {
               <p className="text-gray-500">لم يتم العثور على العميل المحتمل</p>
               <Button 
                 className="mt-4"
-                onClick={() => navigate("/leads")}
+                onClick={() => navigate("/dashboard/leads")}
               >
                 العودة إلى قائمة العملاء المحتملين
               </Button>
@@ -399,6 +454,24 @@ const LeadDetails = () => {
           </Card>
         )}
       </div>
+
+      {/* Edit Lead Dialog */}
+      <Dialog open={isEditLeadOpen} onOpenChange={setIsEditLeadOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">تحرير بيانات العميل المحتمل</DialogTitle>
+          </DialogHeader>
+          {lead && (
+            <div className="mt-4">
+              <LeadForm 
+                lead={lead}
+                onClose={() => setIsEditLeadOpen(false)}
+                onSuccess={handleLeadUpdate}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
