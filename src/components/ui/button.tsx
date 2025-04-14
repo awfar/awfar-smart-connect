@@ -19,8 +19,8 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        // New white variant with improved readability
-        white: "bg-white text-awfar-primary hover:bg-gray-100 shadow-sm border border-gray-200",
+        // Updated white variant with better text visibility
+        white: "bg-white text-awfar-primary hover:bg-gray-100 shadow-sm border border-gray-200 hover:text-awfar-primary/80 active:text-awfar-primary/70",
       },
       size: {
         default: "h-10 px-4 py-2",
