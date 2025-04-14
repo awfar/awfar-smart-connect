@@ -18,17 +18,18 @@ export const getDealActivities = async (dealId: string): Promise<DealActivity[]>
     if (error) throw error;
     
     return data.map(activity => {
-      // Safely handle profiles data which might be a SelectQueryError or null
+      // Safely handle profiles data which might be null or have errors
       let creatorName = '';
       
-      // Check if profiles exists and is not null
+      // More robust null and type checking
       if (activity.profiles && 
-          activity.profiles !== null && 
           typeof activity.profiles === 'object' && 
-          !('error' in activity.profiles) && 
-          'first_name' in activity.profiles) {
-        const profileData = activity.profiles as { first_name?: string; last_name?: string };
-        creatorName = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim();
+          !('error' in activity.profiles)) {
+        const profileData = activity.profiles as { first_name?: string; last_name?: string } | null;
+        
+        if (profileData) {
+          creatorName = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim();
+        }
       }
       
       return {
