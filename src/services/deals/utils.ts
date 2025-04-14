@@ -2,9 +2,15 @@
 import { Deal, DealDBRow } from "../types/dealTypes";
 
 export const transformDealFromSupabase = (deal: DealDBRow): Deal => {
-  // Ensure profiles exists with default values if missing
-  const profiles = deal.profiles || { first_name: '', last_name: '' };
-  const fullName = `${profiles.first_name || ''} ${profiles.last_name || ''}`.trim();
+  // Handle profiles safely
+  let fullName = '';
+  
+  if (deal.profiles && 
+      !('error' in deal.profiles) && 
+      typeof deal.profiles === 'object' && 
+      'first_name' in deal.profiles) {
+    fullName = `${deal.profiles.first_name || ''} ${deal.profiles.last_name || ''}`.trim();
+  }
   
   return {
     id: deal.id,
@@ -21,9 +27,9 @@ export const transformDealFromSupabase = (deal: DealDBRow): Deal => {
       initials: getInitials(fullName || 'غير معين'),
     } : undefined,
     company_id: deal.company_id,
-    company_name: deal.companies?.name,
+    company_name: deal.companies && !('error' in deal.companies) ? deal.companies.name : undefined,
     contact_id: deal.contact_id,
-    contact_name: deal.company_contacts?.name,
+    contact_name: deal.company_contacts && !('error' in deal.company_contacts) ? deal.company_contacts.name : undefined,
     created_at: deal.created_at,
     updated_at: deal.updated_at,
     lead_id: deal.lead_id

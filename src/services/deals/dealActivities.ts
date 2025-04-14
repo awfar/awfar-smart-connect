@@ -17,19 +17,27 @@ export const getDealActivities = async (dealId: string): Promise<DealActivity[]>
     
     if (error) throw error;
     
-    return data.map(activity => ({
-      id: activity.id,
-      deal_id: activity.entity_id,
-      type: activity.action,
-      description: activity.details || '',
-      created_at: activity.created_at,
-      created_by: activity.user_id,
-      creator: activity.profiles ? {
-        name: `${activity.profiles.first_name || ''} ${activity.profiles.last_name || ''}`.trim(),
-      } : undefined,
-      scheduled_at: null,
-      completed_at: null
-    })) || [];
+    return data.map(activity => {
+      // Safely handle profiles data which might be a SelectQueryError
+      let creatorName = '';
+      if (activity.profiles && 
+          !('error' in activity.profiles) && 
+          'first_name' in activity.profiles) {
+        creatorName = `${activity.profiles.first_name || ''} ${activity.profiles.last_name || ''}`.trim();
+      }
+      
+      return {
+        id: activity.id,
+        deal_id: activity.entity_id,
+        type: activity.action,
+        description: activity.details || '',
+        created_at: activity.created_at,
+        created_by: activity.user_id,
+        creator: creatorName ? { name: creatorName } : undefined,
+        scheduled_at: null,
+        completed_at: null
+      };
+    }) || [];
   } catch (error) {
     console.error("Error fetching deal activities:", error);
     toast.error("فشل في جلب أنشطة الصفقة");

@@ -40,16 +40,17 @@ export interface DealDBRow {
   created_at?: string;
   updated_at?: string;
   lead_id?: string;
+  // Updated to handle SelectQueryError
   profiles?: {
     first_name: string;
     last_name: string;
-  } | null;
+  } | null | { error: boolean; [key: string]: any };
   companies?: {
     name: string;
-  } | null;
+  } | null | { error: boolean; [key: string]: any };
   company_contacts?: {
     name: string;
-  } | null;
+  } | null | { error: boolean; [key: string]: any };
 }
 
 export interface DealActivity {

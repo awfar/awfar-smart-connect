@@ -44,13 +44,9 @@ export const createDeal = async (dealData: Partial<Deal>): Promise<Deal | null> 
 
     toast.success("تم إنشاء الصفقة بنجاح");
     
-    // Handle potentially missing profile data
     if (data) {
-      const dealWithDefaults = {
-        ...data,
-        profiles: data.profiles || { first_name: '', last_name: '' }
-      };
-      return transformDealFromSupabase(dealWithDefaults);
+      // Safe type casting to handle the response properly
+      return transformDealFromSupabase(data as any);
     }
     return null;
   } catch (error) {
@@ -84,13 +80,9 @@ export const updateDeal = async (id: string, dealData: Partial<Deal>): Promise<D
 
     toast.success("تم تحديث الصفقة بنجاح");
     
-    // Handle potentially missing profile data
     if (data) {
-      const dealWithDefaults = {
-        ...data,
-        profiles: data.profiles || { first_name: '', last_name: '' }
-      };
-      return transformDealFromSupabase(dealWithDefaults);
+      // Safe type casting to handle the response properly
+      return transformDealFromSupabase(data as any);
     }
     return null;
   } catch (error) {

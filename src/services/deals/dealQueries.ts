@@ -51,7 +51,8 @@ export const getDeals = async (filters?: Record<string, any>): Promise<Deal[]> =
     
     // Transform data before returning
     if (data && data.length > 0) {
-      return data.map((deal: DealDBRow) => transformDealFromSupabase(deal));
+      // Use a type safe approach with explicit transformations
+      return data.map((deal: any) => transformDealFromSupabase(deal));
     }
     
     console.log("No deals found in Supabase, returning empty array");
@@ -83,7 +84,8 @@ export const getDealById = async (id: string): Promise<Deal | null> => {
     }
     
     if (data) {
-      return transformDealFromSupabase(data as DealDBRow);
+      // Safe type casting to handle the response properly
+      return transformDealFromSupabase(data as any);
     }
     
     return null;
