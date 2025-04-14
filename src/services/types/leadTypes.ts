@@ -45,7 +45,8 @@ export interface LeadDBRow {
   position?: string | null;
   country?: string | null;
   industry?: string | null;
-  status?: string;
+  status?: string; // This is used as 'stage' in the UI
+  stage?: string;  // Add this for compatibility with the transformer
   source?: string | null;
   notes?: string | null;
   created_at: string;

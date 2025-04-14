@@ -8,7 +8,9 @@ import {
   getLeadSources, 
   getLeadStages,
   getSalesOwners,
-  getCompanies
+  getCompanies,
+  getCountries,
+  getIndustries
 } from "./leadQueries";
 
 import { 
@@ -34,6 +36,8 @@ export {
   getSalesOwners,
   getCompanies,
   getLeadActivities,
+  getCountries,
+  getIndustries,
   
   // Mutation functions
   updateLead,

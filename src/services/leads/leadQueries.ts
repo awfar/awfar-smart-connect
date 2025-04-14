@@ -1,4 +1,3 @@
-
 // Functions for fetching lead data
 import { supabase } from "@/integrations/supabase/client";
 import { Lead, LeadDBRow } from "../types/leadTypes";
@@ -182,6 +181,56 @@ export const getCompanies = async (): Promise<{id: string, name: string}[]> => {
   }
 };
 
+// Get countries for filtering
+export const getCountries = async (): Promise<string[]> => {
+  try {
+    console.log("Fetching countries from Supabase");
+    const { data, error } = await supabase
+      .from('leads')
+      .select('country')
+      .not('country', 'is', null);
+    
+    if (error) throw error;
+    
+    // Extract unique countries
+    const countries = data
+      .map(item => item.country as string)
+      .filter(Boolean)
+      .filter((value, index, self) => self.indexOf(value) === index)
+      .sort();
+    
+    return countries.length > 0 ? countries : getDefaultCountries();
+  } catch (error) {
+    console.error("Error fetching countries:", error);
+    return getDefaultCountries();
+  }
+};
+
+// Get industries for filtering
+export const getIndustries = async (): Promise<string[]> => {
+  try {
+    console.log("Fetching industries from Supabase");
+    const { data, error } = await supabase
+      .from('leads')
+      .select('industry')
+      .not('industry', 'is', null);
+    
+    if (error) throw error;
+    
+    // Extract unique industries
+    const industries = data
+      .map(item => item.industry as string)
+      .filter(Boolean)
+      .filter((value, index, self) => self.indexOf(value) === index)
+      .sort();
+    
+    return industries.length > 0 ? industries : getDefaultIndustries();
+  } catch (error) {
+    console.error("Error fetching industries:", error);
+    return getDefaultIndustries();
+  }
+};
+
 // Helper functions for default values
 const getDefaultSources = (): string[] => {
   return [
@@ -203,6 +252,36 @@ const getDefaultStages = (): string[] => {
     "عرض سعر",
     "تفاوض",
     "مغلق"
+  ];
+};
+
+const getDefaultIndustries = (): string[] => {
+  return [
+    "تكنولوجيا المعلومات",
+    "الرعاية الصحية",
+    "التعليم",
+    "التجزئة",
+    "التصنيع",
+    "الخدمات المالية",
+    "البناء",
+    "النقل",
+    "الترفيه",
+    "أخرى"
+  ];
+};
+
+const getDefaultCountries = (): string[] => {
+  return [
+    "المملكة العربية السعودية",
+    "الإمارات العربية المتحدة",
+    "مصر",
+    "الأردن",
+    "قطر",
+    "البحرين",
+    "الكويت",
+    "عمان",
+    "العراق",
+    "لبنان"
   ];
 };
 

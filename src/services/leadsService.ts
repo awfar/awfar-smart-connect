@@ -10,6 +10,8 @@ export {
   getSalesOwners,
   getCompanies,
   getLeadActivities,
+  getCountries,
+  getIndustries,
   
   // Mutation functions
   updateLead,
