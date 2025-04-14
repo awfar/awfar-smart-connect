@@ -587,10 +587,12 @@ export type Database = {
         Row: {
           assigned_to: string | null
           company: string | null
+          country: string | null
           created_at: string | null
           email: string
           first_name: string
           id: string
+          industry: string | null
           landing_page_id: string | null
           last_name: string
           notes: string | null
@@ -603,10 +605,12 @@ export type Database = {
         Insert: {
           assigned_to?: string | null
           company?: string | null
+          country?: string | null
           created_at?: string | null
           email: string
           first_name: string
           id?: string
+          industry?: string | null
           landing_page_id?: string | null
           last_name: string
           notes?: string | null
@@ -619,10 +623,12 @@ export type Database = {
         Update: {
           assigned_to?: string | null
           company?: string | null
+          country?: string | null
           created_at?: string | null
           email?: string
           first_name?: string
           id?: string
+          industry?: string | null
           landing_page_id?: string | null
           last_name?: string
           notes?: string | null
@@ -1172,6 +1178,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_column_exists: {
+        Args: { table_name: string; column_name: string }
+        Returns: boolean
+      }
       count_activities_by_action: {
         Args: Record<PropertyKey, never>
         Returns: {

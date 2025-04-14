@@ -156,7 +156,9 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
         const newLeadData = {
           ...formData,
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          // Fix: Don't set assigned_to to "unassigned" if it's a string value. Set it to null instead.
+          assigned_to: formData.assigned_to === "unassigned" ? null : formData.assigned_to
         };
         
         const newLead = await createLead(newLeadData as Omit<Lead, "id">);

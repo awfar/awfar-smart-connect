@@ -32,14 +32,15 @@ export const getLeads = async (filters?: Record<string, any>): Promise<Lead[]> =
       if (filters.assigned_to && filters.assigned_to !== 'all') {
         query = query.eq('assigned_to', filters.assigned_to);
       }
-      
-      // Only apply these filters if the columns exist in the table
+
+      // Handle country filter with type safety
       if (filters.country && filters.country !== 'all') {
-        query = query.eq('country', filters.country);
+        query = query.eq('country', filters.country as string);
       }
       
+      // Handle industry filter with type safety
       if (filters.industry && filters.industry !== 'all') {
-        query = query.eq('industry', filters.industry);
+        query = query.eq('industry', filters.industry as string);
       }
       
       if (filters.search) {
@@ -185,14 +186,15 @@ export const getSalesOwners = async (): Promise<{id: string, name: string}[]> =>
 // Get countries for filtering
 export const getCountries = async (): Promise<string[]> => {
   try {
-    // Check if the country column exists on the leads table
-    const { data: columnInfo, error: columnError } = await supabase
-      .rpc('check_column_exists', { 
-        table_name: 'leads',
-        column_name: 'country'
-      });
+    // Use a direct query to check if column exists instead of RPC
+    const { data: columns, error: columnsError } = await supabase
+      .from('information_schema.columns')
+      .select('column_name')
+      .eq('table_schema', 'public')
+      .eq('table_name', 'leads')
+      .eq('column_name', 'country');
     
-    if (columnError || !columnInfo) {
+    if (columnsError || !columns || columns.length === 0) {
       console.log("Country column doesn't exist, returning default countries");
       return getDefaultCountries();
     }
@@ -223,14 +225,15 @@ export const getCountries = async (): Promise<string[]> => {
 // Get industries for filtering
 export const getIndustries = async (): Promise<string[]> => {
   try {
-    // Check if the industry column exists on the leads table
-    const { data: columnInfo, error: columnError } = await supabase
-      .rpc('check_column_exists', { 
-        table_name: 'leads',
-        column_name: 'industry'
-      });
+    // Use a direct query to check if column exists instead of RPC
+    const { data: columns, error: columnsError } = await supabase
+      .from('information_schema.columns')
+      .select('column_name')
+      .eq('table_schema', 'public')
+      .eq('table_name', 'leads')
+      .eq('column_name', 'industry');
     
-    if (columnError || !columnInfo) {
+    if (columnsError || !columns || columns.length === 0) {
       console.log("Industry column doesn't exist, returning default industries");
       return getDefaultIndustries();
     }
