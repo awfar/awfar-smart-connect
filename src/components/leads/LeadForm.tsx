@@ -51,8 +51,11 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
         console.log("Lead updated successfully:", updatedLead);
         
         if (updatedLead) {
-          onSuccess?.(updatedLead);
+          // Show success toast first
           toast.success("تم تحديث العميل المحتمل بنجاح");
+          
+          // Then call onSuccess callback
+          onSuccess?.(updatedLead);
           
           // Only close if no errors occurred
           onClose?.();
@@ -75,8 +78,11 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
         console.log("Lead created successfully:", newLead);
         
         if (newLead) {
-          onSuccess?.(newLead);
+          // Show success toast first
           toast.success("تم إضافة العميل المحتمل بنجاح");
+          
+          // Then call onSuccess callback
+          onSuccess?.(newLead);
           
           // Only close if no errors occurred
           onClose?.();

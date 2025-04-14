@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,6 +46,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
             value: c.name
           }));
           setCompanyOptions(companyOpts);
+          console.log("Loaded companies:", companyOpts);
         } else {
           console.error("Companies data is not an array:", companies);
           // Initialize with empty array
@@ -72,7 +72,6 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
     if (formData.company && 
         // Ensure companyOptions is an array before checking
         Array.isArray(companyOptions) && 
-        companyOptions.length > 0 && 
         !companyOptions.some(c => c.value === formData.company)) {
       setCompanyOptions(prev => [
         ...prev,
@@ -91,6 +90,9 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
     if (!companyOptions.some(opt => opt.value === companyName)) {
       setCompanyOptions(prev => [...prev, newOption]);
     }
+    
+    console.log("Added new company to options:", newOption);
+    console.log("Setting company value in form:", companyName);
     
     // Select the new company in the form
     handleSelectChange("company", companyName);

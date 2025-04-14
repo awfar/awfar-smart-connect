@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { createCompany } from "@/services/companiesService";
@@ -105,31 +104,28 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
       
       // Return the company name back to parent component
       if (newCompany && newCompany.name) {
-        onSuccess(newCompany.name);
+        // Show success toast BEFORE closing dialog
+        toast.success(`تم إضافة الشركة "${newCompany.name}" بنجاح`);
         
-        // Close dialog first
-        onOpenChange(false);
-        
-        // Show success message AFTER dialog closes to prevent render issues
+        // Wait slightly before continuing to ensure toast is shown
         setTimeout(() => {
-          toast.success(`تم إضافة الشركة "${newCompany.name}" بنجاح`);
+          onSuccess(newCompany.name);
+          onOpenChange(false);
         }, 100);
       } else if (formData.name) {
         // Fallback if company object doesn't have a name for some reason
-        onSuccess(formData.name);
+        toast.success(`تم إضافة الشركة "${formData.name}" بنجاح`);
         
-        // Close dialog first
-        onOpenChange(false);
-        
-        // Show success message AFTER dialog closes
         setTimeout(() => {
-          toast.success(`تم إضافة الشركة "${formData.name}" بنجاح`);
+          onSuccess(formData.name);
+          onOpenChange(false);
         }, 100);
       }
       
     } catch (error) {
       console.error("Error creating company:", error);
       toast.error("حدث خطأ أثناء إضافة الشركة");
+    } finally {
       setIsSubmitting(false);
     }
   };

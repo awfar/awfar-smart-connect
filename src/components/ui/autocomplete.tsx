@@ -108,7 +108,9 @@ export function Autocomplete({
                 variant="ghost" 
                 className="flex w-full items-center justify-start mt-2"
                 onClick={() => {
-                  onCreateNew?.();
+                  if (onCreateNew) {
+                    onCreateNew();
+                  }
                   setOpen(false);
                 }}
               >
