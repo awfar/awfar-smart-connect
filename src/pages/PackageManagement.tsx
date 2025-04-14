@@ -2,12 +2,13 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { getPackages, getProducts } from '@/services/catalogService';
+import { getProducts } from '@/services/catalogService';
+import { getPackages } from '@/services/catalog/packageService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Plus, Edit, Package as PackageIcon, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { type Package as PackageType } from '@/services/catalogService';
+import { type Package as PackageType } from '@/services/catalog/packageService';
 import PackageForm from '@/components/catalog/PackageForm';
 import {
   Dialog,

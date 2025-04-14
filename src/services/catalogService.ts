@@ -44,3 +44,12 @@ export {
   deleteSubscription,
 } from './catalog/subscriptions';
 export type { Subscription, BillingCycle } from './catalog/subscriptions';
+
+// Export from packageService.ts
+export {
+  getPackages,
+  getPackageById,
+  createPackage,
+  updatePackage,
+} from './catalog/packageService';
+export type { Package } from './catalog/packageService';
