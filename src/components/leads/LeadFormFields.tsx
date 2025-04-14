@@ -92,9 +92,6 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
     
     // Select the new company in the form
     handleSelectChange("company", companyName);
-    
-    // Show success message
-    toast.success(`تمت إضافة الشركة "${companyName}" بنجاح`);
   };
 
   // Ensure companyOptions is never undefined to prevent "undefined is not iterable" error
