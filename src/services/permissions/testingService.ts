@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { getLeads, createLead, updateLead, deleteLead } from "@/services/leadsService";
