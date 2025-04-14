@@ -35,15 +35,17 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     
     console.log("Tickets fetched:", data);
     
-    // Break the complex type chain by explicitly defining the return type
+    // Simplified approach: treat data as a raw array without complex typing
     const tickets: Ticket[] = [];
     
     if (data) {
-      for (const item of data) {
-        // Convert each record individually with explicit typing
-        const ticket = mapDBTicketToTicket(item as any);
+      // Process each item individually to avoid complex type chains
+      data.forEach(item => {
+        // Force cast to any to break the complex type chain
+        const rawItem = item as any;
+        const ticket = mapDBTicketToTicket(rawItem);
         tickets.push(ticket);
-      }
+      });
     }
     
     return tickets;
@@ -83,7 +85,7 @@ export const createTicket = async (ticketData: Omit<Ticket, 'id' | 'created_at' 
     
     console.log("Ticket created:", data);
     toast.success("تم إنشاء التذكرة بنجاح");
-    return mapDBTicketToTicket(data as TicketFromDB);
+    return mapDBTicketToTicket(data as any);
   } catch (error) {
     console.error("خطأ في إنشاء التذكرة:", error);
     toast.error("فشل في إنشاء التذكرة");
@@ -113,7 +115,7 @@ export const updateTicket = async (id: string, ticketData: Partial<Ticket>): Pro
     
     console.log("Ticket updated:", data);
     toast.success("تم تحديث التذكرة بنجاح");
-    return mapDBTicketToTicket(data as TicketFromDB);
+    return mapDBTicketToTicket(data as any);
   } catch (error) {
     console.error("خطأ في تحديث التذكرة:", error);
     toast.error("فشل في تحديث التذكرة");
