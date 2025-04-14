@@ -37,6 +37,7 @@ import Integration from "./pages/Integration";
 import RolesManagement from "./pages/RolesManagement";
 import DepartmentsManagement from "./pages/DepartmentsManagement";
 import TeamsManagement from "./pages/TeamsManagement";
+import SystemTests from "./pages/SystemTests";
 
 function App() {
   return (
@@ -189,6 +190,10 @@ function App() {
           {
             path: "/integration",
             element: <Integration />,
+          },
+          {
+            path: "/system-tests",
+            element: <SystemTests />,
           },
           {
             path: "*",
