@@ -3,8 +3,6 @@
 // This file re-exports functionality from the refactored services
 
 import { 
-  Lead,
-  LeadActivity,
   getLeads,
   getLeadById,
   fetchLeadById,
@@ -17,12 +15,11 @@ import {
   getIndustries
 } from "./leads";
 
-// Re-export all types and functions for backward compatibility
+// Re-export types from the leads module
+import type { Lead, LeadActivity } from "./leads";
+
+// Re-export all functions for backward compatibility
 export {
-  // Types
-  Lead,
-  LeadActivity,
-  
   // Query functions
   getLeads,
   getLeadById,

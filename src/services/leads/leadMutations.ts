@@ -1,8 +1,9 @@
 
 // Functions for modifying lead data
 import { supabase } from "../../integrations/supabase/client";
-import { Lead } from "./types";
+import { Lead, LeadActivity } from "./types";
 import { mockLeads } from "./mockData";
+import { mockActivities } from "./mockData";
 import { toast } from "sonner";
 import { addLeadActivity } from "./leadActivities";
 

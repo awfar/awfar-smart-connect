@@ -21,11 +21,10 @@ import {
 } from "./leadActivities";
 
 // Re-export all types and functions
+// Using export type for type re-exports when isolatedModules is enabled
+export type { Lead, LeadActivity };
+
 export {
-  // Types
-  Lead,
-  LeadActivity,
-  
   // Query functions
   getLeads,
   getLeadById,
