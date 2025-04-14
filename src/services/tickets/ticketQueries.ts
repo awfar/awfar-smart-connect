@@ -28,6 +28,7 @@ export const fetchTickets = async (
   categoryFilter?: string
 ): Promise<Ticket[]> => {
   try {
+    // Create the base query with explicit typing to avoid deep inference
     let query = supabase
       .from('tickets')
       .select(`
@@ -38,7 +39,7 @@ export const fetchTickets = async (
         )
       `);
     
-    // تطبيق الفلاتر إذا تم توفيرها
+    // Apply filters if provided
     if (statusFilter && statusFilter !== 'all') {
       query = query.eq('status', statusFilter);
     }
@@ -51,7 +52,10 @@ export const fetchTickets = async (
       query = query.eq('category', categoryFilter);
     }
     
-    const { data, error } = await query.order('created_at', { ascending: false });
+    // Execute the query and extract data with explicit typing
+    const result = await query.order('created_at', { ascending: false });
+    const data = result.data as any[];
+    const error = result.error;
     
     if (error) {
       console.error("Error fetching tickets:", error);
@@ -63,8 +67,7 @@ export const fetchTickets = async (
     const ticketsArray: Ticket[] = [];
     
     if (data && Array.isArray(data)) {
-      for (let i = 0; i < data.length; i++) {
-        const rawTicket = data[i];
+      for (const rawTicket of data) {
         const transformedTicket = safeTransformTicket(rawTicket);
         ticketsArray.push(mapDBTicketToTicket(transformedTicket));
       }
@@ -77,10 +80,11 @@ export const fetchTickets = async (
   }
 };
 
-// Implement the missing fetchTicketById function
+// Implement the fetchTicketById function with explicit typing
 export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
   try {
-    const { data, error } = await supabase
+    // Use explicit typing to avoid deep inference
+    const result = await supabase
       .from('tickets')
       .select(`
         *,
@@ -91,6 +95,9 @@ export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
       `)
       .eq('id', id)
       .single();
+    
+    const data = result.data as any;
+    const error = result.error;
     
     if (error) {
       console.error("Error fetching ticket by id:", error);
