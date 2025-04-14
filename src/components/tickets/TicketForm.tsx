@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { createTicket, fetchClients, fetchStaff, Ticket } from "@/services/ticketsService";
+import { createTicket, fetchClients, fetchStaff, Ticket } from "@/services/tickets";
 import { Loader2 } from "lucide-react";
 
 interface TicketFormProps {

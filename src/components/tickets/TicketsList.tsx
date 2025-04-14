@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
   Table,
@@ -11,7 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, CheckCircle, Edit, MessageCircle, Tag, Trash2, Loader2 } from "lucide-react";
-import { deleteTicket, fetchTickets, Ticket } from "@/services/ticketsService";
+import { deleteTicket, fetchTickets, Ticket } from "@/services/tickets";
 import { useQuery } from "@tanstack/react-query";
 import {
   Dialog,
