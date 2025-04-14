@@ -51,27 +51,25 @@ export const fetchTickets = async (
       query = query.eq('category', categoryFilter);
     }
     
-    // Break the type inference chain by using a type assertion
-    const response = await query.order('created_at', { ascending: false });
-    const data = response.data;
-    const error = response.error;
+    // Completely avoid type inference by using vanilla JS approach
+    const result = await query.order('created_at', { ascending: false }) as any;
     
-    if (error) {
-      console.error("Error fetching tickets:", error);
-      throw error;
+    if (result.error) {
+      console.error("Error fetching tickets:", result.error);
+      throw result.error;
     }
     
-    console.log("Fetched tickets data:", data);
+    console.log("Fetched tickets data:", result.data);
     
-    // Break the type instantiation chain by converting raw data to a known structure
+    // Create a simple array without complex typing
     const ticketsArray: Ticket[] = [];
     
-    if (data && Array.isArray(data)) {
-      // Use a simple for loop and avoid type inference issues
-      for (let i = 0; i < data.length; i++) {
-        const ticket = data[i];
-        // Using our helper function with type assertion to break complex type chain
-        const transformedTicket = safeTransformTicket(ticket);
+    if (result.data && Array.isArray(result.data)) {
+      // Use a simple for loop to avoid complex type inference
+      for (let i = 0; i < result.data.length; i++) {
+        const rawTicket = result.data[i];
+        // Explicitly map to our known structure
+        const transformedTicket = safeTransformTicket(rawTicket);
         ticketsArray.push(mapDBTicketToTicket(transformedTicket));
       }
     }
@@ -86,8 +84,8 @@ export const fetchTickets = async (
 // Implement the missing fetchTicketById function
 export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
   try {
-    // Break the type inference chain using a simple approach
-    const response = await supabase
+    // Completely avoid type inference by using vanilla JS approach
+    const result = await supabase
       .from('tickets')
       .select(`
         *,
@@ -97,23 +95,20 @@ export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
         )
       `)
       .eq('id', id)
-      .single();
+      .single() as any;
     
-    const data = response.data;
-    const error = response.error;
-    
-    if (error) {
-      console.error("Error fetching ticket by id:", error);
-      throw error;
+    if (result.error) {
+      console.error("Error fetching ticket by id:", result.error);
+      throw result.error;
     }
     
-    console.log("Fetched ticket data:", data);
+    console.log("Fetched ticket data:", result.data);
     
     // Safe conversion to avoid type errors
-    if (!data) return null;
+    if (!result.data) return null;
     
-    // Using our helper function to break complex type chain
-    const transformedTicket = safeTransformTicket(data);
+    // Explicitly map to our known structure
+    const transformedTicket = safeTransformTicket(result.data);
     return mapDBTicketToTicket(transformedTicket);
   } catch (error) {
     console.error("Error in fetchTicketById:", error);
