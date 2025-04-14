@@ -267,14 +267,15 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
         <div>
           <Label htmlFor="source">المصدر</Label>
           <Select 
-            value={formData.source || ''} 
+            value={formData.source || undefined} 
             onValueChange={(value) => handleSelectChange("source", value)}
           >
             <SelectTrigger id="source">
               <SelectValue placeholder="اختر المصدر" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">غير محدد</SelectItem>
+              {/* Fix: Changed empty string to a meaningful value */}
+              <SelectItem value="not_specified">غير محدد</SelectItem>
               {sources.map((source) => (
                 <SelectItem key={source} value={source}>
                   {source}
@@ -288,14 +289,15 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
       <div>
         <Label htmlFor="assigned_to">المسؤول</Label>
         <Select 
-          value={formData.assigned_to || ''} 
+          value={formData.assigned_to || undefined} 
           onValueChange={(value) => handleSelectChange("assigned_to", value)}
         >
           <SelectTrigger id="assigned_to">
             <SelectValue placeholder="اختر المسؤول" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">غير مخصص</SelectItem>
+            {/* Fix: Changed empty string to a meaningful value */}
+            <SelectItem value="unassigned">غير مخصص</SelectItem>
             {owners.map((owner) => (
               <SelectItem key={owner.id} value={owner.id}>
                 {owner.name}
