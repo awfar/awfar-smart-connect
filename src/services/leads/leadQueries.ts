@@ -1,4 +1,3 @@
-
 // Functions for fetching lead data
 import { supabase } from "../../integrations/supabase/client";
 import { Lead } from "./types";
@@ -139,11 +138,10 @@ export const getIndustries = async (): Promise<string[]> => {
     
     // استخراج القطاعات الفريدة
     if (response.data && response.data.length > 0) {
-      // Type assertion for data to ensure TypeScript knows it's an array of objects with industry
-      type IndustryRecord = { industry: string };
-      
-      const industries = (response.data as IndustryRecord[])
+      // Extract all valid industry values
+      const industries = response.data
         .map(item => {
+          // Safely check if the item has an industry property and it's a string
           if (item && typeof item.industry === 'string') {
             return item.industry;
           }
