@@ -82,12 +82,12 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     
     console.log("Tickets fetched:", data);
     
-    // Fix the type recursion issue by explicitly using type assertion
-    // Define an empty array as fallback
-    const safeData: Record<string, any>[] = data || [];
+    // Fix the issue by avoiding complex type relationships
+    // First convert the data to a simple array type
+    const rawData = data as unknown[] || [];
     
-    // Map the safely typed data to our Ticket type
-    return safeData.map(ticket => mapDBTicketToTicket(ticket as TicketFromDB));
+    // Then map each ticket using our helper function with proper type assertions
+    return rawData.map(item => mapDBTicketToTicket(item as TicketFromDB));
   } catch (error) {
     console.error("خطأ في جلب التذاكر:", error);
     toast.error("فشل في جلب قائمة التذاكر");
