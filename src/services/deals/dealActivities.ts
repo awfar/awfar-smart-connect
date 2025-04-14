@@ -28,7 +28,7 @@ export const getDealActivities = async (dealId: string): Promise<DealActivity[]>
         const profileData = activity.profiles as { first_name?: string; last_name?: string } | null;
         
         if (profileData) {
-          creatorName = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim();
+          creatorName = `${profileData?.first_name || ''} ${profileData?.last_name || ''}`.trim();
         }
       }
       
