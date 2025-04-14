@@ -139,26 +139,21 @@ export const getIndustries = async (): Promise<string[]> => {
     // Extract unique industries
     if (response.data && response.data.length > 0) {
       try {
-        // Process the data safely without type predicates
+        // Safer type handling for the data
         const industries = response.data
-          // Filter out null/undefined items and ensure they have an industry property
-          .filter(item => 
-            item !== null && 
-            typeof item === 'object' && 
-            item !== undefined &&
-            'industry' in item
-          )
-          // Map to industry values with type assertion
+          // First, filter out null/undefined items
+          .filter(item => item !== null && typeof item === 'object')
+          // Then map to get industry values (with type guards)
           .map(item => {
-            // Since we've verified item is not null above, we can safely access it
-            if (item && typeof item.industry === 'string') {
+            // Type guard to ensure we have an item with industry property that is a string
+            if (item && 'industry' in item && typeof item.industry === 'string') {
               return item.industry;
             }
             return null;
           })
-          // Filter out any remaining nulls
-          .filter((industry): industry is string => industry !== null)
-          // Keep only unique values
+          // Filter out null values we may have from the mapping
+          .filter((value): value is string => value !== null)
+          // Ensure uniqueness
           .filter((value, index, self) => self.indexOf(value) === index)
           .sort();
         
