@@ -28,7 +28,7 @@ export const fetchTickets = async (
   categoryFilter?: string
 ): Promise<Ticket[]> => {
   try {
-    // Create the base query with explicit typing to avoid deep inference
+    // Create the base query builder
     let query = supabase
       .from('tickets')
       .select(`
@@ -52,25 +52,27 @@ export const fetchTickets = async (
       query = query.eq('category', categoryFilter);
     }
     
-    // Execute the query and extract data with explicit typing
-    const result = await query.order('created_at', { ascending: false });
-    const data = result.data as any[];
-    const error = result.error;
+    // Execute the query with explicit type handling
+    const response = await query.order('created_at', { ascending: false });
+    
+    // Explicitly handle the response without relying on type inference
+    const rawData = response.data || [];
+    const error = response.error;
     
     if (error) {
       console.error("Error fetching tickets:", error);
       throw error;
     }
     
-    console.log("Fetched tickets data:", data);
+    console.log("Fetched tickets data:", rawData);
     
+    // Manually transform data to avoid deep type inference
     const ticketsArray: Ticket[] = [];
     
-    if (data && Array.isArray(data)) {
-      for (const rawTicket of data) {
-        const transformedTicket = safeTransformTicket(rawTicket);
-        ticketsArray.push(mapDBTicketToTicket(transformedTicket));
-      }
+    for (let i = 0; i < rawData.length; i++) {
+      // Use our safe transformer to control the typing
+      const transformedTicket = safeTransformTicket(rawData[i]);
+      ticketsArray.push(mapDBTicketToTicket(transformedTicket));
     }
     
     return ticketsArray;
@@ -80,11 +82,10 @@ export const fetchTickets = async (
   }
 };
 
-// Implement the fetchTicketById function with explicit typing
 export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
   try {
-    // Use explicit typing to avoid deep inference
-    const result = await supabase
+    // Execute query with explicit type handling
+    const response = await supabase
       .from('tickets')
       .select(`
         *,
@@ -96,19 +97,21 @@ export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
       .eq('id', id)
       .single();
     
-    const data = result.data as any;
-    const error = result.error;
+    // Explicitly handle the response without relying on type inference
+    const rawData = response.data;
+    const error = response.error;
     
     if (error) {
       console.error("Error fetching ticket by id:", error);
       throw error;
     }
     
-    console.log("Fetched ticket data:", data);
+    if (!rawData) return null;
     
-    if (!data) return null;
+    console.log("Fetched ticket data:", rawData);
     
-    const transformedTicket = safeTransformTicket(data);
+    // Use our safe transformer to control the typing
+    const transformedTicket = safeTransformTicket(rawData);
     return mapDBTicketToTicket(transformedTicket);
   } catch (error) {
     console.error("Error in fetchTicketById:", error);
