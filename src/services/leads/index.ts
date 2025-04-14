@@ -3,13 +3,14 @@
 import { Lead, LeadActivity } from "../types/leadTypes";
 import { 
   getLeads, 
-  getLeadById, 
-  fetchLeadById, 
+  getLead,
   getLeadSources, 
   getLeadStages,
   getSalesOwners,
   getCountries,
-  getIndustries
+  getIndustries,
+  getLeadCountByStatus,
+  getTotalLeadCount
 } from "./leadQueries";
 
 import { 
@@ -28,13 +29,14 @@ import {
 export {
   // Query functions
   getLeads,
-  getLeadById,
-  fetchLeadById,
+  getLead,
   getLeadSources,
   getLeadStages,
   getSalesOwners,
   getCountries,
   getIndustries,
+  getLeadCountByStatus,
+  getTotalLeadCount,
   
   // Mutation functions
   updateLead,

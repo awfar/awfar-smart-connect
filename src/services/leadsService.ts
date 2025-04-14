@@ -3,8 +3,7 @@
 export {
   // Query functions
   getLeads,
-  getLeadById,
-  fetchLeadById,
+  getLead,
   getLeadSources,
   getLeadStages,
   getSalesOwners,
@@ -21,4 +20,4 @@ export {
 } from './leads';
 
 // Export types
-export type { Lead, LeadActivity } from './types/leadTypes';
+export type { Lead, LeadActivity } from './leads';

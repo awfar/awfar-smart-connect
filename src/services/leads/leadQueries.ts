@@ -62,20 +62,20 @@ export const getLeads = async (filters: Record<string, any> = {}): Promise<Lead[
       query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,company.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
     }
     
-    // Apply other filters
-    Object.entries(filters).forEach(([key, value]) => {
+    // Apply other filters using async/await properly - FIX: making this section async compatible
+    for (const [key, value] of Object.entries(filters)) {
       if (key !== 'search' && value) {
         // Handle special case for "current-user-id"
         if (key === 'assigned_to' && value === 'current-user-id') {
           const { data: authData } = await supabase.auth.getUser();
-          if (authData.user?.id) {
+          if (authData?.user?.id) {
             query = query.eq(key, authData.user.id);
           }
         } else {
           query = query.eq(key, value);
         }
       }
-    });
+    }
     
     const { data, error } = await query;
     
@@ -386,7 +386,10 @@ export const getLeadCountByStatus = async (): Promise<Record<string, number>> =>
       return counts;
     }
     
-    const { data, error } = await supabase.rpc('get_lead_count_by_status');
+    // Fix: Removed the call to the non-existent RPC function and replaced with direct query
+    const { data, error } = await supabase
+      .from('leads')
+      .select('status');
     
     if (error) {
       console.error("Error fetching lead counts:", error);
@@ -394,10 +397,14 @@ export const getLeadCountByStatus = async (): Promise<Record<string, number>> =>
     }
     
     if (data) {
-      return data.reduce((acc: Record<string, number>, item: any) => {
-        acc[item.status || 'غير محدد'] = item.count;
-        return acc;
-      }, {});
+      // Count the lead status manually
+      const counts: Record<string, number> = {};
+      data.forEach((lead) => {
+        const status = lead.status || 'غير محدد';
+        if (!counts[status]) counts[status] = 0;
+        counts[status]++;
+      });
+      return counts;
     }
     
     return {};
