@@ -41,12 +41,11 @@ export const fetchTickets = async (
     
     console.log("Fetched tickets data:", data);
     
-    // Safe conversion to avoid type errors
-    return (data || []).map(ticket => {
-      // First convert to a simple object to break any type references
-      const safeTicket = safeDataConversion<Record<string, any>>(ticket);
-      return mapDBTicketToTicket(safeTicket as unknown as TicketFromDB);
-    });
+    // Break the circular reference by converting to plain objects first
+    const plainData = JSON.parse(JSON.stringify(data || []));
+    
+    // Return mapped tickets
+    return plainData.map((ticket: any) => mapDBTicketToTicket(ticket as TicketFromDB));
   } catch (error) {
     console.error("Error in fetchTickets:", error);
     return [];
@@ -78,9 +77,10 @@ export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
     // Safe conversion to avoid type errors
     if (!data) return null;
     
-    // First convert to a simple object to break any type references
-    const safeTicket = safeDataConversion<Record<string, any>>(data);
-    return mapDBTicketToTicket(safeTicket as unknown as TicketFromDB);
+    // Break the circular reference by converting to plain object
+    const plainData = JSON.parse(JSON.stringify(data));
+    
+    return mapDBTicketToTicket(plainData as TicketFromDB);
   } catch (error) {
     console.error("Error in fetchTicketById:", error);
     return null;

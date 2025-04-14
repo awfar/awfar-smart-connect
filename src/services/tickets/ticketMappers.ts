@@ -18,7 +18,7 @@ export interface TicketFromDB {
   profiles?: {
     first_name: string;
     last_name: string;
-  } | null | { error: boolean } & String;
+  } | null | { error: boolean };
 }
 
 export const mapTicketFromDB = (data: any): Ticket => {
@@ -41,6 +41,7 @@ export const mapDBTicketToTicket = (data: TicketFromDB): Ticket => {
   const hasValidProfiles = data.profiles && 
     typeof data.profiles === 'object' && 
     !('error' in data.profiles) &&
+    data.profiles !== null &&
     'first_name' in data.profiles &&
     'last_name' in data.profiles;
 
@@ -57,7 +58,7 @@ export const mapDBTicketToTicket = (data: TicketFromDB): Ticket => {
     updated_at: data.updated_at,
     // Add additional properties like assigned staff name if profiles is available and valid
     assignedStaffName: hasValidProfiles 
-      ? `${data.profiles.first_name} ${data.profiles.last_name}`.trim() 
+      ? `${(data.profiles as {first_name: string, last_name: string}).first_name} ${(data.profiles as {first_name: string, last_name: string}).last_name}`.trim() 
       : undefined
   };
 };
