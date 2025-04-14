@@ -46,7 +46,6 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
           id: lead.id,
           updated_at: new Date().toISOString()
         });
-        toast.success("تم تحديث بيانات العميل المحتمل بنجاح");
         onSuccess?.(updatedLead);
       } else {
         // Set current timestamp for creation
@@ -59,16 +58,18 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
         };
         
         const newLead = await createLead(newLeadData as Omit<Lead, "id">);
-        toast.success("تم إضافة عميل محتمل جديد بنجاح");
         onSuccess?.(newLead);
       }
-      onClose?.();
     } catch (error) {
       console.error("Error submitting lead:", error);
       toast.error("حدث خطأ أثناء حفظ البيانات");
+      return; // Don't close the form on error
     } finally {
       setIsSubmitting(false);
     }
+    
+    // Only close if no errors occurred
+    onClose?.();
   };
 
   if (isLoading) {

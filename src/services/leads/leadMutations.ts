@@ -12,9 +12,9 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
   try {
     console.log("Updating lead:", lead);
     
-    // Check if it's a mock lead (shouldn't normally happen in production)
-    if (lead.id.startsWith('lead-')) {
-      console.warn("Attempted to update a mock lead in production mode");
+    // Check if it's a mock lead or we're in demo mode
+    if (lead.id.startsWith('lead-') || !supabase.auth.getUser) {
+      console.log("Using mock data for demo mode (update lead)");
       // Update mock lead for development
       const index = mockLeads.findIndex((l) => l.id === lead.id);
       if (index >= 0) {
@@ -85,6 +85,37 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
   try {
     console.log("Creating new lead:", lead);
     
+    // Check if we should use mock data (if not authenticated or in development mode)
+    const { data: userData } = await supabase.auth.getUser().catch(() => ({ data: null }));
+    const useMockData = !userData || !userData.user;
+    
+    if (useMockData) {
+      console.log("Using mock data for demo mode (create lead)");
+      // Create a new mock lead with a generated ID
+      const newId = `lead-${mockLeads.length + 1}`;
+      const createdAt = new Date().toISOString();
+      const newLead = {
+        ...lead,
+        id: newId,
+        created_at: createdAt,
+        updated_at: createdAt,
+        // Add owner information for display
+        owner: {
+          name: "أنت",
+          avatar: "",
+          initials: "أنت"
+        }
+      } as Lead;
+      
+      // Add to mock data
+      mockLeads.unshift(newLead);
+      
+      toast.success("تم إضافة العميل المحتمل بنجاح");
+      console.log("Created mock lead:", newLead);
+      return newLead;
+    }
+    
+    // Regular flow for authenticated users
     // Prepare lead data for Supabase
     const { owner, ...leadToCreate } = lead as any;
     
@@ -170,9 +201,9 @@ export const deleteLead = async (id: string): Promise<boolean> => {
   try {
     console.log("Deleting lead with ID:", id);
     
-    // Check if it's a mock lead
-    if (id.startsWith('lead-')) {
-      console.warn("Attempted to delete a mock lead in production mode");
+    // Check if it's a mock lead or we're in demo mode
+    if (id.startsWith('lead-') || !supabase.auth.getUser) {
+      console.log("Using mock data for demo mode (delete lead)");
       // Remove from mock data for development
       const index = mockLeads.findIndex((l) => l.id === id);
       if (index >= 0) {
