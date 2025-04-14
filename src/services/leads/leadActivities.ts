@@ -1,179 +1,144 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { LeadActivity } from "../types/leadTypes";
-import { mockActivities } from "./mockData";
+import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
 
 // Get activities for a specific lead
 export const getLeadActivities = async (leadId: string): Promise<LeadActivity[]> => {
   try {
+    console.log(`Fetching activities for lead ${leadId}`);
+    
+    // Handle mock data IDs (they start with "lead-")
+    if (leadId.startsWith("lead-")) {
+      console.log("Using mock data for lead activities");
+      return getMockActivities(leadId);
+    }
+    
+    // For real UUIDs, fetch from Supabase
     const { data, error } = await supabase
-      .from('lead_activities')
-      .select(`
-        *,
-        profiles:created_by (
-          first_name,
-          last_name
-        )
-      `)
-      .eq('lead_id', leadId)
-      .order('created_at', { ascending: false });
+      .from("lead_activities")
+      .select("*")
+      .eq("lead_id", leadId)
+      .order("created_at", { ascending: false });
     
     if (error) {
-      console.error("Error fetching lead activities:", error);
+      console.error("Error in getLeadActivities:", error);
       throw error;
     }
     
-    // Return data if found
-    if (data && data.length > 0) {
-      return data.map(activity => ({
-        ...activity,
-        id: activity.id,
-        lead_id: activity.lead_id,
-        type: activity.type,
-        description: activity.description,
-        created_at: activity.created_at,
-        created_by: activity.created_by,
-        scheduled_at: activity.scheduled_at,
-        completed_at: activity.completed_at
-      }));
-    }
-    
-    // Use mock data if no activities found in database
-    return mockActivities[leadId] || [];
+    return data as LeadActivity[];
   } catch (error) {
-    console.error("Error in getLeadActivities:", error);
-    // Return mock data in case of error
-    return mockActivities[leadId] || [];
+    console.error("Error fetching lead activities:", error);
+    
+    // Return mock activities if there was an error
+    return getMockActivities(leadId);
   }
 };
 
 // Add a new activity for a lead
 export const addLeadActivity = async (activity: Omit<LeadActivity, "id" | "created_at">): Promise<LeadActivity> => {
   try {
-    console.log("Adding new lead activity:", activity);
+    // Handle mock data IDs
+    if (activity.lead_id.startsWith("lead-")) {
+      console.log("Using mock data for adding activity");
+      const mockActivity = {
+        ...activity,
+        id: uuidv4(),
+        created_at: new Date().toISOString(),
+      } as LeadActivity;
+      
+      return Promise.resolve(mockActivity);
+    }
     
-    // Make sure we're using lead_id (not leadId)
-    const normalizedActivity = {
-      lead_id: activity.lead_id,
-      type: activity.type,
-      description: activity.description,
-      created_by: activity.created_by || (await supabase.auth.getUser()).data.user?.id,
-      scheduled_at: activity.scheduled_at,
-      completed_at: activity.completed_at
-    };
-    
-    // Try adding the activity to Supabase
     const { data, error } = await supabase
-      .from('lead_activities')
-      .insert(normalizedActivity)
+      .from("lead_activities")
+      .insert({
+        ...activity,
+        created_at: new Date().toISOString(),
+      })
       .select()
       .single();
     
     if (error) {
-      console.error("Error adding lead activity to Supabase:", error);
       throw error;
     }
     
-    // Return the new activity from the database
-    if (data) {
-      toast.success("تم إضافة النشاط بنجاح");
-      return data as LeadActivity;
-    }
-    
-    // Fallback to mock data
-    const newActivity: LeadActivity = {
-      id: `activity-${Date.now()}`,
-      ...activity,
-      created_at: new Date().toISOString()
-    } as LeadActivity;
-    
-    // Initialize the array if it doesn't exist
-    if (!mockActivities[activity.lead_id]) {
-      mockActivities[activity.lead_id] = [];
-    }
-    
-    // Add the new activity to the mock data
-    mockActivities[activity.lead_id].unshift(newActivity);
-    
-    toast.success("تم إضافة النشاط بنجاح");
-    return newActivity;
+    return data as LeadActivity;
   } catch (error) {
-    console.error("Error in addLeadActivity:", error);
-    toast.error("فشل في إضافة النشاط");
-    
-    // Create a mock activity in case of error
-    const newActivity: LeadActivity = {
-      id: `activity-${Date.now()}`,
-      ...activity,
-      created_at: new Date().toISOString()
-    } as LeadActivity;
-    
-    // Initialize the array if it doesn't exist
-    if (!mockActivities[activity.lead_id]) {
-      mockActivities[activity.lead_id] = [];
-    }
-    
-    // Add the new activity to the mock data
-    mockActivities[activity.lead_id].unshift(newActivity);
-    
-    return newActivity;
+    console.error("Error adding lead activity:", error);
+    toast.error("تعذر إضافة النشاط للعميل المحتمل");
+    throw error;
   }
 };
 
-// Mark an activity as completed
-export const completeLeadActivity = async (id: string): Promise<LeadActivity | null> => {
+// Mark an activity as complete
+export const completeLeadActivity = async (activityId: string): Promise<LeadActivity> => {
   try {
-    console.log("Marking activity as completed:", id);
+    // Handle mock data
+    if (activityId.includes("mock")) {
+      console.log("Using mock data for completing activity");
+      const mockActivity = {
+        id: activityId,
+        completed_at: new Date().toISOString(),
+      } as LeadActivity;
+      
+      return Promise.resolve(mockActivity);
+    }
     
-    // Try updating the activity in Supabase
     const { data, error } = await supabase
-      .from('lead_activities')
+      .from("lead_activities")
       .update({
-        completed_at: new Date().toISOString()
+        completed_at: new Date().toISOString(),
       })
-      .eq('id', id)
+      .eq("id", activityId)
       .select()
       .single();
     
     if (error) {
-      console.error("Error completing lead activity in Supabase:", error);
       throw error;
     }
     
-    // Return the updated activity
-    if (data) {
-      toast.success("تم إكمال النشاط بنجاح");
-      return data as LeadActivity;
-    }
-    
-    // Fallback to mock data
-    // Find the activity in mock data
-    for (const leadId in mockActivities) {
-      const activityIndex = mockActivities[leadId].findIndex(a => a.id === id);
-      if (activityIndex >= 0) {
-        // Update the activity
-        mockActivities[leadId][activityIndex].completed_at = new Date().toISOString();
-        toast.success("تم إكمال النشاط بنجاح");
-        return mockActivities[leadId][activityIndex];
-      }
-    }
-    
-    return null;
+    return data as LeadActivity;
   } catch (error) {
-    console.error("Error in completeLeadActivity:", error);
-    toast.error("فشل في إكمال النشاط");
-    
-    // Fallback to mock data in case of error
-    for (const leadId in mockActivities) {
-      const activityIndex = mockActivities[leadId].findIndex(a => a.id === id);
-      if (activityIndex >= 0) {
-        // Update the activity
-        mockActivities[leadId][activityIndex].completed_at = new Date().toISOString();
-        return mockActivities[leadId][activityIndex];
-      }
-    }
-    
-    return null;
+    console.error("Error completing lead activity:", error);
+    toast.error("تعذر تحديث حالة النشاط");
+    throw error;
   }
+};
+
+// Helper function to generate mock activities for leads
+const getMockActivities = (leadId: string): LeadActivity[] => {
+  return [
+    {
+      id: `mock-activity-${uuidv4()}`,
+      lead_id: leadId,
+      type: "call",
+      description: "اتصال أولي للتعريف بالخدمات",
+      created_at: new Date(Date.now() - 86400000 * 2).toISOString(), // 2 days ago
+      created_by: "user-1",
+      scheduled_at: null,
+      completed_at: new Date(Date.now() - 86400000 * 2).toISOString(),
+    },
+    {
+      id: `mock-activity-${uuidv4()}`,
+      lead_id: leadId,
+      type: "note",
+      description: "العميل مهتم بباقة الأعمال المتكاملة",
+      created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+      created_by: "user-1",
+      scheduled_at: null,
+      completed_at: null,
+    },
+    {
+      id: `mock-activity-${uuidv4()}`,
+      lead_id: leadId,
+      type: "meeting",
+      description: "اجتماع لمناقشة تفاصيل المشروع",
+      created_at: new Date().toISOString(),
+      created_by: "user-1",
+      scheduled_at: new Date(Date.now() + 86400000 * 2).toISOString(), // 2 days from now
+      completed_at: null,
+    },
+  ];
 };

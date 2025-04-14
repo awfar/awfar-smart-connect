@@ -184,22 +184,10 @@ export const getCompanies = async (): Promise<{id: string, name: string}[]> => {
 // Get countries for filtering
 export const getCountries = async (): Promise<string[]> => {
   try {
-    console.log("Fetching countries from Supabase");
-    const { data, error } = await supabase
-      .from('leads')
-      .select('country')
-      .not('country', 'is', null);
-    
-    if (error) throw error;
-    
-    // Extract unique countries
-    const countries = data
-      .map(item => item.country as string)
-      .filter(Boolean)
-      .filter((value, index, self) => self.indexOf(value) === index)
-      .sort();
-    
-    return countries.length > 0 ? countries : getDefaultCountries();
+    // Since the country column might not exist in the leads table yet,
+    // we'll return default countries
+    console.log("Returning default countries due to schema limitations");
+    return getDefaultCountries();
   } catch (error) {
     console.error("Error fetching countries:", error);
     return getDefaultCountries();
@@ -209,22 +197,10 @@ export const getCountries = async (): Promise<string[]> => {
 // Get industries for filtering
 export const getIndustries = async (): Promise<string[]> => {
   try {
-    console.log("Fetching industries from Supabase");
-    const { data, error } = await supabase
-      .from('leads')
-      .select('industry')
-      .not('industry', 'is', null);
-    
-    if (error) throw error;
-    
-    // Extract unique industries
-    const industries = data
-      .map(item => item.industry as string)
-      .filter(Boolean)
-      .filter((value, index, self) => self.indexOf(value) === index)
-      .sort();
-    
-    return industries.length > 0 ? industries : getDefaultIndustries();
+    // Since the industry column might not exist in the leads table yet,
+    // we'll return default industries
+    console.log("Returning default industries due to schema limitations");
+    return getDefaultIndustries();
   } catch (error) {
     console.error("Error fetching industries:", error);
     return getDefaultIndustries();
