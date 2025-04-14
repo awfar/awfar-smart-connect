@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +33,7 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Reset form when dialog opens
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       setFormData({ name: "" });
       setFormErrors({});

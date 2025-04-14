@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -208,11 +209,13 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر الدولة" />
             </SelectTrigger>
             <SelectContent>
-              {Array.isArray(options.countries) ? options.countries.map((country) => (
+              {Array.isArray(options.countries) && options.countries.length > 0 ? options.countries.map((country) => (
                 <SelectItem key={country} value={country}>
                   {country}
                 </SelectItem>
-              )) : null}
+              )) : (
+                <SelectItem value="no-countries" disabled>لا توجد دول متاحة</SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -226,11 +229,13 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر القطاع" />
             </SelectTrigger>
             <SelectContent>
-              {Array.isArray(options.industries) ? options.industries.map((industry) => (
+              {Array.isArray(options.industries) && options.industries.length > 0 ? options.industries.map((industry) => (
                 <SelectItem key={industry} value={industry}>
                   {industry}
                 </SelectItem>
-              )) : null}
+              )) : (
+                <SelectItem value="no-industries" disabled>لا توجد قطاعات متاحة</SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -247,11 +252,13 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر المرحلة" />
             </SelectTrigger>
             <SelectContent>
-              {Array.isArray(options.stages) ? options.stages.map((stage) => (
+              {Array.isArray(options.stages) && options.stages.length > 0 ? options.stages.map((stage) => (
                 <SelectItem key={stage} value={stage}>
                   {stage}
                 </SelectItem>
-              )) : null}
+              )) : (
+                <SelectItem value="new" disabled>جديد</SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -265,11 +272,13 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر المصدر" />
             </SelectTrigger>
             <SelectContent>
-              {Array.isArray(options.sources) ? options.sources.map((source) => (
+              {Array.isArray(options.sources) && options.sources.length > 0 ? options.sources.map((source) => (
                 <SelectItem key={source} value={source}>
                   {source}
                 </SelectItem>
-              )) : null}
+              )) : (
+                <SelectItem value="no-sources" disabled>لا توجد مصادر متاحة</SelectItem>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -286,7 +295,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="unassigned">غير مخصص</SelectItem>
-            {Array.isArray(options.owners) ? options.owners.map((owner) => (
+            {Array.isArray(options.owners) && options.owners.length > 0 ? options.owners.map((owner) => (
               <SelectItem key={owner.id} value={owner.id}>
                 {owner.name}
               </SelectItem>
