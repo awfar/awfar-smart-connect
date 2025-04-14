@@ -52,7 +52,7 @@ export function Autocomplete({
   const [open, setOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
 
-  // Ensure options is always an array
+  // Ensure options is always a valid array to prevent the "undefined is not iterable" error
   const safeOptions = Array.isArray(options) ? options : [];
 
   const handleSelect = React.useCallback(
@@ -115,7 +115,7 @@ export function Autocomplete({
               <CommandItem
                 key={option.value}
                 value={option.value}
-                onSelect={handleSelect}
+                onSelect={() => handleSelect(option.value)}
               >
                 <CheckIcon
                   className={cn(

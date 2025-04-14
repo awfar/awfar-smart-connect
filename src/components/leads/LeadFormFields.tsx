@@ -9,6 +9,7 @@ import { Autocomplete } from "@/components/ui/autocomplete";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CompanyQuickAddDialog from "@/components/companies/CompanyQuickAddDialog";
+import { getCompanies } from "@/services/companiesService";
 
 interface LeadFormFieldsProps {
   formData: any;
@@ -28,17 +29,44 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
   const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
   const [companyOptions, setCompanyOptions] = useState<{label: string, value: string}[]>([]);
   
-  // Transform company name to options format for Autocomplete
+  // نحاول تحميل الشركات الموجودة والبحث عنها عند تحميل المكون
   useEffect(() => {
-    if (formData.company) {
-      setCompanyOptions([{ label: formData.company, value: formData.company }]);
-    } else {
-      setCompanyOptions([]);
+    const loadCompanies = async () => {
+      try {
+        const companies = await getCompanies();
+        const companyOpts = companies.map(c => ({
+          label: c.name,
+          value: c.name
+        }));
+        setCompanyOptions(companyOpts);
+      } catch (error) {
+        console.error("Error loading companies:", error);
+        setCompanyOptions([]);
+      }
+    };
+    
+    loadCompanies();
+  }, []);
+
+  // أضف الشركة المحددة حالياً إلى خيارات الشركات إذا كانت موجودة
+  useEffect(() => {
+    if (formData.company && companyOptions.findIndex(c => c.value === formData.company) === -1) {
+      setCompanyOptions(prev => [
+        ...prev,
+        { label: formData.company, value: formData.company }
+      ]);
     }
-  }, [formData.company]);
+  }, [formData.company, companyOptions]);
 
   const handleAddCompany = (companyName: string) => {
     if (companyName) {
+      // أضف الشركة الجديدة إلى خيارات الشركات
+      setCompanyOptions(prev => [
+        ...prev,
+        { label: companyName, value: companyName }
+      ]);
+      
+      // حدد الشركة الجديدة في النموذج
       handleSelectChange("company", companyName);
     }
   };
@@ -117,7 +145,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
           </Button>
         </Label>
         <Autocomplete
-          options={companyOptions || []}
+          options={companyOptions}
           value={formData.company || ''}
           onValueChange={(value) => handleSelectChange("company", value)}
           placeholder="اختر أو اكتب اسم الشركة"
@@ -207,7 +235,6 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر المصدر" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="not_specified">غير محدد</SelectItem>
               {(options.sources || []).map((source) => (
                 <SelectItem key={source} value={source}>
                   {source}
@@ -228,7 +255,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
             <SelectValue placeholder="اختر المسؤول" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem key="unassigned" value="unassigned">غير مخصص</SelectItem>
+            <SelectItem value="unassigned">غير مخصص</SelectItem>
             {(options.owners || []).map((owner) => (
               <SelectItem key={owner.id} value={owner.id}>
                 {owner.name}

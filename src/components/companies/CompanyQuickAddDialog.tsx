@@ -87,19 +87,19 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
     setIsSubmitting(true);
 
     try {
-      // In a real implementation, we would save the company to the database
-      // For now, we'll just simulate a successful save
+      // في تطبيق حقيقي، سنحفظ الشركة في قاعدة البيانات
+      // في هذه الحالة، سنقوم فقط بمحاكاة عملية الحفظ
       setTimeout(() => {
         console.log("Company created:", formData.name);
         toast.success("تم إضافة الشركة بنجاح");
         
-        // Make sure we pass a non-empty string to onSuccess
+        // تأكد من إرسال اسم الشركة إلى الدالة onSuccess
         if (formData.name) {
           onSuccess(formData.name);
         }
         
+        // أغلق النافذة المنبثقة
         onOpenChange(false);
-        setFormData({ name: "" });
       }, 500);
     } catch (error) {
       console.error("Error creating company:", error);
