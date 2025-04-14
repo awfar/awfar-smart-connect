@@ -55,7 +55,9 @@ export function Autocomplete({
   const [searchTerm, setSearchTerm] = React.useState("");
 
   // Ensure options is always a valid array
-  const safeOptions = Array.isArray(options) ? options : [];
+  const safeOptions = React.useMemo(() => {
+    return Array.isArray(options) ? options : [];
+  }, [options]);
 
   const handleSelect = React.useCallback(
     (currentValue: string) => {
@@ -95,7 +97,7 @@ export function Autocomplete({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0" align="start">
-        <Command>
+        <Command shouldFilter={false}>
           <CommandInput 
             placeholder="بحث..." 
             value={searchTerm}
@@ -120,7 +122,9 @@ export function Autocomplete({
             )}
           </CommandEmpty>
           <CommandGroup className="max-h-60 overflow-auto">
-            {safeOptions.map((option) => (
+            {safeOptions.filter(option => 
+              option.label.toLowerCase().includes(searchTerm.toLowerCase())
+            ).map((option) => (
               <CommandItem
                 key={option.value}
                 value={option.value}

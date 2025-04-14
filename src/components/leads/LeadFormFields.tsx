@@ -70,7 +70,6 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
   // Add the company selected in the form to the options if it doesn't exist yet
   useEffect(() => {
     if (formData.company && 
-        // Ensure companyOptions is an array before checking
         Array.isArray(companyOptions) && 
         !companyOptions.some(c => c.value === formData.company)) {
       setCompanyOptions(prev => [
@@ -86,9 +85,9 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
     // Add the new company to company options
     const newOption = { label: companyName, value: companyName };
     
-    // Ensure companyOptions is an array before checking
+    // Check if the company already exists in options
     if (!companyOptions.some(opt => opt.value === companyName)) {
-      setCompanyOptions(prev => [...prev, newOption]);
+      setCompanyOptions(prevOptions => [...prevOptions, newOption]);
     }
     
     console.log("Added new company to options:", newOption);
@@ -172,7 +171,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
           </Button>
         </Label>
         <Autocomplete
-          options={companyOptions || []} 
+          options={companyOptions}
           value={formData.company || ''}
           onValueChange={(value) => handleSelectChange("company", value)}
           placeholder="اختر أو اكتب اسم الشركة"

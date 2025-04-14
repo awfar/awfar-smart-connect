@@ -53,18 +53,6 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
     }
   };
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-    
-    // Clear validation error when field is changed
-    if (formErrors[name]) {
-      setFormErrors(prev => ({ ...prev, [name]: "" }));
-    }
-  };
-
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
     
@@ -103,7 +91,7 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
       console.log("Company created:", newCompany);
       
       // Return the company name back to parent component
-      if (newCompany && newCompany.name) {
+      if (newCompany?.name) {
         // Show success toast BEFORE closing dialog
         toast.success(`تم إضافة الشركة "${newCompany.name}" بنجاح`);
         
