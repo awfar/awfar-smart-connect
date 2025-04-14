@@ -34,6 +34,7 @@ export interface AutocompleteProps {
   disableCreate?: boolean;
   onCreateNew?: () => void;
   createNewLabel?: string;
+  isLoading?: boolean;
 }
 
 export function Autocomplete({
@@ -47,12 +48,13 @@ export function Autocomplete({
   disabled = false,
   disableCreate = true,
   onCreateNew,
-  createNewLabel = "إضافة جديد"
+  createNewLabel = "إضافة جديد",
+  isLoading = false,
 }: AutocompleteProps) {
   const [open, setOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
 
-  // Ensure options is always a valid array to prevent the "undefined is not iterable" error
+  // Ensure options is always a valid array
   const safeOptions = Array.isArray(options) ? options : [];
 
   const handleSelect = React.useCallback(
@@ -63,9 +65,14 @@ export function Autocomplete({
     [value, onValueChange]
   );
 
+  // Safely find the selected option, with null checks
   const selectedOption = React.useMemo(() => {
-    return safeOptions.find((option) => option.value === value);
+    if (!value || !safeOptions.length) return null;
+    return safeOptions.find((option) => option.value === value) || null;
   }, [safeOptions, value]);
+
+  // Safe label for display
+  const displayLabel = selectedOption ? selectedOption.label : "";
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -79,11 +86,11 @@ export function Autocomplete({
             !selectedOption && "text-muted-foreground",
             className
           )}
-          disabled={disabled}
+          disabled={disabled || isLoading}
           onClick={() => setSearchTerm("")}
           data-name={name}
         >
-          {selectedOption ? selectedOption.label : placeholder}
+          {isLoading ? "جاري التحميل..." : displayLabel || placeholder}
           <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -95,8 +102,8 @@ export function Autocomplete({
             onValueChange={setSearchTerm}
           />
           <CommandEmpty>
-            {emptyMessage}
-            {!disableCreate && searchTerm && (
+            {isLoading ? "جاري التحميل..." : emptyMessage}
+            {!disableCreate && searchTerm && !isLoading && (
               <Button 
                 variant="ghost" 
                 className="flex w-full items-center justify-start mt-2"

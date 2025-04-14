@@ -103,29 +103,44 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
       
       console.log("Company created:", newCompany);
       
-      // Ensure we're passing the company name back to the parent component
+      // Return the company name back to parent component
       if (newCompany && newCompany.name) {
         onSuccess(newCompany.name);
-        toast.success("تم إضافة الشركة بنجاح");
+        
+        // Close dialog first
+        onOpenChange(false);
+        
+        // Show success message AFTER dialog closes to prevent render issues
+        setTimeout(() => {
+          toast.success(`تم إضافة الشركة "${newCompany.name}" بنجاح`);
+        }, 100);
       } else if (formData.name) {
         // Fallback if company object doesn't have a name for some reason
         onSuccess(formData.name);
-        toast.success("تم إضافة الشركة بنجاح");
+        
+        // Close dialog first
+        onOpenChange(false);
+        
+        // Show success message AFTER dialog closes
+        setTimeout(() => {
+          toast.success(`تم إضافة الشركة "${formData.name}" بنجاح`);
+        }, 100);
       }
-      
-      // Close the dialog after success
-      onOpenChange(false);
       
     } catch (error) {
       console.error("Error creating company:", error);
       toast.error("حدث خطأ أثناء إضافة الشركة");
-    } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      // Only allow closing if not submitting
+      if (!isSubmitting) {
+        onOpenChange(open);
+      }
+    }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">إضافة شركة جديدة</DialogTitle>

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,14 +49,15 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
           setCompanyOptions(companyOpts);
         } else {
           console.error("Companies data is not an array:", companies);
-          // Initialize with empty array rather than undefined
+          // Initialize with empty array
           setCompanyOptions([]);
+          toast.error("فشل تحميل قائمة الشركات: البيانات المستلمة غير صالحة");
         }
       } catch (error) {
         console.error("Error loading companies:", error);
         setLoadCompanyError("لم نتمكن من تحميل قائمة الشركات");
         toast.error("لم نتمكن من تحميل قائمة الشركات");
-        // Always set an empty array as fallback, never undefined
+        // Always set an empty array as fallback
         setCompanyOptions([]);
       } finally {
         setIsLoadingCompanies(false);
@@ -86,16 +88,13 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
     const newOption = { label: companyName, value: companyName };
     
     // Ensure companyOptions is an array before checking
-    if (Array.isArray(companyOptions) && !companyOptions.some(opt => opt.value === companyName)) {
+    if (!companyOptions.some(opt => opt.value === companyName)) {
       setCompanyOptions(prev => [...prev, newOption]);
     }
     
     // Select the new company in the form
     handleSelectChange("company", companyName);
   };
-
-  // Ensure companyOptions is never undefined to prevent "undefined is not iterable" error
-  const safeCompanyOptions = Array.isArray(companyOptions) ? companyOptions : [];
 
   return (
     <>
@@ -171,15 +170,16 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
           </Button>
         </Label>
         <Autocomplete
-          options={safeCompanyOptions}
+          options={companyOptions}
           value={formData.company || ''}
           onValueChange={(value) => handleSelectChange("company", value)}
-          placeholder={isLoadingCompanies ? "جاري التحميل..." : "اختر أو اكتب اسم الشركة"}
+          placeholder="اختر أو اكتب اسم الشركة"
           emptyMessage={loadCompanyError ? loadCompanyError : "لم يتم العثور على نتائج"}
           disableCreate={false}
           onCreateNew={() => setIsAddCompanyOpen(true)}
           createNewLabel="إضافة شركة جديدة"
           disabled={isLoadingCompanies}
+          isLoading={isLoadingCompanies}
         />
         {isLoadingCompanies && (
           <div className="flex items-center mt-1 text-xs text-muted-foreground">
