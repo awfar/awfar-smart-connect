@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -8,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Check, Clock, List, Mail, Phone, User, Building, MapPin, Briefcase, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { 
-  fetchLeadById, 
+  getLead, 
   getLeadActivities, 
   addLeadActivity,
   updateLead,
@@ -45,7 +44,7 @@ const LeadDetails = () => {
     error: leadError
   } = useQuery({
     queryKey: ['lead', id],
-    queryFn: () => id ? fetchLeadById(id) : null,
+    queryFn: () => id ? getLead(id) : null,
     enabled: !!id
   });
   

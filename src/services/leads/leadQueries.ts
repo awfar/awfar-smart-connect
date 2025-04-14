@@ -62,7 +62,7 @@ export const getLeads = async (filters: Record<string, any> = {}): Promise<Lead[
       query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,company.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
     }
     
-    // Apply other filters using async/await properly - FIX: making this section async compatible
+    // Apply other filters using for...of loop instead of forEach with await
     for (const [key, value] of Object.entries(filters)) {
       if (key !== 'search' && value) {
         // Handle special case for "current-user-id"
