@@ -55,10 +55,10 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
           toast.success("تم تحديث العميل المحتمل بنجاح");
           
           // Then call onSuccess callback
-          onSuccess?.(updatedLead);
+          if (onSuccess) onSuccess(updatedLead);
           
           // Only close if no errors occurred
-          onClose?.();
+          if (onClose) onClose();
         } else {
           toast.error("حدث خطأ أثناء تحديث العميل المحتمل");
         }
@@ -82,10 +82,10 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
           toast.success("تم إضافة العميل المحتمل بنجاح");
           
           // Then call onSuccess callback
-          onSuccess?.(newLead);
+          if (onSuccess) onSuccess(newLead);
           
           // Only close if no errors occurred
-          onClose?.();
+          if (onClose) onClose();
         } else {
           toast.error("حدث خطأ أثناء إنشاء العميل المحتمل");
         }

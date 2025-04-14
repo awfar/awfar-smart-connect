@@ -46,8 +46,8 @@ import PropertiesManagement from "./pages/PropertiesManagement";
 import ReportsManagement from "./pages/ReportsManagement";
 import SubscriptionManagement from "./pages/SubscriptionManagement";
 
-// Import Toaster component
-import { Toaster } from "./components/ui/sonner";
+// Import Toaster component from sonner directly
+import { Toaster } from "sonner";
 
 function App() {
   return (
@@ -101,8 +101,14 @@ function App() {
         </Routes>
       </Router>
       
-      {/* Add Toaster component here */}
-      <Toaster />
+      {/* Add Toaster component with RTL support and positioning */}
+      <Toaster 
+        position="top-center"
+        richColors
+        expand
+        closeButton
+        dir="rtl"
+      />
     </>
   );
 }
