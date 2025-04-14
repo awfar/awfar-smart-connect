@@ -62,8 +62,11 @@ export const getLeads = async (filters: Record<string, any> = {}): Promise<Lead[
       query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,company.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
     }
     
-    // Apply other filters using for...of loop instead of forEach with await
-    for (const [key, value] of Object.entries(filters)) {
+    // Apply other filters - fix type instantiation issue by simplifying the approach
+    const filterEntries = Object.entries(filters);
+    for (let i = 0; i < filterEntries.length; i++) {
+      const [key, value] = filterEntries[i];
+      
       if (key !== 'search' && value) {
         // Handle special case for "current-user-id"
         if (key === 'assigned_to' && value === 'current-user-id') {
