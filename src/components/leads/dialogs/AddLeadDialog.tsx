@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import MobileOptimizedContainer from '@/components/ui/mobile-optimized-container';
 import LeadForm from '@/components/leads/LeadForm';
 import { toast } from "sonner";
+import { Lead } from "@/services/leads";
 
 interface AddLeadDialogProps {
   isOpen: boolean;
@@ -16,8 +17,13 @@ const AddLeadDialog: React.FC<AddLeadDialogProps> = ({
   onOpenChange,
   onSuccess
 }) => {
-  const handleSuccess = () => {
-    toast.success("تم إضافة العميل المحتمل بنجاح");
+  const handleSuccess = (lead?: Lead) => {
+    if (lead) {
+      const fullName = `${lead.first_name} ${lead.last_name}`.trim();
+      toast.success(`تم إضافة العميل المحتمل "${fullName}" بنجاح`);
+    } else {
+      toast.success("تم إضافة العميل المحتمل بنجاح");
+    }
     onSuccess();
   };
 

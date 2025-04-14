@@ -45,6 +45,25 @@ export const addLeadActivity = async (activity: Partial<LeadActivity>): Promise<
   try {
     const { data: userData } = await supabase.auth.getUser();
     
+    // Make sure we have a user before proceeding
+    if (!userData.user) {
+      console.error("No authenticated user found when creating activity");
+      throw new Error("User authentication required");
+    }
+    
+    // Validate required fields
+    if (!activity.lead_id) {
+      throw new Error("Lead ID is required");
+    }
+    
+    if (!activity.type) {
+      throw new Error("Activity type is required");
+    }
+    
+    if (!activity.description) {
+      throw new Error("Activity description is required");
+    }
+    
     const { data, error } = await supabase
       .from('lead_activities')
       .insert([{
@@ -52,14 +71,19 @@ export const addLeadActivity = async (activity: Partial<LeadActivity>): Promise<
         type: activity.type,
         description: activity.description,
         scheduled_at: activity.scheduled_at,
-        created_by: userData.user?.id
+        created_by: userData.user.id,
+        completed_at: activity.completed_at || null
       }])
       .select()
       .single();
     
     if (error) throw error;
     
-    toast.success("تم إضافة النشاط بنجاح");
+    // Only show success toast for user-facing activities (not system activities)
+    if (activity.type !== "create" && activity.type !== "update" && activity.type !== "delete") {
+      toast.success("تم إضافة النشاط بنجاح");
+    }
+    
     return data;
   } catch (error) {
     console.error("Error creating lead activity:", error);
@@ -88,4 +112,72 @@ export const completeLeadActivity = async (activityId: string): Promise<LeadActi
     toast.error("فشل في إكمال النشاط");
     return null;
   }
+};
+
+// Add a new note to a lead
+export const addLeadNote = async (
+  leadId: string, 
+  noteText: string
+): Promise<LeadActivity | null> => {
+  return addLeadActivity({
+    lead_id: leadId,
+    type: "note",
+    description: noteText,
+    completed_at: new Date().toISOString() // Notes are completed when created
+  });
+};
+
+// Schedule a call with a lead
+export const scheduleLeadCall = async (
+  leadId: string, 
+  description: string,
+  scheduledAt: string
+): Promise<LeadActivity | null> => {
+  return addLeadActivity({
+    lead_id: leadId,
+    type: "call",
+    description: description,
+    scheduled_at: scheduledAt
+  });
+};
+
+// Schedule a meeting with a lead
+export const scheduleLeadMeeting = async (
+  leadId: string, 
+  description: string,
+  scheduledAt: string
+): Promise<LeadActivity | null> => {
+  return addLeadActivity({
+    lead_id: leadId,
+    type: "meeting",
+    description: description,
+    scheduled_at: scheduledAt
+  });
+};
+
+// Add a task related to a lead
+export const addLeadTask = async (
+  leadId: string, 
+  taskDescription: string,
+  dueDate: string
+): Promise<LeadActivity | null> => {
+  return addLeadActivity({
+    lead_id: leadId,
+    type: "task",
+    description: taskDescription,
+    scheduled_at: dueDate
+  });
+};
+
+// Add an email activity to a lead
+export const logLeadEmail = async (
+  leadId: string, 
+  emailSubject: string
+): Promise<LeadActivity | null> => {
+  return addLeadActivity({
+    lead_id: leadId,
+    type: "email",
+    description: emailSubject,
+    completed_at: new Date().toISOString() // Emails are completed when logged
+  });
 };

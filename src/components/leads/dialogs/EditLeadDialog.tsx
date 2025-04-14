@@ -19,8 +19,13 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
   lead,
   onSuccess
 }) => {
-  const handleSuccess = () => {
-    toast.success("تم تحديث بيانات العميل المحتمل بنجاح");
+  const handleSuccess = (updatedLead?: Lead) => {
+    if (updatedLead) {
+      const fullName = `${updatedLead.first_name} ${updatedLead.last_name}`.trim();
+      toast.success(`تم تحديث بيانات العميل المحتمل "${fullName}" بنجاح`);
+    } else {
+      toast.success("تم تحديث بيانات العميل المحتمل بنجاح");
+    }
     onSuccess();
   };
 

@@ -28,8 +28,8 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
     // Prepare lead data for Supabase (remove owner property)
     const { owner, ...leadToUpdate } = lead;
     
-    // Clean assigned_to field if empty to prevent uuid type error
-    if (leadToUpdate.assigned_to === '') {
+    // Remove any null or empty string values for UUID fields to prevent errors
+    if (!leadToUpdate.assigned_to || leadToUpdate.assigned_to === '') {
       leadToUpdate.assigned_to = null;
     }
     
@@ -54,6 +54,20 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
     
     // If operation was successful, return the updated lead
     if (data) {
+      // Log the activity
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        await addLeadActivity({
+          lead_id: lead.id,
+          type: "update",
+          description: "تم تحديث بيانات العميل المحتمل",
+          created_by: userData.user?.id
+        });
+      } catch (activityError) {
+        console.error("Error logging lead update activity:", activityError);
+        // Don't block the update if activity logging fails
+      }
+      
       toast.success("تم تحديث العميل المحتمل بنجاح");
       return transformLeadFromSupabase(data);
     }
@@ -74,8 +88,8 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     // Prepare lead data for Supabase
     const { owner, ...leadToCreate } = lead as any;
     
-    // Clean assigned_to field if empty or invalid to prevent uuid type error
-    if (!leadToCreate.assigned_to || leadToCreate.assigned_to === '') {
+    // Sanitize input - ensure UUID fields are either valid UUIDs or null
+    if (!leadToCreate.assigned_to || leadToCreate.assigned_to === '' || leadToCreate.assigned_to === 'unassigned') {
       leadToCreate.assigned_to = null;
     }
     
@@ -117,14 +131,25 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
       followupDate.setDate(followupDate.getDate() + 3);
       
       try {
+        // Log the creation activity
+        const { data: userData } = await supabase.auth.getUser();
+        
+        await addLeadActivity({
+          lead_id: transformedLead.id,
+          type: "create",
+          description: "تم إنشاء العميل المحتمل",
+          created_by: userData.user?.id
+        });
+        
         await addLeadActivity({
           lead_id: transformedLead.id,
           type: "call",
           description: "متابعة هاتفية للعميل المحتمل الجديد",
-          scheduled_at: followupDate.toISOString()
+          scheduled_at: followupDate.toISOString(),
+          created_by: userData.user?.id
         });
       } catch (activityError) {
-        console.error("Error creating follow-up activity:", activityError);
+        console.error("Error creating activity:", activityError);
         // Don't block lead creation if activity creation fails
       }
       
@@ -156,6 +181,20 @@ export const deleteLead = async (id: string): Promise<boolean> => {
         return true;
       }
       throw new Error("Lead not found");
+    }
+    
+    // Log the deletion activity before deleting the lead
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      await addLeadActivity({
+        lead_id: id,
+        type: "delete",
+        description: "تم حذف العميل المحتمل",
+        created_by: userData.user?.id
+      });
+    } catch (activityError) {
+      console.error("Error logging lead deletion activity:", activityError);
+      // Continue with deletion even if activity logging fails
     }
     
     // Try deleting the lead from Supabase

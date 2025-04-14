@@ -13,6 +13,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
       className="toaster group"
       position="top-center"
       richColors
+      dir="rtl" // Add RTL support
+      expand
       toastOptions={{
         classNames: {
           toast:
