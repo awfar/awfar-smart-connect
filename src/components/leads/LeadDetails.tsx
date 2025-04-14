@@ -5,27 +5,59 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { X, Mail, Phone, MapPin, Building, Calendar, MessageCircle } from "lucide-react";
+import { 
+  X, Mail, Phone, MapPin, Building, Calendar, Briefcase, 
+  MoreVertical, Edit, Trash, Clock, AlertCircle, CheckCircle, 
+  CircleCheck, FileEdit, Loader2 
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getStageColorClass } from "@/services/leads/utils";
-import { Lead } from "@/services/types/leadTypes";
+import { Lead, LeadActivity } from "@/services/types/leadTypes";
 import { useQuery } from "@tanstack/react-query";
-import { getLeadActivities } from "@/services/leads";
+import { getLeadActivities, completeLeadActivity } from "@/services/leads";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
+import ActivityForm from "./ActivityForm";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
 interface LeadDetailsProps {
   lead: Lead;
   onClose: () => void;
+  onEdit?: (lead: Lead) => void;
+  onDelete?: (leadId: string) => void;
+  onRefresh?: () => void;
 }
 
-const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
+const LeadDetails: React.FC<LeadDetailsProps> = ({ 
+  lead, 
+  onClose, 
+  onEdit, 
+  onDelete,
+  onRefresh 
+}) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("activities");
+  const [showActivityForm, setShowActivityForm] = useState(false);
+  const [processingActivity, setProcessingActivity] = useState<string | null>(null);
   
   // Fetch activities for this lead
-  const { data: activities = [], isLoading: loadingActivities } = useQuery({
-    queryKey: ["leadActivities", lead.id],
+  const { 
+    data: activities = [], 
+    isLoading: loadingActivities,
+    refetch: refetchActivities
+  } = useQuery({
+    queryKey: ["leadActivities", lead?.id],
     queryFn: () => getLeadActivities(lead.id),
-    enabled: !!lead.id
+    enabled: !!lead?.id
   });
   
   // If no lead is provided, show empty state
@@ -57,18 +89,98 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
     initials: "؟" 
   };
   
-  // Handle double click to navigate to lead details
+  // Handle activity actions
+  const handleAddActivity = (activity?: LeadActivity) => {
+    setShowActivityForm(false);
+    if (activity) {
+      refetchActivities();
+      onRefresh?.();
+    }
+  };
+  
+  const handleCompleteActivity = async (activityId: string) => {
+    try {
+      setProcessingActivity(activityId);
+      await completeLeadActivity(activityId);
+      refetchActivities();
+      onRefresh?.();
+    } catch (error) {
+      console.error("Error completing activity:", error);
+    } finally {
+      setProcessingActivity(null);
+    }
+  };
+  
+  // Handle navigation to full lead details
   const handleViewDetails = () => {
     navigate(`/dashboard/leads/${lead.id}`);
+  };
+  
+  // Handle lead edit
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit(lead);
+    } else {
+      navigate(`/dashboard/leads/${lead.id}/edit`);
+    }
+  };
+  
+  // Handle lead deletion
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete(lead.id);
+    } else {
+      toast.error("عملية الحذف غير متاحة");
+    }
+  };
+  
+  // Filter activities by tab
+  const filteredActivities = {
+    activities: activities.filter(act => act.type !== 'task' && act.type !== 'note'),
+    tasks: activities.filter(act => act.type === 'task'),
+    notes: activities.filter(act => act.type === 'note'),
   };
   
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
         <CardTitle className="text-lg font-semibold">تفاصيل العميل المحتمل</CardTitle>
-        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onClose}>
-          <X className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>خيارات</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleViewDetails}>
+                <FileEdit className="mr-2 h-4 w-4" />
+                عرض التفاصيل الكاملة
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleEdit}>
+                <Edit className="mr-2 h-4 w-4" />
+                تحرير البيانات
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowActivityForm(true)}>
+                <Calendar className="mr-2 h-4 w-4" />
+                إضافة نشاط
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={handleDelete}
+                className="text-red-600 focus:text-red-600"
+              >
+                <Trash className="mr-2 h-4 w-4" />
+                حذف العميل المحتمل
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onClose}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </CardHeader>
 
       <CardContent className="py-2">
@@ -96,6 +208,12 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
               <Phone className="h-4 w-4 text-muted-foreground" />
               <p className="text-sm">{lead.phone || "غير محدد"}</p>
             </div>
+            {lead.position && (
+              <div className="flex items-center gap-2">
+                <Briefcase className="h-4 w-4 text-muted-foreground" />
+                <p className="text-sm">{lead.position}</p>
+              </div>
+            )}
             {lead.country && (
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -106,6 +224,12 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
               <div className="flex items-center gap-2">
                 <Building className="h-4 w-4 text-muted-foreground" />
                 <p className="text-sm">{lead.industry}</p>
+              </div>
+            )}
+            {lead.source && (
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                <p className="text-sm">المصدر: {lead.source}</p>
               </div>
             )}
           </div>
@@ -129,20 +253,28 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
             </TabsList>
 
             <TabsContent value="activities" className="space-y-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full text-xs" 
+                onClick={() => setShowActivityForm(true)}
+              >
+                + إضافة نشاط جديد
+              </Button>
+              
               {loadingActivities ? (
                 <div className="flex justify-center py-4">
-                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <span className="mr-2">جاري تحميل البيانات...</span>
                 </div>
-              ) : activities.length > 0 ? (
-                activities
-                  .filter(act => act.type !== 'task' && act.type !== 'note')
-                  .slice(0, 3)
-                  .map(activity => (
-                    <div key={activity.id} className="border-b pb-3">
-                      <div className="flex items-center gap-2 mb-2">
+              ) : filteredActivities.activities.length > 0 ? (
+                filteredActivities.activities.map(activity => (
+                  <div key={activity.id} className="border-b pb-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
                           <AvatarFallback>
-                            {activity.created_by ? activity.created_by.substring(0, 2).toUpperCase() : '؟'}
+                            {activity.created_by ? typeof activity.created_by === 'string' ? activity.created_by.substring(0, 2).toUpperCase() : activity.created_by.first_name?.charAt(0) || '؟' : '؟'}
                           </AvatarFallback>
                         </Avatar>
                         <span className="text-sm font-medium">{owner?.name || "غير معروف"}</span>
@@ -150,51 +282,107 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
                           {activity.type === "call" && "مكالمة"}
                           {activity.type === "email" && "بريد"}
                           {activity.type === "meeting" && "اجتماع"}
+                          {activity.type === "whatsapp" && "واتساب"}
                         </Badge>
                       </div>
-                      <p className="text-sm mb-1">{activity.description}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {activity.created_at ? new Date(activity.created_at).toLocaleString('ar-SA') : ''}
-                      </p>
+                      {activity.scheduled_at && !activity.completed_at && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0"
+                          disabled={processingActivity === activity.id}
+                          onClick={() => handleCompleteActivity(activity.id)}
+                        >
+                          {processingActivity === activity.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <CheckCircle className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
                     </div>
-                  ))
+                    <p className="text-sm mb-1">{activity.description}</p>
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs text-muted-foreground">
+                        {activity.created_at && format(new Date(activity.created_at), "yyyy/MM/dd HH:mm", { locale: ar })}
+                      </p>
+                      {activity.scheduled_at && (
+                        <div className="flex items-center gap-1 text-xs">
+                          <Clock className="h-3 w-3" />
+                          <span className={activity.completed_at ? "line-through text-muted-foreground" : ""}>
+                            {format(new Date(activity.scheduled_at), "yyyy/MM/dd", { locale: ar })}
+                          </span>
+                          {activity.completed_at && (
+                            <CircleCheck className="h-3 w-3 text-green-500" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
               ) : (
                 <p className="text-center text-sm text-muted-foreground py-4">
                   لا توجد أنشطة مسجلة
                 </p>
               )}
-              {activities.length > 3 && (
-                <Button variant="ghost" size="sm" className="w-full text-xs" onClick={handleViewDetails}>
-                  عرض المزيد ({activities.length - 3})
-                </Button>
-              )}
             </TabsContent>
 
             <TabsContent value="tasks" className="space-y-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full text-xs" 
+                onClick={() => {
+                  setActiveTab("activities");
+                  setShowActivityForm(true);
+                }}
+              >
+                + إضافة مهمة جديدة
+              </Button>
+              
               {loadingActivities ? (
                 <div className="flex justify-center py-4">
-                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <span className="mr-2">جاري تحميل البيانات...</span>
                 </div>
-              ) : (
-                activities
-                  .filter(act => act.type === 'task')
-                  .slice(0, 3)
-                  .map(task => (
-                    <div key={task.id} className="flex items-center justify-between border-b pb-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <p className="text-sm font-medium">{task.description}</p>
-                        </div>
-                        <p className="text-xs text-muted-foreground">المكلف: {owner?.name || "غير محدد"}</p>
+              ) : filteredActivities.tasks.length > 0 ? (
+                filteredActivities.tasks.map(task => (
+                  <div key={task.id} className="flex items-center justify-between border-b pb-3">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <p className={`text-sm font-medium ${task.completed_at ? 'line-through text-muted-foreground' : ''}`}>
+                          {task.description}
+                        </p>
                       </div>
-                      <Badge variant={task.completed_at ? "secondary" : "outline"}>
-                        {task.scheduled_at ? new Date(task.scheduled_at).toLocaleDateString('ar-SA') : "غير محدد"}
-                      </Badge>
+                      <p className="text-xs text-muted-foreground">
+                        {task.created_at && format(new Date(task.created_at), "yyyy/MM/dd", { locale: ar })}
+                      </p>
                     </div>
-                  ))
-              )}
-              {activities.filter(act => act.type === 'task').length === 0 && (
+                    {!task.completed_at ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7"
+                        disabled={processingActivity === task.id}
+                        onClick={() => handleCompleteActivity(task.id)}
+                      >
+                        {processingActivity === task.id ? (
+                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                        ) : (
+                          <CheckCircle className="mr-1 h-3 w-3" />
+                        )}
+                        إكمال
+                      </Button>
+                    ) : (
+                      <Badge variant="outline" className="text-green-600">
+                        <CheckCircle className="mr-1 h-3 w-3" />
+                        مكتمل
+                      </Badge>
+                    )}
+                  </div>
+                ))
+              ) : (
                 <p className="text-center text-sm text-muted-foreground py-4">
                   لا توجد مهام مسجلة
                 </p>
@@ -202,32 +390,41 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
             </TabsContent>
 
             <TabsContent value="notes" className="space-y-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full text-xs" 
+                onClick={() => {
+                  setActiveTab("activities");
+                  setShowActivityForm(true);
+                }}
+              >
+                + إضافة ملاحظة جديدة
+              </Button>
+              
               {loadingActivities ? (
                 <div className="flex justify-center py-4">
-                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <span className="mr-2">جاري تحميل البيانات...</span>
                 </div>
-              ) : (
-                activities
-                  .filter(act => act.type === 'note')
-                  .slice(0, 3)
-                  .map(note => (
-                    <div key={note.id} className="border-b pb-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarFallback>
-                            {note.created_by ? note.created_by.substring(0, 2).toUpperCase() : '؟'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm font-medium">{owner?.name || "غير معروف"}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {note.created_at ? new Date(note.created_at).toLocaleString('ar-SA') : ''}
-                        </span>
-                      </div>
-                      <p className="text-sm">{note.description}</p>
+              ) : filteredActivities.notes.length > 0 ? (
+                filteredActivities.notes.map(note => (
+                  <div key={note.id} className="border-b pb-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Avatar className="h-6 w-6">
+                        <AvatarFallback>
+                          {note.created_by ? typeof note.created_by === 'string' ? note.created_by.substring(0, 2).toUpperCase() : note.created_by.first_name?.charAt(0) || '؟' : '؟'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium">{owner?.name || "غير معروف"}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {note.created_at && format(new Date(note.created_at), "yyyy/MM/dd HH:mm", { locale: ar })}
+                      </span>
                     </div>
-                  ))
-              )}
-              {activities.filter(act => act.type === 'note').length === 0 && (
+                    <p className="text-sm whitespace-pre-wrap">{note.description}</p>
+                  </div>
+                ))
+              ) : (
                 <p className="text-center text-sm text-muted-foreground py-4">
                   لا توجد ملاحظات مسجلة
                 </p>
@@ -238,14 +435,33 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({ lead, onClose }) => {
       </CardContent>
 
       <CardFooter className="flex justify-between border-t pt-4 mt-4">
-        <Button variant="outline" size="sm" className="gap-1" onClick={handleViewDetails}>
-          عرض التفاصيل
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="gap-1" 
+          onClick={handleViewDetails}
+        >
+          عرض التفاصيل الكاملة
         </Button>
         
-        <Button size="sm" className="gap-1" onClick={handleViewDetails}>
+        <Button size="sm" className="gap-1" onClick={handleEdit}>
+          <Edit className="mr-1 h-4 w-4" />
           تحرير
         </Button>
       </CardFooter>
+      
+      <Dialog open={showActivityForm} onOpenChange={setShowActivityForm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>إضافة نشاط جديد</DialogTitle>
+          </DialogHeader>
+          <ActivityForm 
+            leadId={lead.id} 
+            onSuccess={handleAddActivity}
+            onClose={() => setShowActivityForm(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

@@ -29,9 +29,10 @@ export interface LeadActivity {
   type: string;
   description: string;
   created_at: string;
-  created_by?: string;
+  created_by?: string | { id: string; first_name: string; last_name: string };
   scheduled_at?: string | null;
   completed_at?: string | null;
+  profiles?: any; // For join with profiles table
 }
 
 // Database representation of a lead

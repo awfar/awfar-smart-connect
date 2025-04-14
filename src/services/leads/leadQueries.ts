@@ -1,3 +1,4 @@
+
 // Functions for fetching lead data
 import { supabase } from "@/integrations/supabase/client";
 import { Lead, LeadDBRow } from "../types/leadTypes";
@@ -32,12 +33,20 @@ export const getLeads = async (filters?: Record<string, any>): Promise<Lead[]> =
         query = query.eq('assigned_to', filters.assigned_to);
       }
       
+      if (filters.country && filters.country !== 'all') {
+        query = query.eq('country', filters.country);
+      }
+      
+      if (filters.industry && filters.industry !== 'all') {
+        query = query.eq('industry', filters.industry);
+      }
+      
       if (filters.search) {
         query = query.or(`first_name.ilike.%${filters.search}%,last_name.ilike.%${filters.search}%,email.ilike.%${filters.search}%,company.ilike.%${filters.search}%`);
       }
     }
     
-    // Add sorting
+    // Add sorting - newest first
     query = query.order('created_at', { ascending: false });
     
     // Execute query
@@ -53,12 +62,12 @@ export const getLeads = async (filters?: Record<string, any>): Promise<Lead[]> =
       return data.map((lead: LeadDBRow) => transformLeadFromSupabase(lead));
     }
     
-    console.log("No data found in Supabase, using mock data");
-    return Promise.resolve(mockLeads);
+    console.log("No data found in Supabase, returning empty array");
+    return [];
   } catch (error) {
     console.error("Error fetching leads:", error);
     toast.error("تعذر جلب بيانات العملاء المحتملين");
-    return Promise.resolve(mockLeads);
+    return mockLeads; // Return mock data only if there's an error
   }
 };
 
@@ -66,6 +75,14 @@ export const getLeads = async (filters?: Record<string, any>): Promise<Lead[]> =
 export const getLeadById = async (id: string): Promise<Lead | null> => {
   try {
     console.log(`Fetching lead with id ${id} from Supabase...`);
+    
+    // Check if it's a mock ID
+    if (id.startsWith('lead-')) {
+      console.log("Lead ID appears to be mock data, checking mock array");
+      const mockLead = mockLeads.find((lead) => lead.id === id);
+      if (mockLead) return mockLead;
+    }
+    
     const { data, error } = await supabase
       .from('leads')
       .select(`
@@ -84,15 +101,12 @@ export const getLeadById = async (id: string): Promise<Lead | null> => {
       return transformLeadFromSupabase(data as LeadDBRow);
     }
     
-    // If no data found, look in mock data
-    console.log("Lead not found in Supabase, checking mock data");
-    const mockLead = mockLeads.find((lead) => lead.id === id);
-    return Promise.resolve(mockLead || null);
+    return null;
   } catch (error) {
     console.error("Error fetching lead by ID:", error);
     toast.error("تعذر جلب بيانات العميل المحتمل");
     
-    // Look in mock data as fallback
+    // Look in mock data as fallback only if there's an error
     const mockLead = mockLeads.find((lead) => lead.id === id);
     return Promise.resolve(mockLead || null);
   }
@@ -104,7 +118,8 @@ export const getLeadSources = async (): Promise<string[]> => {
     const { data, error } = await supabase
       .from('leads')
       .select('source')
-      .not('source', 'is', null);
+      .not('source', 'is', null)
+      .not('source', 'eq', '');
     
     if (error) throw error;
     
@@ -128,7 +143,8 @@ export const getLeadStages = async (): Promise<string[]> => {
     const { data, error } = await supabase
       .from('leads')
       .select('status')
-      .not('status', 'is', null);
+      .not('status', 'is', null)
+      .not('status', 'eq', '');
     
     if (error) throw error;
     
@@ -165,29 +181,25 @@ export const getSalesOwners = async (): Promise<{id: string, name: string}[]> =>
   }
 };
 
-// Get companies for dropdown
-export const getCompanies = async (): Promise<{id: string, name: string}[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('companies')
-      .select('id, name');
-    
-    if (error) throw error;
-    
-    return data;
-  } catch (error) {
-    console.error("Error fetching companies:", error);
-    return [];
-  }
-};
-
 // Get countries for filtering
 export const getCountries = async (): Promise<string[]> => {
   try {
-    // Since the country column might not exist in the leads table yet,
-    // we'll return default countries
-    console.log("Returning default countries due to schema limitations");
-    return getDefaultCountries();
+    const { data, error } = await supabase
+      .from('leads')
+      .select('country')
+      .not('country', 'is', null)
+      .not('country', 'eq', '');
+    
+    if (error) throw error;
+    
+    // Extract unique countries
+    const countries = data
+      .map(item => item.country as string)
+      .filter(Boolean)
+      .filter((value, index, self) => self.indexOf(value) === index)
+      .sort();
+    
+    return countries.length > 0 ? countries : getDefaultCountries();
   } catch (error) {
     console.error("Error fetching countries:", error);
     return getDefaultCountries();
@@ -197,10 +209,22 @@ export const getCountries = async (): Promise<string[]> => {
 // Get industries for filtering
 export const getIndustries = async (): Promise<string[]> => {
   try {
-    // Since the industry column might not exist in the leads table yet,
-    // we'll return default industries
-    console.log("Returning default industries due to schema limitations");
-    return getDefaultIndustries();
+    const { data, error } = await supabase
+      .from('leads')
+      .select('industry')
+      .not('industry', 'is', null)
+      .not('industry', 'eq', '');
+    
+    if (error) throw error;
+    
+    // Extract unique industries
+    const industries = data
+      .map(item => item.industry as string)
+      .filter(Boolean)
+      .filter((value, index, self) => self.indexOf(value) === index)
+      .sort();
+    
+    return industries.length > 0 ? industries : getDefaultIndustries();
   } catch (error) {
     console.error("Error fetching industries:", error);
     return getDefaultIndustries();

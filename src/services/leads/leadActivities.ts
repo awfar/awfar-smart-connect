@@ -17,7 +17,10 @@ export const getLeadActivities = async (leadId: string): Promise<LeadActivity[]>
     // For real UUIDs, fetch from Supabase
     const { data, error } = await supabase
       .from("lead_activities")
-      .select("*")
+      .select(`
+        *,
+        profiles:created_by (first_name, last_name)
+      `)
       .eq("lead_id", leadId)
       .order("created_at", { ascending: false });
     
@@ -26,9 +29,11 @@ export const getLeadActivities = async (leadId: string): Promise<LeadActivity[]>
       throw error;
     }
     
+    console.log("Lead activities retrieved:", data);
     return data as LeadActivity[];
   } catch (error) {
     console.error("Error fetching lead activities:", error);
+    toast.error("تعذر جلب أنشطة العميل المحتمل");
     
     // Return mock activities if there was an error
     return getMockActivities(leadId);
@@ -50,19 +55,34 @@ export const addLeadActivity = async (activity: Omit<LeadActivity, "id" | "creat
       return Promise.resolve(mockActivity);
     }
     
+    // Get current user ID from Supabase auth if available
+    let created_by = null;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) created_by = user.id;
+    } catch (e) {
+      console.log("User not authenticated, continuing without user ID");
+    }
+    
     const { data, error } = await supabase
       .from("lead_activities")
       .insert({
         ...activity,
         created_at: new Date().toISOString(),
+        created_by,
       })
-      .select()
+      .select(`
+        *,
+        profiles:created_by (first_name, last_name)
+      `)
       .single();
     
     if (error) {
+      console.error("Error in addLeadActivity:", error);
       throw error;
     }
     
+    toast.success("تم إضافة النشاط بنجاح");
     return data as LeadActivity;
   } catch (error) {
     console.error("Error adding lead activity:", error);
@@ -91,13 +111,18 @@ export const completeLeadActivity = async (activityId: string): Promise<LeadActi
         completed_at: new Date().toISOString(),
       })
       .eq("id", activityId)
-      .select()
+      .select(`
+        *,
+        profiles:created_by (first_name, last_name)
+      `)
       .single();
     
     if (error) {
+      console.error("Error in completeLeadActivity:", error);
       throw error;
     }
     
+    toast.success("تم إكمال النشاط بنجاح");
     return data as LeadActivity;
   } catch (error) {
     console.error("Error completing lead activity:", error);

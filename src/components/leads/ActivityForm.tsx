@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { 
   Select, 
@@ -15,19 +14,24 @@ import { addLeadActivity } from "@/services/leads";
 import { LeadActivity } from "@/services/types/leadTypes";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 export interface ActivityFormProps {
   leadId: string;
-  title: string;
+  title?: string;
   onSuccess: (activity?: LeadActivity) => void;
   onClose?: () => void; 
 }
 
-const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, title, onSuccess, onClose }) => {
+const ActivityForm: React.FC<ActivityFormProps> = ({ 
+  leadId, 
+  title = "إضافة نشاط جديد", 
+  onSuccess, 
+  onClose 
+}) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     type: "note", // Default activity type
@@ -37,6 +41,11 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, title, onSuccess, o
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.description.trim()) {
+      return; // Don't submit empty activities
+    }
+    
     setIsSubmitting(true);
     
     try {
@@ -46,6 +55,13 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, title, onSuccess, o
         type: formData.type,
         description: formData.description,
         scheduled_at: formData.scheduled_at ? formData.scheduled_at.toISOString() : null,
+      });
+      
+      // Reset form
+      setFormData({
+        type: "note",
+        description: "",
+        scheduled_at: null
       });
       
       // Call the success callback with the new activity
@@ -64,11 +80,14 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, title, onSuccess, o
   
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {title && <h3 className="text-lg font-medium">{title}</h3>}
+      
       <div>
         <Label htmlFor="type">نوع النشاط</Label>
         <Select 
           value={formData.type} 
           onValueChange={(value) => handleChange('type', value)}
+          disabled={isSubmitting}
         >
           <SelectTrigger id="type">
             <SelectValue placeholder="اختر نوع النشاط" />
@@ -79,6 +98,7 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, title, onSuccess, o
             <SelectItem value="meeting">اجتماع</SelectItem>
             <SelectItem value="email">بريد إلكتروني</SelectItem>
             <SelectItem value="task">مهمة</SelectItem>
+            <SelectItem value="whatsapp">واتساب</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -91,6 +111,8 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, title, onSuccess, o
           onChange={(e) => handleChange('description', e.target.value)}
           placeholder="أدخل تفاصيل النشاط"
           required 
+          disabled={isSubmitting}
+          className="min-h-[100px]"
         />
       </div>
       
@@ -105,6 +127,7 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, title, onSuccess, o
                   "w-full justify-start text-right font-normal",
                   !formData.scheduled_at && "text-muted-foreground"
                 )}
+                disabled={isSubmitting}
               >
                 <CalendarIcon className="ml-2 h-4 w-4" />
                 {formData.scheduled_at ? (
@@ -137,8 +160,13 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, title, onSuccess, o
             إلغاء
           </Button>
         )}
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "جاري الحفظ..." : "إضافة النشاط"}
+        <Button type="submit" disabled={isSubmitting || !formData.description.trim()}>
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              جاري الإضافة...
+            </>
+          ) : "إضافة النشاط"}
         </Button>
       </div>
     </form>

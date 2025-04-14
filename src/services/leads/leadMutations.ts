@@ -1,5 +1,4 @@
 
-// Functions for modifying lead data
 import { supabase } from "@/integrations/supabase/client";
 import { Lead } from "../types/leadTypes";
 import { mockLeads } from "./mockData";
@@ -12,6 +11,19 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
   try {
     console.log("Updating lead:", lead);
     
+    // Check if it's a mock lead (shouldn't normally happen in production)
+    if (lead.id.startsWith('lead-')) {
+      console.warn("Attempted to update a mock lead in production mode");
+      // Update mock lead for development
+      const index = mockLeads.findIndex((l) => l.id === lead.id);
+      if (index >= 0) {
+        mockLeads[index] = lead;
+        toast.success("تم تحديث العميل المحتمل بنجاح");
+        return lead;
+      }
+      throw new Error("Lead not found");
+    }
+    
     // Prepare lead data for Supabase (remove owner property)
     const { owner, ...leadToUpdate } = lead;
     
@@ -23,7 +35,10 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
         updated_at: new Date().toISOString()
       })
       .eq('id', lead.id)
-      .select()
+      .select(`
+        *,
+        profiles:assigned_to (first_name, last_name)
+      `)
       .single();
     
     if (error) {
@@ -37,23 +52,11 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
       return transformLeadFromSupabase(data);
     }
     
-    // Fallback to mock data
-    const index = mockLeads.findIndex((l) => l.id === lead.id);
-    if (index >= 0) {
-      mockLeads[index] = lead;
-    }
-    toast.success("تم تحديث العميل المحتمل بنجاح");
-    return lead;
+    throw new Error("Failed to update lead");
   } catch (error) {
     console.error("Error updating lead:", error);
     toast.error("فشل في تحديث العميل المحتمل");
-    
-    // Fallback to mock data
-    const index = mockLeads.findIndex((l) => l.id === lead.id);
-    if (index >= 0) {
-      mockLeads[index] = lead;
-    }
-    return lead;
+    throw error;
   }
 };
 
@@ -83,7 +86,10 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     const { data, error } = await supabase
       .from('leads')
       .insert(leadToCreate)
-      .select()
+      .select(`
+        *,
+        profiles:assigned_to (first_name, last_name)
+      `)
       .single();
     
     if (error) {
@@ -93,13 +99,15 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     
     // If operation was successful, return the new lead
     if (data) {
+      const transformedLead = transformLeadFromSupabase(data);
+      
       // Create automatic follow-up activity after 3 days
       const followupDate = new Date();
       followupDate.setDate(followupDate.getDate() + 3);
       
       try {
         await addLeadActivity({
-          lead_id: data.id,
+          lead_id: transformedLead.id,
           type: "call",
           description: "متابعة هاتفية للعميل المحتمل الجديد",
           scheduled_at: followupDate.toISOString()
@@ -110,45 +118,14 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
       }
       
       toast.success("تم إنشاء العميل المحتمل بنجاح");
-      return transformLeadFromSupabase(data);
+      return transformedLead;
     }
     
-    // Fallback to mock data
-    const newLead: Lead = {
-      id: `lead-${Date.now()}`,
-      ...lead,
-    };
-    mockLeads.push(newLead);
-    
-    // Create follow-up activity
-    const followupDate = new Date();
-    followupDate.setDate(followupDate.getDate() + 3);
-    
-    try {
-      await addLeadActivity({
-        lead_id: newLead.id,
-        type: "call",
-        description: "متابعة هاتفية للعميل المحتمل الجديد",
-        scheduled_at: followupDate.toISOString()
-      });
-    } catch (activityError) {
-      console.error("Error creating follow-up activity:", activityError);
-    }
-    
-    toast.success("تم إنشاء العميل المحتمل بنجاح");
-    return newLead;
+    throw new Error("Failed to create lead");
   } catch (error) {
     console.error("Error creating lead:", error);
     toast.error("فشل في إنشاء العميل المحتمل");
-    
-    // Fallback to mock data in case of error
-    const newLead: Lead = {
-      id: `lead-${Date.now()}`,
-      ...lead,
-    };
-    mockLeads.push(newLead);
-    
-    return newLead;
+    throw error;
   }
 };
 
@@ -156,6 +133,19 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
 export const deleteLead = async (id: string): Promise<boolean> => {
   try {
     console.log("Deleting lead with ID:", id);
+    
+    // Check if it's a mock lead
+    if (id.startsWith('lead-')) {
+      console.warn("Attempted to delete a mock lead in production mode");
+      // Remove from mock data for development
+      const index = mockLeads.findIndex((l) => l.id === id);
+      if (index >= 0) {
+        mockLeads.splice(index, 1);
+        toast.success("تم حذف العميل المحتمل بنجاح");
+        return true;
+      }
+      throw new Error("Lead not found");
+    }
     
     // Try deleting the lead from Supabase
     const { error } = await supabase
@@ -168,24 +158,11 @@ export const deleteLead = async (id: string): Promise<boolean> => {
       throw error;
     }
     
-    // Also remove from mock data
-    const index = mockLeads.findIndex((l) => l.id === id);
-    if (index >= 0) {
-      mockLeads.splice(index, 1);
-    }
-    
     toast.success("تم حذف العميل المحتمل بنجاح");
     return true;
   } catch (error) {
     console.error("Error deleting lead:", error);
     toast.error("فشل في حذف العميل المحتمل");
-    
-    // Fallback to mock data in case of error
-    const index = mockLeads.findIndex((l) => l.id === id);
-    if (index >= 0) {
-      mockLeads.splice(index, 1);
-      return true;
-    }
-    return false;
+    throw error;
   }
 };

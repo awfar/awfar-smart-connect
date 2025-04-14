@@ -11,6 +11,8 @@ import {
   getLeadSources, 
   getLeadStages,
   getSalesOwners,
+  getCountries,
+  getIndustries,
   Lead 
 } from "@/services/leads";
 import { toast } from "sonner";
@@ -36,6 +38,8 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
     status: lead?.status || lead?.stage || "جديد",
     notes: lead?.notes || "",
     assigned_to: lead?.assigned_to || "",
+    country: lead?.country || "",
+    industry: lead?.industry || "",
     created_at: lead?.created_at || new Date().toISOString(),
     updated_at: lead?.updated_at || new Date().toISOString(),
   });
@@ -44,6 +48,8 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
   const [sources, setSources] = useState<string[]>([]);
   const [stages, setStages] = useState<string[]>([]);
   const [owners, setOwners] = useState<{id: string, name: string}[]>([]);
+  const [countries, setCountries] = useState<string[]>([]);
+  const [industries, setIndustries] = useState<string[]>([]);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -54,15 +60,19 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
     const fetchOptions = async () => {
       try {
         setIsLoading(true);
-        const [sourcesData, stagesData, ownersData] = await Promise.all([
+        const [sourcesData, stagesData, ownersData, countriesData, industriesData] = await Promise.all([
           getLeadSources(),
           getLeadStages(),
-          getSalesOwners()
+          getSalesOwners(),
+          getCountries(),
+          getIndustries()
         ]);
         
         setSources(sourcesData);
         setStages(stagesData);
         setOwners(ownersData);
+        setCountries(countriesData);
+        setIndustries(industriesData);
       } catch (error) {
         console.error("Error fetching form options:", error);
         toast.error("فشل في تحميل خيارات النموذج");
@@ -137,11 +147,19 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
           ...lead,
           ...formData,
           id: lead.id,
+          updated_at: new Date().toISOString()
         });
         toast.success("تم تحديث بيانات العميل المحتمل بنجاح");
         onSuccess?.(updatedLead);
       } else {
-        const newLead = await createLead(formData as Omit<Lead, "id">);
+        // Set current timestamp for creation
+        const newLeadData = {
+          ...formData,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        
+        const newLead = await createLead(newLeadData as Omit<Lead, "id">);
         toast.success("تم إضافة عميل محتمل جديد بنجاح");
         onSuccess?.(newLead);
       }
@@ -224,6 +242,45 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
+          <Label htmlFor="country">الدولة</Label>
+          <Select 
+            value={formData.country || undefined} 
+            onValueChange={(value) => handleSelectChange("country", value)}
+          >
+            <SelectTrigger id="country">
+              <SelectValue placeholder="اختر الدولة" />
+            </SelectTrigger>
+            <SelectContent>
+              {countries.map((country) => (
+                <SelectItem key={country} value={country}>
+                  {country}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label htmlFor="industry">القطاع</Label>
+          <Select 
+            value={formData.industry || undefined} 
+            onValueChange={(value) => handleSelectChange("industry", value)}
+          >
+            <SelectTrigger id="industry">
+              <SelectValue placeholder="اختر القطاع" />
+            </SelectTrigger>
+            <SelectContent>
+              {industries.map((industry) => (
+                <SelectItem key={industry} value={industry}>
+                  {industry}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
           <Label htmlFor="company">الشركة</Label>
           <Input
             type="text"
@@ -274,7 +331,6 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
               <SelectValue placeholder="اختر المصدر" />
             </SelectTrigger>
             <SelectContent>
-              {/* Fix: Changed empty string to a meaningful value */}
               <SelectItem value="not_specified">غير محدد</SelectItem>
               {sources.map((source) => (
                 <SelectItem key={source} value={source}>
@@ -296,7 +352,6 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
             <SelectValue placeholder="اختر المسؤول" />
           </SelectTrigger>
           <SelectContent>
-            {/* Fix: Changed empty string to a meaningful value */}
             <SelectItem value="unassigned">غير مخصص</SelectItem>
             {owners.map((owner) => (
               <SelectItem key={owner.id} value={owner.id}>
@@ -331,7 +386,12 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
           type="submit" 
           disabled={isSubmitting}
         >
-          {isSubmitting ? "جاري الحفظ..." : editMode ? "تحديث" : "إضافة"}
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              جاري الحفظ...
+            </>
+          ) : editMode ? "تحديث" : "إضافة"}
         </Button>
       </div>
     </form>
