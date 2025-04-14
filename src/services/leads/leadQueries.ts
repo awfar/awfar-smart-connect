@@ -134,7 +134,7 @@ export const getIndustries = async (): Promise<string[]> => {
     // التحقق من وجود خطأ في الاستعلام
     if (error) {
       console.error("Error fetching industries:", error);
-      // Return default industries on error instead of trying to access error properties
+      // Return default industries when there's an error
       return getDefaultIndustries();
     }
     
