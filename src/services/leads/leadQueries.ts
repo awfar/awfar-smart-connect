@@ -62,7 +62,8 @@ export const getLeads = async (filters: Record<string, any> = {}): Promise<Lead[
       query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,company.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
     }
     
-    // Apply other filters - fix type instantiation issue by simplifying the approach
+    // Fix type instantiation issue by avoiding method chaining
+    // Apply other filters
     const filterEntries = Object.entries(filters);
     for (let i = 0; i < filterEntries.length; i++) {
       const [key, value] = filterEntries[i];
@@ -75,7 +76,9 @@ export const getLeads = async (filters: Record<string, any> = {}): Promise<Lead[
             query = query.eq(key, authData.user.id);
           }
         } else {
-          query = query.eq(key, value);
+          // Apply the filter with explicit type casting
+          const filterKey = key as string;
+          query = query.eq(filterKey, value);
         }
       }
     }
