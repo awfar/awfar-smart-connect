@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { createCompany } from "@/services/companiesService";
 
 interface CompanyQuickAddDialogProps {
   isOpen: boolean;
@@ -87,19 +88,29 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
     setIsSubmitting(true);
 
     try {
-      // في تطبيق حقيقي، سنحفظ الشركة في قاعدة البيانات
-      // في هذه الحالة، سنقوم فقط بمحاكاة عملية الحفظ
-      setTimeout(() => {
-        console.log("Company created:", formData.name);
-        
-        // تأكد من إرسال اسم الشركة إلى الدالة onSuccess
-        if (formData.name) {
-          onSuccess(formData.name);
-        }
-        
-        // أغلق النافذة المنبثقة بعد النجاح
-        onOpenChange(false);
-      }, 500);
+      // Use the actual service to create a company in the database
+      const newCompany = await createCompany({
+        name: formData.name,
+        industry: formData.industry || "",
+        website: formData.website || "",
+        country: formData.country || "",
+        // Additional required fields based on the Company type
+        type: "customer",
+        contacts: [],
+        status: "active",
+        createdAt: new Date().toISOString()
+      });
+      
+      console.log("Company created:", newCompany);
+      
+      // Ensure we're passing the company name back to the parent component
+      if (formData.name) {
+        onSuccess(formData.name);
+      }
+      
+      // Close the dialog after success
+      onOpenChange(false);
+      
     } catch (error) {
       console.error("Error creating company:", error);
       toast.error("حدث خطأ أثناء إضافة الشركة");

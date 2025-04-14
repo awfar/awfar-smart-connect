@@ -80,15 +80,15 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
   const handleAddCompany = (companyName: string) => {
     if (!companyName) return;
     
-    // أضف الشركة الجديدة إلى خيارات الشركات
+    // Add the new company to company options
     const newOption = { label: companyName, value: companyName };
     
-    // تأكد من عدم وجود الشركة بالفعل
+    // Make sure company doesn't already exist
     if (!companyOptions.some(opt => opt.value === companyName)) {
       setCompanyOptions(prev => [...prev, newOption]);
     }
     
-    // حدد الشركة الجديدة في النموذج
+    // Select the new company in the form
     handleSelectChange("company", companyName);
     
     // Show success message
