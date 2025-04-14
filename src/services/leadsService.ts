@@ -228,7 +228,7 @@ export const addLeadActivity = async (activity: Omit<LeadActivity, "id">): Promi
       throw error;
     }
     
-    // إذا نجحت ال��ملية، نقوم بإرجاع النشاط المضاف
+    // إذا نجحت العملية، نقوم بإرجاع النشاط المضاف
     if (data) {
       return {
         id: data.id,
@@ -532,7 +532,7 @@ export const getIndustries = async (): Promise<string[]> => {
     }
     
     // استخراج القطاعات الفريدة
-    if (data) {
+    if (data && data.length > 0) {
       const industries = data
         .map(item => item.industry as string)
         .filter(Boolean)
