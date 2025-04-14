@@ -122,11 +122,6 @@ export const getLeadSources = async (): Promise<string[]> => {
   }
 };
 
-// Interface to help with type safety
-interface IndustryRecord {
-  industry: string;
-}
-
 // Get industries
 export const getIndustries = async (): Promise<string[]> => {
   try {
@@ -144,16 +139,18 @@ export const getIndustries = async (): Promise<string[]> => {
     // Extract unique industries
     if (response.data && response.data.length > 0) {
       try {
-        // Safely process the data with proper type checking
+        // Type safely process the data
         const industries = response.data
-          // Make sure each item has an industry property that is a string
-          .filter((item): item is IndustryRecord => 
+          // First filter out any items that don't contain a valid industry string
+          .filter(item => (
             item !== null && 
             typeof item === 'object' && 
             'industry' in item && 
             typeof item.industry === 'string'
-          )
-          .map(item => item.industry)
+          ))
+          // Then safely map the filtered items to their industry values
+          .map(item => item.industry as string)
+          // Keep only unique values
           .filter((value, index, self) => self.indexOf(value) === index)
           .sort();
         
