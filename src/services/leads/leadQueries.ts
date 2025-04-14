@@ -122,6 +122,11 @@ export const getLeadSources = async (): Promise<string[]> => {
   }
 };
 
+// Interface to help with type safety
+interface IndustryRecord {
+  industry: string;
+}
+
 // Get industries
 export const getIndustries = async (): Promise<string[]> => {
   try {
@@ -136,16 +141,27 @@ export const getIndustries = async (): Promise<string[]> => {
       return getDefaultIndustries();
     }
     
-    // استخراج القطاعات الفريدة (Extract unique industries)
+    // Extract unique industries
     if (response.data && response.data.length > 0) {
-      // Extract only valid industries where the property exists and is a string
-      const industries = response.data
-        .filter(item => item && typeof item.industry === 'string')
-        .map(item => item.industry as string)
-        .filter((value, index, self) => self.indexOf(value) === index)
-        .sort();
-      
-      return industries.length > 0 ? industries : getDefaultIndustries();
+      try {
+        // Safely process the data with proper type checking
+        const industries = response.data
+          // Make sure each item has an industry property that is a string
+          .filter((item): item is IndustryRecord => 
+            item !== null && 
+            typeof item === 'object' && 
+            'industry' in item && 
+            typeof item.industry === 'string'
+          )
+          .map(item => item.industry)
+          .filter((value, index, self) => self.indexOf(value) === index)
+          .sort();
+        
+        return industries.length > 0 ? industries : getDefaultIndustries();
+      } catch (processingError) {
+        console.error("Error processing industry data:", processingError);
+        return getDefaultIndustries();
+      }
     }
     
     return getDefaultIndustries();
