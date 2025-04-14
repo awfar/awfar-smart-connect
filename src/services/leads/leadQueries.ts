@@ -139,9 +139,11 @@ export const getIndustries = async (): Promise<string[]> => {
     
     // استخراج القطاعات الفريدة
     if (response.data && response.data.length > 0) {
-      const industries = response.data
+      // Type assertion for data to ensure TypeScript knows it's an array of objects with industry
+      type IndustryRecord = { industry: string };
+      
+      const industries = (response.data as IndustryRecord[])
         .map(item => {
-          // Explicitly check if industry exists and is a string
           if (item && typeof item.industry === 'string') {
             return item.industry;
           }
