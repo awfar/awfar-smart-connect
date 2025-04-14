@@ -64,9 +64,11 @@ export const fetchTickets = async (
     const ticketsArray: Ticket[] = [];
     
     if (data && Array.isArray(data)) {
-      for (const ticket of data) {
-        // Using our helper function to safely transform the data
-        const transformedTicket = safeTransformTicket(ticket);
+      // Use a simple for loop and avoid type inference issues
+      for (let i = 0; i < data.length; i++) {
+        const ticket = data[i];
+        // Using our helper function with type assertion to break complex type chain
+        const transformedTicket = safeTransformTicket(ticket as Record<string, any>);
         ticketsArray.push(mapDBTicketToTicket(transformedTicket));
       }
     }
@@ -103,8 +105,8 @@ export const fetchTicketById = async (id: string): Promise<Ticket | null> => {
     // Safe conversion to avoid type errors
     if (!data) return null;
     
-    // Using our helper function to safely transform the data
-    const transformedTicket = safeTransformTicket(data);
+    // Using our helper function with type assertion to break complex type chain
+    const transformedTicket = safeTransformTicket(data as Record<string, any>);
     return mapDBTicketToTicket(transformedTicket);
   } catch (error) {
     console.error("Error in fetchTicketById:", error);
