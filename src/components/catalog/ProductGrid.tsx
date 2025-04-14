@@ -3,8 +3,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Product } from '@/services/catalog/products';
-import { productTypeIconMap, productTypeLabels } from '@/services/catalog/utils';
+import { Product } from '@/services/catalogService';
+import { productTypeIconMap, productTypeLabels } from '@/services/catalogService';
 
 interface ProductGridProps {
   products: Product[];

@@ -65,7 +65,7 @@ const ProductDetails: React.FC = () => {
   const handleDeleteProduct = async () => {
     try {
       if (product) {
-        await updateProduct(product.id, { isActive: false });
+        await updateProduct(product.id, { is_active: false });
         toast.success('تم إلغاء تنشيط المنتج بنجاح');
         setShowDeleteDialog(false);
         navigate('/catalog');
@@ -110,7 +110,7 @@ const ProductDetails: React.FC = () => {
     );
   }
 
-  const createdDate = new Date(product.createdAt);
+  const createdDate = new Date(product.createdAt || product.created_at);
   const timeAgo = formatDistanceToNow(createdDate, { addSuffix: true, locale: ar });
   
   // Get the correct icon component based on the product type
@@ -146,8 +146,8 @@ const ProductDetails: React.FC = () => {
                   <IconComponent className="h-5 w-5" />
                   {productTypeLabels[product.type]}
                 </Badge>
-                <Badge variant={product.isActive ? 'success' : 'destructive'}>
-                  {product.isActive ? 'نشط' : 'غير نشط'}
+                <Badge variant={product.isActive || product.is_active ? 'success' : 'destructive'}>
+                  {product.isActive || product.is_active ? 'نشط' : 'غير نشط'}
                 </Badge>
               </div>
 

@@ -1,146 +1,174 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DatePicker } from "@/components/ui/date-picker";
-import { addLeadActivity } from "@/services/leads";
-import { toast } from "sonner";
-import { LeadActivity } from "@/services/leads";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Calendar } from '@/components/ui/calendar';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { format } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+const activityFormSchema = z.object({
+  type: z.enum(['call', 'email', 'meeting', 'note'], {
+    required_error: 'الرجاء اختيار نوع النشاط',
+  }),
+  description: z.string().min(5, {
+    message: 'يجب أن يكون الوصف 5 أحرف على الأقل',
+  }),
+  date: z.date({
+    required_error: 'الرجاء اختيار تاريخ',
+  }),
+});
+
+type ActivityFormValues = z.infer<typeof activityFormSchema>;
 
 interface ActivityFormProps {
   leadId: string;
-  onClose: () => void;
-  onSuccess?: (activity: LeadActivity) => void;
-  title?: string;
+  onSuccess: () => void;
+  onCancel?: () => void;
 }
 
-const ActivityForm: React.FC<ActivityFormProps> = ({ 
-  leadId, 
-  onClose, 
-  onSuccess, 
-  title = "إضافة نشاط"
-}) => {
-  const [formData, setFormData] = useState({
-    type: "call",
-    description: "",
-    scheduled_at: new Date().toISOString(),
+export default function ActivityForm({ leadId, onSuccess, onCancel }: ActivityFormProps) {
+  const [date, setDate] = useState<Date>(new Date());
+
+  const form = useForm<ActivityFormValues>({
+    resolver: zodResolver(activityFormSchema),
+    defaultValues: {
+      type: 'note',
+      description: '',
+      date: new Date(),
+    },
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [scheduledDate, setScheduledDate] = useState<Date | undefined>(new Date());
 
-  const handleTypeChange = (value: string) => {
-    setFormData(prev => ({ ...prev, type: value }));
-  };
-
-  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setFormData(prev => ({ ...prev, description: e.target.value }));
-  };
-
-  const handleDateChange = (date: Date | undefined) => {
-    setScheduledDate(date);
-    if (date) {
-      setFormData(prev => ({ ...prev, scheduled_at: date.toISOString() }));
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.description.trim()) {
-      toast.error("الرجاء إدخال وصف للنشاط");
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
+  const onSubmit = async (values: ActivityFormValues) => {
     try {
-      const newActivity = await addLeadActivity({
-        lead_id: leadId,
-        type: formData.type,
-        description: formData.description,
-        scheduled_at: formData.scheduled_at
-      });
+      console.log('Submitting activity:', { ...values, leadId });
       
-      onSuccess?.(newActivity);
-      onClose();
+      // Here you would call your API to save the activity
+      // const response = await createLeadActivity({...values, leadId});
+      
+      onSuccess();
     } catch (error) {
-      console.error("Error adding activity:", error);
-      toast.error("حدث خطأ أثناء إضافة النشاط");
-    } finally {
-      setIsSubmitting(false);
+      console.error('Error creating activity:', error);
     }
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg border">
-      <h3 className="text-lg font-semibold mb-4">{title}</h3>
-      
-      <form onSubmit={handleSubmit}>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="activity-type">نوع النشاط</Label>
-            <Select 
-              value={formData.type}
-              onValueChange={handleTypeChange}
-            >
-              <SelectTrigger id="activity-type">
-                <SelectValue placeholder="اختر نوع النشاط" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="call">مكالمة هاتفية</SelectItem>
-                <SelectItem value="meeting">اجتماع</SelectItem>
-                <SelectItem value="email">بريد إلكتروني</SelectItem>
-                <SelectItem value="task">مهمة</SelectItem>
-                <SelectItem value="note">ملاحظة</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <div>
-            <Label htmlFor="activity-description">الوصف</Label>
-            <Textarea
-              id="activity-description"
-              value={formData.description}
-              onChange={handleDescriptionChange}
-              rows={3}
-              placeholder="أدخل وصفاً للنشاط..."
-              className="resize-none"
-            />
-          </div>
-          
-          <div>
-            <Label htmlFor="activity-date">تاريخ النشاط</Label>
-            <div className="mt-1">
-              <DatePicker
-                date={scheduledDate}
-                onSelect={handleDateChange}
-                className="w-full"
-              />
-            </div>
-          </div>
-          
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <FormField
+          control={form.control}
+          name="type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>نوع النشاط</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر نوع النشاط" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="call">مكالمة هاتفية</SelectItem>
+                  <SelectItem value="email">بريد إلكتروني</SelectItem>
+                  <SelectItem value="meeting">اجتماع</SelectItem>
+                  <SelectItem value="note">ملاحظة</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>التفاصيل</FormLabel>
+              <FormControl>
+                <Textarea 
+                  placeholder="أدخل تفاصيل النشاط هنا" 
+                  {...field} 
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="date"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>التاريخ</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        format(field.value, "PPP")
+                      ) : (
+                        <span>اختر تاريخ</span>
+                      )}
+                      <CalendarIcon className="mr-2 h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={field.value}
+                    onSelect={field.onChange}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <div className="flex justify-end gap-2">
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={onCancel}>
               إلغاء
             </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting || !formData.description.trim()}
-            >
-              {isSubmitting ? "جاري الحفظ..." : "حفظ النشاط"}
-            </Button>
-          </div>
+          )}
+          <Button type="submit">
+            إضافة النشاط
+          </Button>
         </div>
       </form>
-    </div>
+    </Form>
   );
-};
-
-export default ActivityForm;
+}

@@ -2,9 +2,11 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { fetchProducts } from '@/services/catalog/products';
-import { fetchCategories } from '@/services/catalog/categories';
-import { ProductType } from '@/services/catalog/utils';
+import { 
+  fetchProducts,
+  fetchCategories, 
+  ProductType 
+} from '@/services/catalogService';
 import ProductGrid from '@/components/catalog/ProductGrid';
 import CatalogFilters from '@/components/catalog/CatalogFilters';
 import CatalogTabs from '@/components/catalog/CatalogTabs';

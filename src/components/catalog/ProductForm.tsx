@@ -3,10 +3,14 @@ import React, { useState, useEffect } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Product } from '@/services/catalog/products';
-import { ProductType, productTypeLabels } from '@/services/catalog/utils';
-import { fetchCategories } from '@/services/catalog/categories';
-import { createProduct, updateProduct } from '@/services/catalog/productService';
+import { 
+  ProductType, 
+  productTypeLabels,
+  fetchCategories,
+  Product,
+  createProduct,
+  updateProduct
+} from '@/services/catalogService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -26,10 +30,10 @@ const productSchema = z.object({
     required_error: "نوع المنتج مطلوب",
   }),
   sku: z.string().min(1, { message: "رمز التخزين مطلوب" }),
-  isActive: z.boolean().default(true),
-  imageUrl: z.string().optional(),
+  is_active: z.boolean().default(true),
+  image_url: z.string().optional(),
   inventory: z.coerce.number().optional(),
-  categoryId: z.string().optional(),
+  category_id: z.string().optional(),
 });
 
 type ProductFormValues = z.infer<typeof productSchema>;
@@ -54,10 +58,10 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         price: product.price,
         type: product.type as ProductType,
         sku: product.sku,
-        isActive: product.is_active,
-        imageUrl: product.image_url,
+        is_active: product.is_active || product.isActive || false,
+        image_url: product.image_url || product.imageUrl || '',
         inventory: product.inventory,
-        categoryId: product.category_id,
+        category_id: product.category_id || product.categoryId,
       };
     }
     
@@ -67,10 +71,10 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
       price: 0,
       type: 'physical' as ProductType,
       sku: "",
-      isActive: true,
-      imageUrl: "",
+      is_active: true,
+      image_url: "",
       inventory: undefined,
-      categoryId: undefined,
+      category_id: undefined,
     };
   };
 
@@ -98,10 +102,10 @@ export default function ProductForm({ product, onSuccess }: ProductFormProps) {
         price: data.price,
         type: data.type,
         sku: data.sku,
-        is_active: data.isActive,
-        image_url: data.imageUrl,
+        is_active: data.is_active,
+        image_url: data.image_url,
         inventory: data.type === 'physical' ? data.inventory : undefined,
-        category_id: data.categoryId
+        category_id: data.category_id
       };
       
       if (product) {

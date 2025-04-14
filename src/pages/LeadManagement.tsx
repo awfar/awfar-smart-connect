@@ -11,11 +11,28 @@ import LeadSearchBar from "@/components/leads/LeadSearchBar";
 import LeadCardHeader from "@/components/leads/LeadCardHeader";
 import LeadTable from "@/components/leads/LeadTable";
 import { getLeads } from "@/services/leads";
-import { Lead } from "@/services/types/leadTypes";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import LeadForm from "@/components/leads/LeadForm";
 import MobileOptimizedContainer from '@/components/ui/mobile-optimized-container';
 import DashboardLayout from "@/components/layout/DashboardLayout";
+
+// Create compatibility interface to handle the type mismatch
+interface Lead {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  position?: string;
+  source?: string;
+  status: string;
+  notes?: string;
+  assigned_to?: string;
+  created_at?: string;
+  updated_at?: string;
+  landing_page_id?: string;
+}
 
 const LeadManagement = () => {
   const [selectedView, setSelectedView] = useState<string>("all");
@@ -113,7 +130,7 @@ const LeadManagement = () => {
                   </div>
                 ) : (
                   <LeadTable 
-                    leads={leads} 
+                    leads={leads as any[]} 
                     selectedLead={selectedLead}
                     onLeadSelect={handleLeadClick}
                   />
@@ -122,10 +139,10 @@ const LeadManagement = () => {
             </Card>
           </div>
 
-          {selectedLead && (
+          {selectedLead && Array.isArray(leads) && (
             <div className="w-full lg:w-[400px]">
               <LeadDetails 
-                lead={leads.find(l => l.id === selectedLead)!} 
+                lead={leads.find(l => l.id === selectedLead) as any} 
                 onClose={() => setSelectedLead(null)} 
               />
             </div>

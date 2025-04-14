@@ -1,19 +1,43 @@
 
-// Re-export everything from the catalog module
-export * from './catalog';
-export * from './catalog/utils';
-export * from './catalog/products';
-export * from './catalog/categories';
-export * from './catalog/subscriptions';
-export * from './catalog/productService';
+// Re-export specific functions from the catalog module to avoid conflicts
+export { ProductType, productTypeIconMap, productTypeLabels } from './catalog/utils';
 
-// Alias functions to maintain compatibility
-import { fetchProducts as getProducts } from './catalog/products';
-import { fetchProductById as getProductById } from './catalog/products';
-import { fetchCategories as getCategories } from './catalog/categories';
-
+// Export from products.ts
 export {
-  getProducts,
+  fetchProducts,
+  fetchProductById,
+  createProduct as createProductLegacy,
+  updateProduct as updateProductLegacy,
+  deleteProduct,
+  Product
+} from './catalog/products';
+
+// Export from categories.ts
+export {
+  fetchCategories,
+  fetchCategoryById,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+  Category
+} from './catalog/categories';
+
+// Export from productService.ts (newer versions)
+export {
   getProductById,
-  getCategories
-};
+  getProducts,
+  createProduct,
+  updateProduct,
+  Product as ProductNew
+} from './catalog/productService';
+
+// Export from subscriptions.ts
+export {
+  fetchSubscriptions,
+  fetchSubscriptionById,
+  createSubscription,
+  updateSubscription,
+  deleteSubscription,
+  Subscription,
+  BillingCycle
+} from './catalog/subscriptions';
