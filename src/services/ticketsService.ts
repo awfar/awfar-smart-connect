@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -81,9 +82,10 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     
     console.log("Tickets fetched:", data);
     
-    // Break the type chain completely using unknown - this is the most effective
-    // approach to prevent TypeScript from analyzing nested types too deeply
-    return (data || []) as unknown[] as Ticket[];
+    // Fix: First cast to any[] to break the deep type chain
+    const ticketsData = (data || []) as any[];
+    // Then explicitly map to our desired type
+    return ticketsData.map(item => mapDBTicketToTicket(item as TicketFromDB));
   } catch (error) {
     console.error("خطأ في جلب التذاكر:", error);
     toast.error("فشل في جلب قائمة التذاكر");
