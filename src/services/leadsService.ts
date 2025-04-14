@@ -8,8 +8,6 @@ export {
   getLeadSources,
   getLeadStages,
   getSalesOwners,
-  // getCompanies, // This was removed since it doesn't exist
-  getLeadActivities,
   getCountries,
   getIndustries,
   
@@ -19,6 +17,7 @@ export {
   deleteLead,
   addLeadActivity,
   completeLeadActivity,
+  getLeadActivities,
 } from './leads';
 
 // Export types

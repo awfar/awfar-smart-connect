@@ -186,38 +186,54 @@ export const getSalesOwners = async (): Promise<{id: string, name: string}[]> =>
 // Get countries for filtering
 export const getCountries = async (): Promise<string[]> => {
   try {
-    // Use a direct query to check if column exists instead of RPC
-    const { data: columns, error: columnsError } = await supabase
-      .from('information_schema.columns')
-      .select('column_name')
-      .eq('table_schema', 'public')
-      .eq('table_name', 'leads')
-      .eq('column_name', 'country');
+    // Use a raw query to check if the column exists
+    const { data: columnCheckResult, error: columnCheckError } = await supabase
+      .rpc('get_table_row_count', { table_name: 'leads' });
     
-    if (columnsError || !columns || columns.length === 0) {
-      console.log("Country column doesn't exist, returning default countries");
+    if (columnCheckError || !columnCheckResult) {
+      console.log("Error checking leads table, returning default countries");
       return getDefaultCountries();
     }
     
-    // If column exists, fetch distinct values
-    const { data, error } = await supabase
-      .from('leads')
-      .select('country')
-      .not('country', 'is', null)
-      .not('country', 'eq', '');
+    // Perform a raw query to check if the column exists
+    const { data: columnCheck, error: rawError } = await supabase
+      .rpc('get_table_row_count', { table_name: 'leads' });
     
-    if (error) throw error;
+    if (rawError || !columnCheck) {
+      return getDefaultCountries();
+    }
     
-    // Extract unique countries
-    const countries = data
-      .map(item => item.country as string)
-      .filter(Boolean)
-      .filter((value, index, self) => self.indexOf(value) === index)
-      .sort();
-    
-    return countries.length > 0 ? countries : getDefaultCountries();
+    // If table exists, try to fetch countries
+    try {
+      const { data, error } = await supabase
+        .from('leads')
+        .select('country')
+        .not('country', 'is', null)
+        .not('country', 'eq', '');
+      
+      if (error) {
+        // If error is related to column not existing
+        if (error.message && error.message.includes("column") && error.message.includes("does not exist")) {
+          console.log("Country column doesn't exist, returning default countries");
+          return getDefaultCountries();
+        }
+        throw error;
+      }
+      
+      // Extract unique countries
+      const countries = data
+        .map(item => item.country as string)
+        .filter(Boolean)
+        .filter((value, index, self) => self.indexOf(value) === index)
+        .sort();
+      
+      return countries.length > 0 ? countries : getDefaultCountries();
+    } catch (error) {
+      console.error("Error fetching countries:", error);
+      return getDefaultCountries();
+    }
   } catch (error) {
-    console.error("Error fetching countries:", error);
+    console.error("Error in getCountries:", error);
     return getDefaultCountries();
   }
 };
@@ -225,38 +241,46 @@ export const getCountries = async (): Promise<string[]> => {
 // Get industries for filtering
 export const getIndustries = async (): Promise<string[]> => {
   try {
-    // Use a direct query to check if column exists instead of RPC
-    const { data: columns, error: columnsError } = await supabase
-      .from('information_schema.columns')
-      .select('column_name')
-      .eq('table_schema', 'public')
-      .eq('table_name', 'leads')
-      .eq('column_name', 'industry');
+    // Check if the table exists first
+    const { data: tableCheck, error: tableError } = await supabase
+      .rpc('get_table_row_count', { table_name: 'leads' });
     
-    if (columnsError || !columns || columns.length === 0) {
-      console.log("Industry column doesn't exist, returning default industries");
+    if (tableError || !tableCheck) {
+      console.log("Error checking leads table, returning default industries");
       return getDefaultIndustries();
     }
     
-    // If column exists, fetch distinct values
-    const { data, error } = await supabase
-      .from('leads')
-      .select('industry')
-      .not('industry', 'is', null)
-      .not('industry', 'eq', '');
-    
-    if (error) throw error;
-    
-    // Extract unique industries
-    const industries = data
-      .map(item => item.industry as string)
-      .filter(Boolean)
-      .filter((value, index, self) => self.indexOf(value) === index)
-      .sort();
-    
-    return industries.length > 0 ? industries : getDefaultIndustries();
+    // If table exists, try to fetch industries
+    try {
+      const { data, error } = await supabase
+        .from('leads')
+        .select('industry')
+        .not('industry', 'is', null)
+        .not('industry', 'eq', '');
+      
+      if (error) {
+        // If error is related to column not existing
+        if (error.message && error.message.includes("column") && error.message.includes("does not exist")) {
+          console.log("Industry column doesn't exist, returning default industries");
+          return getDefaultIndustries();
+        }
+        throw error;
+      }
+      
+      // Extract unique industries
+      const industries = data
+        .map(item => item.industry as string)
+        .filter(Boolean)
+        .filter((value, index, self) => self.indexOf(value) === index)
+        .sort();
+      
+      return industries.length > 0 ? industries : getDefaultIndustries();
+    } catch (error) {
+      console.error("Error fetching industries:", error);
+      return getDefaultIndustries();
+    }
   } catch (error) {
-    console.error("Error fetching industries:", error);
+    console.error("Error in getIndustries:", error);
     return getDefaultIndustries();
   }
 };
