@@ -2,37 +2,39 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Ticket, TicketFromDB } from "./types";
-import { mapDBTicketToTicket, safeDataConversion } from "./ticketMappers";
+import { mapDBTicketToTicket } from "./ticketMappers";
 
 export const fetchTickets = async (statusFilter?: string, priorityFilter?: string, categoryFilter?: string): Promise<Ticket[]> => {
   try {
     console.log("Fetching tickets with filters:", { statusFilter, priorityFilter, categoryFilter });
     
-    let query = supabase
+    // Build the query
+    let queryBuilder = supabase
       .from('tickets')
       .select('*, profiles!assigned_to(first_name, last_name)');
       
     // Apply filters
     if (statusFilter && statusFilter !== 'all') {
       const status = statusFilter === 'open' ? 'open' : 'closed';
-      query = query.eq('status', status);
+      queryBuilder = queryBuilder.eq('status', status);
     }
     
     if (priorityFilter && priorityFilter !== 'all') {
-      query = query.eq('priority', priorityFilter);
+      queryBuilder = queryBuilder.eq('priority', priorityFilter);
     }
     
     if (categoryFilter && categoryFilter !== 'all') {
-      query = query.eq('category', categoryFilter);
+      queryBuilder = queryBuilder.eq('category', categoryFilter);
     }
     
-    // Completely break the type chain by executing the query and storing the raw result
-    const rawResponse = await query.order('created_at', { ascending: false });
-    
-    // Extract data and error as plain objects
-    const error = rawResponse.error;
-    // Use any to break the type inference chain completely
-    const rawData: any = rawResponse.data;
+    // Execute the query as a separate step
+    const { data: rawData, error } = await queryBuilder
+      .order('created_at', { ascending: false })
+      // Use explicit type assertion to break the deep type inference
+      .then(result => ({ 
+        data: result.data as unknown[], 
+        error: result.error 
+      }));
     
     if (error) {
       console.error("Error fetching tickets:", error);
@@ -42,28 +44,31 @@ export const fetchTickets = async (statusFilter?: string, priorityFilter?: strin
     
     console.log("Tickets fetched:", rawData);
     
-    // Initialize an empty array for our tickets
-    const tickets: Ticket[] = [];
-    
     // Handle the null case
     if (!rawData) return [];
     
-    // Explicitly map each item to our known type structure
+    // Initialize an empty array for our tickets
+    const tickets: Ticket[] = [];
+    
+    // Map the raw data to our known type structure
     for (const item of rawData) {
+      // Use type assertion to ensure TypeScript doesn't try to infer complex types
+      const rawItem = item as Record<string, any>;
+      
       const ticketData: TicketFromDB = {
-        id: item.id,
-        subject: item.subject,
-        description: item.description,
-        status: item.status,
-        priority: item.priority,
-        category: item.category,
-        assigned_to: item.assigned_to,
-        client_id: item.client_id,
-        created_by: item.created_by,
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-        resolved_at: item.resolved_at,
-        profiles: item.profiles
+        id: rawItem.id,
+        subject: rawItem.subject,
+        description: rawItem.description,
+        status: rawItem.status,
+        priority: rawItem.priority,
+        category: rawItem.category,
+        assigned_to: rawItem.assigned_to,
+        client_id: rawItem.client_id,
+        created_by: rawItem.created_by,
+        created_at: rawItem.created_at,
+        updated_at: rawItem.updated_at,
+        resolved_at: rawItem.resolved_at,
+        profiles: rawItem.profiles
       };
       
       const ticket = mapDBTicketToTicket(ticketData);
