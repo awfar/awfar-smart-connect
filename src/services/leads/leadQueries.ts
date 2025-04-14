@@ -62,28 +62,41 @@ export const getLeads = async (filters: Record<string, any> = {}): Promise<Lead[
       query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,company.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
     }
     
-    // Fix type instantiation issue by avoiding method chaining
-    // Apply other filters
-    const filterEntries = Object.entries(filters);
-    for (let i = 0; i < filterEntries.length; i++) {
-      const [key, value] = filterEntries[i];
-      
-      if (key !== 'search' && value) {
-        // Handle special case for "current-user-id"
-        if (key === 'assigned_to' && value === 'current-user-id') {
-          const { data: authData } = await supabase.auth.getUser();
-          if (authData?.user?.id) {
-            query = query.eq(key, authData.user.id);
-          }
-        } else {
-          // Apply the filter with explicit type casting
-          const filterKey = key as string;
-          query = query.eq(filterKey, value);
+    // Fix type instantiation issue by completely restructuring the filter application
+    // Create a temporary variable to hold our query and modify it step by step
+    let tempQuery = query;
+    
+    // Apply other filters manually without extensive chaining
+    if (filters.status) {
+      tempQuery = tempQuery.eq('status', filters.status);
+    }
+    
+    if (filters.source) {
+      tempQuery = tempQuery.eq('source', filters.source);
+    }
+    
+    if (filters.industry) {
+      tempQuery = tempQuery.eq('industry', filters.industry);
+    }
+    
+    if (filters.country) {
+      tempQuery = tempQuery.eq('country', filters.country);
+    }
+    
+    // Special handling for assigned_to with current-user-id
+    if (filters.assigned_to) {
+      if (filters.assigned_to === 'current-user-id') {
+        const { data: authData } = await supabase.auth.getUser();
+        if (authData?.user?.id) {
+          tempQuery = tempQuery.eq('assigned_to', authData.user.id);
         }
+      } else {
+        tempQuery = tempQuery.eq('assigned_to', filters.assigned_to);
       }
     }
     
-    const { data, error } = await query;
+    // Execute the final query
+    const { data, error } = await tempQuery;
     
     if (error) {
       console.error("Error fetching leads from Supabase:", error);
