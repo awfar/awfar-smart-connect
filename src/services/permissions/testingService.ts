@@ -534,40 +534,31 @@ export class SystemTestingService {
     this.testResults.push(result);
     console.log(`[TEST] ${result.success ? '✅' : '❌'} ${result.name}: ${result.details} (${result.responseTimeMs.toFixed(2)}ms)`);
     
-    // تسجيل نتيجة الاختبار في قاعدة البيانات (يمكن تنفيذه لاحقًا)
-    this.saveTestResultToDatabase(result).catch(err => {
-      console.error("فشل في تسجيل نتيجة الاختبار في قاعدة البيانات:", err);
+    // تسجيل نتيجة الاختبار في جدول activity_logs بدلاً من system_test_results
+    this.saveTestResultToActivityLogs(result).catch(err => {
+      console.error("فشل في تسجيل نتيجة الاختبار:", err);
     });
   }
 
   /**
-   * حفظ نتيجة الاختبار في قاعدة البيانات
+   * حفظ نتيجة الاختبار في جدول activity_logs
    */
-  private async saveTestResultToDatabase(result: TestResult): Promise<void> {
+  private async saveTestResultToActivityLogs(result: TestResult): Promise<void> {
     try {
-      // التحقق من وجود جدول نتائج الاختبار
-      const { data: tableExists } = await supabase
-        .from('system_test_results')
-        .select('id')
-        .limit(1);
-      
-      // إذا لم يوجد الجدول، سنقوم بإنشائه في وقت لاحق
-      if (tableExists === null) {
-        console.log("جدول نتائج الاختبار غير موجود. يرجى إنشائه أولاً.");
-        return;
-      }
-
-      // حفظ نتيجة الاختبار
+      // استخدام جدول activity_logs الموجود بالفعل
       const { error } = await supabase
-        .from('system_test_results')
+        .from('activity_logs')
         .insert({
-          module_name: result.component,
-          action_type: result.name,
-          status: result.success ? 'success' : 'failed',
-          execution_time: result.responseTimeMs,
-          error_message: result.success ? null : result.details,
-          success_flag: result.success,
-          stack_trace: result.error ? JSON.stringify(result.error) : null
+          entity_type: "system_test",
+          entity_id: result.component,
+          action: result.name,
+          user_id: "system",
+          details: JSON.stringify({
+            success: result.success,
+            details: result.details,
+            responseTimeMs: result.responseTimeMs,
+            error: result.error ? JSON.stringify(result.error) : null
+          })
         });
 
       if (error) {
