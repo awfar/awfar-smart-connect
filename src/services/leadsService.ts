@@ -1,39 +1,41 @@
 
-// Main leads service file - provides backward compatibility with existing code
-// This file re-exports functionality from the refactored services
-
-import { 
+// تصدير كل الوظائف من وحدات العملاء المحتملين بشكل صريح
+import {
   getLeads,
   getLeadById,
-  fetchLeadById,
-  getLeadActivities,
-  addLeadActivity,
-  updateLead,
-  createLead,
-  deleteLead,
-  getLeadSources,
-  getIndustries
-} from "./leads";
-
-// Re-export types from the leads module
-import type { Lead, LeadActivity } from "./leads";
-
-// Re-export all functions for backward compatibility
-export {
-  // Query functions
-  getLeads,
-  getLeadById,
-  fetchLeadById,
-  getLeadActivities,
   getLeadSources,
   getIndustries,
+  fetchLeadById
+} from './leads/leadQueries';
+
+import {
+  createLead,
+  updateLead,
+  deleteLead
+} from './leads/leadMutations';
+
+import {
+  getLeadActivities,
+  addLeadActivity
+} from './leads/leadActivities';
+
+import { Lead, LeadActivity } from './leads/types';
+
+// تصدير الأنواع والوظائف
+export type { Lead, LeadActivity };
+
+export {
+  // وظائف الاستعلام
+  getLeads,
+  getLeadById,
+  fetchLeadById,
+  getLeadSources,
+  getIndustries,
+  getLeadActivities,
   
-  // Mutation functions
-  addLeadActivity,
+  // وظائف التعديل
   updateLead,
   createLead,
   deleteLead,
+  addLeadActivity,
 };
-
-// Export type definitions for use in other modules
-export type { Lead, LeadActivity };
