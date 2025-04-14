@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DealActivity } from "../types/dealTypes";
@@ -18,7 +17,6 @@ export const getDealActivities = async (dealId: string): Promise<DealActivity[]>
     if (error) throw error;
     
     return data.map(activity => {
-      // Safely handle profiles data which might be null or have errors
       let creatorName = '';
       
       // More robust null and type checking
@@ -28,7 +26,7 @@ export const getDealActivities = async (dealId: string): Promise<DealActivity[]>
         const profileData = activity.profiles as { first_name?: string; last_name?: string } | null;
         
         if (profileData) {
-          creatorName = `${profileData?.first_name || ''} ${profileData?.last_name || ''}`.trim();
+          creatorName = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim();
         }
       }
       
@@ -89,7 +87,6 @@ export const addDealActivity = async (activity: Partial<DealActivity>): Promise<
 
 export const completeDealActivity = async (activityId: string): Promise<DealActivity | null> => {
   try {
-    // Since we're using activity_logs, we'll update the details to indicate completion
     const { data, error } = await supabase
       .from('activity_logs')
       .update({
