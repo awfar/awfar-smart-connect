@@ -37,7 +37,7 @@ export interface AutocompleteProps {
 }
 
 export function Autocomplete({
-  options = [],  // Default to empty array to prevent "undefined is not iterable" error
+  options = [],
   value,
   onValueChange,
   placeholder = "Select...",
@@ -52,6 +52,9 @@ export function Autocomplete({
   const [open, setOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
 
+  // Ensure options is always an array
+  const safeOptions = Array.isArray(options) ? options : [];
+
   const handleSelect = React.useCallback(
     (currentValue: string) => {
       onValueChange(currentValue === value ? "" : currentValue);
@@ -61,8 +64,8 @@ export function Autocomplete({
   );
 
   const selectedOption = React.useMemo(() => {
-    return options?.find((option) => option.value === value);
-  }, [options, value]);
+    return safeOptions.find((option) => option.value === value);
+  }, [safeOptions, value]);
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -108,7 +111,7 @@ export function Autocomplete({
             )}
           </CommandEmpty>
           <CommandGroup className="max-h-60 overflow-auto">
-            {options && options.map((option) => (
+            {safeOptions.map((option) => (
               <CommandItem
                 key={option.value}
                 value={option.value}

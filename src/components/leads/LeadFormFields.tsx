@@ -38,7 +38,9 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
   }, [formData.company]);
 
   const handleAddCompany = (companyName: string) => {
-    handleSelectChange("company", companyName);
+    if (companyName) {
+      handleSelectChange("company", companyName);
+    }
   };
 
   return (
@@ -50,7 +52,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
             type="text"
             id="first_name"
             name="first_name"
-            value={formData.first_name}
+            value={formData.first_name || ''}
             onChange={handleChange}
             className={formErrors.first_name ? "border-red-500" : ""}
           />
@@ -64,7 +66,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
             type="text"
             id="last_name"
             name="last_name"
-            value={formData.last_name}
+            value={formData.last_name || ''}
             onChange={handleChange}
             className={formErrors.last_name ? "border-red-500" : ""}
           />
@@ -80,7 +82,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
           type="email"
           id="email"
           name="email"
-          value={formData.email}
+          value={formData.email || ''}
           onChange={handleChange}
           className={formErrors.email ? "border-red-500" : ""}
         />
@@ -115,7 +117,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
           </Button>
         </Label>
         <Autocomplete
-          options={companyOptions}
+          options={companyOptions || []}
           value={formData.company || ''}
           onValueChange={(value) => handleSelectChange("company", value)}
           placeholder="اختر أو اكتب اسم الشركة"
@@ -148,7 +150,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر الدولة" />
             </SelectTrigger>
             <SelectContent>
-              {options.countries.map((country) => (
+              {(options.countries || []).map((country) => (
                 <SelectItem key={country} value={country}>
                   {country}
                 </SelectItem>
@@ -166,7 +168,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر القطاع" />
             </SelectTrigger>
             <SelectContent>
-              {options.industries.map((industry) => (
+              {(options.industries || []).map((industry) => (
                 <SelectItem key={industry} value={industry}>
                   {industry}
                 </SelectItem>
@@ -187,7 +189,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر المرحلة" />
             </SelectTrigger>
             <SelectContent>
-              {options.stages.map((stage) => (
+              {(options.stages || []).map((stage) => (
                 <SelectItem key={stage} value={stage}>
                   {stage}
                 </SelectItem>
@@ -206,7 +208,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="not_specified">غير محدد</SelectItem>
-              {options.sources.map((source) => (
+              {(options.sources || []).map((source) => (
                 <SelectItem key={source} value={source}>
                   {source}
                 </SelectItem>
@@ -227,7 +229,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem key="unassigned" value="unassigned">غير مخصص</SelectItem>
-            {options.owners.map((owner) => (
+            {(options.owners || []).map((owner) => (
               <SelectItem key={owner.id} value={owner.id}>
                 {owner.name}
               </SelectItem>

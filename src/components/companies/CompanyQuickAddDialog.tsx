@@ -32,6 +32,14 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
+  // Reset form when dialog opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setFormData({ name: "" });
+      setFormErrors({});
+    }
+  }, [isOpen]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -82,9 +90,16 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
       // In a real implementation, we would save the company to the database
       // For now, we'll just simulate a successful save
       setTimeout(() => {
+        console.log("Company created:", formData.name);
         toast.success("تم إضافة الشركة بنجاح");
-        onSuccess(formData.name);
+        
+        // Make sure we pass a non-empty string to onSuccess
+        if (formData.name) {
+          onSuccess(formData.name);
+        }
+        
         onOpenChange(false);
+        setFormData({ name: "" });
       }, 500);
     } catch (error) {
       console.error("Error creating company:", error);
