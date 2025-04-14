@@ -1,4 +1,3 @@
-
 // Functions for fetching lead data
 import { supabase } from "../../integrations/supabase/client";
 import { Lead } from "./types";
@@ -134,7 +133,6 @@ export const getIndustries = async (): Promise<string[]> => {
     // التحقق من وجود خطأ في الاستعلام
     if (error) {
       console.error("Error fetching industries:", error);
-      // Return default industries when there's an error
       return getDefaultIndustries();
     }
     
