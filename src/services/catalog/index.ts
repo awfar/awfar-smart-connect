@@ -6,4 +6,4 @@ export * from './packageService';
 export * from './invoice';
 export * from './utils';
 // Explicitly re-export BillingCycle from subscriptions to avoid ambiguity
-export { BillingCycle } from './subscriptions';
+export type { BillingCycle } from './subscriptions';

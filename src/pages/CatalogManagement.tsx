@@ -4,9 +4,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { 
   fetchProducts,
-  fetchCategories, 
-  ProductType 
+  fetchCategories
 } from '@/services/catalogService';
+import type { ProductType } from '@/services/catalogService'; 
 import ProductGrid from '@/components/catalog/ProductGrid';
 import CatalogFilters from '@/components/catalog/CatalogFilters';
 import CatalogTabs from '@/components/catalog/CatalogTabs';

@@ -1,6 +1,10 @@
 
 // Re-export specific functions from the catalog module to avoid conflicts
-export type { ProductType, productTypeIconMap, productTypeLabels } from './catalog/utils';
+
+// Export types from utils.ts
+export { type ProductType } from './catalog/utils';
+export { productTypeIconMap } from './catalog/utils';
+export { productTypeLabels } from './catalog/utils';
 
 // Export from products.ts
 export {
