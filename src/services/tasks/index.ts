@@ -36,9 +36,17 @@ function validateTaskPriority(priority: string): 'low' | 'medium' | 'high' {
 // Cast database result to Task type
 function castToTask(data: any): Task {
   return {
-    ...data,
+    id: data.id,
+    title: data.title,
+    description: data.description,
     status: validateTaskStatus(data.status),
-    priority: validateTaskPriority(data.priority)
+    priority: validateTaskPriority(data.priority),
+    due_date: data.due_date,
+    assigned_to: data.assigned_to,
+    created_by: data.created_by,
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+    lead_id: data.lead_id
   };
 }
 
