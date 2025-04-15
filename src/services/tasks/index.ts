@@ -32,21 +32,20 @@ function validateTaskPriority(priority: string): 'low' | 'medium' | 'high' {
     : 'medium'; // Default to medium if invalid
 }
 
-// Completely rewritten function without complex type conversions
-function castToTask(data: Record<string, any>): Task {
-  // Build the task directly with explicit type assignments
+// Fixed function that avoids excessive type instantiation
+function castToTask(data: any): Task {
   return {
-    id: data.id?.toString() || '',
-    title: data.title?.toString() || '',
-    status: validateTaskStatus(data.status?.toString() || 'pending'),
-    priority: validateTaskPriority(data.priority?.toString() || 'medium'),
-    created_at: data.created_at?.toString() || new Date().toISOString(),
-    updated_at: data.updated_at?.toString() || new Date().toISOString(),
-    description: data.description?.toString(),
-    due_date: data.due_date?.toString() || null,
-    assigned_to: data.assigned_to?.toString() || null,
-    created_by: data.created_by?.toString() || null,
-    lead_id: data.lead_id?.toString() || null
+    id: String(data.id || ''),
+    title: String(data.title || ''),
+    status: validateTaskStatus(String(data.status || 'pending')),
+    priority: validateTaskPriority(String(data.priority || 'medium')),
+    created_at: String(data.created_at || new Date().toISOString()),
+    updated_at: String(data.updated_at || new Date().toISOString()),
+    description: data.description ? String(data.description) : undefined,
+    due_date: data.due_date ? String(data.due_date) : null,
+    assigned_to: data.assigned_to ? String(data.assigned_to) : null,
+    created_by: data.created_by ? String(data.created_by) : null,
+    lead_id: data.lead_id ? String(data.lead_id) : null
   };
 }
 
