@@ -116,7 +116,7 @@ export const useLeadForm = (lead?: Lead) => {
             .filter(item => item !== null && typeof item === 'object')
             .map(item => {
               // If it's an object with the right structure
-              if (item && typeof item === 'object' && 'id' in item && 'name' in item) {
+              if (item !== null && typeof item === 'object' && 'id' in item && 'name' in item) {
                 return {
                   id: String(item.id),
                   name: String(item.name)
@@ -127,6 +127,7 @@ export const useLeadForm = (lead?: Lead) => {
             .filter((item): item is {id: string, name: string} => 
               item !== null && typeof item.id === 'string' && typeof item.name === 'string');
         }
+        
         // Always ensure "not-assigned" option is available
         if (!filteredOwners.some(owner => owner.id === 'not-assigned')) {
           filteredOwners.unshift({ id: "not-assigned", name: "غير مخصص" });
