@@ -8,7 +8,7 @@ interface MobileOptimizedContainerProps {
 
 const MobileOptimizedContainer: React.FC<MobileOptimizedContainerProps> = ({ children, className = '' }) => {
   return (
-    <div className={`p-1 md:p-4 ${className}`}>
+    <div className={`p-2 md:p-4 max-w-full overflow-x-hidden ${className}`}>
       {children}
     </div>
   );

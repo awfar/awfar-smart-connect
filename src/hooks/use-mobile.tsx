@@ -11,26 +11,26 @@ type Breakpoints = {
 }
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+  const [isMobile, setIsMobile] = React.useState<boolean>(window.innerWidth < MOBILE_BREAKPOINT)
 
   React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const onChange = () => {
+    const updateSize = () => {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     }
-    mql.addEventListener("change", onChange)
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    return () => mql.removeEventListener("change", onChange)
+    
+    window.addEventListener('resize', updateSize)
+    
+    return () => window.removeEventListener('resize', updateSize)
   }, [])
 
-  return !!isMobile
+  return isMobile
 }
 
 export function useBreakpoints(): Breakpoints {
   const [breakpoints, setBreakpoints] = React.useState<Breakpoints>({
-    isMobile: false,
-    isTablet: false,
-    isDesktop: false
+    isMobile: window.innerWidth < MOBILE_BREAKPOINT,
+    isTablet: window.innerWidth >= MOBILE_BREAKPOINT && window.innerWidth < TABLET_BREAKPOINT,
+    isDesktop: window.innerWidth >= TABLET_BREAKPOINT
   })
   
   React.useEffect(() => {

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -32,22 +31,20 @@ function validateTaskPriority(priority: string): 'low' | 'medium' | 'high' {
     : 'medium'; // Default to medium if invalid
 }
 
-// Simplified function to avoid excessive type instantiation
-function castToTask(data: unknown): Task {
-  const d = data as Record<string, unknown>;
-  
+// Using a more direct approach to avoid excessive type instantiation
+function castToTask(data: any): Task {
   return {
-    id: typeof d.id === 'string' ? d.id : String(d.id || ''),
-    title: typeof d.title === 'string' ? d.title : String(d.title || ''),
-    status: validateTaskStatus(typeof d.status === 'string' ? d.status : String(d.status || 'pending')),
-    priority: validateTaskPriority(typeof d.priority === 'string' ? d.priority : String(d.priority || 'medium')),
-    created_at: typeof d.created_at === 'string' ? d.created_at : String(d.created_at || new Date().toISOString()),
-    updated_at: typeof d.updated_at === 'string' ? d.updated_at : String(d.updated_at || new Date().toISOString()),
-    description: d.description ? String(d.description) : undefined,
-    due_date: d.due_date ? String(d.due_date) : null,
-    assigned_to: d.assigned_to ? String(d.assigned_to) : null,
-    created_by: d.created_by ? String(d.created_by) : null,
-    lead_id: d.lead_id ? String(d.lead_id) : null
+    id: String(data?.id || ''),
+    title: String(data?.title || ''),
+    description: data?.description ? String(data.description) : undefined,
+    status: validateTaskStatus(String(data?.status || 'pending')),
+    priority: validateTaskPriority(String(data?.priority || 'medium')),
+    due_date: data?.due_date ? String(data.due_date) : null,
+    assigned_to: data?.assigned_to ? String(data.assigned_to) : null,
+    created_by: data?.created_by ? String(data.created_by) : null,
+    created_at: String(data?.created_at || new Date().toISOString()),
+    updated_at: String(data?.updated_at || new Date().toISOString()),
+    lead_id: data?.lead_id ? String(data.lead_id) : null
   };
 }
 

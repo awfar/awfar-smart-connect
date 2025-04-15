@@ -12,14 +12,19 @@ interface DashboardHeaderProps {
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuToggle }) => {
   return (
-    <header className="h-16 md:h-20 border-b flex items-center fixed top-0 w-full z-10 bg-awfar-primary backdrop-blur supports-[backdrop-filter]:bg-awfar-primary/90 lg:static">
+    <header className="h-16 md:h-20 border-b flex items-center fixed top-0 w-full z-50 bg-awfar-primary backdrop-blur supports-[backdrop-filter]:bg-awfar-primary/90 lg:static">
       <div className="container mx-auto px-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="lg:hidden text-white hover:bg-awfar-primary/80" onClick={onMenuToggle}>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="text-white hover:bg-awfar-primary/80 block lg:hidden" 
+            onClick={onMenuToggle}
+          >
             <Menu className="h-5 w-5" />
           </Button>
           
-          <div className="mr-4 flex items-center">
+          <div className="flex items-center">
             <img 
               src="/lovable-uploads/2469fa9e-f2ef-495c-b429-586ab2bf0574.png" 
               alt="Awfar Logo" 
