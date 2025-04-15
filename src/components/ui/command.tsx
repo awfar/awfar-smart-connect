@@ -91,6 +91,8 @@ const CommandGroup = React.forwardRef<
       "overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground",
       className
     )}
+    // Adding safety check to prevent issues with cmdk internally using Array.from on children
+    data-cmdk-safe-children={true}
     {...props}
   />
 ))
