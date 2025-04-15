@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import LeadHeader from "@/components/leads/LeadHeader";
 import LeadListSection from "@/components/leads/LeadListSection";
@@ -10,8 +10,24 @@ import DeleteLeadDialog from "@/components/leads/dialogs/DeleteLeadDialog";
 import { useLeadManagement } from "@/hooks/useLeadManagement";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import LeadPermissionAlert from "@/components/leads/LeadPermissionAlert";
 
 const LeadManagement = () => {
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
+
+  // استدعاء وظيفة جلب بيانات المستخدم الحالي
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data && data.user) {
+        setCurrentUserEmail(data.user.email);
+      }
+    };
+    
+    fetchCurrentUser();
+  }, []);
+
   const {
     // State
     selectedView,
@@ -58,6 +74,9 @@ const LeadManagement = () => {
           onRefresh={handleRefresh}
           onAddLead={handleAddLead}
         />
+
+        {/* عرض تنبيه صلاحيات المستخدم */}
+        {currentUserEmail && <LeadPermissionAlert email={currentUserEmail} />}
 
         {!supabaseStatus.isConnected && (
           <Alert variant="warning" className="mb-4 bg-amber-50 border-amber-200">
