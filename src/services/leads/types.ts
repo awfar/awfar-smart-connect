@@ -22,6 +22,7 @@ export interface Lead {
   updated_at?: string;
   assignedTo?: string;
   assigned_to?: string;
+  avatar_url?: string | null;
   owner?: Owner;
 }
 
