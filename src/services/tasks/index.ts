@@ -32,21 +32,23 @@ function validateTaskPriority(priority: string): 'low' | 'medium' | 'high' {
     : 'medium'; // Default to medium if invalid
 }
 
-// Cast database result to Task type
+// Cast database result to Task type - Fixed to avoid deep type instantiation
 function castToTask(data: Record<string, any>): Task {
-  return {
+  const task: Task = {
     id: data.id,
-    title: data.title,
+    title: data.title || '',
     description: data.description,
     status: validateTaskStatus(data.status),
     priority: validateTaskPriority(data.priority),
     due_date: data.due_date,
     assigned_to: data.assigned_to,
     created_by: data.created_by,
-    created_at: data.created_at,
-    updated_at: data.updated_at,
+    created_at: data.created_at || new Date().toISOString(),
+    updated_at: data.updated_at || new Date().toISOString(),
     lead_id: data.lead_id
   };
+  
+  return task;
 }
 
 // Get all tasks
