@@ -32,26 +32,21 @@ function validateTaskPriority(priority: string): 'low' | 'medium' | 'high' {
     : 'medium'; // Default to medium if invalid
 }
 
-// Fixed castToTask function to avoid deep type instantiation
-function castToTask(data: any): Task {
-  // Create a new task with explicit typed properties
-  const task: Task = {
+// Completely redesigned castToTask function to avoid type instantiation issues
+function castToTask(data: Record<string, any>): Task {
+  return {
     id: String(data.id || ''),
     title: String(data.title || ''),
     status: validateTaskStatus(String(data.status || '')),
     priority: validateTaskPriority(String(data.priority || '')),
     created_at: String(data.created_at || new Date().toISOString()),
-    updated_at: String(data.updated_at || new Date().toISOString())
+    updated_at: String(data.updated_at || new Date().toISOString()),
+    description: data.description ? String(data.description) : undefined,
+    due_date: data.due_date ? String(data.due_date) : null,
+    assigned_to: data.assigned_to ? String(data.assigned_to) : null,
+    created_by: data.created_by ? String(data.created_by) : null,
+    lead_id: data.lead_id ? String(data.lead_id) : null
   };
-  
-  // Add optional properties conditionally
-  if (data.description) task.description = String(data.description);
-  if (data.due_date) task.due_date = String(data.due_date);
-  if (data.assigned_to) task.assigned_to = String(data.assigned_to);
-  if (data.created_by) task.created_by = String(data.created_by);
-  if (data.lead_id) task.lead_id = String(data.lead_id);
-  
-  return task;
 }
 
 // Get all tasks
