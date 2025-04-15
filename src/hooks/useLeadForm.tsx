@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { 
   getLeadSources, 
@@ -110,18 +111,18 @@ export const useLeadForm = (lead?: Lead) => {
         if (isOwnerArray(ownersData)) {
           filteredOwners = ownersData.filter(owner => owner.id.trim() !== '');
         } else if (Array.isArray(ownersData)) {
-          // Fix: Use a proper type predicate that's compatible with the array elements
+          // Fix: Correctly type the items in the array
           filteredOwners = ownersData
-            .filter((item): item is Record<string, any> => item !== null && item !== undefined && typeof item === 'object')
+            .filter((item): item is any => item !== null && item !== undefined && typeof item === 'object')
             .map(item => {
               // Check if the item has id and name properties
               const hasIdProperty = 'id' in item;
               const hasNameProperty = 'name' in item;
               
               if (hasIdProperty && hasNameProperty) {
-                // Safely extract id and name values
-                const id = hasIdProperty ? String(item['id']) : '';
-                const name = hasNameProperty ? String(item['name']) : '';
+                // Safely extract id and name values as strings
+                const id = String(item.id || '');
+                const name = String(item.name || '');
                 
                 // Only proceed if both id and name are valid strings
                 if (id.trim() !== '' && name.trim() !== '') {
