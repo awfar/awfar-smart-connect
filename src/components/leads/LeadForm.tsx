@@ -8,7 +8,8 @@ import LeadFormFields from './LeadFormFields';
 import LeadFormToolbar from './LeadFormToolbar';
 import { supabase } from "@/integrations/supabase/client";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { InfoIcon, AlertCircle } from "lucide-react";
+import { InfoIcon, AlertCircle, ShieldAlert } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface LeadFormProps {
   lead?: Lead;
@@ -24,6 +25,10 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
     isConnected: false,
     message: "جاري التحقق من الاتصال بقاعدة البيانات..."
   });
+  const [authStatus, setAuthStatus] = useState<{ isAuthenticated: boolean, userId: string | null }>({
+    isAuthenticated: false,
+    userId: null
+  });
   
   const { 
     formData, 
@@ -35,10 +40,11 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
     validateForm 
   } = useLeadForm(lead);
 
-  // Check Supabase connection on component mount
+  // Check Supabase connection and authentication on component mount
   useEffect(() => {
     const checkConnection = async () => {
       try {
+        // Check connection to database
         const { data, error } = await supabase.from('leads').select('count').limit(1);
         
         if (error) {
@@ -54,6 +60,16 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
             message: "تم الاتصال بقاعدة البيانات بنجاح"
           });
         }
+
+        // Check authentication status
+        const { data: authData } = await supabase.auth.getSession();
+        setAuthStatus({
+          isAuthenticated: !!authData.session,
+          userId: authData.session?.user?.id || null
+        });
+        
+        console.log("Authentication status:", !!authData.session ? "Authenticated" : "Not authenticated");
+        
       } catch (err) {
         console.error("Error checking Supabase connection:", err);
         setSupabaseStatus({
@@ -77,9 +93,8 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
     }
     
     if (!supabaseStatus.isConnected) {
-      setDbError("غير متصل بقاعدة البيانات! لا يمكن حفظ البيانات بدون اتصال مؤكد.");
-      toast.error("لا يمكن حفظ البيانات - تحقق من اتصالك بقاعدة البيانات");
-      return;
+      setDbError("غير متصل بقاعدة البيانات! سيتم استخدام بيانات تجريبية.");
+      toast.warning("سيتم استخدام بيانات تجريبية - تحقق من اتصالك بقاعدة البيانات");
     }
     
     setIsSubmitting(true);
@@ -141,6 +156,15 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
     }
   };
 
+  const handleLogin = async () => {
+    try {
+      // This would typically redirect to a login page
+      toast.info("لم يتم تنفيذ نظام المصادقة بعد. ستظل البيانات في وضع تجريبي.");
+    } catch (error) {
+      console.error("Error redirecting to login:", error);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -152,12 +176,27 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
+      {!authStatus.isAuthenticated && (
+        <Alert variant="warning" className="bg-amber-50 border-amber-200">
+          <ShieldAlert className="h-4 w-4 text-amber-600" />
+          <AlertTitle className="text-amber-800">تنبيه: أنت غير مسجل دخول</AlertTitle>
+          <AlertDescription className="text-amber-700">
+            البيانات ستكون تجريبية فقط ولن يتم حفظها بشكل دائم. قم بتسجيل الدخول لحفظ بياناتك في قاعدة البيانات.
+            <div className="mt-2">
+              <Button variant="outline" size="sm" onClick={handleLogin} className="bg-amber-100 hover:bg-amber-200 border-amber-300">
+                تسجيل الدخول
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
+      
       {!supabaseStatus.isConnected && (
         <Alert variant="destructive" className="border-red-400 bg-red-50">
           <AlertCircle className="h-4 w-4 text-red-600" />
           <AlertTitle className="text-red-700">تحذير: مشكلة في الاتصال بقاعدة البيانات</AlertTitle>
           <AlertDescription className="text-red-600">
-            {supabaseStatus.message} - لن يتم حفظ البيانات في قاعدة البيانات.
+            {supabaseStatus.message} - سيتم استخدام بيانات تجريبية مؤقتة.
           </AlertDescription>
         </Alert>
       )}
@@ -165,7 +204,7 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
       {dbError && (
         <Alert variant="destructive" className="bg-red-50 border-red-400">
           <AlertCircle className="h-4 w-4 text-red-600" />
-          <AlertTitle className="text-red-700">خطأ في قاعدة البيانات:</AlertTitle>
+          <AlertTitle className="text-red-700">خطأ في العملية:</AlertTitle>
           <AlertDescription className="text-red-600">{dbError}</AlertDescription>
         </Alert>
       )}

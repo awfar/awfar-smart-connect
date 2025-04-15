@@ -27,44 +27,66 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
     
     console.log("Sending update to Supabase with data:", leadToUpdate);
     
+    // Check authentication status
+    const { data: authData } = await supabase.auth.getSession();
+    const isAuthenticated = !!authData.session;
+    
     // Try updating the lead in Supabase
-    const { data, error } = await supabase
-      .from('leads')
-      .update({
-        ...leadToUpdate,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', lead.id)
-      .select(`
-        *,
-        profiles:assigned_to (first_name, last_name)
-      `)
-      .single();
-    
-    if (error) {
-      console.error("Error updating lead in Supabase:", error);
-      toast.error(`خطأ في تحديث البيانات: ${error.message}`);
-      throw error;
-    }
-    
-    // If operation was successful, return the updated lead
-    if (data) {
-      // Log the activity
-      try {
-        const { data: userData } = await supabase.auth.getUser();
-        await addLeadActivity({
-          lead_id: lead.id,
-          type: "update",
-          description: "تم تحديث بيانات العميل المحتمل",
-          created_by: userData.user?.id
-        });
-      } catch (activityError) {
-        console.error("Error logging lead update activity:", activityError);
+    if (isAuthenticated) {
+      const { data, error } = await supabase
+        .from('leads')
+        .update({
+          ...leadToUpdate,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', lead.id)
+        .select(`
+          *,
+          profiles:assigned_to (first_name, last_name)
+        `)
+        .single();
+      
+      if (error) {
+        console.error("Error updating lead in Supabase:", error);
+        toast.error(`خطأ في تحديث البيانات: ${error.message}`);
+        throw error;
       }
       
-      console.log("Lead successfully updated in Supabase:", data);
-      toast.success("تم تحديث العميل المحتمل بنجاح");
-      return transformLeadFromSupabase(data);
+      // If operation was successful, return the updated lead
+      if (data) {
+        // Log the activity
+        try {
+          const { data: userData } = await supabase.auth.getUser();
+          await addLeadActivity({
+            lead_id: lead.id,
+            type: "update",
+            description: "تم تحديث بيانات العميل المحتمل",
+            created_by: userData.user?.id
+          });
+        } catch (activityError) {
+          console.error("Error logging lead update activity:", activityError);
+        }
+        
+        console.log("Lead successfully updated in Supabase:", data);
+        toast.success("تم تحديث العميل المحتمل بنجاح");
+        return transformLeadFromSupabase(data);
+      }
+    } else {
+      // Fallback to mock data if not authenticated
+      console.log("User not authenticated, using mock data for update");
+      
+      // Find the lead in mock data and update it
+      const leadIndex = mockLeads.findIndex(l => l.id === lead.id);
+      if (leadIndex !== -1) {
+        mockLeads[leadIndex] = {
+          ...lead,
+          updated_at: new Date().toISOString()
+        };
+        
+        console.log("Lead successfully updated in mock data:", mockLeads[leadIndex]);
+        toast.success("تم تحديث العميل المحتمل بنجاح (وضع تجريبي)");
+        return mockLeads[leadIndex];
+      }
     }
     
     throw new Error("Failed to update lead");
@@ -116,56 +138,86 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     
     console.log("Prepared lead data for creation:", leadToCreate);
 
-    // Create in Supabase with better error details
-    const { data, error } = await supabase
-      .from('leads')
-      .insert(leadToCreate)
-      .select(`
-        *,
-        profiles:assigned_to (first_name, last_name)
-      `)
-      .single();
+    // Check authentication status before proceeding
+    const { data: authData } = await supabase.auth.getSession();
+    const isAuthenticated = !!authData.session;
     
-    // Handle Supabase errors
-    if (error) {
-      console.error("Error creating lead in Supabase:", error);
-      toast.error(`فشل في حفظ البيانات: ${error.message}`);
-      throw error;
-    }
-    
-    // If operation was successful, return the new lead
-    if (data) {
-      const transformedLead = transformLeadFromSupabase(data);
-      console.log("Lead successfully created in Supabase:", transformedLead);
-      toast.success("تم إنشاء العميل المحتمل بنجاح");
+    if (isAuthenticated) {
+      // Create in Supabase with better error details
+      const { data, error } = await supabase
+        .from('leads')
+        .insert(leadToCreate)
+        .select(`
+          *,
+          profiles:assigned_to (first_name, last_name)
+        `)
+        .single();
       
-      // Create automatic follow-up activity
-      try {
-        const followupDate = new Date();
-        followupDate.setDate(followupDate.getDate() + 3);
-        
-        // Log the creation activity
-        const { data: userData } = await supabase.auth.getUser();
-        
-        await addLeadActivity({
-          lead_id: transformedLead.id,
-          type: "create",
-          description: "تم إنشاء العميل المحتمل",
-          created_by: userData.user?.id
-        });
-        
-        await addLeadActivity({
-          lead_id: transformedLead.id,
-          type: "call",
-          description: "متابعة هاتفية للعميل المحتمل الجديد",
-          scheduled_at: followupDate.toISOString(),
-          created_by: userData.user?.id
-        });
-      } catch (activityError) {
-        console.error("Error creating activity:", activityError);
+      // Handle Supabase errors
+      if (error) {
+        console.error("Error creating lead in Supabase:", error);
+        toast.error(`فشل في حفظ البيانات: ${error.message}`);
+        throw error;
       }
       
-      return transformedLead;
+      // If operation was successful, return the new lead
+      if (data) {
+        const transformedLead = transformLeadFromSupabase(data);
+        console.log("Lead successfully created in Supabase:", transformedLead);
+        toast.success("تم إنشاء العميل المحتمل بنجاح");
+        
+        // Create automatic follow-up activity
+        try {
+          const followupDate = new Date();
+          followupDate.setDate(followupDate.getDate() + 3);
+          
+          // Log the creation activity
+          const { data: userData } = await supabase.auth.getUser();
+          
+          await addLeadActivity({
+            lead_id: transformedLead.id,
+            type: "create",
+            description: "تم إنشاء العميل المحتمل",
+            created_by: userData.user?.id
+          });
+          
+          await addLeadActivity({
+            lead_id: transformedLead.id,
+            type: "call",
+            description: "متابعة هاتفية للعميل المحتمل الجديد",
+            scheduled_at: followupDate.toISOString(),
+            created_by: userData.user?.id
+          });
+        } catch (activityError) {
+          console.error("Error creating activity:", activityError);
+        }
+        
+        return transformedLead;
+      }
+    } else {
+      // Fallback to mock data for development/demo when not authenticated
+      console.log("User not authenticated, using mock data for lead creation");
+      
+      // Generate a new lead with a mock ID
+      const newMockLead: Lead = {
+        ...leadToCreate as any,
+        id: `mock-${uuidv4()}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        owner: {
+          name: "تجريبي",
+          avatar: "",
+          initials: "ت ج"
+        }
+      };
+      
+      // Add to mock data array
+      mockLeads.unshift(newMockLead);
+      console.log("Mock lead created:", newMockLead);
+      toast.success("تم إنشاء العميل المحتمل بنجاح (وضع تجريبي)");
+      toast.warning("ملاحظة: هذه البيانات تجريبية ولن يتم حفظها بشكل دائم. قم بتسجيل الدخول لحفظ البيانات في قاعدة البيانات.", { duration: 5000 });
+      
+      return newMockLead;
     }
     
     throw new Error("Failed to create lead - no data returned from database");
@@ -181,34 +233,54 @@ export const deleteLead = async (id: string): Promise<boolean> => {
   try {
     console.log("Deleting lead with ID:", id);
     
-    // Try deleting the lead from Supabase
-    try {
-      // Log the deletion activity before deleting the lead
-      const { data: userData } = await supabase.auth.getUser();
-      await addLeadActivity({
-        lead_id: id,
-        type: "delete",
-        description: "تم حذف العميل المحتمل",
-        created_by: userData.user?.id
-      });
-    } catch (activityError) {
-      console.error("Error logging lead deletion activity:", activityError);
+    // Check authentication status
+    const { data: authData } = await supabase.auth.getSession();
+    const isAuthenticated = !!authData.session;
+    
+    if (isAuthenticated) {
+      // Try deleting the lead from Supabase
+      try {
+        // Log the deletion activity before deleting the lead
+        const { data: userData } = await supabase.auth.getUser();
+        await addLeadActivity({
+          lead_id: id,
+          type: "delete",
+          description: "تم حذف العميل المحتمل",
+          created_by: userData.user?.id
+        });
+      } catch (activityError) {
+        console.error("Error logging lead deletion activity:", activityError);
+      }
+      
+      const { error } = await supabase
+        .from('leads')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error("Error deleting lead from Supabase:", error);
+        toast.error(`فشل في حذف العميل: ${error.message}`);
+        throw error;
+      }
+      
+      console.log("Lead successfully deleted from Supabase");
+      toast.success("تم حذف العميل المحتمل بنجاح");
+      return true;
+    } else {
+      // Fallback to mock data if not authenticated
+      console.log("User not authenticated, using mock data for delete operation");
+      
+      // Find and remove the lead from mock data
+      const leadIndex = mockLeads.findIndex(l => l.id === id);
+      if (leadIndex !== -1) {
+        mockLeads.splice(leadIndex, 1);
+        console.log("Lead successfully deleted from mock data");
+        toast.success("تم حذف العميل المحتمل بنجاح (وضع تجريبي)");
+        return true;
+      }
     }
     
-    const { error } = await supabase
-      .from('leads')
-      .delete()
-      .eq('id', id);
-    
-    if (error) {
-      console.error("Error deleting lead from Supabase:", error);
-      toast.error(`فشل في حذف العميل: ${error.message}`);
-      throw error;
-    }
-    
-    console.log("Lead successfully deleted from Supabase");
-    toast.success("تم حذف العميل المحتمل بنجاح");
-    return true;
+    return false;
   } catch (error) {
     console.error("Error deleting lead:", error);
     toast.error("فشل في حذف العميل المحتمل");
