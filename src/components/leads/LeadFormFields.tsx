@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LeadFormOptions } from "@/hooks/useLeadForm";
-import { Autocomplete } from "@/components/ui/autocomplete";
 import { Plus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CompanyQuickAddDialog from "@/components/companies/CompanyQuickAddDialog";
@@ -28,77 +27,24 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
   handleSelectChange
 }) => {
   const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
-  const [companyOptions, setCompanyOptions] = useState<{label: string, value: string}[]>([]);
   const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
-  const [loadCompanyError, setLoadCompanyError] = useState<string | null>(null);
   
-  // Load companies when component mounts
-  useEffect(() => {
-    const loadCompanies = async () => {
-      try {
-        setIsLoadingCompanies(true);
-        setLoadCompanyError(null);
-        const companies = await getCompanies();
-        
-        // Make sure companies is an array before mapping
-        if (Array.isArray(companies)) {
-          const companyOpts = companies.map(c => ({
-            label: c.name,
-            value: c.name
-          }));
-          setCompanyOptions(companyOpts);
-          console.log("Loaded companies:", companyOpts);
-        } else {
-          console.error("Companies data is not an array:", companies);
-          // Initialize with empty array
-          setCompanyOptions([]);
-          toast.error("فشل تحميل قائمة الشركات: البيانات المستلمة غير صالحة");
-        }
-      } catch (error) {
-        console.error("Error loading companies:", error);
-        setLoadCompanyError("لم نتمكن من تحميل قائمة الشركات");
-        toast.error("لم نتمكن من تحميل قائمة الشركات");
-        // Always set an empty array as fallback
-        setCompanyOptions([]);
-      } finally {
-        setIsLoadingCompanies(false);
-      }
-    };
-    
-    loadCompanies();
-  }, []);
-
-  // Add the company selected in the form to the options if it doesn't exist yet
-  useEffect(() => {
-    if (formData.company && 
-        Array.isArray(companyOptions) && 
-        !companyOptions.some(c => c.value === formData.company)) {
-      setCompanyOptions(prev => [
-        ...prev,
-        { label: formData.company, value: formData.company }
-      ]);
-    }
-  }, [formData.company, companyOptions]);
+  // ربط البيانات من المدخل النصي إلى formData
+  const handleCompanyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleSelectChange("company", e.target.value);
+  };
 
   const handleAddCompany = (companyName: string) => {
     if (!companyName) return;
     
-    // Add the new company to company options
-    const newOption = { label: companyName, value: companyName };
-    
-    // Check if the company already exists in options
-    if (!companyOptions.some(opt => opt.value === companyName)) {
-      setCompanyOptions(prevOptions => [...prevOptions, newOption]);
-    }
-    
-    console.log("Added new company to options:", newOption);
     console.log("Setting company value in form:", companyName);
     
     // Select the new company in the form
     handleSelectChange("company", companyName);
+    toast.success("تم إضافة الشركة بنجاح");
   };
 
-  // Safe access to ensure options never cause "Array.from" errors
+  // Safe access to ensure options never cause errors
   const getCountries = () => Array.isArray(options.countries) ? options.countries : [];
   const getIndustries = () => Array.isArray(options.industries) ? options.industries : [];
   const getStages = () => Array.isArray(options.stages) ? options.stages : ['جديد'];
@@ -178,24 +124,13 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
             إضافة شركة
           </Button>
         </Label>
-        <Autocomplete
-          options={companyOptions || []}
+        <Input
+          type="text"
+          id="company"
           value={formData.company || ''}
-          onValueChange={(value) => handleSelectChange("company", value)}
-          placeholder="اختر أو اكتب اسم الشركة"
-          emptyMessage={loadCompanyError ? loadCompanyError : "لم يتم العثور على نتائج"}
-          disableCreate={false}
-          onCreateNew={() => setIsAddCompanyOpen(true)}
-          createNewLabel="إضافة شركة جديدة"
-          disabled={isLoadingCompanies}
-          isLoading={isLoadingCompanies}
+          onChange={handleCompanyChange}
+          placeholder="اكتب اسم الشركة"
         />
-        {isLoadingCompanies && (
-          <div className="flex items-center mt-1 text-xs text-muted-foreground">
-            <Loader2 className="h-3 w-3 animate-spin mr-1" />
-            جاري تحميل قائمة الشركات...
-          </div>
-        )}
       </div>
 
       <div>

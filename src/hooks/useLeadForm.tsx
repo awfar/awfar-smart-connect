@@ -39,7 +39,7 @@ export const useLeadForm = (lead?: Lead) => {
   // State for dropdown options
   const [options, setOptions] = useState<LeadFormOptions>({
     sources: [],
-    stages: [],
+    stages: ["جديد"],
     owners: [],
     countries: [],
     industries: []
@@ -53,17 +53,26 @@ export const useLeadForm = (lead?: Lead) => {
     const fetchOptions = async () => {
       try {
         setIsLoading(true);
-        const [sourcesData, stagesData, ownersData, countriesData, industriesData] = await Promise.all([
-          getLeadSources(),
-          getLeadStages(),
-          getSalesOwners(),
-          getCountries(),
-          getIndustries()
-        ]);
+        
+        // جلب البيانات بشكل متسلسل لتجنب المشاكل المحتملة
+        const sourcesData = await getLeadSources();
+        console.log("Sources data:", sourcesData);
+        
+        const stagesData = await getLeadStages();
+        console.log("Stages data:", stagesData);
+        
+        const ownersData = await getSalesOwners();
+        console.log("Owners data:", ownersData);
+        
+        const countriesData = await getCountries();
+        console.log("Countries data:", countriesData);
+        
+        const industriesData = await getIndustries();
+        console.log("Industries data:", industriesData);
         
         setOptions({
           sources: Array.isArray(sourcesData) ? sourcesData : [],
-          stages: Array.isArray(stagesData) ? stagesData : [],
+          stages: Array.isArray(stagesData) && stagesData.length > 0 ? stagesData : ["جديد"],
           owners: Array.isArray(ownersData) ? ownersData : [],
           countries: Array.isArray(countriesData) ? countriesData : [],
           industries: Array.isArray(industriesData) ? industriesData : []
@@ -101,6 +110,7 @@ export const useLeadForm = (lead?: Lead) => {
   };
 
   const handleSelectChange = (name: string, value: string) => {
+    console.log(`Setting ${name} to:`, value);
     setFormData(prev => ({
       ...prev,
       [name]: value,
