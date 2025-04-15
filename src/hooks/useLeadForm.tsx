@@ -103,13 +103,14 @@ export const useLeadForm = (lead?: Lead) => {
         if (isOwnerArray(ownersData)) {
           filteredOwners = ownersData.filter(owner => owner.id.trim() !== '');
         } else if (Array.isArray(ownersData)) {
-          // Fix: Changed the type predicate to check if the item is any object, not specifically a string
+          // Fix: Changed the filter implementation to properly handle different item types
           filteredOwners = ownersData
-            .filter((item): item is Record<string, any> => item !== null && typeof item === 'object')
+            .filter(item => item !== null && typeof item === 'object')
             .map(item => {
-              // Now we can safely access properties on the item object
-              const id = typeof item.id === 'string' ? item.id : String(item.id || '');
-              const name = typeof item.name === 'string' ? item.name : String(item.name || '');
+              // Since we've filtered for objects above, we can safely cast and access properties
+              const itemObj = item as Record<string, unknown>;
+              const id = typeof itemObj.id === 'string' ? itemObj.id : String(itemObj.id || '');
+              const name = typeof itemObj.name === 'string' ? itemObj.name : String(itemObj.name || '');
               return { id, name };
             })
             .filter(owner => owner.id.trim() !== '' && owner.name.trim() !== '');
