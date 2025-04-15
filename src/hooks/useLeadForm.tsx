@@ -105,21 +105,19 @@ export const useLeadForm = (lead?: Lead) => {
           filteredOwners = ownersData
             .filter(item => item !== null && typeof item === 'object')
             .map(item => {
-              const itemObj = item as unknown;
-              
-              if (typeof itemObj === 'object' && itemObj !== null) {
-                const objWithProps = itemObj as Record<string, unknown>;
-                const id = typeof objWithProps.id === 'string' ? 
-                  objWithProps.id : 
-                  objWithProps.id ? String(objWithProps.id) : '';
-                  
-                const name = typeof objWithProps.name === 'string' ? 
-                  objWithProps.name : 
-                  objWithProps.name ? String(objWithProps.name) : '';
-                  
-                return { id, name };
+              if (typeof item === 'string') {
+                return { id: '', name: '' };
               }
-              return { id: '', name: '' };
+              
+              const id = item && typeof item === 'object' && 'id' in item 
+                ? (typeof item.id === 'string' ? item.id : String(item.id || ''))
+                : '';
+                
+              const name = item && typeof item === 'object' && 'name' in item
+                ? (typeof item.name === 'string' ? item.name : String(item.name || ''))
+                : '';
+                
+              return { id, name };
             })
             .filter(owner => owner.id.trim() !== '' && owner.name.trim() !== '');
         }
