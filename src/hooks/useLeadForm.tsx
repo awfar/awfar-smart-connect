@@ -113,21 +113,26 @@ export const useLeadForm = (lead?: Lead) => {
         } else if (Array.isArray(ownersData)) {
           // Try to convert or filter invalid items - using strict null checks for safety
           filteredOwners = ownersData
-            .filter(item => item !== null && item !== undefined && typeof item === 'object')
+            .filter((item): item is object => item !== null && item !== undefined && typeof item === 'object')
             .map(item => {
-              // If it's not an object or is null/undefined, return null
-              if (item === null || item === undefined) {
-                return null;
-              }
+              // We know item is a non-null object at this point
               
-              // Safely check if item has id and name properties before accessing them
-              if (typeof item === 'object' && 'id' in item && 'name' in item) {
-                // Get the properties but don't access them yet
-                const id = item['id'];
-                const name = item['name'];
+              // Check if the item has id and name properties using hasOwnProperty
+              if (
+                Object.prototype.hasOwnProperty.call(item, 'id') && 
+                Object.prototype.hasOwnProperty.call(item, 'name')
+              ) {
+                // Now we can safely access these properties using bracket notation
+                const id = (item as any)['id'];
+                const name = (item as any)['name'];
                 
-                // Only proceed if both id and name are non-null
-                if (id !== null && id !== undefined && name !== null && name !== undefined) {
+                // Only proceed if both id and name are valid strings
+                if (
+                  id !== null && 
+                  id !== undefined && 
+                  name !== null && 
+                  name !== undefined
+                ) {
                   return {
                     id: String(id),
                     name: String(name)
@@ -136,10 +141,8 @@ export const useLeadForm = (lead?: Lead) => {
               }
               return null;
             })
-            // Filter out any null entries and explicitly type the result
-            .filter((item): item is {id: string, name: string} => 
-              item !== null && 
-              item !== undefined);
+            // Filter out any null entries
+            .filter((item): item is {id: string, name: string} => item !== null);
         }
         
         // Always ensure "not-assigned" option is available
