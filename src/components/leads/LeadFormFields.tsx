@@ -155,13 +155,16 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر الدولة" />
             </SelectTrigger>
             <SelectContent>
-              {getCountries().map((country) => (
-                <SelectItem key={country} value={country}>
-                  {country}
+              {getCountries().length > 0 ? (
+                getCountries().map((country) => (
+                  <SelectItem key={country} value={country}>
+                    {country}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="no-countries-available" disabled>
+                  لا توجد دول متاحة
                 </SelectItem>
-              ))}
-              {getCountries().length === 0 && (
-                <SelectItem value="no-countries-available" disabled>لا توجد دول متاحة</SelectItem>
               )}
             </SelectContent>
           </Select>
@@ -176,13 +179,16 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر القطاع" />
             </SelectTrigger>
             <SelectContent>
-              {getIndustries().map((industry) => (
-                <SelectItem key={industry} value={industry}>
-                  {industry}
+              {getIndustries().length > 0 ? (
+                getIndustries().map((industry) => (
+                  <SelectItem key={industry} value={industry}>
+                    {industry}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="no-industries-available" disabled>
+                  لا توجد قطاعات متاحة
                 </SelectItem>
-              ))}
-              {getIndustries().length === 0 && (
-                <SelectItem value="no-industries-available" disabled>لا توجد قطاعات متاحة</SelectItem>
               )}
             </SelectContent>
           </Select>
@@ -200,13 +206,14 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر المرحلة" />
             </SelectTrigger>
             <SelectContent>
-              {getStages().map((stage) => (
-                <SelectItem key={stage} value={stage}>
-                  {stage}
-                </SelectItem>
-              ))}
-              {getStages().length === 0 && (
-                <SelectItem value="new">جديد</SelectItem>
+              {getStages().length > 0 ? (
+                getStages().map((stage) => (
+                  <SelectItem key={stage} value={stage}>
+                    {stage}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="جديد">جديد</SelectItem>
               )}
             </SelectContent>
           </Select>
@@ -221,13 +228,14 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
               <SelectValue placeholder="اختر المصدر" />
             </SelectTrigger>
             <SelectContent>
-              {getSources().map((source) => (
-                <SelectItem key={source} value={source}>
-                  {source}
-                </SelectItem>
-              ))}
-              {getSources().length === 0 && (
-                <SelectItem value="no-sources-available" disabled>لا توجد مصادر متاحة</SelectItem>
+              {getSources().length > 0 ? (
+                getSources().map((source) => (
+                  <SelectItem key={source} value={source}>
+                    {source}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="source-placeholder">اختر مصدرًا</SelectItem>
               )}
             </SelectContent>
           </Select>
@@ -245,11 +253,13 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="not-assigned">غير مخصص</SelectItem>
-            {getOwners().map((owner) => (
-              <SelectItem key={owner.id} value={owner.id}>
-                {owner.name}
-              </SelectItem>
-            ))}
+            {getOwners().length > 0 ? (
+              getOwners().map((owner) => (
+                <SelectItem key={owner.id} value={owner.id}>
+                  {owner.name}
+                </SelectItem>
+              ))
+            ) : null}
           </SelectContent>
         </Select>
       </div>

@@ -55,31 +55,90 @@ export const useLeadForm = (lead?: Lead) => {
         setIsLoading(true);
         
         // جلب البيانات بشكل متسلسل لتجنب المشاكل المحتملة
-        const sourcesData = await getLeadSources();
-        console.log("Sources data:", sourcesData);
+        let sourcesData;
+        try {
+          sourcesData = await getLeadSources();
+          console.log("Sources data:", sourcesData);
+        } catch (error) {
+          console.log("Using default sources");
+          sourcesData = ["إعلان", "مواقع التواصل الاجتماعي", "التسويق الإلكتروني", "توصية من عميل", "معرض", "اتصال مباشر", "موقع الويب"];
+        }
         
-        const stagesData = await getLeadStages();
-        console.log("Stages data:", stagesData);
+        let stagesData;
+        try {
+          stagesData = await getLeadStages();
+          console.log("Using default stages");
+          console.log("Stages data:", stagesData);
+        } catch (error) {
+          console.log("Using default stages");
+          stagesData = ["جديد", "اتصال أولي", "تفاوض", "عرض سعر", "مؤهل", "فاز", "خسر", "مؤجل"];
+        }
         
-        const ownersData = await getSalesOwners();
-        console.log("Owners data:", ownersData);
+        let ownersData;
+        try {
+          ownersData = await getSalesOwners();
+          console.log("Using default owners");
+          console.log("Owners data:", ownersData);
+        } catch (error) {
+          console.log("Using default owners");
+          ownersData = [
+            { id: "unassigned", name: "غير مخصص" },
+            { id: "user-1", name: "أحمد محمد" },
+            { id: "user-2", name: "سارة خالد" },
+            { id: "user-3", name: "محمد علي" },
+          ];
+        }
         
-        const countriesData = await getCountries();
-        console.log("Countries data:", countriesData);
+        let countriesData;
+        try {
+          countriesData = await getCountries();
+          console.log("Countries data:", countriesData);
+        } catch (error) {
+          countriesData = [
+            "المملكة العربية السعودية",
+            "الإمارات العربية المتحدة",
+            "قطر",
+            "الكويت",
+            // Add more default countries here
+          ];
+        }
         
-        const industriesData = await getIndustries();
-        console.log("Industries data:", industriesData);
+        let industriesData;
+        try {
+          industriesData = await getIndustries();
+          console.log("Industries data:", industriesData);
+        } catch (error) {
+          industriesData = [
+            "التكنولوجيا والاتصالات",
+            "الرعاية الصحية",
+            "التعليم",
+            "العقارات",
+            // Add more default industries here
+          ];
+        }
+        
+        // Make sure all arrays are properly filtered for empty values
+        const filteredSources = Array.isArray(sourcesData) ? 
+          sourcesData.filter(src => src && src.trim() !== '') : [];
+          
+        const filteredStages = Array.isArray(stagesData) && stagesData.length > 0 ? 
+          stagesData.filter(stage => stage && stage.trim() !== '') : ["جديد"];
+          
+        const filteredOwners = Array.isArray(ownersData) ? 
+          ownersData.filter(owner => owner && owner.id && owner.name) : [];
+          
+        const filteredCountries = Array.isArray(countriesData) ? 
+          countriesData.filter(country => country && country.trim() !== '') : [];
+          
+        const filteredIndustries = Array.isArray(industriesData) ? 
+          industriesData.filter(industry => industry && industry.trim() !== '') : [];
         
         setOptions({
-          sources: Array.isArray(sourcesData) ? sourcesData.filter(src => src && src.trim() !== '') : [],
-          stages: Array.isArray(stagesData) && stagesData.length > 0 ? 
-            stagesData.filter(stage => stage && stage.trim() !== '') : ["جديد"],
-          owners: Array.isArray(ownersData) ? 
-            ownersData.filter(owner => owner && owner.id && owner.name) : [],
-          countries: Array.isArray(countriesData) ? 
-            countriesData.filter(country => country && country.trim() !== '') : [],
-          industries: Array.isArray(industriesData) ? 
-            industriesData.filter(industry => industry && industry.trim() !== '') : []
+          sources: filteredSources,
+          stages: filteredStages,
+          owners: filteredOwners,
+          countries: filteredCountries,
+          industries: filteredIndustries
         });
       } catch (error) {
         console.error("Error fetching form options:", error);

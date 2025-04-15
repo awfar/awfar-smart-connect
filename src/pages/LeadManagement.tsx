@@ -29,6 +29,7 @@ const LeadManagement = () => {
   const [leadToEdit, setLeadToEdit] = useState<Lead | null>(null);
   const [leadToDelete, setLeadToDelete] = useState<string | null>(null);
   const [filters, setFilters] = useState<Record<string, any>>({});
+  const [forceRefresh, setForceRefresh] = useState<number>(0); // Add this to force refetch
 
   // Use react-query to fetch leads
   const { 
@@ -37,7 +38,7 @@ const LeadManagement = () => {
     isError, 
     refetch 
   } = useQuery({
-    queryKey: ['leads', selectedView, filters, searchTerm],
+    queryKey: ['leads', selectedView, filters, searchTerm, forceRefresh], // Add forceRefresh to queryKey
     queryFn: async () => {
       // Combine view filter with other filters
       const combinedFilters = { ...filters };
@@ -54,6 +55,7 @@ const LeadManagement = () => {
         combinedFilters.search = searchTerm;
       }
       
+      console.log("Fetching leads with filters:", combinedFilters);
       return getLeads(combinedFilters);
     },
   });
@@ -77,6 +79,7 @@ const LeadManagement = () => {
   };
 
   const handleRefresh = () => {
+    setForceRefresh(prev => prev + 1); // Increment forceRefresh to trigger refetch
     refetch();
     toast.success("تم تحديث البيانات بنجاح");
   };
@@ -97,7 +100,12 @@ const LeadManagement = () => {
     setIsAddLeadOpen(false);
     setIsEditLeadOpen(false);
     setLeadToEdit(null);
-    refetch();
+    
+    // Force a refresh after a short delay
+    setTimeout(() => {
+      setForceRefresh(prev => prev + 1);
+      refetch();
+    }, 500);
   };
   
   const handleEditLead = (lead: Lead) => {
@@ -118,6 +126,7 @@ const LeadManagement = () => {
       if (selectedLead === leadToDelete) {
         setSelectedLead(null);
       }
+      setForceRefresh(prev => prev + 1);
       refetch();
     } catch (error) {
       console.error("Error deleting lead:", error);

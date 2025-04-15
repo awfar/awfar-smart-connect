@@ -92,7 +92,7 @@ const CommandGroup = React.forwardRef<
       className
     )}
     // إضافة خاصية لمنع أخطاء Array.from
-    data-safe-children={true}
+    data-safe-children="true"
     {...props}
   />
 ))
