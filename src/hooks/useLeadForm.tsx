@@ -116,7 +116,7 @@ export const useLeadForm = (lead?: Lead) => {
             .filter(item => item !== null && typeof item === 'object')
             .map(item => {
               // If it's an object with the right structure
-              if (typeof item === 'object' && 'id' in item && 'name' in item) {
+              if (item && typeof item === 'object' && 'id' in item && 'name' in item) {
                 return {
                   id: String(item.id),
                   name: String(item.name)
