@@ -116,13 +116,14 @@ export const useLeadForm = (lead?: Lead) => {
           filteredOwners = ownersData
             .filter(item => item !== null && item !== undefined && typeof item === 'object')
             .map(item => {
-              // We know item is an object here
+              // Safely cast to Record<string, unknown> as we already checked it's an object
               const typedItem = item as Record<string, unknown>;
+              
               // Check if the item has id and name properties
               if ('id' in typedItem && 'name' in typedItem) {
                 // Safely extract id and name values as strings
-                const id = String(typedItem.id || '');
-                const name = String(typedItem.name || '');
+                const id = typedItem.id ? String(typedItem.id) : '';
+                const name = typedItem.name ? String(typedItem.name) : '';
                 
                 // Only proceed if both id and name are valid strings
                 if (id.trim() !== '' && name.trim() !== '') {
