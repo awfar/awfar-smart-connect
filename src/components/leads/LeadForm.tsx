@@ -39,18 +39,15 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
     setIsSubmitting(true);
 
     try {
-      // Process assigned_to value
-      let processedFormData = {...formData};
-      if (processedFormData.assigned_to === "not-assigned") {
-        processedFormData.assigned_to = null;
-      }
+      // Process assigned_to value - ensure it's null or a valid UUID
+      // No need to modify formData here as it's already handled in handleSelectChange
 
       if (editMode && lead) {
         console.log("Updating lead:", lead.id);
         // Preserve the ID and owner properties from the original lead
         const updatedLead = await updateLead({
           ...lead,
-          ...processedFormData,
+          ...formData,
           id: lead.id,
           updated_at: new Date().toISOString()
         });
@@ -71,11 +68,11 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
           toast.error("حدث خطأ أثناء تحديث العميل المحتمل");
         }
       } else {
-        console.log("Creating new lead with data:", processedFormData);
+        console.log("Creating new lead with data:", formData);
         
         // Set current timestamp for creation
         const newLeadData = {
-          ...processedFormData,
+          ...formData,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };

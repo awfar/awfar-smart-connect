@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,7 +26,6 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
 }) => {
   const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
   
-  // ربط البيانات من المدخل النصي إلى formData
   const handleCompanyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     handleSelectChange("company", e.target.value);
   };
@@ -37,17 +35,14 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
     
     console.log("Setting company value in form:", companyName);
     
-    // Select the new company in the form
     handleSelectChange("company", companyName);
     toast.success("تم إضافة الشركة بنجاح");
   };
 
-  // Ensure our dropdown options have valid data
   const filterValidItems = (items: string[]): string[] => {
     return items.filter(item => typeof item === 'string' && item.trim() !== '');
   };
 
-  // Safe access to ensure options never cause errors
   const getCountries = () => filterValidItems(Array.isArray(options.countries) ? options.countries : []);
   const getIndustries = () => filterValidItems(Array.isArray(options.industries) ? options.industries : []);
   const getStages = () => filterValidItems(Array.isArray(options.stages) ? options.stages : ['جديد']);

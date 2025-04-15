@@ -29,7 +29,7 @@ export const useLeadForm = (lead?: Lead) => {
     source: lead?.source || "",
     status: lead?.status || lead?.stage || "جديد",
     notes: lead?.notes || "",
-    assigned_to: lead?.assigned_to || "not-assigned",
+    assigned_to: lead?.assigned_to || null, // Changed from "not-assigned" to null
     country: lead?.country || "",
     industry: lead?.industry || "",
     created_at: lead?.created_at || new Date().toISOString(),
@@ -46,7 +46,7 @@ export const useLeadForm = (lead?: Lead) => {
       { id: "user-2", name: "سارة خالد" },
       { id: "user-3", name: "محمد علي" },
     ],
-    countries: ["المملكة العربية السعودية", "الإمارات العربية المتحدة", "قطر", "الكويت", "البحرين", "عمان"],
+    countries: ["المملكة العربية السعودية", "الإمارات العربية المتحدة", "قطر", "الكويت", "البحرين", "عمان", "لبنان"],
     industries: ["التكنولوجيا والاتصالات", "الرعاية الصحية", "التعليم", "العقارات", "المالية والتأمين", "التجزئة"]
   });
   
@@ -113,7 +113,7 @@ export const useLeadForm = (lead?: Lead) => {
         } else if (Array.isArray(ownersData)) {
           // Fix: Correctly type the items in the array
           filteredOwners = ownersData
-            .filter((item): item is any => item !== null && item !== undefined && typeof item === 'object')
+            .filter((item): item is {[key: string]: any} => item !== null && item !== undefined && typeof item === 'object')
             .map(item => {
               // Check if the item has id and name properties
               const hasIdProperty = 'id' in item;
@@ -212,10 +212,20 @@ export const useLeadForm = (lead?: Lead) => {
 
   const handleSelectChange = (name: string, value: string) => {
     console.log(`Setting ${name} to:`, value);
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
+    
+    // Special handling for assigned_to field
+    if (name === "assigned_to") {
+      const assignedValue = value === "not-assigned" ? null : value;
+      setFormData(prev => ({
+        ...prev,
+        [name]: assignedValue,
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
     
     // Clear validation error when field is changed
     if (formErrors[name]) {
