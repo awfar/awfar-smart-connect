@@ -32,40 +32,22 @@ function validateTaskPriority(priority: string): 'low' | 'medium' | 'high' {
     : 'medium'; // Default to medium if invalid
 }
 
-// Simple implementation that avoids excessive type instantiation
-function castToTask(data: Record<string, unknown>): Task {
-  // Create a basic task with required fields
-  const task: Task = {
-    id: typeof data.id === 'string' ? data.id : '',
-    title: typeof data.title === 'string' ? data.title : '',
-    status: validateTaskStatus(String(data.status || 'pending')),
-    priority: validateTaskPriority(String(data.priority || 'medium')),
-    created_at: typeof data.created_at === 'string' ? data.created_at : new Date().toISOString(),
-    updated_at: typeof data.updated_at === 'string' ? data.updated_at : new Date().toISOString()
+// Completely rewritten function without complex type conversions
+function castToTask(data: Record<string, any>): Task {
+  // Build the task directly with explicit type assignments
+  return {
+    id: data.id?.toString() || '',
+    title: data.title?.toString() || '',
+    status: validateTaskStatus(data.status?.toString() || 'pending'),
+    priority: validateTaskPriority(data.priority?.toString() || 'medium'),
+    created_at: data.created_at?.toString() || new Date().toISOString(),
+    updated_at: data.updated_at?.toString() || new Date().toISOString(),
+    description: data.description?.toString(),
+    due_date: data.due_date?.toString() || null,
+    assigned_to: data.assigned_to?.toString() || null,
+    created_by: data.created_by?.toString() || null,
+    lead_id: data.lead_id?.toString() || null
   };
-  
-  // Add optional properties if they exist
-  if (data.description != null) {
-    task.description = String(data.description);
-  }
-  
-  if (data.due_date != null) {
-    task.due_date = String(data.due_date);
-  }
-  
-  if (data.assigned_to != null) {
-    task.assigned_to = String(data.assigned_to);
-  }
-  
-  if (data.created_by != null) {
-    task.created_by = String(data.created_by);
-  }
-  
-  if (data.lead_id != null) {
-    task.lead_id = String(data.lead_id);
-  }
-  
-  return task;
 }
 
 // Get all tasks
