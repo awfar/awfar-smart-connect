@@ -32,34 +32,36 @@ function validateTaskPriority(priority: string): 'low' | 'medium' | 'high' {
     : 'medium'; // Default to medium if invalid
 }
 
-// Completely redesigned castToTask function to avoid type instantiation issues
-function castToTask(data: any): Task {
+// Simple implementation that avoids excessive type instantiation
+function castToTask(data: Record<string, unknown>): Task {
+  // Create a basic task with required fields
   const task: Task = {
     id: typeof data.id === 'string' ? data.id : '',
     title: typeof data.title === 'string' ? data.title : '',
-    status: validateTaskStatus(typeof data.status === 'string' ? data.status : ''),
-    priority: validateTaskPriority(typeof data.priority === 'string' ? data.priority : ''),
+    status: validateTaskStatus(String(data.status || 'pending')),
+    priority: validateTaskPriority(String(data.priority || 'medium')),
     created_at: typeof data.created_at === 'string' ? data.created_at : new Date().toISOString(),
     updated_at: typeof data.updated_at === 'string' ? data.updated_at : new Date().toISOString()
   };
   
-  if (data.description !== undefined && data.description !== null) {
+  // Add optional properties if they exist
+  if (data.description != null) {
     task.description = String(data.description);
   }
   
-  if (data.due_date !== undefined && data.due_date !== null) {
+  if (data.due_date != null) {
     task.due_date = String(data.due_date);
   }
   
-  if (data.assigned_to !== undefined && data.assigned_to !== null) {
+  if (data.assigned_to != null) {
     task.assigned_to = String(data.assigned_to);
   }
   
-  if (data.created_by !== undefined && data.created_by !== null) {
+  if (data.created_by != null) {
     task.created_by = String(data.created_by);
   }
   
-  if (data.lead_id !== undefined && data.lead_id !== null) {
+  if (data.lead_id != null) {
     task.lead_id = String(data.lead_id);
   }
   
