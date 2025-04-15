@@ -105,23 +105,30 @@ export const useLeadForm = (lead?: Lead) => {
         if (isOwnerArray(ownersData)) {
           filteredOwners = ownersData.filter(owner => owner.id.trim() !== '');
         } else if (Array.isArray(ownersData)) {
+          // This is the part with the type errors - let's fix it
           filteredOwners = ownersData
             .filter((item): item is Record<string, unknown> => 
               item !== null && typeof item === 'object' && item !== undefined
             )
             .map(item => {
-              // Safe property access with type checking
-              const id = typeof item.id === 'string' 
-                ? item.id 
-                : item.id && typeof item.id === 'object'
-                  ? String(Object.values(item.id)[0] || '') 
-                  : String(item.id || '');
+              // Define a safe extraction function for properties
+              const safeGetString = (obj: Record<string, unknown>, key: string): string => {
+                const value = obj[key];
+                if (typeof value === 'string') {
+                  return value;
+                } else if (value && typeof value === 'object') {
+                  // Handle case where value is an object, extract first value
+                  const objValues = Object.values(value);
+                  return objValues.length > 0 && typeof objValues[0] === 'string' 
+                    ? objValues[0] 
+                    : '';
+                }
+                return String(value || '');
+              };
               
-              const name = typeof item.name === 'string'
-                ? item.name
-                : item.name && typeof item.name === 'object'
-                  ? String(Object.values(item.name)[0] || '')
-                  : String(item.name || '');
+              // Safely extract id and name
+              const id = safeGetString(item, 'id');
+              const name = safeGetString(item, 'name');
               
               return { id, name };
             })
