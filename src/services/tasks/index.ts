@@ -39,7 +39,7 @@ function castToTask(data: any): Task {
     ...data,
     status: validateTaskStatus(data.status),
     priority: validateTaskPriority(data.priority)
-  } as Task;
+  };
 }
 
 // Get all tasks
