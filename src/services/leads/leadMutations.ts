@@ -84,36 +84,34 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
   try {
     console.log("Creating new lead:", lead);
     
-    // Always create in Supabase first, not just mock data
     // Remove owner property as it's not part of the DB schema
     const { owner, ...leadToCreate } = lead as any;
     
-    // *** TEMPORARY FIX: Always use mock data in development until we get the RLS permissions fixed ***
-    // This ensures leads can be created and displayed in the UI during development
-    const newId = `lead-${Date.now()}`;
-    const createdAt = new Date().toISOString();
-    const newLead = {
-      ...leadToCreate,
-      id: newId,
-      created_at: createdAt,
-      updated_at: createdAt,
-      owner: {
-        name: leadToCreate.assigned_to ? "أحمد محمد" : "غير مخصص",
-        avatar: "",
-        initials: "أم"
-      }
-    } as Lead;
+    // In development mode, use mock data to ensure UI updates properly
+    if (process.env.NODE_ENV === 'development') {
+      const newId = `lead-${Date.now()}`;
+      const createdAt = new Date().toISOString();
+      const newLead = {
+        ...leadToCreate,
+        id: newId,
+        created_at: createdAt,
+        updated_at: createdAt,
+        owner: {
+          name: leadToCreate.assigned_to ? "أحمد محمد" : "غير مخصص",
+          avatar: "",
+          initials: "أم"
+        }
+      } as Lead;
+      
+      // Add to the BEGINNING of mock data so it shows at the top of the list
+      mockLeads.unshift(newLead);
+      
+      console.log("Created mock lead:", newLead);
+      toast.success("تم إنشاء العميل المحتمل بنجاح");
+      return newLead;
+    }
     
-    // Add to mock data
-    mockLeads.unshift(newLead);
-    
-    console.log("Created mock lead:", newLead);
-    toast.success("تم إنشاء العميل المحتمل بنجاح");
-    return newLead;
-
-    /* 
-    // The below Supabase code can be uncommented once RLS permissions are set up correctly
-    
+    // If not in development, try creating in Supabase
     // Sanitize input - ensure UUID fields are either valid UUIDs or null
     if (!leadToCreate.assigned_to || 
         leadToCreate.assigned_to === '' || 
@@ -189,7 +187,6 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     }
     
     throw new Error("Failed to create lead");
-    */
   } catch (error) {
     console.error("Error creating lead:", error);
     toast.error("فشل في إنشاء العميل المحتمل");

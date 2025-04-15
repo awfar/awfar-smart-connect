@@ -57,10 +57,8 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
         
         if (updatedLead) {
           if (onSuccess) {
-            // Short delay to ensure UI updates after confirmation toast
-            setTimeout(() => {
-              onSuccess(updatedLead);
-            }, 300);
+            // Pass the updated lead to the success handler
+            onSuccess(updatedLead);
           }
           
           if (onClose) onClose();
@@ -88,10 +86,8 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
           
           if (newLead) {
             if (onSuccess) {
-              // Increased delay to ensure UI updates after confirmation toast
-              setTimeout(() => {
-                onSuccess(newLead);
-              }, 500);
+              // Pass the new lead to the success handler
+              onSuccess(newLead);
             }
             
             if (onClose) onClose();

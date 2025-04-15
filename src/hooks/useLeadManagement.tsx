@@ -18,7 +18,7 @@ export const useLeadManagement = () => {
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [forceRefresh, setForceRefresh] = useState<number>(0);
 
-  // Use react-query to fetch leads with a short staleTime for more frequent refreshes
+  // Use react-query to fetch leads with a shorter staleTime for more frequent refreshes
   const { 
     data: leads = [], 
     isLoading, 
@@ -53,10 +53,11 @@ export const useLeadManagement = () => {
         throw error;
       }
     },
-    // Short stale time to ensure frequent refreshes
-    staleTime: 10000, // 10 seconds
+    // Shorter stale time to ensure frequent refreshes
+    staleTime: 5000, // 5 seconds (reduced from 10 seconds)
     refetchOnMount: true,
     refetchOnWindowFocus: true,
+    refetchInterval: 10000, // Refresh every 10 seconds
   });
 
   // When leads change, update selected lead if needed
@@ -102,19 +103,19 @@ export const useLeadManagement = () => {
     setIsEditLeadOpen(false);
     setLeadToEdit(null);
     
-    // Enforce immediate refresh
+    // Force immediate first refresh
     setTimeout(() => {
       console.log("Triggering first refresh after lead operation");
       setForceRefresh(prev => prev + 1);
       refetch();
-    }, 300);
+    }, 100); // Reduced from 300ms
     
-    // Double check refresh after a bit longer delay for backend propagation
+    // Double check refresh after a bit longer delay
     setTimeout(() => {
       console.log("Triggering second refresh after lead operation");
       setForceRefresh(prev => prev + 2);
       refetch();
-    }, 1000);
+    }, 500); // Reduced from 1000ms
   };
   
   const handleEditLead = (lead: Lead) => {

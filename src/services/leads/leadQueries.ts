@@ -1,3 +1,4 @@
+
 import { Lead } from "../types/leadTypes";
 import { mockLeads } from "./mockData";
 import { supabase } from "@/integrations/supabase/client";
@@ -62,7 +63,7 @@ export const getLeads = async (filters: Record<string, any> = {}): Promise<Lead[
     
     if (error) {
       console.error("Error fetching leads from Supabase:", error);
-      // Fall back to mock data only in development
+      // Fall back to mock data in development
       if (process.env.NODE_ENV === 'development') {
         console.warn("⚠️ Falling back to mock data due to Supabase error");
         return filterMockLeads(mockLeads, filters);
@@ -70,8 +71,15 @@ export const getLeads = async (filters: Record<string, any> = {}): Promise<Lead[
       throw error;
     }
     
-    if (data) {
+    if (data && data.length > 0) {
+      console.log(`Fetched ${data.length} leads from Supabase`);
       return data.map(lead => transformLeadFromSupabase(lead));
+    }
+    
+    // If no data from Supabase and we're in development, use mock data
+    if (process.env.NODE_ENV === 'development') {
+      console.log("Using mock leads data in development");
+      return filterMockLeads(mockLeads, filters);
     }
     
     return [];
@@ -88,6 +96,9 @@ export const getLeads = async (filters: Record<string, any> = {}): Promise<Lead[
 
 // Helper function to filter mock leads (used only as fallback)
 const filterMockLeads = (leads: Lead[], filters: Record<string, any>): Lead[] => {
+  console.log("Filtering mock leads with filters:", filters);
+  console.log("Total mock leads available:", leads.length);
+  
   let filteredLeads = [...leads];
   
   // Apply search filter
@@ -116,6 +127,7 @@ const filterMockLeads = (leads: Lead[], filters: Record<string, any>): Lead[] =>
     }
   });
   
+  console.log(`Returning ${filteredLeads.length} filtered mock leads`);
   return filteredLeads;
 };
 
