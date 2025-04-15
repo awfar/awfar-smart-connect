@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   getLeadSources, 
@@ -103,15 +102,24 @@ export const useLeadForm = (lead?: Lead) => {
         if (isOwnerArray(ownersData)) {
           filteredOwners = ownersData.filter(owner => owner.id.trim() !== '');
         } else if (Array.isArray(ownersData)) {
-          // Fix: Changed the filter implementation to properly handle different item types
           filteredOwners = ownersData
             .filter(item => item !== null && typeof item === 'object')
             .map(item => {
-              // Since we've filtered for objects above, we can safely cast and access properties
-              const itemObj = item as Record<string, unknown>;
-              const id = typeof itemObj.id === 'string' ? itemObj.id : String(itemObj.id || '');
-              const name = typeof itemObj.name === 'string' ? itemObj.name : String(itemObj.name || '');
-              return { id, name };
+              const itemObj = item as unknown;
+              
+              if (typeof itemObj === 'object' && itemObj !== null) {
+                const objWithProps = itemObj as Record<string, unknown>;
+                const id = typeof objWithProps.id === 'string' ? 
+                  objWithProps.id : 
+                  objWithProps.id ? String(objWithProps.id) : '';
+                  
+                const name = typeof objWithProps.name === 'string' ? 
+                  objWithProps.name : 
+                  objWithProps.name ? String(objWithProps.name) : '';
+                  
+                return { id, name };
+              }
+              return { id: '', name: '' };
             })
             .filter(owner => owner.id.trim() !== '' && owner.name.trim() !== '');
         }
