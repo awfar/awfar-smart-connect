@@ -32,22 +32,24 @@ function validateTaskPriority(priority: string): 'low' | 'medium' | 'high' {
     : 'medium'; // Default to medium if invalid
 }
 
-// Modified castToTask function to avoid deep type instantiation
+// Fixed castToTask function to avoid deep type instantiation
 function castToTask(data: any): Task {
-  // Use direct property assignment instead of object literal construction
-  let task = {} as Task;
+  // Create a new task with explicit typed properties
+  const task: Task = {
+    id: String(data.id || ''),
+    title: String(data.title || ''),
+    status: validateTaskStatus(String(data.status || '')),
+    priority: validateTaskPriority(String(data.priority || '')),
+    created_at: String(data.created_at || new Date().toISOString()),
+    updated_at: String(data.updated_at || new Date().toISOString())
+  };
   
-  task.id = String(data.id || '');
-  task.title = String(data.title || '');
-  task.description = data.description ? String(data.description) : undefined;
-  task.status = validateTaskStatus(String(data.status || ''));
-  task.priority = validateTaskPriority(String(data.priority || ''));
-  task.due_date = data.due_date ? String(data.due_date) : null;
-  task.assigned_to = data.assigned_to ? String(data.assigned_to) : null;
-  task.created_by = data.created_by ? String(data.created_by) : null;
-  task.created_at = String(data.created_at || new Date().toISOString());
-  task.updated_at = String(data.updated_at || new Date().toISOString());
-  task.lead_id = data.lead_id ? String(data.lead_id) : null;
+  // Add optional properties conditionally
+  if (data.description) task.description = String(data.description);
+  if (data.due_date) task.due_date = String(data.due_date);
+  if (data.assigned_to) task.assigned_to = String(data.assigned_to);
+  if (data.created_by) task.created_by = String(data.created_by);
+  if (data.lead_id) task.lead_id = String(data.lead_id);
   
   return task;
 }
