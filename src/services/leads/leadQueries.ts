@@ -1,4 +1,3 @@
-
 import { Lead } from "../types/leadTypes";
 import { mockLeads } from "./mockData";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,31 +57,37 @@ export const getLeads = async (filters: Record<string, any> = {}): Promise<Lead[
       }
     }
     
-    // Execute the final query
+    // Execute the final query with detailed error handling
+    console.log("Executing Supabase query for leads...");
     const { data, error } = await tempQuery;
     
     if (error) {
       console.error("Error fetching leads from Supabase:", error);
-      // Fall back to mock data in development
+      console.error("Error details:", error.message, error.details, error.hint);
+      
+      // Fall back to mock data in development only
       if (process.env.NODE_ENV === 'development') {
         console.warn("⚠️ Falling back to mock data due to Supabase error");
+        console.warn("This means leads will not persist! Please fix database connection.");
         return filterMockLeads(mockLeads, filters);
       }
       throw error;
     }
     
     if (data && data.length > 0) {
-      console.log(`Fetched ${data.length} leads from Supabase`);
+      console.log(`✅ Successfully fetched ${data.length} leads from Supabase database`);
       return data.map(lead => transformLeadFromSupabase(lead));
+    } else {
+      console.log("ℹ️ No leads found in database matching filters");
+      
+      // If no data from Supabase and we're in development, use mock data
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Using mock leads data in development");
+        return filterMockLeads(mockLeads, filters);
+      }
+      
+      return [];
     }
-    
-    // If no data from Supabase and we're in development, use mock data
-    if (process.env.NODE_ENV === 'development') {
-      console.log("Using mock leads data in development");
-      return filterMockLeads(mockLeads, filters);
-    }
-    
-    return [];
   } catch (error) {
     console.error("Error fetching leads:", error);
     // Fallback to mock data only in development

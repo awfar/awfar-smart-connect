@@ -81,7 +81,7 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
   }
 };
 
-// Create new lead
+// Create new lead - improved to ensure database persistence
 export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
   try {
     console.log("Creating new lead:", lead);
@@ -89,7 +89,7 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     // Remove owner property as it's not part of the DB schema
     const { owner, ...leadToCreate } = lead as any;
     
-    // Ensure assigned_to is properly handled
+    // Ensure assigned_to is properly handled as UUID or null
     if (!leadToCreate.assigned_to || 
         leadToCreate.assigned_to === '' || 
         leadToCreate.assigned_to === 'unassigned' ||
@@ -112,38 +112,67 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     }
     
     console.log("Prepared lead data for creation:", leadToCreate);
-    
-    // DEBUG: Log authentication status
-    const { data: authData } = await supabase.auth.getSession();
-    console.log("Auth status before insert:", authData);
 
-    // Check if we need to use anonymous insert for development
-    const isAuthenticated = authData.session?.user?.id;
-    console.log("Is authenticated:", isAuthenticated ? "Yes" : "No");
+    // Always try to create in Supabase first, with detailed error handling
+    let data;
+    let error;
     
-    // Create in Supabase
-    const { data, error } = await supabase
-      .from('leads')
-      .insert(leadToCreate)
-      .select(`
-        *,
-        profiles:assigned_to (first_name, last_name)
-      `)
-      .single();
-    
-    // Handle creation response
-    if (error) {
-      console.error("Error creating lead in Supabase:", error);
-      console.error("Error details:", error.details, error.hint, error.message);
+    try {
+      // Create in Supabase with better error details
+      const result = await supabase
+        .from('leads')
+        .insert(leadToCreate)
+        .select(`
+          *,
+          profiles:assigned_to (first_name, last_name)
+        `)
+        .single();
       
-      // Check for RLS error
+      data = result.data;
+      error = result.error;
+      
+      // Log the network request for debugging
+      console.log("Supabase insert operation completed:", {
+        success: !error,
+        status: error ? "ERROR" : "SUCCESS",
+        data: data,
+        error: error
+      });
+      
+      if (error) {
+        console.error("Supabase insert error details:", {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+      }
+    } catch (insertError) {
+      console.error("Exception during Supabase insert operation:", insertError);
+      error = insertError;
+    }
+    
+    // Handle different error scenarios
+    if (error) {
+      // Check for RLS policy errors
       if (error.message?.includes('violates row-level security policy')) {
-        console.warn("⚠️ RLS POLICY ERROR: Your RLS policies might be blocking inserts");
-        toast.error("خطأ في سياسة أمان الصفوف - تعذر الإضافة");
+        console.warn("⚠️ RLS POLICY ERROR: Check your RLS policies for the leads table");
+        toast.error("خطأ في سياسة أمان الصفوف - تحقق من صلاحيات الجدول");
+      } 
+      // Check for auth errors
+      else if (error.message?.includes('JWTError') || error.message?.includes('JWT')) {
+        console.warn("⚠️ AUTH ERROR: Not authenticated or token expired");
+        toast.error("خطأ في المصادقة - يرجى تسجيل الدخول مرة أخرى");
+      }
+      // Check for constraint errors
+      else if (error.message?.includes('violates') && error.message?.includes('constraint')) {
+        console.warn("⚠️ CONSTRAINT ERROR: Data doesn't match table constraints");
+        toast.error("خطأ في البيانات - تأكد من صحة المعلومات المدخلة");
       }
       
-      // Fall back to mock data in development mode
+      // Fall back to mock data in development mode only
       if (process.env.NODE_ENV === 'development') {
+        console.warn("⚠️ DEVELOPMENT FALLBACK: Creating mock lead instead of database record");
         const newId = `lead-${Date.now()}`;
         const createdAt = new Date().toISOString();
         const newLead = {
@@ -205,10 +234,10 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
       return transformedLead;
     }
     
-    throw new Error("Failed to create lead");
+    throw new Error("Failed to create lead - no data returned from database");
   } catch (error) {
     console.error("Error creating lead:", error);
-    toast.error("فشل في إنشاء العميل المحتمل");
+    toast.error(`فشل في إنشاء العميل المحتمل: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
     throw error;
   }
 };

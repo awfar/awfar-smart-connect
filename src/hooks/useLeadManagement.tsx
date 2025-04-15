@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getLeads, Lead, deleteLead } from "@/services/leads";
@@ -88,6 +88,7 @@ export const useLeadManagement = () => {
           console.log("✅ Retrieved leads from Supabase DB");
         } else if (fetchedLeads.length > 0) {
           console.warn("⚠️ Retrieved mock leads (not from Supabase)");
+          toast.warning("البيانات المعروضة هي بيانات مؤقتة وليست من قاعدة البيانات");
         }
         
         return fetchedLeads;
@@ -98,10 +99,10 @@ export const useLeadManagement = () => {
       }
     },
     // Shorter stale time to ensure frequent refreshes
-    staleTime: 3000, // 3 seconds (reduced from 5 seconds)
+    staleTime: 2000, // 2 seconds (reduced for more frequent updates)
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchInterval: 5000, // Refresh every 5 seconds (reduced from 10 seconds)
+    refetchInterval: 5000, // Refresh every 5 seconds
   });
 
   // When leads change, update selected lead if needed
@@ -122,12 +123,12 @@ export const useLeadManagement = () => {
     setShowFilters(!showFilters);
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     console.log("Manually refreshing leads data");
     setForceRefresh(prev => prev + 1);
     refetch();
     toast.success("تم تحديث البيانات بنجاح");
-  };
+  }, [refetch]);
 
   const handleAddLead = () => {
     setIsAddLeadOpen(true);
@@ -141,7 +142,7 @@ export const useLeadManagement = () => {
     setFilters(newFilters);
   };
 
-  const handleLeadSuccess = (lead?: Lead) => {
+  const handleLeadSuccess = useCallback((lead?: Lead) => {
     console.log("Lead operation successful, lead:", lead);
     setIsAddLeadOpen(false);
     setIsEditLeadOpen(false);
@@ -165,7 +166,7 @@ export const useLeadManagement = () => {
       setForceRefresh(prev => prev + 1);
       refetch();
     }, 1000);
-  };
+  }, [refetch]);
   
   const handleEditLead = (lead: Lead) => {
     setLeadToEdit(lead);

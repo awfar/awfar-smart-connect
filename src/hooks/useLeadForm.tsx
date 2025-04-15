@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   getLeadSources, 
@@ -105,14 +104,14 @@ export const useLeadForm = (lead?: Lead) => {
         if (isOwnerArray(ownersData)) {
           filteredOwners = ownersData.filter(owner => owner.id.trim() !== '');
         } else if (Array.isArray(ownersData)) {
-          // Fix type issues by using a proper type guard
+          // Fix the filter to handle the correct type
           filteredOwners = ownersData
-            .filter((item): item is {[key: string]: any} => 
+            .filter((item): item is Record<string, any> => 
               item !== null && typeof item === 'object' && item !== undefined
             )
             .map(item => {
               // Define a safe extraction function for properties
-              const safeGetString = (obj: {[key: string]: any}, key: string): string => {
+              const safeGetString = (obj: Record<string, any>, key: string): string => {
                 const value = obj[key];
                 if (typeof value === 'string') {
                   return value;

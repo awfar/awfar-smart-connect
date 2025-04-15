@@ -18,6 +18,10 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
   const editMode = !!lead;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
+  const [supabaseStatus, setSupabaseStatus] = useState<{ isConnected: boolean, message: string }>({
+    isConnected: false,
+    message: "جاري التحقق من الاتصال بقاعدة البيانات..."
+  });
   
   const { 
     formData, 
@@ -29,6 +33,37 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
     validateForm 
   } = useLeadForm(lead);
 
+  // Check Supabase connection on component mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        const { data, error } = await supabase.from('leads').select('count').limit(1);
+        
+        if (error) {
+          console.error("Supabase connection error:", error);
+          setSupabaseStatus({
+            isConnected: false,
+            message: `خطأ في الاتصال بقاعدة البيانات: ${error.message}`
+          });
+        } else {
+          console.log("Supabase connection successful:", data);
+          setSupabaseStatus({
+            isConnected: true,
+            message: "تم الاتصال بقاعدة البيانات بنجاح"
+          });
+        }
+      } catch (err) {
+        console.error("Error checking Supabase connection:", err);
+        setSupabaseStatus({
+          isConnected: false,
+          message: `خطأ في فحص الاتصال: ${err instanceof Error ? err.message : String(err)}`
+        });
+      }
+    };
+    
+    checkConnection();
+  }, []);
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     console.log("Form submitted with data:", formData);
@@ -37,6 +72,11 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
     if (!validateForm()) {
       toast.error("يرجى تصحيح الأخطاء في النموذج");
       return;
+    }
+    
+    if (!supabaseStatus.isConnected) {
+      console.warn("Attempting to submit form while database connection is unavailable");
+      toast.warning("جاري محاولة حفظ البيانات بدون اتصال مؤكد بقاعدة البيانات");
     }
     
     setIsSubmitting(true);
@@ -89,10 +129,17 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
           console.log("Lead creation response:", newLead);
           
           if (newLead) {
-            toast.success("تم إضافة العميل المحتمل بنجاح");
+            // Check if this is a real Supabase lead or a mock lead
+            const isMockLead = newLead.id.startsWith('lead-');
+            
+            if (isMockLead) {
+              toast.warning("تم إنشاء العميل المحتمل في الذاكرة المؤقتة فقط (سيختفي بعد تحديث الصفحة)");
+            } else {
+              toast.success("تم إنشاء العميل المحتمل وحفظه في قاعدة البيانات بنجاح");
+            }
             
             // Verify lead was actually inserted to database
-            console.log("Verifying lead in database with ID:", newLead.id);
+            console.log("Lead created with ID:", newLead.id);
             
             if (onSuccess) {
               // Pass the new lead to the success handler
@@ -130,6 +177,13 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
+      {!supabaseStatus.isConnected && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-700 p-3 rounded-md mb-4">
+          <p className="font-semibold">تحذير: حالة الاتصال بقاعدة البيانات</p>
+          <p className="text-sm">{supabaseStatus.message} - قد لا يتم حفظ البيانات بشكل دائم.</p>
+        </div>
+      )}
+      
       {dbError && (
         <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md mb-4">
           <p className="font-semibold">خطأ في قاعدة البيانات:</p>
