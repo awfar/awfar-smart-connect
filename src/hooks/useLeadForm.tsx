@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { 
   getLeadSources, 
@@ -102,9 +103,11 @@ export const useLeadForm = (lead?: Lead) => {
         if (isOwnerArray(ownersData)) {
           filteredOwners = ownersData.filter(owner => owner.id.trim() !== '');
         } else if (Array.isArray(ownersData)) {
+          // Type checking and filtering to ensure we only work with objects
           filteredOwners = ownersData
-            .filter(item => item !== null && typeof item === 'object')
+            .filter((item): item is object => item !== null && typeof item === 'object')
             .map(item => {
+              // Safely cast to Record after type checking
               const obj = item as Record<string, any>;
               const id = typeof obj.id === 'string' ? obj.id : String(obj.id || '');
               const name = typeof obj.name === 'string' ? obj.name : String(obj.name || '');
