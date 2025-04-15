@@ -78,6 +78,7 @@ export const useLeadForm = (lead?: Lead) => {
         const isOwnerArray = (data: any): data is {id: string, name: string}[] =>
           Array.isArray(data) && data.every(item => 
             typeof item === 'object' && item !== null && 
+            'id' in item && 'name' in item &&
             typeof item.id === 'string' && typeof item.name === 'string');
         
         // Process and filter sources data - ensuring string type
@@ -111,18 +112,17 @@ export const useLeadForm = (lead?: Lead) => {
         if (isOwnerArray(ownersData)) {
           filteredOwners = ownersData.filter(owner => owner.id.trim() !== '');
         } else if (Array.isArray(ownersData)) {
-          // Fix: Correctly type the items in the array
+          // Fix: Correctly type and process owner items
           filteredOwners = ownersData
-            .filter((item): item is {[key: string]: any} => item !== null && item !== undefined && typeof item === 'object')
+            .filter(item => item !== null && item !== undefined && typeof item === 'object')
             .map(item => {
+              // We know item is an object here
+              const typedItem = item as Record<string, unknown>;
               // Check if the item has id and name properties
-              const hasIdProperty = 'id' in item;
-              const hasNameProperty = 'name' in item;
-              
-              if (hasIdProperty && hasNameProperty) {
+              if ('id' in typedItem && 'name' in typedItem) {
                 // Safely extract id and name values as strings
-                const id = String(item.id || '');
-                const name = String(item.name || '');
+                const id = String(typedItem.id || '');
+                const name = String(typedItem.name || '');
                 
                 // Only proceed if both id and name are valid strings
                 if (id.trim() !== '' && name.trim() !== '') {
