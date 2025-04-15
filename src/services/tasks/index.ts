@@ -32,9 +32,8 @@ function validateTaskPriority(priority: string): 'low' | 'medium' | 'high' {
     : 'medium'; // Default to medium if invalid
 }
 
-// Further simplified castToTask function with explicit type assignments
+// Completely redesigned castToTask function to avoid type instantiation issues
 function castToTask(data: any): Task {
-  // Create a task object manually with proper typing
   const task: Task = {
     id: typeof data.id === 'string' ? data.id : '',
     title: typeof data.title === 'string' ? data.title : '',
@@ -44,7 +43,6 @@ function castToTask(data: any): Task {
     updated_at: typeof data.updated_at === 'string' ? data.updated_at : new Date().toISOString()
   };
   
-  // Add optional properties only if they exist
   if (data.description !== undefined && data.description !== null) {
     task.description = String(data.description);
   }
@@ -99,7 +97,15 @@ export const getTasks = async (filters: Record<string, any> = {}): Promise<Task[
       throw error;
     }
     
-    return (data || []).map(item => castToTask(item));
+    // Transform data to tasks
+    const tasks: Task[] = [];
+    if (data) {
+      for (const item of data) {
+        tasks.push(castToTask(item));
+      }
+    }
+    
+    return tasks;
   } catch (error) {
     console.error("Error fetching tasks:", error);
     toast.error("فشل في تحميل المهام");
