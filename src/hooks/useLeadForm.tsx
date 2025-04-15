@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   getLeadSources, 
@@ -111,31 +110,24 @@ export const useLeadForm = (lead?: Lead) => {
         if (isOwnerArray(ownersData)) {
           filteredOwners = ownersData.filter(owner => owner.id.trim() !== '');
         } else if (Array.isArray(ownersData)) {
-          // Try to convert or filter invalid items - using strict null checks for safety
+          // Fix: Use a proper type predicate that's compatible with the array elements
           filteredOwners = ownersData
-            .filter((item): item is object => item !== null && item !== undefined && typeof item === 'object')
+            .filter((item): item is Record<string, any> => item !== null && item !== undefined && typeof item === 'object')
             .map(item => {
-              // If item is null or undefined (which shouldn't happen due to the filter), return null
-              if (item === null || item === undefined) {
-                return null;
-              }
-              
               // Check if the item has id and name properties
               const hasIdProperty = 'id' in item;
               const hasNameProperty = 'name' in item;
               
               if (hasIdProperty && hasNameProperty) {
-                // Safely extract id and name values without direct property access
-                const id = hasIdProperty ? (item as Record<string, any>)['id'] : null;
-                const name = hasNameProperty ? (item as Record<string, any>)['name'] : null;
+                // Safely extract id and name values
+                const id = hasIdProperty ? String(item['id']) : '';
+                const name = hasNameProperty ? String(item['name']) : '';
                 
                 // Only proceed if both id and name are valid strings
-                if (typeof id === 'string' && typeof name === 'string' && 
-                    id !== null && id !== undefined && id.trim() !== '' &&
-                    name !== null && name !== undefined) {
+                if (id.trim() !== '' && name.trim() !== '') {
                   return {
-                    id: id,
-                    name: name
+                    id,
+                    name
                   };
                 }
               }
