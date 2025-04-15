@@ -1,7 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { v4 as uuidv4 } from 'uuid';
 
 export interface Task {
   id: string;
@@ -34,7 +33,7 @@ function validateTaskPriority(priority: string): 'low' | 'medium' | 'high' {
 }
 
 // Cast database result to Task type
-function castToTask(data: any): Task {
+function castToTask(data: Record<string, any>): Task {
   return {
     id: data.id,
     title: data.title,
