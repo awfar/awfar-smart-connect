@@ -17,7 +17,11 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
     const { owner, ...leadToUpdate } = lead;
     
     // Remove any null or empty string values for UUID fields to prevent errors
-    if (!leadToUpdate.assigned_to || leadToUpdate.assigned_to === '' || leadToUpdate.assigned_to === 'unassigned') {
+    if (!leadToUpdate.assigned_to || 
+        leadToUpdate.assigned_to === '' || 
+        leadToUpdate.assigned_to === 'unassigned' ||
+        leadToUpdate.assigned_to === 'not-assigned' ||
+        !isValidUuid(leadToUpdate.assigned_to)) {
       leadToUpdate.assigned_to = null;
     }
     
@@ -71,6 +75,12 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
   }
 };
 
+// Helper function to validate UUID format
+function isValidUuid(uuid: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+}
+
 // Create new lead - improved to ensure database persistence
 export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
   try {
@@ -83,7 +93,10 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     if (!leadToCreate.assigned_to || 
         leadToCreate.assigned_to === '' || 
         leadToCreate.assigned_to === 'unassigned' ||
-        leadToCreate.assigned_to === 'not-assigned') {
+        leadToCreate.assigned_to === 'not-assigned' ||
+        leadToCreate.assigned_to === 'user-1' || // Explicitly handle the problematic "user-1" value
+        !isValidUuid(leadToCreate.assigned_to)) {
+      // If assigned_to is not a valid UUID, set it to null
       leadToCreate.assigned_to = null;
     }
     

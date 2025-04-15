@@ -47,7 +47,18 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
   const getIndustries = () => filterValidItems(Array.isArray(options.industries) ? options.industries : []);
   const getStages = () => filterValidItems(Array.isArray(options.stages) ? options.stages : ['جديد']);
   const getSources = () => filterValidItems(Array.isArray(options.sources) ? options.sources : []);
-  const getOwners = () => Array.isArray(options.owners) ? options.owners.filter(owner => owner && owner.id && typeof owner.id === 'string' && owner.id.trim() !== '') : [];
+  
+  const getOwners = () => {
+    if (!Array.isArray(options.owners)) return [];
+    
+    return options.owners.filter(owner => 
+      owner && 
+      owner.id && 
+      typeof owner.id === 'string' && 
+      owner.id.trim() !== '' && 
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(owner.id)
+    );
+  };
 
   return (
     <>
