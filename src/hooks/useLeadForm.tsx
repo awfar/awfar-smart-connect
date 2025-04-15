@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { 
   getLeadSources, 
@@ -102,11 +103,11 @@ export const useLeadForm = (lead?: Lead) => {
         if (isOwnerArray(ownersData)) {
           filteredOwners = ownersData.filter(owner => owner.id.trim() !== '');
         } else if (Array.isArray(ownersData)) {
-          // Type checking and filtering to ensure we only work with objects
+          // Fix: Changed the type predicate to check if the item is any object, not specifically a string
           filteredOwners = ownersData
-            .filter((item): item is any => item !== null && typeof item === 'object')
+            .filter((item): item is Record<string, any> => item !== null && typeof item === 'object')
             .map(item => {
-              // Safely access properties and convert to string
+              // Now we can safely access properties on the item object
               const id = typeof item.id === 'string' ? item.id : String(item.id || '');
               const name = typeof item.name === 'string' ? item.name : String(item.name || '');
               return { id, name };
