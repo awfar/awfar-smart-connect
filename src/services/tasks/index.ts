@@ -32,20 +32,21 @@ function validateTaskPriority(priority: string): 'low' | 'medium' | 'high' {
     : 'medium'; // Default to medium if invalid
 }
 
-// Cast database result to Task type - Fixed to avoid deep type instantiation
-function castToTask(data: Record<string, any>): Task {
+// Cast database result to Task type with explicit type construction to avoid deep instantiation
+function castToTask(data: any): Task {
+  // Create the task object with explicit types to avoid deep instantiation
   const task: Task = {
-    id: data.id,
-    title: data.title || '',
-    description: data.description,
-    status: validateTaskStatus(data.status),
-    priority: validateTaskPriority(data.priority),
-    due_date: data.due_date,
-    assigned_to: data.assigned_to,
-    created_by: data.created_by,
-    created_at: data.created_at || new Date().toISOString(),
-    updated_at: data.updated_at || new Date().toISOString(),
-    lead_id: data.lead_id
+    id: String(data.id || ''),
+    title: String(data.title || ''),
+    description: data.description ? String(data.description) : undefined,
+    status: validateTaskStatus(String(data.status || '')),
+    priority: validateTaskPriority(String(data.priority || '')),
+    due_date: data.due_date ? String(data.due_date) : null,
+    assigned_to: data.assigned_to ? String(data.assigned_to) : null,
+    created_by: data.created_by ? String(data.created_by) : null,
+    created_at: String(data.created_at || new Date().toISOString()),
+    updated_at: String(data.updated_at || new Date().toISOString()),
+    lead_id: data.lead_id ? String(data.lead_id) : null
   };
   
   return task;
