@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { 
   getLeadSources, 
@@ -70,25 +71,30 @@ export const useLeadForm = (lead?: Lead) => {
         // Wait for all promises to resolve
         const [sourcesData, stagesData, ownersData, countriesData, industriesData] = await Promise.all(promises);
         
-        // Ensure valid data for each option type
+        // Process and filter sources data
         const filteredSources = Array.isArray(sourcesData) && sourcesData.length > 0 ? 
-          sourcesData.filter(src => src && typeof src === 'string' && src.trim() !== '') : 
+          sourcesData.filter((src): src is string => typeof src === 'string' && src.trim() !== '') : 
           options.sources;
           
+        // Process and filter stages data
         const filteredStages = Array.isArray(stagesData) && stagesData.length > 0 ? 
-          stagesData.filter(stage => stage && typeof stage === 'string' && stage.trim() !== '') : 
+          stagesData.filter((stage): stage is string => typeof stage === 'string' && stage.trim() !== '') : 
           options.stages;
           
+        // Process and filter owners data
         const filteredOwners = Array.isArray(ownersData) && ownersData.length > 0 ? 
-          ownersData.filter(owner => owner && owner.id && owner.name) : 
+          ownersData.filter((owner): owner is {id: string, name: string} => 
+            owner && typeof owner === 'object' && 'id' in owner && 'name' in owner) : 
           options.owners;
           
+        // Process and filter countries data
         const filteredCountries = Array.isArray(countriesData) && countriesData.length > 0 ? 
-          countriesData.filter(country => country && typeof country === 'string' && country.trim() !== '') : 
+          countriesData.filter((country): country is string => typeof country === 'string' && country.trim() !== '') : 
           options.countries;
           
+        // Process and filter industries data
         const filteredIndustries = Array.isArray(industriesData) && industriesData.length > 0 ? 
-          industriesData.filter(industry => industry && typeof industry === 'string' && industry.trim() !== '') : 
+          industriesData.filter((industry): industry is string => typeof industry === 'string' && industry.trim() !== '') : 
           options.industries;
         
         // Make sure there's always at least a default option

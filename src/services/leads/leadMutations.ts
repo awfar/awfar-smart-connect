@@ -84,13 +84,15 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
   try {
     console.log("Creating new lead:", lead);
     
-    // IMPORTANT: Always create in Supabase first, not just mock data
-    // Regular flow for all users - try to create in Supabase first
-    // Prepare lead data for Supabase
+    // Always create in Supabase first, not just mock data
+    // Remove owner property as it's not part of the DB schema
     const { owner, ...leadToCreate } = lead as any;
     
     // Sanitize input - ensure UUID fields are either valid UUIDs or null
-    if (!leadToCreate.assigned_to || leadToCreate.assigned_to === '' || leadToCreate.assigned_to === 'unassigned') {
+    if (!leadToCreate.assigned_to || 
+        leadToCreate.assigned_to === '' || 
+        leadToCreate.assigned_to === 'unassigned' ||
+        leadToCreate.assigned_to === 'not-assigned') {
       leadToCreate.assigned_to = null;
     }
     
@@ -109,6 +111,30 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     }
     
     console.log("Preparing lead data for creation:", leadToCreate);
+
+    // Try using mock data in development mode first (for faster feedback)
+    if (process.env.NODE_ENV === 'development') {
+      console.log("Creating lead in mock data for faster feedback");
+      const newId = `lead-${Date.now()}`;
+      const createdAt = new Date().toISOString();
+      const newLead = {
+        ...leadToCreate,
+        id: newId,
+        created_at: createdAt,
+        updated_at: createdAt,
+        owner: {
+          name: "أنت",
+          avatar: "",
+          initials: "أنت"
+        }
+      } as Lead;
+      
+      // Add to mock data
+      mockLeads.unshift(newLead);
+      
+      console.log("Created mock lead:", newLead);
+      return newLead;
+    }
     
     // Try creating the lead in Supabase
     const { data, error } = await supabase
@@ -122,34 +148,6 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     
     if (error) {
       console.error("Error creating lead in Supabase:", error);
-      
-      // Only fall back to mock data in development
-      if (process.env.NODE_ENV === 'development') {
-        console.log("Falling back to mock data for demo mode (create lead)");
-        // Create a new mock lead with a generated ID
-        const newId = `lead-${mockLeads.length + 1}`;
-        const createdAt = new Date().toISOString();
-        const newLead = {
-          ...lead,
-          id: newId,
-          created_at: createdAt,
-          updated_at: createdAt,
-          // Add owner information for display
-          owner: {
-            name: "أنت",
-            avatar: "",
-            initials: "أنت"
-          }
-        } as Lead;
-        
-        // Add to mock data
-        mockLeads.unshift(newLead);
-        
-        toast.success("تم إضافة العميل المحتمل بنجاح (وضع تجريبي)");
-        console.log("Created mock lead:", newLead);
-        return newLead;
-      }
-      
       throw error;
     }
     

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { createLead, updateLead, Lead } from "@/services/leads";
@@ -80,22 +80,30 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
           updated_at: new Date().toISOString(),
         };
         
-        const newLead = await createLead(newLeadData as Omit<Lead, "id">);
-        console.log("Lead created successfully:", newLead);
-        
-        toast.success("تم إضافة العميل المحتمل بنجاح");
-        
-        if (newLead) {
-          if (onSuccess) {
-            // Short delay to ensure UI updates after confirmation toast
-            setTimeout(() => {
-              onSuccess(newLead);
-            }, 300);
-          }
+        try {
+          // Add debug logging before creating lead
+          console.log("About to create lead with this data:", JSON.stringify(newLeadData));
           
-          if (onClose) onClose();
-        } else {
-          toast.error("حدث خطأ أثناء إنشاء العميل المحتمل");
+          const newLead = await createLead(newLeadData as Omit<Lead, "id">);
+          console.log("Lead created successfully:", newLead);
+          
+          toast.success("تم إضافة العميل المحتمل بنجاح");
+          
+          if (newLead) {
+            if (onSuccess) {
+              // Increased delay to ensure UI updates after confirmation toast
+              setTimeout(() => {
+                onSuccess(newLead);
+              }, 500);
+            }
+            
+            if (onClose) onClose();
+          } else {
+            throw new Error("No lead data returned from creation");
+          }
+        } catch (innerError) {
+          console.error("Inner error creating lead:", innerError);
+          toast.error("فشل في إنشاء العميل المحتمل");
         }
       }
     } catch (error) {

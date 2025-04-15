@@ -18,7 +18,7 @@ export const useLeadManagement = () => {
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [forceRefresh, setForceRefresh] = useState<number>(0);
 
-  // Use react-query to fetch leads
+  // Use react-query to fetch leads with a short staleTime for more frequent refreshes
   const { 
     data: leads = [], 
     isLoading, 
@@ -43,9 +43,18 @@ export const useLeadManagement = () => {
       }
       
       console.log("Fetching leads with filters:", combinedFilters);
-      return getLeads(combinedFilters);
+      try {
+        const fetchedLeads = await getLeads(combinedFilters);
+        console.log("Fetched leads:", fetchedLeads.length);
+        return fetchedLeads;
+      } catch (error) {
+        console.error("Error fetching leads:", error);
+        toast.error("فشل في تحميل العملاء المحتملين");
+        throw error;
+      }
     },
-    staleTime: 30000, // 30 seconds
+    // Short stale time to ensure frequent refreshes
+    staleTime: 10000, // 10 seconds
     refetchOnMount: true,
     refetchOnWindowFocus: true,
   });
@@ -69,6 +78,7 @@ export const useLeadManagement = () => {
   };
 
   const handleRefresh = () => {
+    console.log("Manually refreshing leads data");
     setForceRefresh(prev => prev + 1);
     refetch();
     toast.success("تم تحديث البيانات بنجاح");
@@ -86,19 +96,23 @@ export const useLeadManagement = () => {
     setFilters(newFilters);
   };
 
-  const handleLeadSuccess = () => {
+  const handleLeadSuccess = (lead?: Lead) => {
+    console.log("Lead operation successful, lead:", lead);
     setIsAddLeadOpen(false);
     setIsEditLeadOpen(false);
     setLeadToEdit(null);
     
     // Enforce immediate refresh
     setTimeout(() => {
+      console.log("Triggering first refresh after lead operation");
       setForceRefresh(prev => prev + 1);
       refetch();
     }, 300);
     
     // Double check refresh after a bit longer delay for backend propagation
     setTimeout(() => {
+      console.log("Triggering second refresh after lead operation");
+      setForceRefresh(prev => prev + 2);
       refetch();
     }, 1000);
   };
