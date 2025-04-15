@@ -41,3 +41,36 @@ export const transformLeadFromSupabase = (data: LeadDBRow): Lead => {
     owner
   };
 };
+
+/**
+ * Returns the appropriate Tailwind color class for a lead stage
+ */
+export const getStageColorClass = (stage: string): string => {
+  const stageMap: Record<string, string> = {
+    'جديد': 'bg-blue-500 hover:bg-blue-600',
+    'اتصال أولي': 'bg-purple-500 hover:bg-purple-600',
+    'تفاوض': 'bg-orange-500 hover:bg-orange-600',
+    'عرض سعر': 'bg-yellow-500 hover:bg-yellow-600',
+    'مؤهل': 'bg-emerald-500 hover:bg-emerald-600',
+    'فاز': 'bg-green-500 hover:bg-green-600',
+    'خسر': 'bg-red-500 hover:bg-red-600',
+    'مؤجل': 'bg-gray-500 hover:bg-gray-600',
+  };
+  
+  return stageMap[stage] || 'bg-blue-500 hover:bg-blue-600';
+};
+
+/**
+ * Returns initials from a name string
+ */
+export const getInitials = (name: string): string => {
+  if (!name) return 'غ';
+  
+  const parts = name.trim().split(' ');
+  if (parts.length === 0 || parts[0] === '') return 'غ';
+  
+  if (parts.length === 1) return parts[0][0] || 'غ';
+  
+  return `${parts[0][0]}${parts[parts.length - 1][0]}`;
+};
+

@@ -69,7 +69,6 @@ export const useLeadForm = (lead?: Lead) => {
         const isStringArray = (data: any): data is string[] => 
           Array.isArray(data) && data.every(item => typeof item === 'string');
         
-        // Fix the type predicate to correctly check for owner array
         const isOwnerArray = (data: any): data is {id: string, name: string}[] =>
           Array.isArray(data) && data.every(item => 
             typeof item === 'object' && item !== null && 
@@ -100,35 +99,15 @@ export const useLeadForm = (lead?: Lead) => {
         
         let filteredOwners: {id: string, name: string}[] = [];
         
-        // Fixed type handling for owners data
         if (isOwnerArray(ownersData)) {
           filteredOwners = ownersData.filter(owner => owner.id.trim() !== '');
         } else if (Array.isArray(ownersData)) {
-          // Fix the filter to handle the correct type
           filteredOwners = ownersData
-            .filter((item): item is Record<string, any> => 
-              item !== null && typeof item === 'object' && item !== undefined
-            )
+            .filter(item => item !== null && typeof item === 'object')
             .map(item => {
-              // Define a safe extraction function for properties
-              const safeGetString = (obj: Record<string, any>, key: string): string => {
-                const value = obj[key];
-                if (typeof value === 'string') {
-                  return value;
-                } else if (value && typeof value === 'object') {
-                  // Handle case where value is an object, extract first value
-                  const objValues = Object.values(value);
-                  return objValues.length > 0 && typeof objValues[0] === 'string' 
-                    ? objValues[0] 
-                    : '';
-                }
-                return String(value || '');
-              };
-              
-              // Safely extract id and name
-              const id = safeGetString(item, 'id');
-              const name = safeGetString(item, 'name');
-              
+              const obj = item as Record<string, any>;
+              const id = typeof obj.id === 'string' ? obj.id : String(obj.id || '');
+              const name = typeof obj.name === 'string' ? obj.name : String(obj.name || '');
               return { id, name };
             })
             .filter(owner => owner.id.trim() !== '' && owner.name.trim() !== '');
