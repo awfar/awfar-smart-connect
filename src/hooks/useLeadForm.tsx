@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   getLeadSources, 
@@ -29,14 +28,13 @@ export const useLeadForm = (lead?: Lead) => {
     source: lead?.source || "",
     status: lead?.status || lead?.stage || "جديد",
     notes: lead?.notes || "",
-    assigned_to: lead?.assigned_to || null, // Changed from "not-assigned" to null
+    assigned_to: lead?.assigned_to || null,
     country: lead?.country || "",
     industry: lead?.industry || "",
     created_at: lead?.created_at || new Date().toISOString(),
     updated_at: lead?.updated_at || new Date().toISOString(),
   });
 
-  // State for dropdown options
   const [options, setOptions] = useState<LeadFormOptions>({
     sources: ["إعلان", "مواقع التواصل الاجتماعي", "التسويق الإلكتروني", "توصية من عميل", "معرض", "اتصال مباشر", "موقع الويب"],
     stages: ["جديد", "اتصال أولي", "تفاوض", "عرض سعر", "مؤهل", "فاز", "خسر", "مؤجل"],
@@ -53,13 +51,11 @@ export const useLeadForm = (lead?: Lead) => {
   const [isLoading, setIsLoading] = useState(true);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  // Fetch options for dropdown menus
   useEffect(() => {
     const fetchOptions = async () => {
       try {
         setIsLoading(true);
         
-        // Create an array of promises for parallel fetching
         const promises = [
           getLeadSources().catch(() => options.sources),
           getLeadStages().catch(() => options.stages),
@@ -68,10 +64,8 @@ export const useLeadForm = (lead?: Lead) => {
           getIndustries().catch(() => options.industries)
         ];
         
-        // Wait for all promises to resolve
         const [sourcesData, stagesData, ownersData, countriesData, industriesData] = await Promise.all(promises);
         
-        // Type guards to ensure we have the right data types - fixed TS errors
         const isStringArray = (data: any): data is string[] => 
           Array.isArray(data) && data.every(item => typeof item === 'string');
         
@@ -81,12 +75,10 @@ export const useLeadForm = (lead?: Lead) => {
             'id' in item && 'name' in item &&
             typeof item.id === 'string' && typeof item.name === 'string');
         
-        // Process and filter sources data - ensuring string type
         let filteredSources: string[] = [];
         if (isStringArray(sourcesData)) {
           filteredSources = sourcesData.filter(src => src.trim() !== '');
         } else if (Array.isArray(sourcesData)) {
-          // Try to convert any non-string items to strings
           filteredSources = sourcesData
             .filter(item => item !== null && item !== undefined)
             .map(item => String(item))
@@ -94,12 +86,10 @@ export const useLeadForm = (lead?: Lead) => {
         }
         if (filteredSources.length === 0) filteredSources = options.sources;
         
-        // Process and filter stages data - ensuring string type
         let filteredStages: string[] = [];
         if (isStringArray(stagesData)) {
           filteredStages = stagesData.filter(stage => stage.trim() !== '');
         } else if (Array.isArray(stagesData)) {
-          // Try to convert any non-string items to strings
           filteredStages = stagesData
             .filter(item => item !== null && item !== undefined)
             .map(item => String(item))
@@ -107,47 +97,44 @@ export const useLeadForm = (lead?: Lead) => {
         }
         if (filteredStages.length === 0) filteredStages = ["جديد"];
         
-        // Process and filter owners data - ensuring proper structure
         let filteredOwners: {id: string, name: string}[] = [];
         if (isOwnerArray(ownersData)) {
           filteredOwners = ownersData.filter(owner => owner.id.trim() !== '');
         } else if (Array.isArray(ownersData)) {
-          // Fixed: Correctly process owner items with proper type checking and null safety
           filteredOwners = ownersData
-            .filter((item): item is NonNullable<typeof item> => item !== null && typeof item === 'object')
+            .filter((item): item is {id: unknown, name: unknown} => 
+              item !== null && typeof item === 'object' && item !== undefined
+            )
             .map(item => {
-              // Access properties safely with proper type checking
-              if ('id' in item && 'name' in item) {
-                // Safely extract id and name values as strings
-                const id = typeof item.id === 'string' ? item.id : String(item.id ?? '');
-                const name = typeof item.name === 'string' ? item.name : String(item.name ?? '');
-                
-                // Only proceed if both id and name are valid strings
-                if (id.trim() !== '' && name.trim() !== '') {
-                  return {
-                    id,
-                    name
-                  };
-                }
-              }
-              return null;
+              const id = typeof item.id === 'string' 
+                ? item.id 
+                : item.id instanceof Object 
+                  ? String(Object.values(item.id)[0] || '') 
+                  : String(item.id || '');
+              
+              const name = typeof item.name === 'string'
+                ? item.name
+                : item.name instanceof Object
+                  ? String(Object.values(item.name)[0] || '')
+                  : String(item.name || '');
+              
+              return { id, name };
             })
-            // Filter out any null entries
-            .filter((item): item is {id: string, name: string} => item !== null);
+            .filter(owner => owner.id.trim() !== '' && owner.name.trim() !== '');
         }
         
-        // Always ensure "not-assigned" option is available
         if (!filteredOwners.some(owner => owner.id === 'not-assigned')) {
           filteredOwners.unshift({ id: "not-assigned", name: "غير مخصص" });
         }
-        if (filteredOwners.length === 0) filteredOwners = options.owners;
         
-        // Process and filter countries data - ensuring string type
+        if (filteredOwners.length === 0) {
+          filteredOwners = options.owners;
+        }
+        
         let filteredCountries: string[] = [];
         if (isStringArray(countriesData)) {
           filteredCountries = countriesData.filter(country => country.trim() !== '');
         } else if (Array.isArray(countriesData)) {
-          // Try to convert any non-string items to strings
           filteredCountries = countriesData
             .filter(item => item !== null && item !== undefined)
             .map(item => String(item))
@@ -155,12 +142,10 @@ export const useLeadForm = (lead?: Lead) => {
         }
         if (filteredCountries.length === 0) filteredCountries = options.countries;
         
-        // Process and filter industries data - ensuring string type
         let filteredIndustries: string[] = [];
         if (isStringArray(industriesData)) {
           filteredIndustries = industriesData.filter(industry => industry.trim() !== '');
         } else if (Array.isArray(industriesData)) {
-          // Try to convert any non-string items to strings
           filteredIndustries = industriesData
             .filter(item => item !== null && item !== undefined)
             .map(item => String(item))
@@ -168,7 +153,6 @@ export const useLeadForm = (lead?: Lead) => {
         }
         if (filteredIndustries.length === 0) filteredIndustries = options.industries;
         
-        // Update options state with filtered data
         setOptions({
           sources: filteredSources,
           stages: filteredStages,
@@ -186,7 +170,6 @@ export const useLeadForm = (lead?: Lead) => {
         });
       } catch (error) {
         console.error("Error fetching form options:", error);
-        // Keep using default options if fetching fails
       } finally {
         setIsLoading(false);
       }
@@ -202,7 +185,6 @@ export const useLeadForm = (lead?: Lead) => {
       [name]: value,
     }));
     
-    // Clear validation error when field is changed
     if (formErrors[name]) {
       setFormErrors(prev => ({ ...prev, [name]: "" }));
     }
@@ -211,7 +193,6 @@ export const useLeadForm = (lead?: Lead) => {
   const handleSelectChange = (name: string, value: string) => {
     console.log(`Setting ${name} to:`, value);
     
-    // Special handling for assigned_to field
     if (name === "assigned_to") {
       const assignedValue = value === "not-assigned" ? null : value;
       setFormData(prev => ({
@@ -225,7 +206,6 @@ export const useLeadForm = (lead?: Lead) => {
       }));
     }
     
-    // Clear validation error when field is changed
     if (formErrors[name]) {
       setFormErrors(prev => ({ ...prev, [name]: "" }));
     }
