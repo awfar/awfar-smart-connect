@@ -105,14 +105,14 @@ export const useLeadForm = (lead?: Lead) => {
         if (isOwnerArray(ownersData)) {
           filteredOwners = ownersData.filter(owner => owner.id.trim() !== '');
         } else if (Array.isArray(ownersData)) {
-          // Fix the type issues by improving our filter
+          // Fix type issues by using a proper type guard
           filteredOwners = ownersData
-            .filter((item): item is Record<string, unknown> => 
+            .filter((item): item is {[key: string]: any} => 
               item !== null && typeof item === 'object' && item !== undefined
             )
             .map(item => {
               // Define a safe extraction function for properties
-              const safeGetString = (obj: Record<string, unknown>, key: string): string => {
+              const safeGetString = (obj: {[key: string]: any}, key: string): string => {
                 const value = obj[key];
                 if (typeof value === 'string') {
                   return value;
