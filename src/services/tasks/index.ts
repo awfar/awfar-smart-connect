@@ -32,20 +32,22 @@ function validateTaskPriority(priority: string): 'low' | 'medium' | 'high' {
     : 'medium'; // Default to medium if invalid
 }
 
-// Fixed function that avoids excessive type instantiation
-function castToTask(data: any): Task {
+// Simplified function to avoid excessive type instantiation
+function castToTask(data: unknown): Task {
+  const d = data as Record<string, unknown>;
+  
   return {
-    id: String(data.id || ''),
-    title: String(data.title || ''),
-    status: validateTaskStatus(String(data.status || 'pending')),
-    priority: validateTaskPriority(String(data.priority || 'medium')),
-    created_at: String(data.created_at || new Date().toISOString()),
-    updated_at: String(data.updated_at || new Date().toISOString()),
-    description: data.description ? String(data.description) : undefined,
-    due_date: data.due_date ? String(data.due_date) : null,
-    assigned_to: data.assigned_to ? String(data.assigned_to) : null,
-    created_by: data.created_by ? String(data.created_by) : null,
-    lead_id: data.lead_id ? String(data.lead_id) : null
+    id: typeof d.id === 'string' ? d.id : String(d.id || ''),
+    title: typeof d.title === 'string' ? d.title : String(d.title || ''),
+    status: validateTaskStatus(typeof d.status === 'string' ? d.status : String(d.status || 'pending')),
+    priority: validateTaskPriority(typeof d.priority === 'string' ? d.priority : String(d.priority || 'medium')),
+    created_at: typeof d.created_at === 'string' ? d.created_at : String(d.created_at || new Date().toISOString()),
+    updated_at: typeof d.updated_at === 'string' ? d.updated_at : String(d.updated_at || new Date().toISOString()),
+    description: d.description ? String(d.description) : undefined,
+    due_date: d.due_date ? String(d.due_date) : null,
+    assigned_to: d.assigned_to ? String(d.assigned_to) : null,
+    created_by: d.created_by ? String(d.created_by) : null,
+    lead_id: d.lead_id ? String(d.lead_id) : null
   };
 }
 
