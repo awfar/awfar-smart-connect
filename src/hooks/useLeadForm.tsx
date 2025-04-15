@@ -116,8 +116,10 @@ export const useLeadForm = (lead?: Lead) => {
           filteredOwners = ownersData
             .filter(item => item !== null && item !== undefined && typeof item === 'object')
             .map(item => {
-              // Safely cast to Record<string, unknown> as we already checked it's an object
-              const typedItem = item as Record<string, unknown>;
+              // Cast to unknown first to avoid type issues
+              const unknownItem = item as unknown;
+              // Then cast to Record<string, unknown> as we already checked it's an object
+              const typedItem = unknownItem as Record<string, unknown>;
               
               // Check if the item has id and name properties
               if ('id' in typedItem && 'name' in typedItem) {
