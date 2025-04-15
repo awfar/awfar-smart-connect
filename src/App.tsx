@@ -52,8 +52,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 
 function App() {
   return (
-    <>
-      <AuthProvider>
+    <AuthProvider>
+      <>
         <Router>
           <Routes>
             <Route path="/" element={<Index />} />
@@ -109,8 +109,8 @@ function App() {
           closeButton
           dir="rtl"
         />
-      </AuthProvider>
-    </>
+      </>
+    </AuthProvider>
   );
 }
 
