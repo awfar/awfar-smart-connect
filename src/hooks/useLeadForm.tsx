@@ -117,15 +117,26 @@ export const useLeadForm = (lead?: Lead) => {
             .map(item => {
               // If it's an object with the right structure
               if (item !== null && typeof item === 'object' && 'id' in item && 'name' in item) {
-                return {
-                  id: String(item.id),
-                  name: String(item.name)
-                };
+                // Safely access properties with additional null check
+                const id = item.id;
+                const name = item.name;
+                
+                if (id !== null && name !== null) {
+                  return {
+                    id: String(id),
+                    name: String(name)
+                  };
+                }
               }
               return null;
             })
             .filter((item): item is {id: string, name: string} => 
-              item !== null && typeof item.id === 'string' && typeof item.name === 'string');
+              item !== null && 
+              typeof item === 'object' && 
+              'id' in item && 
+              'name' in item &&
+              typeof item.id === 'string' && 
+              typeof item.name === 'string');
         }
         
         // Always ensure "not-assigned" option is available
