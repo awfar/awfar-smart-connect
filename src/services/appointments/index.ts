@@ -18,6 +18,22 @@ export interface Appointment {
   participants?: string[] | null;
 }
 
+// Validate appointment status
+function validateAppointmentStatus(status: string): 'scheduled' | 'completed' | 'cancelled' | 'rescheduled' {
+  const validStatuses = ['scheduled', 'completed', 'cancelled', 'rescheduled'];
+  return validStatuses.includes(status) 
+    ? status as 'scheduled' | 'completed' | 'cancelled' | 'rescheduled'
+    : 'scheduled'; // Default to scheduled if invalid
+}
+
+// Cast database result to Appointment type
+function castToAppointment(data: any): Appointment {
+  return {
+    ...data,
+    status: validateAppointmentStatus(data.status)
+  } as Appointment;
+}
+
 // Get all appointments
 export const getAppointments = async (filters: Record<string, any> = {}): Promise<Appointment[]> => {
   try {
@@ -51,7 +67,7 @@ export const getAppointments = async (filters: Record<string, any> = {}): Promis
       throw error;
     }
     
-    return data || [];
+    return (data || []).map(item => castToAppointment(item));
   } catch (error) {
     console.error("Error fetching appointments:", error);
     toast.error("فشل في تحميل المواعيد");
@@ -73,7 +89,7 @@ export const getAppointmentById = async (id: string): Promise<Appointment | null
       return null;
     }
     
-    return data;
+    return data ? castToAppointment(data) : null;
   } catch (error) {
     console.error("Error fetching appointment:", error);
     return null;
@@ -88,8 +104,11 @@ export const createAppointment = async (
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
     
+    const validStatus = validateAppointmentStatus(appointment.status);
+    
     const newAppointment = {
       ...appointment,
+      status: validStatus,
       created_by: userId || appointment.created_by,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -108,7 +127,7 @@ export const createAppointment = async (
     }
     
     toast.success("تم إنشاء الموعد بنجاح");
-    return data;
+    return castToAppointment(data);
   } catch (error) {
     console.error("Error creating appointment:", error);
     toast.error("فشل في إنشاء الموعد");
@@ -119,10 +138,15 @@ export const createAppointment = async (
 // Update an existing appointment
 export const updateAppointment = async (id: string, updates: Partial<Appointment>): Promise<Appointment | null> => {
   try {
+    // If status is being updated, validate it
     const appointmentUpdates = {
       ...updates,
       updated_at: new Date().toISOString()
     };
+    
+    if (updates.status) {
+      appointmentUpdates.status = validateAppointmentStatus(updates.status);
+    }
     
     const { data, error } = await supabase
       .from('appointments')
@@ -138,7 +162,7 @@ export const updateAppointment = async (id: string, updates: Partial<Appointment
     }
     
     toast.success("تم تحديث الموعد بنجاح");
-    return data;
+    return castToAppointment(data);
   } catch (error) {
     console.error("Error updating appointment:", error);
     toast.error("فشل في تحديث الموعد");

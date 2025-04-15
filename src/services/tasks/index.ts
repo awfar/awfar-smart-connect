@@ -17,6 +17,31 @@ export interface Task {
   lead_id?: string | null;
 }
 
+// Validate task status
+function validateTaskStatus(status: string): 'pending' | 'in-progress' | 'completed' | 'cancelled' {
+  const validStatuses = ['pending', 'in-progress', 'completed', 'cancelled'];
+  return validStatuses.includes(status) 
+    ? status as 'pending' | 'in-progress' | 'completed' | 'cancelled'
+    : 'pending'; // Default to pending if invalid
+}
+
+// Validate task priority
+function validateTaskPriority(priority: string): 'low' | 'medium' | 'high' {
+  const validPriorities = ['low', 'medium', 'high'];
+  return validPriorities.includes(priority) 
+    ? priority as 'low' | 'medium' | 'high'
+    : 'medium'; // Default to medium if invalid
+}
+
+// Cast database result to Task type
+function castToTask(data: any): Task {
+  return {
+    ...data,
+    status: validateTaskStatus(data.status),
+    priority: validateTaskPriority(data.priority)
+  } as Task;
+}
+
 // Get all tasks
 export const getTasks = async (filters: Record<string, any> = {}): Promise<Task[]> => {
   try {
@@ -48,7 +73,7 @@ export const getTasks = async (filters: Record<string, any> = {}): Promise<Task[
       throw error;
     }
     
-    return data || [];
+    return (data || []).map(item => castToTask(item));
   } catch (error) {
     console.error("Error fetching tasks:", error);
     toast.error("فشل في تحميل المهام");
@@ -70,7 +95,7 @@ export const getTaskById = async (id: string): Promise<Task | null> => {
       return null;
     }
     
-    return data;
+    return data ? castToTask(data) : null;
   } catch (error) {
     console.error("Error fetching task:", error);
     return null;
@@ -85,6 +110,8 @@ export const createTask = async (task: Omit<Task, 'id' | 'created_at' | 'updated
     
     const newTask = {
       ...task,
+      status: validateTaskStatus(task.status),
+      priority: validateTaskPriority(task.priority),
       created_by: userId || task.created_by,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -103,7 +130,7 @@ export const createTask = async (task: Omit<Task, 'id' | 'created_at' | 'updated
     }
     
     toast.success("تم إنشاء المهمة بنجاح");
-    return data;
+    return castToTask(data);
   } catch (error) {
     console.error("Error creating task:", error);
     toast.error("فشل في إنشاء المهمة");
@@ -119,6 +146,15 @@ export const updateTask = async (id: string, updates: Partial<Task>): Promise<Ta
       updated_at: new Date().toISOString()
     };
     
+    // Validate status and priority if they are being updated
+    if (updates.status) {
+      taskUpdates.status = validateTaskStatus(updates.status);
+    }
+    
+    if (updates.priority) {
+      taskUpdates.priority = validateTaskPriority(updates.priority);
+    }
+    
     const { data, error } = await supabase
       .from('tasks')
       .update(taskUpdates)
@@ -133,7 +169,7 @@ export const updateTask = async (id: string, updates: Partial<Task>): Promise<Ta
     }
     
     toast.success("تم تحديث المهمة بنجاح");
-    return data;
+    return castToTask(data);
   } catch (error) {
     console.error("Error updating task:", error);
     toast.error("فشل في تحديث المهمة");
