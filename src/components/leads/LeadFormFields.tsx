@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -308,7 +309,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
             <SelectValue placeholder="اختر المسؤول" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="unassigned">غير مخصص</SelectItem>
+            <SelectItem value="">غير مخصص</SelectItem>
             {getOwners().map((owner) => (
               <SelectItem key={owner.id} value={owner.id}>
                 {owner.name}

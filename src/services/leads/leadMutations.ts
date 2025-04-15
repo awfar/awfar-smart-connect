@@ -17,7 +17,7 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
     const { owner, ...leadToUpdate } = lead;
     
     // Remove any null or empty string values for UUID fields to prevent errors
-    if (!leadToUpdate.assigned_to || leadToUpdate.assigned_to === '') {
+    if (!leadToUpdate.assigned_to || leadToUpdate.assigned_to === '' || leadToUpdate.assigned_to === 'unassigned') {
       leadToUpdate.assigned_to = null;
     }
     
@@ -107,6 +107,8 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     if (!leadToCreate.status) {
       leadToCreate.status = 'جديد';
     }
+    
+    console.log("Preparing lead data for creation:", leadToCreate);
     
     // Try creating the lead in Supabase
     const { data, error } = await supabase

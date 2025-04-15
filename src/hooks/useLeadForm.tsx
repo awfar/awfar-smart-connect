@@ -62,15 +62,23 @@ export const useLeadForm = (lead?: Lead) => {
         ]);
         
         setOptions({
-          sources: sourcesData,
-          stages: stagesData,
-          owners: ownersData,
-          countries: countriesData,
-          industries: industriesData
+          sources: Array.isArray(sourcesData) ? sourcesData : [],
+          stages: Array.isArray(stagesData) ? stagesData : [],
+          owners: Array.isArray(ownersData) ? ownersData : [],
+          countries: Array.isArray(countriesData) ? countriesData : [],
+          industries: Array.isArray(industriesData) ? industriesData : []
         });
       } catch (error) {
         console.error("Error fetching form options:", error);
         toast.error("فشل في تحميل خيارات النموذج");
+        // Initialize with empty arrays as fallback
+        setOptions({
+          sources: [],
+          stages: ["جديد"],
+          owners: [],
+          countries: [],
+          industries: []
+        });
       } finally {
         setIsLoading(false);
       }
