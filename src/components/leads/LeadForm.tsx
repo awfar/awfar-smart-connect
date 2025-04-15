@@ -39,9 +39,6 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
     setIsSubmitting(true);
 
     try {
-      // Process assigned_to value - ensure it's null or a valid UUID
-      // No need to modify formData here as it's already handled in handleSelectChange
-
       if (editMode && lead) {
         console.log("Updating lead:", lead.id);
         // Preserve the ID and owner properties from the original lead

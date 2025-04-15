@@ -70,7 +70,7 @@ export const useLeadForm = (lead?: Lead) => {
         // Wait for all promises to resolve
         const [sourcesData, stagesData, ownersData, countriesData, industriesData] = await Promise.all(promises);
         
-        // Type guards to ensure we have the right data types
+        // Type guards to ensure we have the right data types - fixed TS errors
         const isStringArray = (data: any): data is string[] => 
           Array.isArray(data) && data.every(item => typeof item === 'string');
         
@@ -111,14 +111,12 @@ export const useLeadForm = (lead?: Lead) => {
         if (isOwnerArray(ownersData)) {
           filteredOwners = ownersData.filter(owner => owner.id.trim() !== '');
         } else if (Array.isArray(ownersData)) {
-          // Fix: Correctly type and process owner items
+          // Fixed: Correctly process owner items with proper type checking
           filteredOwners = ownersData
-            .filter(item => item !== null && item !== undefined && typeof item === 'object')
+            .filter((item): item is object => item !== null && item !== undefined && typeof item === 'object')
             .map(item => {
-              // Cast to unknown first to avoid type issues
-              const unknownItem = item as unknown;
-              // Then cast to Record<string, unknown> as we already checked it's an object
-              const typedItem = unknownItem as Record<string, unknown>;
+              // Cast to object and access properties safely
+              const typedItem = item as Record<string, unknown>;
               
               // Check if the item has id and name properties
               if ('id' in typedItem && 'name' in typedItem) {

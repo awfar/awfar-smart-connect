@@ -54,10 +54,10 @@ export const useLeadManagement = () => {
       }
     },
     // Shorter stale time to ensure frequent refreshes
-    staleTime: 5000, // 5 seconds (reduced from 10 seconds)
+    staleTime: 3000, // 3 seconds (reduced from 5 seconds)
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchInterval: 10000, // Refresh every 10 seconds
+    refetchInterval: 5000, // Refresh every 5 seconds (reduced from 10 seconds)
   });
 
   // When leads change, update selected lead if needed
@@ -103,19 +103,24 @@ export const useLeadManagement = () => {
     setIsEditLeadOpen(false);
     setLeadToEdit(null);
     
-    // Force immediate first refresh
-    setTimeout(() => {
-      console.log("Triggering first refresh after lead operation");
-      setForceRefresh(prev => prev + 1);
-      refetch();
-    }, 100); // Reduced from 300ms
+    // Force multiple refreshes to ensure data is up-to-date
+    // First immediate refresh
+    setForceRefresh(prev => prev + 1);
+    refetch();
     
-    // Double check refresh after a bit longer delay
+    // Second refresh after a short delay
     setTimeout(() => {
       console.log("Triggering second refresh after lead operation");
-      setForceRefresh(prev => prev + 2);
+      setForceRefresh(prev => prev + 1);
       refetch();
-    }, 500); // Reduced from 1000ms
+    }, 300);
+    
+    // Third refresh to ensure data is properly loaded
+    setTimeout(() => {
+      console.log("Triggering final refresh after lead operation");
+      setForceRefresh(prev => prev + 1);
+      refetch();
+    }, 1000);
   };
   
   const handleEditLead = (lead: Lead) => {

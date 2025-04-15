@@ -87,32 +87,7 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     // Remove owner property as it's not part of the DB schema
     const { owner, ...leadToCreate } = lead as any;
     
-    // In development mode, use mock data to ensure UI updates properly
-    if (process.env.NODE_ENV === 'development') {
-      const newId = `lead-${Date.now()}`;
-      const createdAt = new Date().toISOString();
-      const newLead = {
-        ...leadToCreate,
-        id: newId,
-        created_at: createdAt,
-        updated_at: createdAt,
-        owner: {
-          name: leadToCreate.assigned_to ? "أحمد محمد" : "غير مخصص",
-          avatar: "",
-          initials: "أم"
-        }
-      } as Lead;
-      
-      // Add to the BEGINNING of mock data so it shows at the top of the list
-      mockLeads.unshift(newLead);
-      
-      console.log("Created mock lead:", newLead);
-      toast.success("تم إنشاء العميل المحتمل بنجاح");
-      return newLead;
-    }
-    
-    // If not in development, try creating in Supabase
-    // Sanitize input - ensure UUID fields are either valid UUIDs or null
+    // Ensure assigned_to is properly handled
     if (!leadToCreate.assigned_to || 
         leadToCreate.assigned_to === '' || 
         leadToCreate.assigned_to === 'unassigned' ||
@@ -135,8 +110,8 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     }
     
     console.log("Preparing lead data for creation:", leadToCreate);
-
-    // Try creating the lead in Supabase
+    
+    // Create in Supabase
     const { data, error } = await supabase
       .from('leads')
       .insert(leadToCreate)
@@ -146,8 +121,34 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
       `)
       .single();
     
+    // Handle creation response
     if (error) {
       console.error("Error creating lead in Supabase:", error);
+      
+      // Fall back to mock data in development mode
+      if (process.env.NODE_ENV === 'development') {
+        const newId = `lead-${Date.now()}`;
+        const createdAt = new Date().toISOString();
+        const newLead = {
+          ...leadToCreate,
+          id: newId,
+          created_at: createdAt,
+          updated_at: createdAt,
+          owner: {
+            name: leadToCreate.assigned_to ? "أحمد محمد" : "غير مخصص",
+            avatar: "",
+            initials: "أم"
+          }
+        } as Lead;
+        
+        // Add to the BEGINNING of mock data so it shows at the top of the list
+        mockLeads.unshift(newLead);
+        
+        console.log("Created mock lead:", newLead);
+        toast.success("تم إنشاء العميل المحتمل بنجاح (وضع المحاكاة)");
+        return newLead;
+      }
+      
       throw error;
     }
     
