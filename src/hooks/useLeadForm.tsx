@@ -29,7 +29,7 @@ export const useLeadForm = (lead?: Lead) => {
     source: lead?.source || "",
     status: lead?.status || lead?.stage || "جديد",
     notes: lead?.notes || "",
-    assigned_to: lead?.assigned_to || "",
+    assigned_to: lead?.assigned_to || "not-assigned",
     country: lead?.country || "",
     industry: lead?.industry || "",
     created_at: lead?.created_at || new Date().toISOString(),
@@ -71,11 +71,15 @@ export const useLeadForm = (lead?: Lead) => {
         console.log("Industries data:", industriesData);
         
         setOptions({
-          sources: Array.isArray(sourcesData) ? sourcesData : [],
-          stages: Array.isArray(stagesData) && stagesData.length > 0 ? stagesData : ["جديد"],
-          owners: Array.isArray(ownersData) ? ownersData : [],
-          countries: Array.isArray(countriesData) ? countriesData : [],
-          industries: Array.isArray(industriesData) ? industriesData : []
+          sources: Array.isArray(sourcesData) ? sourcesData.filter(src => src && src.trim() !== '') : [],
+          stages: Array.isArray(stagesData) && stagesData.length > 0 ? 
+            stagesData.filter(stage => stage && stage.trim() !== '') : ["جديد"],
+          owners: Array.isArray(ownersData) ? 
+            ownersData.filter(owner => owner && owner.id && owner.name) : [],
+          countries: Array.isArray(countriesData) ? 
+            countriesData.filter(country => country && country.trim() !== '') : [],
+          industries: Array.isArray(industriesData) ? 
+            industriesData.filter(industry => industry && industry.trim() !== '') : []
         });
       } catch (error) {
         console.error("Error fetching form options:", error);

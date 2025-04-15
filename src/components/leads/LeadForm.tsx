@@ -39,12 +39,18 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
     setIsSubmitting(true);
 
     try {
+      // Process assigned_to value
+      let processedFormData = {...formData};
+      if (processedFormData.assigned_to === "not-assigned") {
+        processedFormData.assigned_to = null;
+      }
+
       if (editMode && lead) {
         console.log("Updating lead:", lead.id);
         // Preserve the ID and owner properties from the original lead
         const updatedLead = await updateLead({
           ...lead,
-          ...formData,
+          ...processedFormData,
           id: lead.id,
           updated_at: new Date().toISOString()
         });
@@ -66,11 +72,9 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
         console.log("Creating new lead");
         // Set current timestamp for creation
         const newLeadData = {
-          ...formData,
+          ...processedFormData,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          // Fix: Don't set assigned_to to "unassigned" if it's a string value. Set it to null instead.
-          assigned_to: formData.assigned_to === "unassigned" ? null : formData.assigned_to
         };
         
         console.log("New lead data:", newLeadData);
