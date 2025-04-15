@@ -111,17 +111,20 @@ export const useLeadForm = (lead?: Lead) => {
         if (isOwnerArray(ownersData)) {
           filteredOwners = ownersData.filter(owner => owner.id.trim() !== '');
         } else if (Array.isArray(ownersData)) {
-          // Try to convert or filter invalid items
+          // Try to convert or filter invalid items - using strict null checks for safety
           filteredOwners = ownersData
-            .filter(item => item !== null && typeof item === 'object')
+            .filter(item => item !== null && item !== undefined && typeof item === 'object')
             .map(item => {
-              // If it's an object with the right structure
-              if (item !== null && typeof item === 'object' && 'id' in item && 'name' in item) {
-                // Safely access properties with additional null check
+              // If it's an object with the right structure - add strictly null check on item first
+              if (item === null) return null;
+              
+              if (typeof item === 'object' && item !== null && 'id' in item && 'name' in item) {
+                // Safely access properties with additional null checks
                 const id = item.id;
                 const name = item.name;
                 
-                if (id !== null && name !== null) {
+                // Only proceed if both id and name are non-null
+                if (id !== null && id !== undefined && name !== null && name !== undefined) {
                   return {
                     id: String(id),
                     name: String(name)
@@ -130,13 +133,10 @@ export const useLeadForm = (lead?: Lead) => {
               }
               return null;
             })
+            // Filter out any null entries and explicitly type the result
             .filter((item): item is {id: string, name: string} => 
               item !== null && 
-              typeof item === 'object' && 
-              'id' in item && 
-              'name' in item &&
-              typeof item.id === 'string' && 
-              typeof item.name === 'string');
+              item !== undefined);
         }
         
         // Always ensure "not-assigned" option is available
