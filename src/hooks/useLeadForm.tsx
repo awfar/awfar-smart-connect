@@ -105,7 +105,7 @@ export const useLeadForm = (lead?: Lead) => {
         if (isOwnerArray(ownersData)) {
           filteredOwners = ownersData.filter(owner => owner.id.trim() !== '');
         } else if (Array.isArray(ownersData)) {
-          // This is the part with the type errors - let's fix it
+          // Fix the type issues by improving our filter
           filteredOwners = ownersData
             .filter((item): item is Record<string, unknown> => 
               item !== null && typeof item === 'object' && item !== undefined
