@@ -1,4 +1,5 @@
 
+
 // تعريف الأنواع للعميل المحتمل والأنشطة المرتبطة به
 
 export interface Lead {
@@ -26,6 +27,8 @@ export interface Lead {
     name: string;
     avatar: string;
     initials: string;
+    first_name?: string;  // إضافة الحقول المطلوبة للـ Owner
+    last_name?: string;   // إضافة الحقول المطلوبة للـ Owner
   };
 }
 
@@ -52,3 +55,4 @@ export interface TestResult {
   responseTimeMs: number;
   error?: any;
 }
+

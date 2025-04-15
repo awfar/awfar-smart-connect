@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import LeadHeader from "@/components/leads/LeadHeader";
@@ -21,7 +20,6 @@ const LeadManagement = () => {
   const { isLoggedIn, user } = useAuth();
   const { isMobile } = useBreakpoints();
 
-  // استدعاء وظيفة جلب بيانات المستخدم الحالي عند عدم وجود مستخدم في سياق المصادقة
   useEffect(() => {
     if (!isLoggedIn) {
       const fetchCurrentUser = async () => {
@@ -38,7 +36,6 @@ const LeadManagement = () => {
   }, [isLoggedIn, user]);
 
   const {
-    // State
     selectedView,
     showFilters,
     selectedLead,
@@ -52,7 +49,6 @@ const LeadManagement = () => {
     leadToDelete,
     supabaseStatus,
     
-    // Actions
     setSelectedView,
     toggleFilters,
     handleRefresh,
@@ -68,12 +64,10 @@ const LeadManagement = () => {
     setIsEditLeadOpen,
     setIsDeleteDialogOpen,
     
-    // Helpers
     getSelectedLeadObject,
     refetch
   } = useLeadManagement();
 
-  // Convert the leads from service type to the type expected by the components
   const leads: Lead[] = serviceLeads.map(lead => ({
     id: lead.id,
     first_name: lead.first_name,
@@ -90,7 +84,6 @@ const LeadManagement = () => {
     notes: lead.notes,
     created_at: lead.created_at,
     createdAt: lead.created_at,
-    lastActivity: lead.lastActivity,
     updated_at: lead.updated_at,
     assignedTo: lead.assigned_to,
     assigned_to: lead.assigned_to,
@@ -98,7 +91,9 @@ const LeadManagement = () => {
     owner: lead.owner ? {
       name: lead.owner.name || `${lead.owner.first_name || ''} ${lead.owner.last_name || ''}`.trim(),
       avatar: lead.owner.avatar || '',
-      initials: lead.owner.initials || (lead.owner.first_name?.charAt(0) || '') + (lead.owner.last_name?.charAt(0) || '')
+      initials: lead.owner.initials || (lead.owner.first_name?.charAt(0) || '') + (lead.owner.last_name?.charAt(0) || ''),
+      first_name: lead.owner.first_name,
+      last_name: lead.owner.last_name
     } : undefined
   }));
 
@@ -114,7 +109,6 @@ const LeadManagement = () => {
           onSearch={handleSearch}
         />
 
-        {/* عرض تنبيه صلاحيات المستخدم إذا لم يكن المستخدم مسجل الدخول */}
         <LeadPermissionAlert email={currentUserEmail} isAuthenticated={isLoggedIn} />
 
         {!supabaseStatus.isConnected && (
@@ -154,7 +148,6 @@ const LeadManagement = () => {
         </div>
       </div>
 
-      {/* مكونات الحوارات */}
       <AddLeadDialog 
         isOpen={isAddLeadOpen}
         onOpenChange={setIsAddLeadOpen}
