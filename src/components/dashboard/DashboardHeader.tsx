@@ -5,23 +5,27 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Bell, Menu, Search } from 'lucide-react';
 import SystemStatus from '@/components/dashboard/SystemStatus';
+import { useBreakpoints } from '@/hooks/use-mobile';
 
 interface DashboardHeaderProps {
   onMenuToggle: () => void;
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuToggle }) => {
+  const { isMobile } = useBreakpoints();
+
   return (
     <header className="h-16 md:h-20 border-b flex items-center fixed top-0 w-full z-50 bg-awfar-primary backdrop-blur supports-[backdrop-filter]:bg-awfar-primary/90 lg:static">
       <div className="container mx-auto px-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 md:gap-4">
           <Button 
             variant="ghost" 
             size="icon" 
-            className="text-white hover:bg-awfar-primary/80 block lg:hidden" 
+            className="text-white hover:bg-awfar-primary/80" 
             onClick={onMenuToggle}
           >
             <Menu className="h-5 w-5" />
+            <span className="sr-only">القائمة الرئيسية</span>
           </Button>
           
           <div className="flex items-center">
@@ -32,17 +36,19 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuToggle }) => {
             />
           </div>
           
-          <div className="relative hidden md:flex items-center">
-            <Search className="absolute right-3 h-4 w-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="بحث..."
-              className="h-10 w-64 rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background"
-            />
-          </div>
+          {!isMobile && (
+            <div className="relative hidden md:flex items-center">
+              <Search className="absolute right-3 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="بحث..."
+                className="h-10 w-64 rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background"
+              />
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           {/* System Status */}
           <SystemStatus />
           
@@ -51,18 +57,19 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuToggle }) => {
             <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[10px] font-medium text-white flex items-center justify-center">
               3
             </span>
+            <span className="sr-only">الإشعارات</span>
           </Button>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                <Avatar className="h-8 w-8">
+                <Avatar className="h-8 w-8 border border-white/30">
                   <AvatarImage src="/placeholder.svg" alt="صورة المستخدم" />
                   <AvatarFallback>مس</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-56 rtl" align="end" forceMount>
+            <DropdownMenuContent className="w-56 rtl mt-1" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">محمد سعيد</p>

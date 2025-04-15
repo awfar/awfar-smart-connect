@@ -21,6 +21,7 @@ export interface Lead {
   updated_at?: string;
   assignedTo?: string;
   assigned_to?: string;
+  avatar_url?: string | null; // إضافة حقل avatar_url
   owner?: {
     name: string;
     avatar: string;

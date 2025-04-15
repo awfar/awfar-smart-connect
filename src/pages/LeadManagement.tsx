@@ -13,10 +13,12 @@ import { InfoIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import LeadPermissionAlert from "@/components/leads/LeadPermissionAlert";
 import { useAuth } from '@/contexts/AuthContext';
+import { useBreakpoints } from '@/hooks/use-mobile';
 
 const LeadManagement = () => {
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
   const { isLoggedIn, user } = useAuth();
+  const { isMobile } = useBreakpoints();
 
   // استدعاء وظيفة جلب بيانات المستخدم الحالي عند عدم وجود مستخدم في سياق المصادقة
   useEffect(() => {
@@ -74,22 +76,23 @@ const LeadManagement = () => {
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 md:gap-6">
         <LeadHeader 
           onToggleFilters={toggleFilters}
           onRefresh={handleRefresh}
           onAddLead={handleAddLead}
+          onSearch={handleSearch}
         />
 
         {/* عرض تنبيه صلاحيات المستخدم إذا لم يكن المستخدم مسجل الدخول */}
         <LeadPermissionAlert email={currentUserEmail} isAuthenticated={isLoggedIn} />
 
         {!supabaseStatus.isConnected && (
-          <Alert variant="warning" className="mb-4 bg-amber-50 border-amber-200">
+          <Alert variant="warning" className="mb-2 md:mb-4 bg-amber-50 border-amber-200">
             <InfoIcon className="h-4 w-4 text-amber-600" />
-            <AlertTitle className="text-amber-800">Supabase Connection Status</AlertTitle>
+            <AlertTitle className="text-amber-800">حالة الاتصال بقاعدة البيانات</AlertTitle>
             <AlertDescription className="text-amber-700">
-              {supabaseStatus.message} - Leads will be stored temporarily in memory only.
+              {supabaseStatus.message} - سيتم تخزين البيانات مؤقتًا في الذاكرة فقط.
             </AlertDescription>
           </Alert>
         )}
@@ -109,7 +112,7 @@ const LeadManagement = () => {
             onRefresh={handleRefresh}
           />
 
-          {selectedLead && selectedLeadObject && (
+          {selectedLead && selectedLeadObject && !isMobile && (
             <LeadDetailSidebar 
               lead={selectedLeadObject}
               onClose={() => handleLeadClick(selectedLead)}
@@ -121,7 +124,7 @@ const LeadManagement = () => {
         </div>
       </div>
 
-      {/* Dialog components */}
+      {/* مكونات الحوارات */}
       <AddLeadDialog 
         isOpen={isAddLeadOpen}
         onOpenChange={setIsAddLeadOpen}

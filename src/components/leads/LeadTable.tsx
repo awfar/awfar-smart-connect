@@ -1,37 +1,70 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lead } from "@/services/leads";
+import { Lead } from "@/types/leads";
 import { getStageColorClass, getInitials } from "@/services/leads/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, User, Building, Calendar, Phone, Mail, PieChart, MapPin } from "lucide-react";
+import {
+  Loader2, User, Building, Calendar, Phone, Mail, PieChart, 
+  MoreVertical, Eye, Pencil, Trash2
+} from "lucide-react";
 import { cn } from '@/lib/utils';
 import { useBreakpoints } from '@/hooks/use-mobile';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface LeadTableProps {
   leads: Lead[];
   selectedLead: string | null;
   onLeadSelect: (leadId: string) => void;
   isLoading?: boolean;
+  onEdit?: (lead: Lead) => void;
+  onDelete?: (leadId: string) => void;
 }
 
 const LeadTable: React.FC<LeadTableProps> = ({ 
   leads, 
   selectedLead, 
   onLeadSelect,
-  isLoading = false
+  isLoading = false,
+  onEdit,
+  onDelete
 }) => {
   const navigate = useNavigate();
   const { isMobile } = useBreakpoints();
 
+  // التعامل مع النقر على صف
   const handleRowClick = (leadId: string) => {
     onLeadSelect(leadId);
   };
 
+  // التعامل مع النقر المزدوج للانتقال إلى صفحة التفاصيل
   const handleRowDoubleClick = (leadId: string) => {
+    navigate(`/dashboard/leads/${leadId}`);
+  };
+  
+  // التعامل مع زر التعديل
+  const handleEdit = (e: React.MouseEvent, lead: Lead) => {
+    e.stopPropagation();
+    if (onEdit) onEdit(lead);
+  };
+  
+  // التعامل مع زر الحذف
+  const handleDelete = (e: React.MouseEvent, leadId: string) => {
+    e.stopPropagation();
+    if (onDelete) onDelete(leadId);
+  };
+  
+  // التعامل مع النقر على زر العرض
+  const handleView = (e: React.MouseEvent, leadId: string) => {
+    e.stopPropagation();
     navigate(`/dashboard/leads/${leadId}`);
   };
 
@@ -44,7 +77,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
     );
   }
 
-  // Mobile card view for leads
+  // عرض البطاقات للأجهزة المحمولة
   if (isMobile) {
     return (
       <div className="space-y-4 px-1">
@@ -64,9 +97,8 @@ const LeadTable: React.FC<LeadTableProps> = ({
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <Avatar className="h-10 w-10 border-2 border-muted-foreground/10">
-                      <AvatarImage src={lead.avatar_url || ''} />
                       <AvatarFallback className="bg-primary/10 text-primary">
-                        {fullName.charAt(0) || "؟"}
+                        {getInitials(fullName)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
@@ -95,7 +127,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
                   {lead.phone && (
                     <div className="flex items-center gap-2">
                       <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <span>{lead.phone}</span>
+                      <span dir="ltr">{lead.phone}</span>
                     </div>
                   )}
                   
@@ -106,12 +138,45 @@ const LeadTable: React.FC<LeadTableProps> = ({
                     </div>
                   )}
                   
-                  {lead.created_at && (
+                  {(lead.created_at || lead.createdAt) && (
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Calendar className="h-3.5 w-3.5 shrink-0" />
-                      <span>{format(new Date(lead.created_at), "yyyy/MM/dd", { locale: ar })}</span>
+                      <span>{format(new Date(lead.created_at || lead.createdAt || ''), "yyyy/MM/dd", { locale: ar })}</span>
                     </div>
                   )}
+                </div>
+                
+                <div className="flex justify-end mt-3 pt-2 border-t">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={(e) => e.stopPropagation()}
+                        className="h-8 w-8 p-0"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                        <span className="sr-only">خيارات</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-[160px]">
+                      <DropdownMenuItem onClick={(e) => handleView(e, lead.id)}>
+                        <Eye className="ml-2 h-4 w-4" />
+                        <span>عرض التفاصيل</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={(e) => handleEdit(e, lead)}>
+                        <Pencil className="ml-2 h-4 w-4" />
+                        <span>تعديل</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="text-red-600" 
+                        onClick={(e) => handleDelete(e, lead.id)}
+                      >
+                        <Trash2 className="ml-2 h-4 w-4" />
+                        <span>حذف</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             );
@@ -127,7 +192,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
     );
   }
 
-  // Desktop table view for leads
+  // عرض جدول للحاسوب
   return (
     <div className="rounded-md border overflow-hidden">
       <div className="overflow-x-auto">
@@ -158,8 +223,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
                     <td className="p-4">
                       <div className="flex items-center gap-2">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={lead.avatar_url || ''} />
-                          <AvatarFallback>{fullName.charAt(0) || "؟"}</AvatarFallback>
+                          <AvatarFallback>{getInitials(fullName)}</AvatarFallback>
                         </Avatar>
                         <div>
                           <div className="font-medium">{fullName}</div>
@@ -201,11 +265,11 @@ const LeadTable: React.FC<LeadTableProps> = ({
                       )}
                     </td>
                     <td className="p-4">
-                      {lead.created_at ? (
+                      {(lead.created_at || lead.createdAt) ? (
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                           <span className="text-sm">
-                            {format(new Date(lead.created_at), "yyyy/MM/dd", { locale: ar })}
+                            {format(new Date(lead.created_at || lead.createdAt || ''), "yyyy/MM/dd", { locale: ar })}
                           </span>
                         </div>
                       ) : (
@@ -214,14 +278,33 @@ const LeadTable: React.FC<LeadTableProps> = ({
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
-                        <button className="text-primary text-sm hover:underline" 
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            handleRowDoubleClick(lead.id);
-                          }}
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={(e) => handleView(e, lead.id)}
                         >
-                          التفاصيل
-                        </button>
+                          <Eye className="h-4 w-4" />
+                          <span className="sr-only">عرض</span>
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={(e) => handleEdit(e, lead)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                          <span className="sr-only">تعديل</span>
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-red-600"
+                          onClick={(e) => handleDelete(e, lead.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">حذف</span>
+                        </Button>
                       </div>
                     </td>
                   </tr>

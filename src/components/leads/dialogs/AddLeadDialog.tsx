@@ -5,6 +5,7 @@ import MobileOptimizedContainer from '@/components/ui/mobile-optimized-container
 import LeadForm from '@/components/leads/LeadForm';
 import { toast } from "@/components/ui/use-toast";
 import { Lead } from "@/services/leads";
+import { useBreakpoints } from '@/hooks/use-mobile';
 
 interface AddLeadDialogProps {
   isOpen: boolean;
@@ -17,6 +18,8 @@ const AddLeadDialog: React.FC<AddLeadDialogProps> = ({
   onOpenChange,
   onSuccess
 }) => {
+  const { isMobile } = useBreakpoints();
+
   const handleSuccess = (lead?: Lead) => {
     if (lead) {
       const fullName = `${lead.first_name} ${lead.last_name}`.trim();
@@ -34,12 +37,14 @@ const AddLeadDialog: React.FC<AddLeadDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent 
+        className={`${isMobile ? 'w-[95vw] max-w-none p-3 h-[90vh] overflow-y-auto' : 'sm:max-w-lg'}`}
+      >
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">إضافة عميل محتمل جديد</DialogTitle>
         </DialogHeader>
-        <div className="mt-4">
-          <MobileOptimizedContainer>
+        <div className={`${isMobile ? 'overflow-y-auto flex-1' : 'mt-4'}`}>
+          <MobileOptimizedContainer noPadding={isMobile}>
             <LeadForm 
               onClose={() => onOpenChange(false)}
               onSuccess={handleSuccess}
