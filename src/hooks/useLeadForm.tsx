@@ -71,34 +71,93 @@ export const useLeadForm = (lead?: Lead) => {
         // Wait for all promises to resolve
         const [sourcesData, stagesData, ownersData, countriesData, industriesData] = await Promise.all(promises);
         
-        // Process and filter sources data
-        const filteredSources = Array.isArray(sourcesData) && sourcesData.length > 0 ? 
-          sourcesData.filter((src): src is string => typeof src === 'string' && src.trim() !== '') : 
-          options.sources;
-          
-        // Process and filter stages data
-        const filteredStages = Array.isArray(stagesData) && stagesData.length > 0 ? 
-          stagesData.filter((stage): stage is string => typeof stage === 'string' && stage.trim() !== '') : 
-          options.stages;
-          
-        // Process and filter owners data
-        const filteredOwners = Array.isArray(ownersData) && ownersData.length > 0 ? 
-          ownersData.filter((owner): owner is {id: string, name: string} => 
-            owner && typeof owner === 'object' && 'id' in owner && 'name' in owner) : 
-          options.owners;
-          
-        // Process and filter countries data
-        const filteredCountries = Array.isArray(countriesData) && countriesData.length > 0 ? 
-          countriesData.filter((country): country is string => typeof country === 'string' && country.trim() !== '') : 
-          options.countries;
-          
-        // Process and filter industries data
-        const filteredIndustries = Array.isArray(industriesData) && industriesData.length > 0 ? 
-          industriesData.filter((industry): industry is string => typeof industry === 'string' && industry.trim() !== '') : 
-          options.industries;
+        // Type guards to ensure we have the right data types
+        const isStringArray = (data: any): data is string[] => 
+          Array.isArray(data) && data.every(item => typeof item === 'string');
         
-        // Make sure there's always at least a default option
-        if (filteredStages.length === 0) filteredStages.push("جديد");
+        const isOwnerArray = (data: any): data is {id: string, name: string}[] =>
+          Array.isArray(data) && data.every(item => 
+            typeof item === 'object' && item !== null && 
+            typeof item.id === 'string' && typeof item.name === 'string');
+        
+        // Process and filter sources data - ensuring string type
+        let filteredSources: string[] = [];
+        if (isStringArray(sourcesData)) {
+          filteredSources = sourcesData.filter(src => src.trim() !== '');
+        } else if (Array.isArray(sourcesData)) {
+          // Try to convert any non-string items to strings
+          filteredSources = sourcesData
+            .filter(item => item !== null && item !== undefined)
+            .map(item => String(item))
+            .filter(str => str.trim() !== '');
+        }
+        if (filteredSources.length === 0) filteredSources = options.sources;
+        
+        // Process and filter stages data - ensuring string type
+        let filteredStages: string[] = [];
+        if (isStringArray(stagesData)) {
+          filteredStages = stagesData.filter(stage => stage.trim() !== '');
+        } else if (Array.isArray(stagesData)) {
+          // Try to convert any non-string items to strings
+          filteredStages = stagesData
+            .filter(item => item !== null && item !== undefined)
+            .map(item => String(item))
+            .filter(str => str.trim() !== '');
+        }
+        if (filteredStages.length === 0) filteredStages = ["جديد"];
+        
+        // Process and filter owners data - ensuring proper structure
+        let filteredOwners: {id: string, name: string}[] = [];
+        if (isOwnerArray(ownersData)) {
+          filteredOwners = ownersData.filter(owner => owner.id.trim() !== '');
+        } else if (Array.isArray(ownersData)) {
+          // Try to convert or filter invalid items
+          filteredOwners = ownersData
+            .filter(item => item !== null && typeof item === 'object')
+            .map(item => {
+              // If it's an object with the right structure
+              if (typeof item === 'object' && 'id' in item && 'name' in item) {
+                return {
+                  id: String(item.id),
+                  name: String(item.name)
+                };
+              }
+              return null;
+            })
+            .filter((item): item is {id: string, name: string} => 
+              item !== null && typeof item.id === 'string' && typeof item.name === 'string');
+        }
+        // Always ensure "not-assigned" option is available
+        if (!filteredOwners.some(owner => owner.id === 'not-assigned')) {
+          filteredOwners.unshift({ id: "not-assigned", name: "غير مخصص" });
+        }
+        if (filteredOwners.length === 0) filteredOwners = options.owners;
+        
+        // Process and filter countries data - ensuring string type
+        let filteredCountries: string[] = [];
+        if (isStringArray(countriesData)) {
+          filteredCountries = countriesData.filter(country => country.trim() !== '');
+        } else if (Array.isArray(countriesData)) {
+          // Try to convert any non-string items to strings
+          filteredCountries = countriesData
+            .filter(item => item !== null && item !== undefined)
+            .map(item => String(item))
+            .filter(str => str.trim() !== '');
+        }
+        if (filteredCountries.length === 0) filteredCountries = options.countries;
+        
+        // Process and filter industries data - ensuring string type
+        let filteredIndustries: string[] = [];
+        if (isStringArray(industriesData)) {
+          filteredIndustries = industriesData.filter(industry => industry.trim() !== '');
+        } else if (Array.isArray(industriesData)) {
+          // Try to convert any non-string items to strings
+          filteredIndustries = industriesData
+            .filter(item => item !== null && item !== undefined)
+            .map(item => String(item))
+            .filter(str => str.trim() !== '');
+        }
+        if (filteredIndustries.length === 0) filteredIndustries = options.industries;
         
         // Update options state with filtered data
         setOptions({
