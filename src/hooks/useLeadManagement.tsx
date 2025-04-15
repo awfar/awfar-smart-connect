@@ -45,6 +45,9 @@ export const useLeadManagement = () => {
       console.log("Fetching leads with filters:", combinedFilters);
       return getLeads(combinedFilters);
     },
+    staleTime: 30000, // 30 seconds
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
 
   // When leads change, update selected lead if needed
@@ -88,11 +91,16 @@ export const useLeadManagement = () => {
     setIsEditLeadOpen(false);
     setLeadToEdit(null);
     
-    // Force a refresh after a short delay
+    // Enforce immediate refresh
     setTimeout(() => {
       setForceRefresh(prev => prev + 1);
       refetch();
-    }, 500);
+    }, 300);
+    
+    // Double check refresh after a bit longer delay for backend propagation
+    setTimeout(() => {
+      refetch();
+    }, 1000);
   };
   
   const handleEditLead = (lead: Lead) => {
@@ -113,8 +121,12 @@ export const useLeadManagement = () => {
       if (selectedLead === leadToDelete) {
         setSelectedLead(null);
       }
+      
+      // Ensure data is refreshed after deletion
       setForceRefresh(prev => prev + 1);
-      refetch();
+      await refetch();
+      
+      toast.success("تم حذف العميل المحتمل بنجاح");
     } catch (error) {
       console.error("Error deleting lead:", error);
       toast.error("فشل في حذف العميل المحتمل");

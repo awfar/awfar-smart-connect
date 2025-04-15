@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   getLeadSources, 
@@ -38,11 +37,16 @@ export const useLeadForm = (lead?: Lead) => {
 
   // State for dropdown options
   const [options, setOptions] = useState<LeadFormOptions>({
-    sources: [],
-    stages: ["جديد"],
-    owners: [],
-    countries: [],
-    industries: []
+    sources: ["إعلان", "مواقع التواصل الاجتماعي", "التسويق الإلكتروني", "توصية من عميل", "معرض", "اتصال مباشر", "موقع الويب"],
+    stages: ["جديد", "اتصال أولي", "تفاوض", "عرض سعر", "مؤهل", "فاز", "خسر", "مؤجل"],
+    owners: [
+      { id: "not-assigned", name: "غير مخصص" },
+      { id: "user-1", name: "أحمد محمد" },
+      { id: "user-2", name: "سارة خالد" },
+      { id: "user-3", name: "محمد علي" },
+    ],
+    countries: ["المملكة العربية السعودية", "الإمارات العربية المتحدة", "قطر", "الكويت", "البحرين", "عمان"],
+    industries: ["التكنولوجيا والاتصالات", "الرعاية الصحية", "التعليم", "العقارات", "المالية والتأمين", "التجزئة"]
   });
   
   const [isLoading, setIsLoading] = useState(true);
@@ -54,85 +58,43 @@ export const useLeadForm = (lead?: Lead) => {
       try {
         setIsLoading(true);
         
-        // جلب البيانات بشكل متسلسل لتجنب المشاكل المحتملة
-        let sourcesData;
-        try {
-          sourcesData = await getLeadSources();
-          console.log("Sources data:", sourcesData);
-        } catch (error) {
-          console.log("Using default sources");
-          sourcesData = ["إعلان", "مواقع التواصل الاجتماعي", "التسويق الإلكتروني", "توصية من عميل", "معرض", "اتصال مباشر", "موقع الويب"];
-        }
+        // Create an array of promises for parallel fetching
+        const promises = [
+          getLeadSources().catch(() => options.sources),
+          getLeadStages().catch(() => options.stages),
+          getSalesOwners().catch(() => options.owners),
+          getCountries().catch(() => options.countries),
+          getIndustries().catch(() => options.industries)
+        ];
         
-        let stagesData;
-        try {
-          stagesData = await getLeadStages();
-          console.log("Using default stages");
-          console.log("Stages data:", stagesData);
-        } catch (error) {
-          console.log("Using default stages");
-          stagesData = ["جديد", "اتصال أولي", "تفاوض", "عرض سعر", "مؤهل", "فاز", "خسر", "مؤجل"];
-        }
+        // Wait for all promises to resolve
+        const [sourcesData, stagesData, ownersData, countriesData, industriesData] = await Promise.all(promises);
         
-        let ownersData;
-        try {
-          ownersData = await getSalesOwners();
-          console.log("Using default owners");
-          console.log("Owners data:", ownersData);
-        } catch (error) {
-          console.log("Using default owners");
-          ownersData = [
-            { id: "unassigned", name: "غير مخصص" },
-            { id: "user-1", name: "أحمد محمد" },
-            { id: "user-2", name: "سارة خالد" },
-            { id: "user-3", name: "محمد علي" },
-          ];
-        }
-        
-        let countriesData;
-        try {
-          countriesData = await getCountries();
-          console.log("Countries data:", countriesData);
-        } catch (error) {
-          countriesData = [
-            "المملكة العربية السعودية",
-            "الإمارات العربية المتحدة",
-            "قطر",
-            "الكويت",
-            // Add more default countries here
-          ];
-        }
-        
-        let industriesData;
-        try {
-          industriesData = await getIndustries();
-          console.log("Industries data:", industriesData);
-        } catch (error) {
-          industriesData = [
-            "التكنولوجيا والاتصالات",
-            "الرعاية الصحية",
-            "التعليم",
-            "العقارات",
-            // Add more default industries here
-          ];
-        }
-        
-        // Make sure all arrays are properly filtered for empty values
-        const filteredSources = Array.isArray(sourcesData) ? 
-          sourcesData.filter(src => src && src.trim() !== '') : [];
+        // Ensure valid data for each option type
+        const filteredSources = Array.isArray(sourcesData) && sourcesData.length > 0 ? 
+          sourcesData.filter(src => src && typeof src === 'string' && src.trim() !== '') : 
+          options.sources;
           
         const filteredStages = Array.isArray(stagesData) && stagesData.length > 0 ? 
-          stagesData.filter(stage => stage && stage.trim() !== '') : ["جديد"];
+          stagesData.filter(stage => stage && typeof stage === 'string' && stage.trim() !== '') : 
+          options.stages;
           
-        const filteredOwners = Array.isArray(ownersData) ? 
-          ownersData.filter(owner => owner && owner.id && owner.name) : [];
+        const filteredOwners = Array.isArray(ownersData) && ownersData.length > 0 ? 
+          ownersData.filter(owner => owner && owner.id && owner.name) : 
+          options.owners;
           
-        const filteredCountries = Array.isArray(countriesData) ? 
-          countriesData.filter(country => country && country.trim() !== '') : [];
+        const filteredCountries = Array.isArray(countriesData) && countriesData.length > 0 ? 
+          countriesData.filter(country => country && typeof country === 'string' && country.trim() !== '') : 
+          options.countries;
           
-        const filteredIndustries = Array.isArray(industriesData) ? 
-          industriesData.filter(industry => industry && industry.trim() !== '') : [];
+        const filteredIndustries = Array.isArray(industriesData) && industriesData.length > 0 ? 
+          industriesData.filter(industry => industry && typeof industry === 'string' && industry.trim() !== '') : 
+          options.industries;
         
+        // Make sure there's always at least a default option
+        if (filteredStages.length === 0) filteredStages.push("جديد");
+        
+        // Update options state with filtered data
         setOptions({
           sources: filteredSources,
           stages: filteredStages,
@@ -140,17 +102,17 @@ export const useLeadForm = (lead?: Lead) => {
           countries: filteredCountries,
           industries: filteredIndustries
         });
+        
+        console.log("Form options loaded successfully:", {
+          sources: filteredSources.length,
+          stages: filteredStages.length,
+          owners: filteredOwners.length,
+          countries: filteredCountries.length,
+          industries: filteredIndustries.length
+        });
       } catch (error) {
         console.error("Error fetching form options:", error);
-        toast.error("فشل في تحميل خيارات النموذج");
-        // Initialize with empty arrays as fallback
-        setOptions({
-          sources: [],
-          stages: ["جديد"],
-          owners: [],
-          countries: [],
-          industries: []
-        });
+        // Keep using default options if fetching fails
       } finally {
         setIsLoading(false);
       }

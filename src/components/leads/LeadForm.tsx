@@ -56,20 +56,23 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
         });
         console.log("Lead updated successfully:", updatedLead);
         
+        toast.success("تم تحديث العميل المحتمل بنجاح");
+        
         if (updatedLead) {
-          // Show success toast first
-          toast.success("تم تحديث العميل المحتمل بنجاح");
+          if (onSuccess) {
+            // Short delay to ensure UI updates after confirmation toast
+            setTimeout(() => {
+              onSuccess(updatedLead);
+            }, 300);
+          }
           
-          // Then call onSuccess callback
-          if (onSuccess) onSuccess(updatedLead);
-          
-          // Only close if no errors occurred
           if (onClose) onClose();
         } else {
           toast.error("حدث خطأ أثناء تحديث العميل المحتمل");
         }
       } else {
-        console.log("Creating new lead");
+        console.log("Creating new lead with data:", processedFormData);
+        
         // Set current timestamp for creation
         const newLeadData = {
           ...processedFormData,
@@ -77,18 +80,19 @@ const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
           updated_at: new Date().toISOString(),
         };
         
-        console.log("New lead data:", newLeadData);
         const newLead = await createLead(newLeadData as Omit<Lead, "id">);
         console.log("Lead created successfully:", newLead);
         
+        toast.success("تم إضافة العميل المحتمل بنجاح");
+        
         if (newLead) {
-          // Show success toast first
-          toast.success("تم إضافة العميل المحتمل بنجاح");
+          if (onSuccess) {
+            // Short delay to ensure UI updates after confirmation toast
+            setTimeout(() => {
+              onSuccess(newLead);
+            }, 300);
+          }
           
-          // Then call onSuccess callback
-          if (onSuccess) onSuccess(newLead);
-          
-          // Only close if no errors occurred
           if (onClose) onClose();
         } else {
           toast.error("حدث خطأ أثناء إنشاء العميل المحتمل");

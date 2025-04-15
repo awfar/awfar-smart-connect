@@ -1,14 +1,13 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LeadFormOptions } from "@/hooks/useLeadForm";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CompanyQuickAddDialog from "@/components/companies/CompanyQuickAddDialog";
-import { getCompanies } from "@/services/companiesService";
 import { toast } from "sonner";
 
 interface LeadFormFieldsProps {
@@ -27,7 +26,6 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
   handleSelectChange
 }) => {
   const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
-  const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
   
   // ربط البيانات من المدخل النصي إلى formData
   const handleCompanyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,12 +42,17 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
     toast.success("تم إضافة الشركة بنجاح");
   };
 
+  // Ensure our dropdown options have valid data
+  const filterValidItems = (items: string[]): string[] => {
+    return items.filter(item => typeof item === 'string' && item.trim() !== '');
+  };
+
   // Safe access to ensure options never cause errors
-  const getCountries = () => Array.isArray(options.countries) ? options.countries.filter(country => country && country.trim() !== '') : [];
-  const getIndustries = () => Array.isArray(options.industries) ? options.industries.filter(industry => industry && industry.trim() !== '') : [];
-  const getStages = () => Array.isArray(options.stages) ? options.stages.filter(stage => stage && stage.trim() !== '') : ['جديد'];
-  const getSources = () => Array.isArray(options.sources) ? options.sources.filter(source => source && source.trim() !== '') : [];
-  const getOwners = () => Array.isArray(options.owners) ? options.owners.filter(owner => owner && owner.id && owner.id.trim() !== '') : [];
+  const getCountries = () => filterValidItems(Array.isArray(options.countries) ? options.countries : []);
+  const getIndustries = () => filterValidItems(Array.isArray(options.industries) ? options.industries : []);
+  const getStages = () => filterValidItems(Array.isArray(options.stages) ? options.stages : ['جديد']);
+  const getSources = () => filterValidItems(Array.isArray(options.sources) ? options.sources : []);
+  const getOwners = () => Array.isArray(options.owners) ? options.owners.filter(owner => owner && owner.id && typeof owner.id === 'string' && owner.id.trim() !== '') : [];
 
   return (
     <>
@@ -162,8 +165,8 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
                   </SelectItem>
                 ))
               ) : (
-                <SelectItem value="no-countries-available" disabled>
-                  لا توجد دول متاحة
+                <SelectItem value="no-options-available" disabled>
+                  لا توجد خيارات متاحة
                 </SelectItem>
               )}
             </SelectContent>
@@ -186,8 +189,8 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
                   </SelectItem>
                 ))
               ) : (
-                <SelectItem value="no-industries-available" disabled>
-                  لا توجد قطاعات متاحة
+                <SelectItem value="no-options-available" disabled>
+                  لا توجد خيارات متاحة
                 </SelectItem>
               )}
             </SelectContent>
@@ -235,7 +238,9 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
                   </SelectItem>
                 ))
               ) : (
-                <SelectItem value="source-placeholder">اختر مصدرًا</SelectItem>
+                <SelectItem value="no-source-available" disabled>
+                  لا توجد مصادر متاحة
+                </SelectItem>
               )}
             </SelectContent>
           </Select>
@@ -253,13 +258,11 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="not-assigned">غير مخصص</SelectItem>
-            {getOwners().length > 0 ? (
-              getOwners().map((owner) => (
-                <SelectItem key={owner.id} value={owner.id}>
-                  {owner.name}
-                </SelectItem>
-              ))
-            ) : null}
+            {getOwners().map((owner) => (
+              <SelectItem key={owner.id} value={owner.id}>
+                {owner.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
