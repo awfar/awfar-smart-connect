@@ -1,13 +1,14 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle, LogIn, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useNavigate, Link } from 'react-router-dom';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -15,7 +16,16 @@ const LoginPage: React.FC = () => {
   const [emailForConfirmation, setEmailForConfirmation] = useState('');
   const [showConfirmationForm, setShowConfirmationForm] = useState(false);
   const [confirmationLoading, setConfirmationLoading] = useState(false);
-  const { login, loading, resendConfirmationEmail } = useAuth();
+  const { login, loading, resendConfirmationEmail, isLoggedIn, user } = useAuth();
+  const navigate = useNavigate();
+  
+  // إذا كان المستخدم مسجل دخوله بالفعل، انتقل إلى لوحة التحكم
+  useEffect(() => {
+    if (isLoggedIn && user) {
+      toast.success('تم تسجيل الدخول بنجاح');
+      navigate('/dashboard');
+    }
+  }, [isLoggedIn, user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,6 +37,7 @@ const LoginPage: React.FC = () => {
 
     try {
       await login(email, password);
+      // سيتم التعامل مع التوجيه في useEffect
     } catch (error: any) {
       console.error('Login error:', error);
       // إذا كان الخطأ هو عدم تأكيد البريد الإلكتروني، اعرض نموذج إعادة إرسال التأكيد
@@ -119,7 +130,7 @@ const LoginPage: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <Label htmlFor="password">كلمة المرور</Label>
-                  <Button variant="link" className="p-0 h-auto text-sm">نسيت كلمة المرور؟</Button>
+                  <Link to="/forget-password" className="text-sm text-primary hover:underline">نسيت كلمة المرور؟</Link>
                 </div>
                 <Input
                   id="password"
@@ -137,9 +148,24 @@ const LoginPage: React.FC = () => {
                     جاري تسجيل الدخول...
                   </>
                 ) : (
-                  'تسجيل الدخول'
+                  <>
+                    <LogIn className="ml-2 h-4 w-4" />
+                    تسجيل الدخول
+                  </>
                 )}
               </Button>
+              
+              <div className="text-center mt-4">
+                <p className="text-sm text-gray-600">
+                  ليس لديك حساب؟{" "}
+                  <Link to="/register" className="text-primary hover:underline">
+                    <span className="flex items-center justify-center mt-2">
+                      <UserPlus className="ml-1 h-4 w-4" />
+                      إنشاء حساب جديد
+                    </span>
+                  </Link>
+                </p>
+              </div>
             </form>
           )}
         </CardContent>

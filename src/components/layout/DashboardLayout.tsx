@@ -1,44 +1,19 @@
+import React from 'react';
+import AuthButton from './AuthButton';
 
-import React, { useState } from 'react';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import DashboardNav from '@/components/dashboard/DashboardNav';
-import { useIsMobile } from '@/hooks/use-mobile';
-
-interface DashboardLayoutProps {
-  children: React.ReactNode;
-}
-
-const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const isMobile = useIsMobile();
-
-  const toggleMobileNav = () => {
-    setMobileNavOpen(prev => !prev);
-  };
-  
-  const closeMobileNav = () => {
-    setMobileNavOpen(false);
-  };
-  
+const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col rtl">
-      <DashboardHeader onMenuToggle={toggleMobileNav} />
-      
-      <div className="flex flex-1">
-        {/* Desktop sidebar */}
-        {!isMobile && <DashboardNav />}
-        
-        {/* Mobile sidebar */}
-        {isMobile && (
-          <DashboardNav 
-            mobileOpen={mobileNavOpen} 
-            onClose={closeMobileNav} 
-          />
-        )}
-        
-        <main className="flex-1 p-4 md:p-6 overflow-y-auto pt-16 lg:pt-0">
-          {children}
-        </main>
+    <div className="min-h-screen bg-gray-100 flex flex-col dark:bg-gray-900 rtl">
+      <div className="bg-white dark:bg-gray-800 shadow-sm border-b">
+        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">لوحة التحكم</h1>
+          <div className="flex items-center gap-2">
+            <AuthButton />
+          </div>
+        </div>
+      </div>
+      <div className="flex-1 container mx-auto px-4 py-6">
+        {children}
       </div>
     </div>
   );

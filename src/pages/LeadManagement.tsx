@@ -12,21 +12,27 @@ import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { InfoIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import LeadPermissionAlert from "@/components/leads/LeadPermissionAlert";
+import { useAuth } from '@/contexts/AuthContext';
 
 const LeadManagement = () => {
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
+  const { isLoggedIn, user } = useAuth();
 
-  // استدعاء وظيفة جلب بيانات المستخدم الحالي
+  // استدعاء وظيفة جلب بيانات المستخدم الحالي عند عدم وجود مستخدم في سياق المصادقة
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      if (data && data.user) {
-        setCurrentUserEmail(data.user.email);
-      }
-    };
-    
-    fetchCurrentUser();
-  }, []);
+    if (!isLoggedIn) {
+      const fetchCurrentUser = async () => {
+        const { data } = await supabase.auth.getUser();
+        if (data && data.user) {
+          setCurrentUserEmail(data.user.email);
+        }
+      };
+      
+      fetchCurrentUser();
+    } else if (user) {
+      setCurrentUserEmail(user.email);
+    }
+  }, [isLoggedIn, user]);
 
   const {
     // State
@@ -75,8 +81,8 @@ const LeadManagement = () => {
           onAddLead={handleAddLead}
         />
 
-        {/* عرض تنبيه صلاحيات المستخدم */}
-        {currentUserEmail && <LeadPermissionAlert email={currentUserEmail} />}
+        {/* عرض تنبيه صلاحيات المستخدم إذا لم يكن المستخدم مسجل الدخول */}
+        <LeadPermissionAlert email={currentUserEmail} isAuthenticated={isLoggedIn} />
 
         {!supabaseStatus.isConnected && (
           <Alert variant="warning" className="mb-4 bg-amber-50 border-amber-200">

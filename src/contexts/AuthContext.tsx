@@ -26,6 +26,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log("Auth state changed:", event, session?.user?.email || "No user");
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -34,6 +35,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session check:", session?.user?.email || "No active session");
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -58,6 +60,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         throw error;
       }
       
+      toast.success(`مرحبًا بك! تم تسجيل الدخول بنجاح`);
       return data;
     } catch (error: any) {
       console.error("خطأ في تسجيل الدخول:", error);
@@ -72,6 +75,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setLoading(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      toast.success('تم تسجيل الخروج بنجاح');
     } catch (error: any) {
       toast.error(error.message || 'حدث خطأ في تسجيل الخروج');
     } finally {
