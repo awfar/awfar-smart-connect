@@ -115,27 +115,27 @@ export const useLeadForm = (lead?: Lead) => {
           filteredOwners = ownersData
             .filter((item): item is object => item !== null && item !== undefined && typeof item === 'object')
             .map(item => {
-              // We know item is a non-null object at this point
+              // If item is null or undefined (which shouldn't happen due to the filter), return null
+              if (item === null || item === undefined) {
+                return null;
+              }
               
-              // Check if the item has id and name properties using hasOwnProperty
-              if (
-                Object.prototype.hasOwnProperty.call(item, 'id') && 
-                Object.prototype.hasOwnProperty.call(item, 'name')
-              ) {
-                // Now we can safely access these properties using bracket notation
-                const id = (item as any)['id'];
-                const name = (item as any)['name'];
+              // Check if the item has id and name properties
+              const hasIdProperty = 'id' in item;
+              const hasNameProperty = 'name' in item;
+              
+              if (hasIdProperty && hasNameProperty) {
+                // Safely extract id and name values without direct property access
+                const id = hasIdProperty ? (item as Record<string, any>)['id'] : null;
+                const name = hasNameProperty ? (item as Record<string, any>)['name'] : null;
                 
                 // Only proceed if both id and name are valid strings
-                if (
-                  id !== null && 
-                  id !== undefined && 
-                  name !== null && 
-                  name !== undefined
-                ) {
+                if (typeof id === 'string' && typeof name === 'string' && 
+                    id !== null && id !== undefined && id.trim() !== '' &&
+                    name !== null && name !== undefined) {
                   return {
-                    id: String(id),
-                    name: String(name)
+                    id: id,
+                    name: name
                   };
                 }
               }
