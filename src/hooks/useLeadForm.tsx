@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { 
   getLeadSources, 
@@ -111,15 +112,15 @@ export const useLeadForm = (lead?: Lead) => {
         if (isOwnerArray(ownersData)) {
           filteredOwners = ownersData.filter(owner => owner.id.trim() !== '');
         } else if (Array.isArray(ownersData)) {
-          // Fixed: Correctly process owner items with proper type checking
+          // Fixed: Correctly process owner items with proper type checking and null safety
           filteredOwners = ownersData
-            .filter(item => item !== null && typeof item === 'object')
+            .filter((item): item is NonNullable<typeof item> => item !== null && typeof item === 'object')
             .map(item => {
-              // Access properties safely
-              if (item && typeof item === 'object' && 'id' in item && 'name' in item) {
+              // Access properties safely with proper type checking
+              if ('id' in item && 'name' in item) {
                 // Safely extract id and name values as strings
-                const id = item.id ? String(item.id) : '';
-                const name = item.name ? String(item.name) : '';
+                const id = typeof item.id === 'string' ? item.id : String(item.id ?? '');
+                const name = typeof item.name === 'string' ? item.name : String(item.name ?? '');
                 
                 // Only proceed if both id and name are valid strings
                 if (id.trim() !== '' && name.trim() !== '') {
