@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { getLeads, Lead, deleteLead } from "@/services/leads";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useLeadManagement = () => {
   // State management
@@ -17,6 +18,41 @@ export const useLeadManagement = () => {
   const [leadToDelete, setLeadToDelete] = useState<string | null>(null);
   const [filters, setFilters] = useState<Record<string, any>>({});
   const [forceRefresh, setForceRefresh] = useState<number>(0);
+  const [supabaseStatus, setSupabaseStatus] = useState<{isConnected: boolean, message: string}>({
+    isConnected: false, 
+    message: "Checking connection..."
+  });
+
+  // Check Supabase connection on component mount
+  useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        const { data, error } = await supabase.from('leads').select('count').limit(1);
+        
+        if (error) {
+          console.error("Supabase connection error:", error);
+          setSupabaseStatus({
+            isConnected: false,
+            message: `Connection issue: ${error.message}`
+          });
+        } else {
+          console.log("Supabase connection successful:", data);
+          setSupabaseStatus({
+            isConnected: true,
+            message: "Connected to Supabase"
+          });
+        }
+      } catch (err) {
+        console.error("Error checking Supabase connection:", err);
+        setSupabaseStatus({
+          isConnected: false,
+          message: `Connection error: ${err instanceof Error ? err.message : String(err)}`
+        });
+      }
+    };
+    
+    checkConnection();
+  }, []);
 
   // Use react-query to fetch leads with a shorter staleTime for more frequent refreshes
   const { 
@@ -46,6 +82,14 @@ export const useLeadManagement = () => {
       try {
         const fetchedLeads = await getLeads(combinedFilters);
         console.log("Fetched leads:", fetchedLeads.length);
+        
+        // Log if we got data from Supabase or mock
+        if (fetchedLeads.length > 0 && !fetchedLeads[0].id.startsWith('lead-')) {
+          console.log("✅ Retrieved leads from Supabase DB");
+        } else if (fetchedLeads.length > 0) {
+          console.warn("⚠️ Retrieved mock leads (not from Supabase)");
+        }
+        
         return fetchedLeads;
       } catch (error) {
         console.error("Error fetching leads:", error);
@@ -173,6 +217,7 @@ export const useLeadManagement = () => {
     isDeleteDialogOpen,
     leadToEdit,
     leadToDelete,
+    supabaseStatus,
     
     // Actions
     setSelectedView,

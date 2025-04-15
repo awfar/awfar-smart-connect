@@ -8,6 +8,8 @@ import AddLeadDialog from "@/components/leads/dialogs/AddLeadDialog";
 import EditLeadDialog from "@/components/leads/dialogs/EditLeadDialog";
 import DeleteLeadDialog from "@/components/leads/dialogs/DeleteLeadDialog";
 import { useLeadManagement } from "@/hooks/useLeadManagement";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { InfoIcon } from "lucide-react";
 
 const LeadManagement = () => {
   const {
@@ -23,6 +25,7 @@ const LeadManagement = () => {
     isDeleteDialogOpen,
     leadToEdit,
     leadToDelete,
+    supabaseStatus,
     
     // Actions
     setSelectedView,
@@ -55,6 +58,16 @@ const LeadManagement = () => {
           onRefresh={handleRefresh}
           onAddLead={handleAddLead}
         />
+
+        {!supabaseStatus.isConnected && (
+          <Alert variant="warning" className="mb-4 bg-amber-50 border-amber-200">
+            <InfoIcon className="h-4 w-4 text-amber-600" />
+            <AlertTitle className="text-amber-800">Supabase Connection Status</AlertTitle>
+            <AlertDescription className="text-amber-700">
+              {supabaseStatus.message} - Leads will be stored temporarily in memory only.
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="flex gap-4 flex-col lg:flex-row">
           <LeadListSection

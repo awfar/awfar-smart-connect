@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { 
   getLeadSources, 
@@ -69,6 +70,7 @@ export const useLeadForm = (lead?: Lead) => {
         const isStringArray = (data: any): data is string[] => 
           Array.isArray(data) && data.every(item => typeof item === 'string');
         
+        // Fix the type predicate to correctly check for owner array
         const isOwnerArray = (data: any): data is {id: string, name: string}[] =>
           Array.isArray(data) && data.every(item => 
             typeof item === 'object' && item !== null && 
@@ -98,23 +100,26 @@ export const useLeadForm = (lead?: Lead) => {
         if (filteredStages.length === 0) filteredStages = ["جديد"];
         
         let filteredOwners: {id: string, name: string}[] = [];
+        
+        // Fixed type handling for owners data
         if (isOwnerArray(ownersData)) {
           filteredOwners = ownersData.filter(owner => owner.id.trim() !== '');
         } else if (Array.isArray(ownersData)) {
           filteredOwners = ownersData
-            .filter((item): item is {id: unknown, name: unknown} => 
+            .filter((item): item is Record<string, unknown> => 
               item !== null && typeof item === 'object' && item !== undefined
             )
             .map(item => {
+              // Safe property access with type checking
               const id = typeof item.id === 'string' 
                 ? item.id 
-                : item.id instanceof Object 
+                : item.id && typeof item.id === 'object'
                   ? String(Object.values(item.id)[0] || '') 
                   : String(item.id || '');
               
               const name = typeof item.name === 'string'
                 ? item.name
-                : item.name instanceof Object
+                : item.name && typeof item.name === 'object'
                   ? String(Object.values(item.name)[0] || '')
                   : String(item.name || '');
               

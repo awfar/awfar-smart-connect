@@ -21,6 +21,8 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
       leadToUpdate.assigned_to = null;
     }
     
+    console.log("Sending update to Supabase with data:", leadToUpdate);
+    
     // Try updating the lead in Supabase
     const { data, error } = await supabase
       .from('leads')
@@ -67,7 +69,7 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
         // Don't block the update if activity logging fails
       }
       
-      toast.success("تم تحديث العميل المحتمل بنجاح");
+      console.log("Lead successfully updated in Supabase:", data);
       return transformLeadFromSupabase(data);
     }
     
@@ -109,7 +111,15 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
       leadToCreate.status = 'جديد';
     }
     
-    console.log("Preparing lead data for creation:", leadToCreate);
+    console.log("Prepared lead data for creation:", leadToCreate);
+    
+    // DEBUG: Log authentication status
+    const { data: authData } = await supabase.auth.getSession();
+    console.log("Auth status before insert:", authData);
+
+    // Check if we need to use anonymous insert for development
+    const isAuthenticated = authData.session?.user?.id;
+    console.log("Is authenticated:", isAuthenticated ? "Yes" : "No");
     
     // Create in Supabase
     const { data, error } = await supabase
@@ -124,6 +134,13 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     // Handle creation response
     if (error) {
       console.error("Error creating lead in Supabase:", error);
+      console.error("Error details:", error.details, error.hint, error.message);
+      
+      // Check for RLS error
+      if (error.message?.includes('violates row-level security policy')) {
+        console.warn("⚠️ RLS POLICY ERROR: Your RLS policies might be blocking inserts");
+        toast.error("خطأ في سياسة أمان الصفوف - تعذر الإضافة");
+      }
       
       // Fall back to mock data in development mode
       if (process.env.NODE_ENV === 'development') {
@@ -144,8 +161,8 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
         // Add to the BEGINNING of mock data so it shows at the top of the list
         mockLeads.unshift(newLead);
         
-        console.log("Created mock lead:", newLead);
-        toast.success("تم إنشاء العميل المحتمل بنجاح (وضع المحاكاة)");
+        console.log("Created mock lead (local only):", newLead);
+        toast.warning("تم إنشاء العميل المحتمل في الذاكرة المؤقتة فقط (وضع المحاكاة)");
         return newLead;
       }
       
@@ -155,6 +172,7 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     // If operation was successful, return the new lead
     if (data) {
       const transformedLead = transformLeadFromSupabase(data);
+      console.log("Lead successfully created in Supabase:", transformedLead);
       
       // Create automatic follow-up activity after 3 days
       const followupDate = new Date();
@@ -240,6 +258,7 @@ export const deleteLead = async (id: string): Promise<boolean> => {
       throw error;
     }
     
+    console.log("Lead successfully deleted from Supabase");
     toast.success("تم حذف العميل المحتمل بنجاح");
     return true;
   } catch (error) {
