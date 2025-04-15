@@ -116,9 +116,10 @@ export const useLeadForm = (lead?: Lead) => {
             .filter(item => item !== null && item !== undefined && typeof item === 'object')
             .map(item => {
               // If it's an object with the right structure - add strictly null check on item first
-              if (item === null) return null;
+              if (item === null || item === undefined) return null;
               
-              if (typeof item === 'object' && item !== null && 'id' in item && 'name' in item) {
+              // Safely check if item has id and name properties before accessing them
+              if (typeof item === 'object' && 'id' in item && 'name' in item) {
                 // Safely access properties with additional null checks
                 const id = item.id;
                 const name = item.name;
