@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { 
   getLeadSources, 
@@ -103,21 +104,28 @@ export const useLeadForm = (lead?: Lead) => {
           filteredOwners = ownersData.filter(owner => owner.id.trim() !== '');
         } else if (Array.isArray(ownersData)) {
           filteredOwners = ownersData
-            .filter(item => item !== null && typeof item === 'object')
+            .filter(item => item !== null)
             .map(item => {
+              // Handle the case where item is a string
               if (typeof item === 'string') {
                 return { id: '', name: '' };
               }
               
-              const id = item && typeof item === 'object' && 'id' in item 
-                ? (typeof item.id === 'string' ? item.id : String(item.id || ''))
-                : '';
-                
-              const name = item && typeof item === 'object' && 'name' in item
-                ? (typeof item.name === 'string' ? item.name : String(item.name || ''))
-                : '';
-                
-              return { id, name };
+              // Handle the case where item is an object
+              if (typeof item === 'object' && item !== null) {
+                const id = item.hasOwnProperty('id') 
+                  ? (typeof item.id === 'string' ? item.id : String(item.id || ''))
+                  : '';
+                  
+                const name = item.hasOwnProperty('name')
+                  ? (typeof item.name === 'string' ? item.name : String(item.name || ''))
+                  : '';
+                  
+                return { id, name };
+              }
+              
+              // Default case for any other type
+              return { id: '', name: '' };
             })
             .filter(owner => owner.id.trim() !== '' && owner.name.trim() !== '');
         }
