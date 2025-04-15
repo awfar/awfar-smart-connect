@@ -113,16 +113,13 @@ export const useLeadForm = (lead?: Lead) => {
         } else if (Array.isArray(ownersData)) {
           // Fixed: Correctly process owner items with proper type checking
           filteredOwners = ownersData
-            .filter((item): item is object => item !== null && item !== undefined && typeof item === 'object')
+            .filter(item => item !== null && typeof item === 'object')
             .map(item => {
-              // Cast to object and access properties safely
-              const typedItem = item as Record<string, unknown>;
-              
-              // Check if the item has id and name properties
-              if ('id' in typedItem && 'name' in typedItem) {
+              // Access properties safely
+              if (item && typeof item === 'object' && 'id' in item && 'name' in item) {
                 // Safely extract id and name values as strings
-                const id = typedItem.id ? String(typedItem.id) : '';
-                const name = typedItem.name ? String(typedItem.name) : '';
+                const id = item.id ? String(item.id) : '';
+                const name = item.name ? String(item.name) : '';
                 
                 // Only proceed if both id and name are valid strings
                 if (id.trim() !== '' && name.trim() !== '') {
