@@ -115,14 +115,16 @@ export const useLeadForm = (lead?: Lead) => {
           filteredOwners = ownersData
             .filter(item => item !== null && item !== undefined && typeof item === 'object')
             .map(item => {
-              // If it's an object with the right structure - add strictly null check on item first
-              if (item === null || item === undefined) return null;
+              // If it's not an object or is null/undefined, return null
+              if (item === null || item === undefined) {
+                return null;
+              }
               
               // Safely check if item has id and name properties before accessing them
               if (typeof item === 'object' && 'id' in item && 'name' in item) {
-                // Safely access properties with additional null checks
-                const id = item.id;
-                const name = item.name;
+                // Get the properties but don't access them yet
+                const id = item['id'];
+                const name = item['name'];
                 
                 // Only proceed if both id and name are non-null
                 if (id !== null && id !== undefined && name !== null && name !== undefined) {
