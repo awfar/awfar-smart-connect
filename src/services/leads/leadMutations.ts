@@ -39,17 +39,7 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
     
     if (error) {
       console.error("Error updating lead in Supabase:", error);
-      // Fall back to mock data only if it's a mock lead or a development environment
-      if (lead.id.startsWith('lead-') || process.env.NODE_ENV === 'development') {
-        console.log("Falling back to mock data for development (update lead)");
-        const index = mockLeads.findIndex((l) => l.id === lead.id);
-        if (index >= 0) {
-          mockLeads[index] = lead;
-          toast.success("تم تحديث العميل المحتمل بنجاح");
-          return lead;
-        }
-        throw new Error("Lead not found in mock data");
-      }
+      toast.error(`خطأ في تحديث البيانات: ${error.message}`);
       throw error;
     }
     
@@ -66,10 +56,10 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
         });
       } catch (activityError) {
         console.error("Error logging lead update activity:", activityError);
-        // Don't block the update if activity logging fails
       }
       
       console.log("Lead successfully updated in Supabase:", data);
+      toast.success("تم تحديث العميل المحتمل بنجاح");
       return transformLeadFromSupabase(data);
     }
     
@@ -113,88 +103,20 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     
     console.log("Prepared lead data for creation:", leadToCreate);
 
-    // Always try to create in Supabase first, with detailed error handling
-    let data;
-    let error;
+    // Create in Supabase with better error details
+    const { data, error } = await supabase
+      .from('leads')
+      .insert(leadToCreate)
+      .select(`
+        *,
+        profiles:assigned_to (first_name, last_name)
+      `)
+      .single();
     
-    try {
-      // Create in Supabase with better error details
-      const result = await supabase
-        .from('leads')
-        .insert(leadToCreate)
-        .select(`
-          *,
-          profiles:assigned_to (first_name, last_name)
-        `)
-        .single();
-      
-      data = result.data;
-      error = result.error;
-      
-      // Log the network request for debugging
-      console.log("Supabase insert operation completed:", {
-        success: !error,
-        status: error ? "ERROR" : "SUCCESS",
-        data: data,
-        error: error
-      });
-      
-      if (error) {
-        console.error("Supabase insert error details:", {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
-      }
-    } catch (insertError) {
-      console.error("Exception during Supabase insert operation:", insertError);
-      error = insertError;
-    }
-    
-    // Handle different error scenarios
+    // Handle Supabase errors
     if (error) {
-      // Check for RLS policy errors
-      if (error.message?.includes('violates row-level security policy')) {
-        console.warn("⚠️ RLS POLICY ERROR: Check your RLS policies for the leads table");
-        toast.error("خطأ في سياسة أمان الصفوف - تحقق من صلاحيات الجدول");
-      } 
-      // Check for auth errors
-      else if (error.message?.includes('JWTError') || error.message?.includes('JWT')) {
-        console.warn("⚠️ AUTH ERROR: Not authenticated or token expired");
-        toast.error("خطأ في المصادقة - يرجى تسجيل الدخول مرة أخرى");
-      }
-      // Check for constraint errors
-      else if (error.message?.includes('violates') && error.message?.includes('constraint')) {
-        console.warn("⚠️ CONSTRAINT ERROR: Data doesn't match table constraints");
-        toast.error("خطأ في البيانات - تأكد من صحة المعلومات المدخلة");
-      }
-      
-      // Fall back to mock data in development mode only
-      if (process.env.NODE_ENV === 'development') {
-        console.warn("⚠️ DEVELOPMENT FALLBACK: Creating mock lead instead of database record");
-        const newId = `lead-${Date.now()}`;
-        const createdAt = new Date().toISOString();
-        const newLead = {
-          ...leadToCreate,
-          id: newId,
-          created_at: createdAt,
-          updated_at: createdAt,
-          owner: {
-            name: leadToCreate.assigned_to ? "أحمد محمد" : "غير مخصص",
-            avatar: "",
-            initials: "أم"
-          }
-        } as Lead;
-        
-        // Add to the BEGINNING of mock data so it shows at the top of the list
-        mockLeads.unshift(newLead);
-        
-        console.log("Created mock lead (local only):", newLead);
-        toast.warning("تم إنشاء العميل المحتمل في الذاكرة المؤقتة فقط (وضع المحاكاة)");
-        return newLead;
-      }
-      
+      console.error("Error creating lead in Supabase:", error);
+      toast.error(`فشل في حفظ البيانات: ${error.message}`);
       throw error;
     }
     
@@ -202,12 +124,13 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
     if (data) {
       const transformedLead = transformLeadFromSupabase(data);
       console.log("Lead successfully created in Supabase:", transformedLead);
+      toast.success("تم إنشاء العميل المحتمل بنجاح");
       
-      // Create automatic follow-up activity after 3 days
-      const followupDate = new Date();
-      followupDate.setDate(followupDate.getDate() + 3);
-      
+      // Create automatic follow-up activity
       try {
+        const followupDate = new Date();
+        followupDate.setDate(followupDate.getDate() + 3);
+        
         // Log the creation activity
         const { data: userData } = await supabase.auth.getUser();
         
@@ -227,10 +150,8 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
         });
       } catch (activityError) {
         console.error("Error creating activity:", activityError);
-        // Don't block lead creation if activity creation fails
       }
       
-      toast.success("تم إنشاء العميل المحتمل بنجاح");
       return transformedLead;
     }
     
@@ -247,8 +168,7 @@ export const deleteLead = async (id: string): Promise<boolean> => {
   try {
     console.log("Deleting lead with ID:", id);
     
-    // IMPORTANT: Always delete from Supabase first, regardless of ID format
-    // Try deleting the lead from Supabase (even if it might be a mock ID)
+    // Try deleting the lead from Supabase
     try {
       // Log the deletion activity before deleting the lead
       const { data: userData } = await supabase.auth.getUser();
@@ -260,7 +180,6 @@ export const deleteLead = async (id: string): Promise<boolean> => {
       });
     } catch (activityError) {
       console.error("Error logging lead deletion activity:", activityError);
-      // Continue with deletion even if activity logging fails
     }
     
     const { error } = await supabase
@@ -270,20 +189,7 @@ export const deleteLead = async (id: string): Promise<boolean> => {
     
     if (error) {
       console.error("Error deleting lead from Supabase:", error);
-      
-      // Only fall back to mock deletion if it's a mock ID or in development
-      if (id.startsWith('lead-') || process.env.NODE_ENV === 'development') {
-        console.log("Using mock data for demo mode (delete lead)");
-        // Remove from mock data for development
-        const index = mockLeads.findIndex((l) => l.id === id);
-        if (index >= 0) {
-          mockLeads.splice(index, 1);
-          toast.success("تم حذف العميل المحتمل بنجاح");
-          return true;
-        }
-        throw new Error("Lead not found in mock data");
-      }
-      
+      toast.error(`فشل في حذف العميل: ${error.message}`);
       throw error;
     }
     

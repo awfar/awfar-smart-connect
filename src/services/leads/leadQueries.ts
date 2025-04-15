@@ -2,13 +2,13 @@ import { Lead } from "../types/leadTypes";
 import { mockLeads } from "./mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { transformLeadFromSupabase } from "./utils";
+import { toast } from "sonner";
 
-// Get all leads or filter by criteria - Always try Supabase first
+// Get all leads or filter by criteria - Improved to focus on real DB data
 export const getLeads = async (filters: Record<string, any> = {}): Promise<Lead[]> => {
   try {
     console.log("Fetching leads with filters:", filters);
     
-    // Always attempt to fetch from Supabase first
     // Build query for Supabase
     let query = supabase
       .from('leads')
@@ -63,14 +63,7 @@ export const getLeads = async (filters: Record<string, any> = {}): Promise<Lead[
     
     if (error) {
       console.error("Error fetching leads from Supabase:", error);
-      console.error("Error details:", error.message, error.details, error.hint);
-      
-      // Fall back to mock data in development only
-      if (process.env.NODE_ENV === 'development') {
-        console.warn("⚠️ Falling back to mock data due to Supabase error");
-        console.warn("This means leads will not persist! Please fix database connection.");
-        return filterMockLeads(mockLeads, filters);
-      }
+      toast.error(`خطأ في استرداد البيانات: ${error.message}`);
       throw error;
     }
     
@@ -79,64 +72,17 @@ export const getLeads = async (filters: Record<string, any> = {}): Promise<Lead[
       return data.map(lead => transformLeadFromSupabase(lead));
     } else {
       console.log("ℹ️ No leads found in database matching filters");
-      
-      // If no data from Supabase and we're in development, use mock data
-      if (process.env.NODE_ENV === 'development') {
-        console.log("Using mock leads data in development");
-        return filterMockLeads(mockLeads, filters);
-      }
-      
+      toast.info("لم يتم العثور على أي بيانات في قاعدة البيانات");
       return [];
     }
   } catch (error) {
     console.error("Error fetching leads:", error);
-    // Fallback to mock data only in development
-    if (process.env.NODE_ENV === 'development') {
-      console.warn("⚠️ Falling back to mock data due to error");
-      return filterMockLeads(mockLeads, filters);
-    }
-    return [];
+    toast.error("فشل في استرداد البيانات من قاعدة البيانات");
+    throw error;
   }
 };
 
-// Helper function to filter mock leads (used only as fallback)
-const filterMockLeads = (leads: Lead[], filters: Record<string, any>): Lead[] => {
-  console.log("Filtering mock leads with filters:", filters);
-  console.log("Total mock leads available:", leads.length);
-  
-  let filteredLeads = [...leads];
-  
-  // Apply search filter
-  if (filters.search) {
-    const searchTerm = filters.search.toLowerCase();
-    filteredLeads = filteredLeads.filter(lead => {
-      return (
-        lead.first_name?.toLowerCase().includes(searchTerm) ||
-        lead.last_name?.toLowerCase().includes(searchTerm) ||
-        lead.company?.toLowerCase().includes(searchTerm) ||
-        lead.email?.toLowerCase().includes(searchTerm)
-      );
-    });
-  }
-  
-  // Apply other filters
-  Object.entries(filters).forEach(([key, value]) => {
-    if (key !== 'search' && value) {
-      filteredLeads = filteredLeads.filter(lead => {
-        // Handle special case for "current-user-id"
-        if (key === 'assigned_to' && value === 'current-user-id') {
-          return true; // In mock mode, consider all leads as assigned to current user
-        }
-        return lead[key as keyof Lead] === value;
-      });
-    }
-  });
-  
-  console.log(`Returning ${filteredLeads.length} filtered mock leads`);
-  return filteredLeads;
-};
-
-// Get a single lead by ID - Always try Supabase first
+// Get a single lead by ID - Don't fall back to mock data
 export const getLead = async (id: string): Promise<Lead | null> => {
   try {
     // Always try to fetch from Supabase first, regardless of ID format
@@ -151,13 +97,6 @@ export const getLead = async (id: string): Promise<Lead | null> => {
     
     if (error) {
       console.error("Error fetching lead from Supabase:", error);
-      
-      // If it's a mock lead ID, return from mock data as fallback
-      if (id.startsWith('lead-') || process.env.NODE_ENV === 'development') {
-        console.warn("⚠️ Falling back to mock data for lead");
-        return mockLeads.find(l => l.id === id) || null;
-      }
-      
       throw error;
     }
     
@@ -168,14 +107,8 @@ export const getLead = async (id: string): Promise<Lead | null> => {
     return null;
   } catch (error) {
     console.error(`Error fetching lead with ID ${id}:`, error);
-    
-    // If it's a mock lead ID, return from mock data as fallback
-    if (id.startsWith('lead-') || process.env.NODE_ENV === 'development') {
-      console.warn("⚠️ Falling back to mock data for lead due to error");
-      return mockLeads.find(l => l.id === id) || null;
-    }
-    
-    return null;
+    toast.error("فشل في استرداد بيانات العميل المحتمل");
+    throw error;
   }
 };
 

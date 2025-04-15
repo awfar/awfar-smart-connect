@@ -82,27 +82,17 @@ export const useLeadManagement = () => {
       try {
         const fetchedLeads = await getLeads(combinedFilters);
         console.log("Fetched leads:", fetchedLeads.length);
-        
-        // Log if we got data from Supabase or mock
-        if (fetchedLeads.length > 0 && !fetchedLeads[0].id.startsWith('lead-')) {
-          console.log("✅ Retrieved leads from Supabase DB");
-        } else if (fetchedLeads.length > 0) {
-          console.warn("⚠️ Retrieved mock leads (not from Supabase)");
-          toast.warning("البيانات المعروضة هي بيانات مؤقتة وليست من قاعدة البيانات");
-        }
-        
         return fetchedLeads;
       } catch (error) {
         console.error("Error fetching leads:", error);
         toast.error("فشل في تحميل العملاء المحتملين");
-        throw error;
+        return [];
       }
     },
-    // Shorter stale time to ensure frequent refreshes
-    staleTime: 2000, // 2 seconds (reduced for more frequent updates)
+    staleTime: 2000,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
-    refetchInterval: 5000, // Refresh every 5 seconds
+    refetchInterval: 5000,
   });
 
   // When leads change, update selected lead if needed
@@ -148,24 +138,9 @@ export const useLeadManagement = () => {
     setIsEditLeadOpen(false);
     setLeadToEdit(null);
     
-    // Force multiple refreshes to ensure data is up-to-date
-    // First immediate refresh
+    // Force immediate refresh to ensure data is up-to-date
     setForceRefresh(prev => prev + 1);
     refetch();
-    
-    // Second refresh after a short delay
-    setTimeout(() => {
-      console.log("Triggering second refresh after lead operation");
-      setForceRefresh(prev => prev + 1);
-      refetch();
-    }, 300);
-    
-    // Third refresh to ensure data is properly loaded
-    setTimeout(() => {
-      console.log("Triggering final refresh after lead operation");
-      setForceRefresh(prev => prev + 1);
-      refetch();
-    }, 1000);
   }, [refetch]);
   
   const handleEditLead = (lead: Lead) => {
@@ -190,8 +165,6 @@ export const useLeadManagement = () => {
       // Ensure data is refreshed after deletion
       setForceRefresh(prev => prev + 1);
       await refetch();
-      
-      toast.success("تم حذف العميل المحتمل بنجاح");
     } catch (error) {
       console.error("Error deleting lead:", error);
       toast.error("فشل في حذف العميل المحتمل");
