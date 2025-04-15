@@ -8,6 +8,8 @@ const DesktopNav = () => {
   
   // Check if a path is active, considering both exact matches and subpaths
   const isPathActive = (path: string) => {
+    if (!path) return false;
+    
     // Home page (dashboard) special case
     if (path === '/dashboard' && location.pathname === '/dashboard') {
       return true;
@@ -28,7 +30,7 @@ const DesktopNav = () => {
         />
       </div>
       <div className="space-y-1">
-        {navItems.map((item) => (
+        {(navItems || []).map((item) => (
           <NavItem
             key={item.href}
             href={item.href}

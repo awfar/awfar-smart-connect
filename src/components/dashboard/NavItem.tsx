@@ -40,7 +40,10 @@ const NavItem = ({
 
   // Check if current path or any subitem path is active
   const isActiveItem = isActive || 
-    (subItems?.some(item => location.pathname === item.href || location.pathname.startsWith(item.href)) ?? false);
+    ((subItems || []).some(item => 
+      (item.href && location.pathname === item.href) || 
+      (item.href && location.pathname.startsWith(item.href))
+    ) ?? false);
   
   const renderContent = () => (
     <Button
@@ -65,6 +68,7 @@ const NavItem = ({
 
   // Check if a subitem path is active
   const isSubItemActive = (subItemHref: string) => {
+    if (!subItemHref) return false;
     return location.pathname === subItemHref || location.pathname.startsWith(subItemHref);
   };
 
@@ -76,9 +80,9 @@ const NavItem = ({
             {renderContent()}
             {expanded && (
               <div className="mr-4 border-r border-gray-700 pr-2">
-                {subItems.map((item) => (
+                {(subItems || []).map((item) => (
                   <SheetClose key={item.href} asChild>
-                    <Link to={item.href} onClick={onClose} className="block w-full">
+                    <Link to={item.href || '#'} onClick={onClose} className="block w-full">
                       <Button
                         variant={isSubItemActive(item.href) ? "secondary" : "ghost"}
                         className={cn(
@@ -100,7 +104,7 @@ const NavItem = ({
           </div>
         ) : (
           <SheetClose asChild>
-            <Link to={href} onClick={onClose} className="block w-full">
+            <Link to={href || '#'} onClick={onClose} className="block w-full">
               {renderContent()}
             </Link>
           </SheetClose>
@@ -118,8 +122,8 @@ const NavItem = ({
           </div>
           {expanded && (
             <div className="mr-4 border-r border-gray-700 pr-2">
-              {subItems.map((item) => (
-                <Link key={item.href} to={item.href} className="block w-full">
+              {(subItems || []).map((item) => (
+                <Link key={item.href} to={item.href || '#'} className="block w-full">
                   <Button
                     variant={isSubItemActive(item.href) ? "secondary" : "ghost"}
                     className={cn(
@@ -139,7 +143,7 @@ const NavItem = ({
           )}
         </>
       ) : (
-        <Link to={href}>
+        <Link to={href || '#'}>
           {renderContent()}
         </Link>
       )}

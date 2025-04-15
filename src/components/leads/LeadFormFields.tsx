@@ -179,7 +179,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
           </Button>
         </Label>
         <Autocomplete
-          options={companyOptions}
+          options={companyOptions || []}
           value={formData.company || ''}
           onValueChange={(value) => handleSelectChange("company", value)}
           placeholder="اختر أو اكتب اسم الشركة"
