@@ -111,14 +111,16 @@ export const useLeadForm = (lead?: Lead) => {
                 return { id: '', name: '' };
               }
               
-              // Handle the case where item is an object
+              // Handle the case where item is an object - use type assertion to avoid "never" type
               if (typeof item === 'object' && item !== null) {
-                const id = item.hasOwnProperty('id') 
-                  ? (typeof item.id === 'string' ? item.id : String(item.id || ''))
+                const itemObj = item as Record<string, unknown>;
+                
+                const id = 'id' in itemObj
+                  ? (typeof itemObj.id === 'string' ? itemObj.id : String(itemObj.id || ''))
                   : '';
                   
-                const name = item.hasOwnProperty('name')
-                  ? (typeof item.name === 'string' ? item.name : String(item.name || ''))
+                const name = 'name' in itemObj
+                  ? (typeof itemObj.name === 'string' ? itemObj.name : String(itemObj.name || ''))
                   : '';
                   
                 return { id, name };
