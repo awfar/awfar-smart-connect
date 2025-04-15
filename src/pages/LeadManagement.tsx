@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import LeadPermissionAlert from "@/components/leads/LeadPermissionAlert";
 import { useAuth } from '@/contexts/AuthContext';
 import { useBreakpoints } from '@/hooks/use-mobile';
+import { Lead } from "@/types/leads"; // Use the Lead type from types/leads
 
 const LeadManagement = () => {
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
@@ -41,7 +42,7 @@ const LeadManagement = () => {
     selectedView,
     showFilters,
     selectedLead,
-    leads,
+    leads: serviceLeads,
     isLoading,
     isError,
     isAddLeadOpen,
@@ -71,6 +72,35 @@ const LeadManagement = () => {
     getSelectedLeadObject,
     refetch
   } = useLeadManagement();
+
+  // Convert the leads from service type to the type expected by the components
+  const leads: Lead[] = serviceLeads.map(lead => ({
+    id: lead.id,
+    first_name: lead.first_name,
+    last_name: lead.last_name,
+    email: lead.email,
+    phone: lead.phone,
+    company: lead.company,
+    position: lead.position,
+    country: lead.country,
+    industry: lead.industry,
+    stage: lead.stage || lead.status,
+    status: lead.status || lead.stage,
+    source: lead.source,
+    notes: lead.notes,
+    created_at: lead.created_at,
+    createdAt: lead.created_at,
+    lastActivity: lead.lastActivity,
+    updated_at: lead.updated_at,
+    assignedTo: lead.assigned_to,
+    assigned_to: lead.assigned_to,
+    avatar_url: lead.avatar_url,
+    owner: lead.owner ? {
+      name: lead.owner.name || `${lead.owner.first_name || ''} ${lead.owner.last_name || ''}`.trim(),
+      avatar: lead.owner.avatar || '',
+      initials: lead.owner.initials || (lead.owner.first_name?.charAt(0) || '') + (lead.owner.last_name?.charAt(0) || '')
+    } : undefined
+  }));
 
   const selectedLeadObject = getSelectedLeadObject();
 

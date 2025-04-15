@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button"; // Added Button import
 import {
   Loader2, User, Building, Calendar, Phone, Mail, PieChart, 
   MoreVertical, Eye, Pencil, Trash2
