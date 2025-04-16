@@ -36,8 +36,12 @@ export async function getTasks(filters: Record<string, any> = {}): Promise<Task[
         return getMockTasks(filters.lead_id);
       }
       
-      // Use safe array check and directly pass to castToTask without type casting
-      return Array.isArray(data) ? data.map(castToTask) : [];
+      // Simplify mapping to avoid type recursion
+      if (Array.isArray(data)) {
+        return data.map((item) => castToTask(item));
+      }
+      
+      return [];
     }
     
     // استخدم البيانات التجريبية إذا لم تكن Supabase متاحة
@@ -84,7 +88,7 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
     
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
-      // Create database record with explicit fields
+      // Create a complete database record with all required fields
       const dbRecord = {
         ...taskFields,
         related_to: relatedToJson
@@ -121,14 +125,13 @@ export async function getTaskById(taskId: string): Promise<Task | null> {
         .from('tasks')
         .select('*')
         .eq('id', taskId)
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error('Error fetching task by id:', error);
         return null;
       }
       
-      // Explicit casting avoided by passing raw data
       return data ? castToTask(data) : null;
     }
     
@@ -145,6 +148,7 @@ export async function getTaskById(taskId: string): Promise<Task | null> {
 // تحديث مهمة
 export async function updateTask(taskId: string, taskData: Partial<Task>): Promise<Task | null> {
   try {
+    // Prepare updates without complex type operations
     const updates: Record<string, any> = {
       ...taskData,
       updated_at: new Date().toISOString()
@@ -162,14 +166,13 @@ export async function updateTask(taskId: string, taskData: Partial<Task>): Promi
         .update(updates)
         .eq('id', taskId)
         .select()
-        .single();
+        .maybeSingle();
       
       if (error) {
         console.error('Error updating task:', error);
         return null;
       }
       
-      // Avoid explicit casting that could trigger deep instantiation
       return data ? castToTask(data) : null;
     }
     
