@@ -1,22 +1,27 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { Appointment } from "./types";
 import { toast } from "sonner";
-import { Appointment, AppointmentCreateInput } from "./types";
 
-// Get a list of appointments with optional filters
-export const getAppointments = async (filters?: Record<string, any>): Promise<Appointment[]> => {
+// Define filter type explicitly to avoid infinite type instantiation
+interface AppointmentFilter {
+  lead_id?: string;
+  client_id?: string;
+  status?: string;
+  created_by?: string;
+}
+
+export async function fetchAppointments(filters?: AppointmentFilter): Promise<Appointment[]> {
   try {
-    console.log("Fetching appointments with filters:", filters);
     let query = supabase
       .from('appointments')
       .select('*')
-      .order('start_time', { ascending: true });
+      .order('start_time', { ascending: false });
     
     // Apply filters if provided
     if (filters) {
-      // Fix the infinite type instantiation by explicitly typing the filter entries
-      Object.entries(filters).forEach(([key, value]: [string, any]) => {
-        if (value !== undefined && value !== null && value !== '') {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) {
           query = query.eq(key, value);
         }
       });
@@ -24,117 +29,73 @@ export const getAppointments = async (filters?: Record<string, any>): Promise<Ap
     
     const { data, error } = await query;
     
-    if (error) {
-      console.error("Error fetching appointments:", error);
-      throw error;
-    }
+    if (error) throw error;
     
-    console.log("Retrieved appointments:", data?.length);
-    return data as Appointment[] || [];
+    return data as Appointment[];
   } catch (error) {
-    console.error("Error fetching appointments:", error);
-    toast.error("فشل في جلب المواعيد");
+    console.error('Error fetching appointments:', error);
+    toast.error('حدث خطأ في جلب المواعيد');
     return [];
   }
-};
+}
 
-// Get a single appointment by ID
-export const getAppointment = async (id: string): Promise<Appointment | null> => {
+export async function fetchAppointmentsByLeadId(leadId: string): Promise<Appointment[]> {
+  return fetchAppointments({ lead_id: leadId });
+}
+
+export async function createAppointment(appointment: Partial<Appointment>): Promise<Appointment | null> {
   try {
     const { data, error } = await supabase
       .from('appointments')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error) {
-      console.error("Error fetching appointment:", error);
-      throw error;
-    }
-    
-    return data as Appointment;
-  } catch (error) {
-    console.error("Error fetching appointment:", error);
-    toast.error("فشل في جلب الموعد");
-    return null;
-  }
-};
-
-// Create a new appointment
-export const createAppointment = async (appointment: AppointmentCreateInput): Promise<Appointment | null> => {
-  try {
-    const { data: userData } = await supabase.auth.getUser();
-    
-    const newAppointment = {
-      ...appointment,
-      created_by: userData.user?.id || null
-    };
-    
-    const { data, error } = await supabase
-      .from('appointments')
-      .insert([newAppointment])
+      .insert([appointment])
       .select()
       .single();
     
-    if (error) {
-      console.error("Error creating appointment:", error);
-      throw error;
-    }
+    if (error) throw error;
     
-    toast.success("تم إنشاء الموعد بنجاح");
+    toast.success('تم إضافة الموعد بنجاح');
     return data as Appointment;
   } catch (error) {
-    console.error("Error creating appointment:", error);
-    toast.error("فشل في إنشاء الموعد");
+    console.error('Error creating appointment:', error);
+    toast.error('حدث خطأ في إضافة الموعد');
     return null;
   }
-};
+}
 
-// Update an existing appointment
-export const updateAppointment = async (id: string, updates: Partial<Appointment>): Promise<Appointment | null> => {
+export async function updateAppointment(id: string, updates: Partial<Appointment>): Promise<Appointment | null> {
   try {
     const { data, error } = await supabase
       .from('appointments')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
+      .update(updates)
       .eq('id', id)
       .select()
       .single();
     
-    if (error) {
-      console.error("Error updating appointment:", error);
-      throw error;
-    }
+    if (error) throw error;
     
-    toast.success("تم تحديث الموعد بنجاح");
+    toast.success('تم تحديث الموعد بنجاح');
     return data as Appointment;
   } catch (error) {
-    console.error("Error updating appointment:", error);
-    toast.error("فشل في تحديث الموعد");
+    console.error('Error updating appointment:', error);
+    toast.error('حدث خطأ في تحديث الموعد');
     return null;
   }
-};
+}
 
-// Delete an appointment
-export const deleteAppointment = async (id: string): Promise<boolean> => {
+export async function deleteAppointment(id: string): Promise<boolean> {
   try {
     const { error } = await supabase
       .from('appointments')
       .delete()
       .eq('id', id);
     
-    if (error) {
-      console.error("Error deleting appointment:", error);
-      throw error;
-    }
+    if (error) throw error;
     
-    toast.success("تم حذف الموعد بنجاح");
+    toast.success('تم حذف الموعد بنجاح');
     return true;
   } catch (error) {
-    console.error("Error deleting appointment:", error);
-    toast.error("فشل في حذف الموعد");
+    console.error('Error deleting appointment:', error);
+    toast.error('حدث خطأ في حذف الموعد');
     return false;
   }
-};
+}

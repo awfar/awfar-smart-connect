@@ -4,7 +4,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Check, Clock, List, Mail, Phone, User, Building, MapPin, Briefcase, Edit, Trash2 } from "lucide-react";
+import { 
+  ArrowLeft, Check, Clock, List, Mail, Phone, User, 
+  Building, MapPin, Briefcase, Edit, Trash2, Plus 
+} from "lucide-react";
 import { toast } from "sonner";
 import { 
   getLead, 
@@ -25,6 +28,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const LeadDetails = () => {
   const { id } = useParams<{ id: string }>();

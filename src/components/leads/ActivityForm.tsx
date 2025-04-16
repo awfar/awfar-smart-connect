@@ -56,9 +56,12 @@ const ActivityForm: React.FC<ActivityFormProps> = ({
       // Ensure scheduled_at is either a valid date string or null
       const scheduledAt = data.scheduled_at ? new Date(data.scheduled_at).toISOString() : null;
       
+      // Fix: Type assertion to ensure type is one of the allowed values
+      const activityType = data.type as "note" | "call" | "meeting" | "email" | "task" | "whatsapp" | "update" | "create" | "delete";
+      
       const activityData = {
         lead_id: leadId,
-        type: data.type,
+        type: activityType,
         description: data.description,
         scheduled_at: scheduledAt,
       };

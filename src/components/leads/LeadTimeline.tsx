@@ -20,6 +20,51 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+// Create type definitions for each item type to handle discriminated unions properly
+type ActivityItem = {
+  id: string;
+  type: 'activity';
+  activityType: "note" | "call" | "meeting" | "email" | "task" | "whatsapp" | "update" | "create" | "delete";
+  title: string;
+  description: string;
+  timestamp: string;
+  createdBy: string;
+  scheduled: string | null | undefined;
+  completed: string | null | undefined;
+  item: LeadActivity;
+};
+
+type TaskItem = {
+  id: string;
+  type: 'task';
+  activityType: "task";
+  title: string;
+  description: string | undefined;
+  timestamp: string;
+  scheduled: string | null | undefined;
+  createdBy: string;
+  priority: "low" | "medium" | "high";
+  status: string;
+  item: Task;
+};
+
+type AppointmentItem = {
+  id: string;
+  type: 'appointment';
+  activityType: "meeting";
+  title: string;
+  description: string | undefined;
+  timestamp: string;
+  scheduled: string;
+  createdBy: string;
+  status: string;
+  location: string | undefined;
+  item: Appointment;
+};
+
+// Combined timeline item type
+type TimelineItem = ActivityItem | TaskItem | AppointmentItem;
+
 interface LeadTimelineProps {
   activities: LeadActivity[];
   tasks: Task[];
@@ -83,10 +128,10 @@ const LeadTimeline: React.FC<LeadTimelineProps> = ({
   };
   
   // Combine all items into a single timeline
-  const timelineItems = [
+  const timelineItems: TimelineItem[] = [
     ...activities.map(activity => ({
       id: activity.id,
-      type: 'activity',
+      type: 'activity' as const,
       activityType: activity.type,
       title: `${activity.type === 'note' ? 'ملاحظة جديدة' : activity.type === 'call' ? 'مكالمة' : 
               activity.type === 'email' ? 'بريد إلكتروني' : activity.type === 'meeting' ? 'اجتماع' :
@@ -100,27 +145,27 @@ const LeadTimeline: React.FC<LeadTimelineProps> = ({
     })),
     ...tasks.map(task => ({
       id: task.id as string,
-      type: 'task',
-      activityType: 'task',
+      type: 'task' as const,
+      activityType: 'task' as const,
       title: `مهمة: ${task.title}`,
       description: task.description,
       timestamp: task.created_at || '',
       scheduled: task.due_date,
       createdBy: task.assigned_to_name || 'مستخدم',
-      priority: task.priority,
-      status: task.status,
+      priority: task.priority || 'medium',
+      status: task.status || 'pending',
       item: task,
     })),
     ...appointments.map(appointment => ({
       id: appointment.id,
-      type: 'appointment',
-      activityType: 'meeting',
+      type: 'appointment' as const,
+      activityType: 'meeting' as const,
       title: `موعد: ${appointment.title}`,
       description: appointment.description,
       timestamp: appointment.created_at || '',
       scheduled: appointment.start_time,
       createdBy: '',
-      status: appointment.status,
+      status: appointment.status || 'scheduled',
       location: appointment.location,
       item: appointment,
     })),
@@ -163,10 +208,12 @@ const LeadTimeline: React.FC<LeadTimelineProps> = ({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <h4 className="font-medium">{item.title}</h4>
-                  {item.status === 'completed' && <Badge variant="outline">مكتمل</Badge>}
-                  {item.priority === 'high' && <Badge variant="destructive">عالية</Badge>}
-                  {item.priority === 'medium' && <Badge variant="secondary">متوسطة</Badge>}
-                  {item.priority === 'low' && <Badge variant="outline">منخفضة</Badge>}
+                  {/* Status badges */}
+                  {item.type !== 'activity' && item.status === 'completed' && <Badge variant="outline">مكتمل</Badge>}
+                  {/* Priority badges - only for tasks */}
+                  {item.type === 'task' && item.priority === 'high' && <Badge variant="destructive">عالية</Badge>}
+                  {item.type === 'task' && item.priority === 'medium' && <Badge variant="secondary">متوسطة</Badge>}
+                  {item.type === 'task' && item.priority === 'low' && <Badge variant="outline">منخفضة</Badge>}
                 </div>
                 
                 {/* Actions */}
@@ -183,7 +230,7 @@ const LeadTimeline: React.FC<LeadTimelineProps> = ({
                         تعديل
                       </DropdownMenuItem>
                     )}
-                    {onComplete && item.status !== 'completed' && (
+                    {onComplete && item.type !== 'activity' && item.status !== 'completed' && (
                       <DropdownMenuItem onClick={() => onComplete(item.type, item.id)}>
                         <Check className="h-4 w-4 mr-2" />
                         إكمال
@@ -231,8 +278,8 @@ const LeadTimeline: React.FC<LeadTimelineProps> = ({
                   </div>
                 )}
                 
-                {/* Location */}
-                {item.location && (
+                {/* Location - only for appointments */}
+                {item.type === 'appointment' && item.location && (
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     <span>{item.location}</span>

@@ -112,7 +112,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
       <div className="flex justify-end gap-2">
         <Button variant="ghost" onClick={onClose}>إلغاء</Button>
         <Button type="submit" disabled={formState.isSubmitting}>
-          {formState.isSubmitting ? 'جاري الحفظ...' : 'حفظ'}
+          {formState.isSubmitting ? 'جاري الحفظ...' : task ? 'تحديث' : 'حفظ'}
         </Button>
       </div>
     </form>
