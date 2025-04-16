@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 import { Task, TaskCreateInput, TaskRecord } from './types';
@@ -54,7 +53,7 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
     const now = new Date().toISOString();
     const taskId = taskData.id || uuidv4();
     
-    // Create a new task object without circular references
+    // Create a new task object
     const newTask: Task = {
       id: taskId,
       title: taskData.title,
@@ -80,7 +79,7 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
     
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
-      // Create a database record with all the appropriate fields
+      // Create a database record
       const taskRecord = {
         id: newTask.id,
         title: newTask.title,
@@ -92,7 +91,6 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
         updated_at: newTask.updated_at,
         assigned_to: newTask.assigned_to,
         assigned_to_name: newTask.assigned_to_name,
-        // Handle the lead relationship
         lead_id: taskData.lead_id || (taskData.related_to?.type === 'lead' ? taskData.related_to.id : null),
         related_to: newTask.related_to ? JSON.stringify(newTask.related_to) : null
       };

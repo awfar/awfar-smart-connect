@@ -24,7 +24,7 @@ export interface Task {
   lead_id?: string;
 }
 
-// Define a simplified type for task creation input without circular references
+// Separate interface for task creation to avoid circular references
 export interface TaskCreateInput {
   id?: string;
   title: string;
@@ -36,12 +36,13 @@ export interface TaskCreateInput {
   updated_at?: string;
   assigned_to?: string;
   assigned_to_name?: string;
+  lead_id?: string;
+  // Make related_to a simple object for task creation
   related_to?: {
     type: RelatedEntityType;
     id: string;
     name: string;
   };
-  lead_id?: string;
 }
 
 // Define a separate type for raw task records from the database
