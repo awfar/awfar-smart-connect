@@ -3,14 +3,14 @@
 
 export type RelatedEntityType = 'lead' | 'deal' | 'customer';
 
-// Simple interface for related entity references - explicitly non-recursive
+// Explicitly non-recursive reference
 export interface RelatedEntityReference {
   type: RelatedEntityType;
   id: string;
   name: string;
 }
 
-// Base properties for a task
+// Base properties for a task with all primitives or non-recursive types
 export interface TaskBase {
   id: string;
   title: string;
@@ -25,9 +25,9 @@ export interface TaskBase {
   lead_id?: string;
 }
 
-// Full Task type extending the base with related entity
+// Full Task type extending the base - NO circular references allowed
 export interface Task extends TaskBase {
-  related_to?: RelatedEntityReference; // Non-recursive reference
+  related_to?: RelatedEntityReference; 
 }
 
 // Explicitly flat task input for creation with no nested structures
@@ -43,19 +43,19 @@ export interface TaskCreateInput {
   assigned_to?: string;
   assigned_to_name?: string;
   lead_id?: string;
-  // Explicitly flatten related entity fields to avoid recursive types
+  // Flat fields for related entity to completely avoid recursive types
   related_to_type?: RelatedEntityType;
   related_to_id?: string;
   related_to_name?: string;
 }
 
-// Raw task data from database - explicitly separate from Task
+// Raw task data from database - always treated as a plain object
 export interface TaskRecord {
   id: string;
   title: string;
   description?: string;
-  status: string; // Raw string format in DB
-  priority: string; // Raw string format in DB
+  status: string; 
+  priority: string;
   due_date?: string;
   created_at: string;
   updated_at: string;

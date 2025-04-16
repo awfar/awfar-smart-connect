@@ -1,63 +1,56 @@
 
-import { Task, TaskRecord, RelatedEntityReference, RelatedEntityType } from './types';
+import { Task, RelatedEntityType } from './types';
 
-// Explicitly convert the TaskRecord to Task with proper type checking and no recursive types
-export const castToTask = (data: TaskRecord): Task => {
-  // Validate and convert status to prevent type issues
-  let status: Task['status'] = 'pending';
-  if (data.status === 'pending' || 
-      data.status === 'in-progress' || 
-      data.status === 'completed' || 
-      data.status === 'cancelled') {
-    status = data.status;
-  }
+// Completely detached from imported types - using raw data input
+export const castToTask = (raw: any): Task => {
+  // Validate and normalize status
+  const status: Task['status'] = ['pending', 'in-progress', 'completed', 'cancelled'].includes(raw.status)
+    ? raw.status as Task['status']
+    : 'pending';
   
-  // Validate and convert priority
-  let priority: Task['priority'] = 'medium';
-  if (data.priority === 'high' || 
-      data.priority === 'medium' || 
-      data.priority === 'low') {
-    priority = data.priority;
-  }
+  // Validate and normalize priority
+  const priority: Task['priority'] = ['high', 'medium', 'low'].includes(raw.priority)
+    ? raw.priority as Task['priority']
+    : 'medium';
   
-  // Parse related_to safely from string to object with explicit typing
-  let relatedTo: RelatedEntityReference | undefined = undefined;
+  // Safely handle related_to as a completely isolated operation
+  let relatedTo: { type: RelatedEntityType; id: string; name: string } | undefined = undefined;
   
-  if (data.related_to) {
+  if (raw.related_to) {
     try {
-      // Handle the case where related_to is a string (JSON)
-      if (typeof data.related_to === 'string') {
-        const parsed = JSON.parse(data.related_to);
+      // Handle string JSON format from database
+      if (typeof raw.related_to === 'string') {
+        const parsed = JSON.parse(raw.related_to);
+        // Validate fields directly without type inference
         if (parsed && typeof parsed === 'object') {
-          // Extract and validate fields individually to avoid deep type issues
-          const type = parsed.type as unknown;
+          const type = parsed.type;
           if (type === 'lead' || type === 'deal' || type === 'customer') {
             relatedTo = {
-              type: type as RelatedEntityType,
+              type,
               id: String(parsed.id || ''),
               name: String(parsed.name || '')
             };
           }
         }
-      } 
+      }
     } catch (e) {
       console.error('Failed to parse related_to:', e);
     }
   }
   
-  // Create a flat Task object with no recursive types
+  // Return a manually constructed task object with clear, explicit field assignments
   return {
-    id: data.id,
-    title: data.title,
-    description: data.description,
+    id: String(raw.id),
+    title: String(raw.title),
+    description: raw.description ? String(raw.description) : undefined,
     status,
     priority,
-    due_date: data.due_date,
-    created_at: data.created_at,
-    updated_at: data.updated_at,
-    assigned_to: data.assigned_to,
-    assigned_to_name: data.assigned_to_name,
+    due_date: raw.due_date,
+    created_at: String(raw.created_at),
+    updated_at: String(raw.updated_at),
+    assigned_to: raw.assigned_to,
+    assigned_to_name: raw.assigned_to_name,
     related_to: relatedTo,
-    lead_id: data.lead_id
+    lead_id: raw.lead_id
   };
 };

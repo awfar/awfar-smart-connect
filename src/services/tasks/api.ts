@@ -1,11 +1,11 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-import { Task, TaskCreateInput, TaskRecord } from './types';
+import { Task, TaskCreateInput } from './types';
 import { castToTask } from './utils';
 import { getMockTasks } from './mockData';
 
-// جلب المهام
+// جلب المهام - avoiding recursive type instantiation
 export async function getTasks(filters: Record<string, any> = {}): Promise<Task[]> {
   try {
     // في بيئة الإنتاج، استخدم Supabase
@@ -36,9 +36,8 @@ export async function getTasks(filters: Record<string, any> = {}): Promise<Task[
         return getMockTasks(filters.lead_id);
       }
       
-      // Use explicit type assertion and mapping to avoid deep type instantiation
-      const typedRecords = data as TaskRecord[];
-      return typedRecords.map(castToTask);
+      // Use safe array check and directly pass to castToTask without type casting
+      return Array.isArray(data) ? data.map(castToTask) : [];
     }
     
     // استخدم البيانات التجريبية إذا لم تكن Supabase متاحة
@@ -56,8 +55,8 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
     const now = new Date().toISOString();
     const taskId = taskData.id || uuidv4();
     
-    // Create a Task object with flattened properties
-    const newTask: Task = {
+    // Build task data manually without complex type operations
+    const taskFields: Record<string, any> = {
       id: taskId,
       title: taskData.title,
       description: taskData.description,
@@ -71,38 +70,27 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
       lead_id: taskData.lead_id
     };
     
-    // Add related_to separately from the flattened fields
+    // Handle related_to explicitly to avoid deep type instantiation
+    let relatedToJson: string | null = null;
+    
     if (taskData.related_to_type && taskData.related_to_id) {
-      newTask.related_to = {
+      const relatedTo = {
         type: taskData.related_to_type,
         id: taskData.related_to_id,
         name: taskData.related_to_name || ''
       };
+      relatedToJson = JSON.stringify(relatedTo);
     }
     
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
-      // Create database record with explicit JSON stringification for related_to
-      const taskRecord: Omit<TaskRecord, 'status' | 'priority'> & {
-        status: string;
-        priority: string;
-        related_to: string | null;
-      } = {
-        id: newTask.id,
-        title: newTask.title,
-        description: newTask.description,
-        status: newTask.status,
-        priority: newTask.priority,
-        due_date: newTask.due_date,
-        created_at: newTask.created_at,
-        updated_at: newTask.updated_at,
-        assigned_to: newTask.assigned_to,
-        assigned_to_name: newTask.assigned_to_name,
-        lead_id: taskData.lead_id || (newTask.related_to?.type === 'lead' ? newTask.related_to.id : undefined),
-        related_to: newTask.related_to ? JSON.stringify(newTask.related_to) : null
+      // Create database record with explicit fields
+      const dbRecord = {
+        ...taskFields,
+        related_to: relatedToJson
       };
 
-      const { error } = await supabase.from('tasks').insert(taskRecord);
+      const { error } = await supabase.from('tasks').insert(dbRecord);
       
       if (error) {
         console.error('Error creating task in Supabase:', error);
@@ -112,7 +100,11 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
       }
     }
     
-    return newTask;
+    // Return task with proper structure but avoid complex type operations
+    return castToTask({
+      ...taskFields,
+      related_to: relatedToJson
+    });
   } catch (error) {
     console.error('Error in createTask:', error);
     throw new Error('Failed to create task');
@@ -135,13 +127,14 @@ export async function getTaskById(taskId: string): Promise<Task | null> {
         return null;
       }
       
-      // Explicit casting to avoid type recursion
-      return castToTask(data as TaskRecord);
+      // Explicit casting avoided by passing raw data
+      return data ? castToTask(data) : null;
     }
     
     // استخدم البيانات التجريبية إذا لم تكن Supabase متاحة
     const mockTasks = getMockTasks();
-    return mockTasks.find(task => task.id === taskId) || null;
+    const task = mockTasks.find(task => task.id === taskId);
+    return task || null;
   } catch (error) {
     console.error('Error in getTaskById:', error);
     return null;
@@ -151,22 +144,21 @@ export async function getTaskById(taskId: string): Promise<Task | null> {
 // تحديث مهمة
 export async function updateTask(taskId: string, taskData: Partial<Task>): Promise<Task | null> {
   try {
-    const updates = {
+    const updates: Record<string, any> = {
       ...taskData,
       updated_at: new Date().toISOString()
     };
     
+    // Handle related_to conversion explicitly
+    if (taskData.related_to) {
+      updates.related_to = JSON.stringify(taskData.related_to);
+    }
+    
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
-      // Convert related_to to JSON string if it exists
-      const updatesForDb: Record<string, any> = { ...updates };
-      if (updates.related_to) {
-        updatesForDb.related_to = JSON.stringify(updates.related_to);
-      }
-      
       const { data, error } = await supabase
         .from('tasks')
-        .update(updatesForDb)
+        .update(updates)
         .eq('id', taskId)
         .select()
         .single();
@@ -176,8 +168,8 @@ export async function updateTask(taskId: string, taskData: Partial<Task>): Promi
         return null;
       }
       
-      // Explicit type assertion to avoid recursive typing
-      return castToTask(data as TaskRecord);
+      // Avoid explicit casting that could trigger deep instantiation
+      return data ? castToTask(data) : null;
     }
     
     // محاكاة تحديث المهمة باستخدام البيانات التجريبية
@@ -189,7 +181,7 @@ export async function updateTask(taskId: string, taskData: Partial<Task>): Promi
         ...mockTasks[taskIndex],
         ...updates
       };
-      return updatedTask;
+      return castToTask(updatedTask);
     }
     
     return null;
