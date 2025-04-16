@@ -14,7 +14,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-import { Task, TaskCreateInput } from './types';
+import { Task, TaskCreateInput, TaskRecord } from './types';
 import { castToTask } from './utils';
 import { getMockTasks } from './mockData';
 
@@ -23,6 +23,7 @@ export async function getTasks(filters: Record<string, any> = {}): Promise<Task[
   try {
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
+      // Use type assertion to avoid deep inference
       let query = supabase.from('tasks').select('*');
       
       // تطبيق الفلاتر
@@ -49,17 +50,16 @@ export async function getTasks(filters: Record<string, any> = {}): Promise<Task[
         return getMockTasks(filters.lead_id);
       }
       
-      // Explicit handling with simple iteration to avoid type recursion
-      if (Array.isArray(data)) {
-        // Use explicit loop instead of map to avoid inference issues
-        const tasks: Task[] = [];
-        for (const item of data) {
-          tasks.push(castToTask(item));
-        }
-        return tasks;
+      if (!Array.isArray(data)) {
+        return [];
       }
       
-      return [];
+      // Explicit handling with simple iteration to avoid type recursion
+      const tasks: Task[] = [];
+      for (const item of data) {
+        tasks.push(castToTask(item));
+      }
+      return tasks;
     }
     
     // استخدم البيانات التجريبية إذا لم تكن Supabase متاحة
