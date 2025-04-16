@@ -36,8 +36,8 @@ export async function getTasks(filters: Record<string, any> = {}): Promise<Task[
         return getMockTasks(filters.lead_id);
       }
       
-      // Convert database records to Task objects using explicit type cast
-      return (data as unknown as TaskRecord[]).map(castToTask);
+      // Explicitly convert database records to Task objects using type assertion
+      return (data || []).map(record => castToTask(record as TaskRecord));
     }
     
     // استخدم البيانات التجريبية إذا لم تكن Supabase متاحة
@@ -130,7 +130,7 @@ export async function getTaskById(taskId: string): Promise<Task | null> {
         return null;
       }
       
-      return castToTask(data as unknown as TaskRecord);
+      return castToTask(data as TaskRecord);
     }
     
     // استخدم البيانات التجريبية إذا لم تكن Supabase متاحة
@@ -170,7 +170,7 @@ export async function updateTask(taskId: string, taskData: Partial<Task>): Promi
         return null;
       }
       
-      return castToTask(data as unknown as TaskRecord);
+      return castToTask(data as TaskRecord);
     }
     
     // محاكاة تحديث المهمة باستخدام البيانات التجريبية
