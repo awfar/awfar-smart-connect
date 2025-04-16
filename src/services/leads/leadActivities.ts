@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LeadActivity } from "@/types/leads"; // Using the central type definition
@@ -115,9 +114,11 @@ export const completeLeadActivity = async (activityId: string): Promise<LeadActi
 export const addLeadTask = async (leadId: string, taskId: string): Promise<boolean> => {
   try {
     // Use the updated Task type with lead_id
+    const updateData = { lead_id: leadId };
+    
     const { error } = await supabase
       .from('tasks')
-      .update({ lead_id: leadId })
+      .update(updateData)
       .eq('id', taskId);
     
     if (error) {
