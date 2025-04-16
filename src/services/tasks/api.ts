@@ -23,7 +23,7 @@ export async function getTasks(filters: Record<string, any> = {}): Promise<Task[
   try {
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
-      // Use type assertion to avoid deep inference
+      // Use explicit typing to avoid deep inference
       let query = supabase.from('tasks').select('*');
       
       // تطبيق الفلاتر
@@ -77,8 +77,8 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
     const now = new Date().toISOString();
     const taskId = taskData.id || uuidv4();
     
-    // Build task data manually without complex type operations
-    const taskFields: Record<string, any> = {
+    // Build task record manually without complex type operations
+    const taskRecord: Record<string, any> = {
       id: taskId,
       title: taskData.title,
       description: taskData.description,
@@ -93,27 +93,19 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
     };
     
     // Handle related_to conversion to string explicitly
-    let relatedToJson: string | null = null;
-    
     if (taskData.related_to_type && taskData.related_to_id) {
       const relatedTo = {
         type: taskData.related_to_type,
         id: taskData.related_to_id,
         name: taskData.related_to_name || ''
       };
-      relatedToJson = JSON.stringify(relatedTo);
+      taskRecord.related_to = JSON.stringify(relatedTo);
     }
     
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
-      // Create a complete database record with all required fields
-      const dbRecord = {
-        ...taskFields,
-        related_to: relatedToJson
-      };
-
-      // Insert as a single record object, not an array
-      const { error } = await supabase.from('tasks').insert(dbRecord);
+      // Insert the complete task record - preventing the update error
+      const { error } = await supabase.from('tasks').insert(taskRecord);
       
       if (error) {
         console.error('Error creating task in Supabase:', error);
@@ -124,10 +116,7 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
     }
     
     // Return task with proper structure but avoid complex type operations
-    return castToTask({
-      ...taskFields,
-      related_to: relatedToJson
-    });
+    return castToTask(taskRecord as any);
   } catch (error) {
     console.error('Error in createTask:', error);
     throw new Error('Failed to create task');
@@ -175,7 +164,7 @@ export async function updateTask(taskId: string, taskData: Partial<Task>): Promi
     // Handle related_to conversion explicitly
     if (taskData.related_to) {
       updates.related_to = JSON.stringify(taskData.related_to);
-      // Remove the object to prevent type recursion
+      // Remove the object reference to prevent type recursion
       delete updates.related_to;
     }
     
