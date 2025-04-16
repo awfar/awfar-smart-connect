@@ -1,16 +1,15 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getTasks, createTask, updateTask, deleteTask } from '@/services/tasks/api';
-import { Task, TaskCreateInput } from '@/services/tasks/types';
+import { Task } from '@/services/tasks/types';
+import { getTasks, createTask, updateTask, deleteTask } from '@/services/tasks';
 import { toast } from 'sonner';
 
 export const useLeadTasks = (leadId?: string) => {
   const queryClient = useQueryClient();
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
-  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
-  
-  // Query for fetching lead tasks
+
+  // Query for fetching tasks associated with a lead
   const {
     data: tasks = [],
     isLoading,
@@ -21,14 +20,12 @@ export const useLeadTasks = (leadId?: string) => {
     queryFn: () => leadId ? getTasks({ lead_id: leadId }) : Promise.resolve([]),
     enabled: !!leadId,
   });
-  
-  // Mutation for creating a new task
+
+  // Mutation for adding a new task
   const { mutate: addTask, isPending: isAddingTask } = useMutation({
     mutationFn: createTask,
     onSuccess: (newTask) => {
-      // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['leadTasks', leadId] });
-      queryClient.invalidateQueries({ queryKey: ['tasks'] }); // Also invalidate global tasks
       toast.success('تم إضافة المهمة بنجاح');
       setIsAddTaskOpen(false);
     },
@@ -37,30 +34,26 @@ export const useLeadTasks = (leadId?: string) => {
       toast.error('فشل في إضافة المهمة');
     }
   });
-  
+
   // Mutation for updating a task
   const { mutate: updateTaskMutation, isPending: isUpdatingTask } = useMutation({
-    mutationFn: ({ id, data }: { id: string, data: Partial<Task> }) => updateTask(id, data),
+    mutationFn: ({ taskId, taskData }: { taskId: string; taskData: Partial<Task> }) => 
+      updateTask(taskId, taskData),
     onSuccess: () => {
-      // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['leadTasks', leadId] });
-      queryClient.invalidateQueries({ queryKey: ['tasks'] }); // Also invalidate global tasks
       toast.success('تم تحديث المهمة بنجاح');
-      setTaskToEdit(null);
     },
     onError: (error) => {
       console.error('Error updating task:', error);
       toast.error('فشل في تحديث المهمة');
     }
   });
-  
+
   // Mutation for deleting a task
   const { mutate: deleteTaskMutation, isPending: isDeletingTask } = useMutation({
     mutationFn: deleteTask,
     onSuccess: () => {
-      // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['leadTasks', leadId] });
-      queryClient.invalidateQueries({ queryKey: ['tasks'] }); // Also invalidate global tasks
       toast.success('تم حذف المهمة بنجاح');
     },
     onError: (error) => {
@@ -68,9 +61,9 @@ export const useLeadTasks = (leadId?: string) => {
       toast.error('فشل في حذف المهمة');
     }
   });
-  
+
   // Function to handle adding a new task
-  const handleAddTask = (taskData: TaskCreateInput) => {
+  const handleAddTask = (taskData: Partial<Task>) => {
     if (!leadId) {
       toast.error('معرف العميل المحتمل غير موجود');
       return;
@@ -81,28 +74,26 @@ export const useLeadTasks = (leadId?: string) => {
       lead_id: leadId,
       related_to_type: 'lead',
       related_to_id: leadId,
-      related_to_name: taskData.related_to_name || ''
+      related_to_name: 'عميل محتمل'
     });
   };
-  
+
   // Function to handle updating a task
-  const handleUpdateTask = (id: string, data: Partial<Task>) => {
-    updateTaskMutation({ id, data });
+  const handleUpdateTask = (taskId: string, taskData: Partial<Task>) => {
+    updateTaskMutation({ taskId, taskData });
   };
-  
+
   // Function to handle deleting a task
   const handleDeleteTask = (taskId: string) => {
     deleteTaskMutation(taskId);
   };
-  
+
   return {
     tasks,
     isLoading,
     isError,
     isAddTaskOpen,
     setIsAddTaskOpen,
-    taskToEdit,
-    setTaskToEdit,
     addTask: handleAddTask,
     updateTask: handleUpdateTask,
     deleteTask: handleDeleteTask,
