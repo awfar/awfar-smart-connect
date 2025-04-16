@@ -6,6 +6,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
 
 // الكائنات والأنواع البيانية الأساسية
+export type RelatedEntityType = 'lead' | 'deal' | 'customer';
+
+export interface RelatedEntity {
+  type: RelatedEntityType;
+  id: string;
+  name: string;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -17,11 +25,7 @@ export interface Task {
   updated_at: string;
   assigned_to?: string;
   assigned_to_name?: string;
-  related_to?: {
-    type: 'lead' | 'deal' | 'customer';
-    id: string;
-    name: string;
-  };
+  related_to?: RelatedEntity;
   lead_id?: string; // Added for direct lead relationship
 }
 
@@ -68,7 +72,7 @@ export const castToTask = (data: TaskRecord): Task => {
   }
   
   // Parse related_to safely
-  let relatedTo: Task['related_to'] | undefined = undefined;
+  let relatedTo: RelatedEntity | undefined = undefined;
   if (data.related_to && typeof data.related_to === 'object') {
     const relatedToObj = data.related_to as Record<string, unknown>;
     if (
@@ -77,9 +81,10 @@ export const castToTask = (data: TaskRecord): Task => {
       typeof relatedToObj.name === 'string'
     ) {
       // Only set if the type is one of the allowed values
-      if (['lead', 'deal', 'customer'].includes(relatedToObj.type)) {
+      const type = relatedToObj.type;
+      if (type === 'lead' || type === 'deal' || type === 'customer') {
         relatedTo = {
-          type: relatedToObj.type as 'lead' | 'deal' | 'customer',
+          type,
           id: relatedToObj.id,
           name: relatedToObj.name
         };
