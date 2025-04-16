@@ -86,16 +86,19 @@ const LeadTimeline: React.FC<LeadTimelineProps> = ({
             initials: '??',
           };
         } else if (activity.profiles) {
+          // Fix for the type conversion error - converting profiles object to user name
+          const profiles = activity.profiles as { first_name?: string; last_name?: string };
           createdBy = {
-            id: activity.created_by as string,
-            name: `${activity.profiles.first_name || ''} ${activity.profiles.last_name || ''}`.trim(),
-            initials: activity.profiles.first_name?.[0] || '?',
+            id: typeof activity.created_by === 'string' ? activity.created_by : 'unknown',
+            name: `${profiles.first_name || ''} ${profiles.last_name || ''}`.trim(),
+            initials: profiles.first_name?.[0] || '?',
           };
         } else if (typeof activity.created_by === 'object') {
+          const createdByObj = activity.created_by as any;
           createdBy = {
-            id: activity.created_by as unknown as string,
-            name: `${(activity.created_by as any).first_name || ''} ${(activity.created_by as any).last_name || ''}`.trim(),
-            initials: (activity.created_by as any).first_name?.[0] || '?',
+            id: 'unknown',
+            name: `${createdByObj.first_name || ''} ${createdByObj.last_name || ''}`.trim(),
+            initials: createdByObj.first_name?.[0] || '?',
           };
         }
       }
@@ -403,3 +406,4 @@ const LeadTimeline: React.FC<LeadTimelineProps> = ({
 };
 
 export default LeadTimeline;
+

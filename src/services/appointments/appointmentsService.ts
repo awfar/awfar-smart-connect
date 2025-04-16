@@ -14,7 +14,8 @@ export const getAppointments = async (filters?: Record<string, any>): Promise<Ap
     
     // Apply filters if provided
     if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
+      // Fix the infinite type instantiation by explicitly typing the filter entries
+      Object.entries(filters).forEach(([key, value]: [string, any]) => {
         if (value !== undefined && value !== null && value !== '') {
           query = query.eq(key, value);
         }

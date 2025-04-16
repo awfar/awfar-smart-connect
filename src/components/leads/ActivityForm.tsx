@@ -1,189 +1,186 @@
-
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { addLeadActivity } from "@/services/leads/leadActivities";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Loader2 } from "lucide-react";
-import { format } from "date-fns";
-import { ar } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { LeadActivity } from '@/types/leads';
+import { addLeadActivity } from '@/services/leads';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { CalendarIcon } from "lucide-react"
+import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner";
-import { LeadActivity } from "@/types/leads"; // Using the centralized type
+
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
+
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export interface ActivityFormProps {
   leadId: string;
+  onSuccess?: () => void;
+  onClose?: () => void;
   title?: string;
-  onSuccess: (activity?: LeadActivity) => void;
-  onClose?: () => void; 
+  activity?: LeadActivity; // Add the activity prop for editing
 }
 
 const ActivityForm: React.FC<ActivityFormProps> = ({ 
   leadId, 
-  title = "إضافة نشاط جديد", 
   onSuccess, 
-  onClose 
+  onClose,
+  title = "إضافة نشاط",
+  activity // The activity to edit, if provided
 }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    type: "note" as LeadActivity['type'], // Explicitly type this as LeadActivity['type']
-    description: "",
-    scheduled_at: null as Date | null,
+  // Initialize form with the activity data if it exists
+  const { register, handleSubmit, formState, watch, setValue } = useForm({
+    defaultValues: {
+      type: activity?.type || 'note',
+      description: activity?.description || '',
+      scheduled_at: activity?.scheduled_at ? new Date(activity.scheduled_at).toISOString().slice(0, 16) : '',
+    }
   });
   
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.description.trim()) {
-      toast.error("يرجى إدخال تفاصيل النشاط");
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
+  const onSubmit = async (data: any) => {
     try {
-      // Create the new activity
-      const newActivity = await addLeadActivity({
+      console.log("Form data:", data);
+      
+      // Ensure scheduled_at is either a valid date string or null
+      const scheduledAt = data.scheduled_at ? new Date(data.scheduled_at).toISOString() : null;
+      
+      const activityData = {
         lead_id: leadId,
-        type: formData.type,
-        description: formData.description,
-        scheduled_at: formData.scheduled_at ? formData.scheduled_at.toISOString() : null,
-      });
+        type: data.type,
+        description: data.description,
+        scheduled_at: scheduledAt,
+      };
       
-      console.log("Activity saved successfully:", newActivity);
-      toast.success("تمت إضافة النشاط بنجاح");
+      console.log("Creating lead activity:", activityData);
       
-      // Reset form
-      setFormData({
-        type: "note" as LeadActivity['type'],
-        description: "",
-        scheduled_at: null
-      });
+      await addLeadActivity(activityData);
       
-      // Call the success callback with the new activity
-      if (newActivity) {
-        onSuccess(newActivity);
-      } else {
-        onSuccess();
-      }
-      
+      toast.success("تم إضافة النشاط بنجاح");
+      onSuccess?.();
+      onClose?.();
     } catch (error) {
-      console.error("Error adding activity:", error);
-      toast.error("حدث خطأ أثناء إضافة النشاط");
-    } finally {
-      setIsSubmitting(false);
+      console.error("Error creating lead activity:", error);
+      toast.error("فشل في إضافة النشاط");
     }
   };
   
-  const handleChange = (key: string, value: string | Date | null) => {
-    if (key === 'type') {
-      setFormData(prev => ({ ...prev, [key]: value as LeadActivity['type'] }));
-    } else {
-      setFormData(prev => ({ ...prev, [key]: value }));
-    }
+  const formatDate = (date: Date | undefined) => {
+    return date ? format(date, 'yyyy/MM/dd HH:mm', { locale: ar }) : '';
   };
-  
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {title && <h3 className="text-lg font-medium">{title}</h3>}
-      
-      <div>
-        <Label htmlFor="type">نوع النشاط</Label>
-        <Select 
-          value={formData.type} 
-          onValueChange={(value) => handleChange('type', value)}
-          disabled={isSubmitting}
-        >
-          <SelectTrigger id="type">
-            <SelectValue placeholder="اختر نوع النشاط" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="note">ملاحظة</SelectItem>
-            <SelectItem value="call">مكالمة</SelectItem>
-            <SelectItem value="meeting">اجتماع</SelectItem>
-            <SelectItem value="email">بريد إلكتروني</SelectItem>
-            <SelectItem value="task">مهمة</SelectItem>
-            <SelectItem value="whatsapp">واتساب</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <div>
-        <Label htmlFor="description">التفاصيل</Label>
-        <Textarea 
-          id="description" 
-          value={formData.description} 
-          onChange={(e) => handleChange('description', e.target.value)}
-          placeholder="أدخل تفاصيل النشاط"
-          required 
-          disabled={isSubmitting}
-          className="min-h-[100px]"
+    <Form>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <FormField
+          control={{ ...register('type') }}
+          name="type"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>نوع النشاط</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="اختر نوع النشاط" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="note">ملاحظة</SelectItem>
+                  <SelectItem value="call">مكالمة</SelectItem>
+                  <SelectItem value="email">بريد إلكتروني</SelectItem>
+                  <SelectItem value="meeting">اجتماع</SelectItem>
+                  <SelectItem value="task">مهمة</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
         />
-      </div>
-      
-      {formData.type !== "note" && (
-        <div>
-          <Label htmlFor="scheduled_at">موعد التنفيذ</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-right font-normal",
-                  !formData.scheduled_at && "text-muted-foreground"
-                )}
-                disabled={isSubmitting}
-              >
-                <CalendarIcon className="ml-2 h-4 w-4" />
-                {formData.scheduled_at ? (
-                  format(formData.scheduled_at, "PPP", { locale: ar })
-                ) : (
-                  "اختر تاريخ"
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={formData.scheduled_at || undefined}
-                onSelect={(date) => handleChange('scheduled_at', date)}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-      )}
-      
-      <div className="flex justify-end gap-2">
-        {onClose && (
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
-            إلغاء
+        
+        <FormField
+          control={{ ...register('description') }}
+          name="description"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>الوصف</FormLabel>
+              <FormControl>
+                <Textarea
+                  placeholder="أدخل وصف النشاط"
+                  className="resize-none"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={{ ...register('scheduled_at') }}
+          name="scheduled_at"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>تاريخ ووقت الجدولة</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant={"outline"}
+                      className={cn(
+                        "w-[240px] pl-3 text-left font-normal",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {field.value ? (
+                        formatDate(new Date(field.value))
+                      ) : (
+                        <span>اختر التاريخ والوقت</span>
+                      )}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="center" side="bottom">
+                  <Calendar
+                    mode="single"
+                    locale={ar}
+                    selected={field.value ? new Date(field.value) : undefined}
+                    onSelect={(date) => {
+                      if (date) {
+                        const isoString = new Date(date).toISOString().slice(0, 16);
+                        setValue('scheduled_at', isoString);
+                      }
+                      field.onChange(date);
+                    }}
+                    disabled={(date) =>
+                      date < new Date()
+                    }
+                    className="rounded-md border"
+                  />
+                </PopoverContent>
+              </Popover>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex justify-end">
+          <Button type="submit" disabled={formState.isSubmitting}>
+            إضافة النشاط
           </Button>
-        )}
-        <Button type="submit" disabled={isSubmitting || !formData.description.trim()}>
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              جاري الإضافة...
-            </>
-          ) : "إضافة النشاط"}
-        </Button>
-      </div>
-    </form>
+        </div>
+      </form>
+    </Form>
   );
 };
 

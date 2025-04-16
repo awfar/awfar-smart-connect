@@ -1,179 +1,155 @@
-
-import React, { useState } from 'react';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { Task } from '@/services/tasks/types';
+import { createTask, updateTask } from '@/services/tasks';
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { createTask, Task } from '@/services/tasks';
-import { CalendarIcon, Loader2 } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from '@/lib/utils';
-import { format } from "date-fns";
-import { ar } from 'date-fns/locale';
 import { toast } from "sonner";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Calendar } from "@/components/ui/calendar"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
+import { format } from "date-fns"
+import { ar } from 'date-fns/locale';
 
 export interface TaskFormProps {
   leadId: string;
-  onSuccess: (task?: Task) => void;
-  onClose?: () => void; 
+  onSuccess?: () => void;
+  onClose?: () => void;
+  task?: Task; // Add the task prop for editing
 }
 
 const TaskForm: React.FC<TaskFormProps> = ({ 
   leadId, 
   onSuccess, 
-  onClose 
+  onClose,
+  task // The task to edit, if provided
 }) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    status: "pending" as Task['status'],
-    priority: "medium" as Task['priority'],
-    due_date: null as Date | null,
-    lead_id: leadId,
+  // Initialize form with the task data if it exists
+  const { register, handleSubmit, formState } = useForm({
+    defaultValues: {
+      title: task?.title || '',
+      description: task?.description || '',
+      priority: task?.priority || 'medium',
+      due_date: task?.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
+    }
   });
   
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.title.trim()) {
-      toast.error("يرجى إدخال عنوان المهمة");
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
+  const onSubmit = async (data: any) => {
     try {
-      const newTask = await createTask({
-        ...formData,
-        due_date: formData.due_date ? formData.due_date.toISOString() : undefined,
-        related_to_type: 'lead',
-        related_to_id: leadId,
-        related_to_name: 'عميل محتمل'
-      });
+      const dueDate = data.due_date ? new Date(data.due_date).toISOString() : undefined;
       
-      toast.success("تمت إضافة المهمة بنجاح");
+      const taskData = {
+        ...data,
+        due_date: dueDate,
+        lead_id: leadId
+      };
+
+      if (task) {
+        // Editing existing task
+        await updateTask(task.id, taskData);
+        toast.success("تم تحديث المهمة بنجاح");
+      } else {
+        // Creating a new task
+        await createTask(taskData);
+        toast.success("تم إنشاء المهمة بنجاح");
+      }
       
-      setFormData({
-        title: "",
-        description: "",
-        status: "pending",
-        priority: "medium",
-        due_date: null,
-        lead_id: leadId,
-      });
-      
-      onSuccess(newTask || undefined);
-      
+      onSuccess?.();
+      onClose?.();
     } catch (error) {
-      console.error("Error adding task:", error);
-      toast.error("حدث خطأ أثناء إضافة المهمة");
-    } finally {
-      setIsSubmitting(false);
+      console.error("Error creating/updating task:", error);
+      toast.error("فشل في إنشاء/تحديث المهمة");
     }
   };
-  
-  const handleChange = (key: string, value: string | Date | null) => {
-    setFormData(prev => ({ ...prev, [key]: value }));
-  };
-  
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col space-y-4">
       <div>
         <Label htmlFor="title">عنوان المهمة</Label>
         <Input 
           id="title" 
-          value={formData.title} 
-          onChange={(e) => handleChange('title', e.target.value)}
-          placeholder="أدخل عنوان المهمة"
-          required 
-          disabled={isSubmitting}
+          type="text" 
+          placeholder="أدخل عنوان المهمة" 
+          {...register("title", { required: 'العنوان مطلوب' })} 
         />
+        {formState.errors.title && <p className="text-red-500 text-sm">{formState.errors.title.message}</p>}
       </div>
       
       <div>
-        <Label htmlFor="description">التفاصيل</Label>
+        <Label htmlFor="description">وصف المهمة</Label>
         <Textarea 
           id="description" 
-          value={formData.description} 
-          onChange={(e) => handleChange('description', e.target.value)}
-          placeholder="أدخل تفاصيل المهمة"
-          disabled={isSubmitting}
+          placeholder="أدخل وصف المهمة" 
+          {...register("description")} 
         />
       </div>
       
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <Label htmlFor="priority">الأولوية</Label>
-          <Select 
-            value={formData.priority} 
-            onValueChange={(value) => handleChange('priority', value as Task['priority'])}
-            disabled={isSubmitting}
-          >
-            <SelectTrigger id="priority">
-              <SelectValue placeholder="اختر الأولوية" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="low">منخفضة</SelectItem>
-              <SelectItem value="medium">متوسطة</SelectItem>
-              <SelectItem value="high">عالية</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div>
-          <Label htmlFor="status">الحالة</Label>
-          <Select 
-            value={formData.status} 
-            onValueChange={(value) => handleChange('status', value as Task['status'])}
-            disabled={isSubmitting}
-          >
-            <SelectTrigger id="status">
-              <SelectValue placeholder="اختر الحالة" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="pending">معلقة</SelectItem>
-              <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
-              <SelectItem value="completed">مكتملة</SelectItem>
-              <SelectItem value="cancelled">ملغاة</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-      
       <div>
-        <Label htmlFor="due_date">موعد الاستحقاق</Label>
+        <Label htmlFor="priority">الأولوية</Label>
+        <Select defaultValue="medium" {...register("priority")}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="اختر الأولوية" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="low">منخفضة</SelectItem>
+            <SelectItem value="medium">متوسطة</SelectItem>
+            <SelectItem value="high">عالية</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label>تاريخ الاستحقاق</Label>
         <Popover>
           <PopoverTrigger asChild>
             <Button
-              variant="outline"
+              variant={"outline"}
               className={cn(
-                "w-full justify-start text-right font-normal",
-                !formData.due_date && "text-muted-foreground"
+                "w-full justify-start text-left font-normal",
+                !watch("due_date") && "text-muted-foreground"
               )}
-              disabled={isSubmitting}
             >
-              <CalendarIcon className="ml-2 h-4 w-4" />
-              {formData.due_date ? (
-                format(formData.due_date, "PPP", { locale: ar })
+              {watch("due_date") ? (
+                format(new Date(watch("due_date")), "yyyy/MM/dd", { locale: ar })
               ) : (
-                "اختر تاريخ"
+                <span>اختر تاريخ</span>
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0" align="center" side="bottom">
             <Calendar
               mode="single"
-              selected={formData.due_date || undefined}
-              onSelect={(date) => handleChange('due_date', date)}
+              locale={ar}
+              selected={watch("due_date") ? new Date(watch("due_date")) : undefined}
+              onSelect={(date) => {
+                if (date) {
+                  const isoDate = date.toISOString().slice(0, 16);
+                  setValue("due_date", isoDate);
+                }
+              }}
+              disabled={(date) => date < new Date()}
               initialFocus
             />
           </PopoverContent>
@@ -181,23 +157,9 @@ const TaskForm: React.FC<TaskFormProps> = ({
       </div>
       
       <div className="flex justify-end gap-2">
-        {onClose && (
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
-            إلغاء
-          </Button>
-        )}
-        <Button type="submit" disabled={isSubmitting || !formData.title.trim()}>
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              جاري الإضافة...
-            </>
-          ) : "إضافة المهمة"}
+        <Button variant="ghost" onClick={onClose}>إلغاء</Button>
+        <Button type="submit" disabled={formState.isSubmitting}>
+          {formState.isSubmitting ? 'جاري الحفظ...' : 'حفظ'}
         </Button>
       </div>
     </form>
