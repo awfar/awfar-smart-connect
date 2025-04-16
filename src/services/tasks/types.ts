@@ -49,18 +49,18 @@ export interface TaskCreateInput {
   related_to_name?: string;
 }
 
-// Raw task data from database
+// Raw task data from database - explicitly separate from Task
 export interface TaskRecord {
   id: string;
   title: string;
   description?: string;
-  status: string;
-  priority: string;
+  status: string; // Raw string from database
+  priority: string; // Raw string from database
   due_date?: string;
   created_at: string;
   updated_at: string;
   assigned_to?: string;
   assigned_to_name?: string;
-  related_to?: unknown; // This could be a JSON string or an object
+  related_to?: string | Record<string, unknown>; // Could be a JSON string or an object
   lead_id?: string;
 }
