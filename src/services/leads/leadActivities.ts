@@ -1,8 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LeadActivity } from "@/types/leads"; // Using the central type definition
-import { Task } from "@/services/tasks/types"; // Import the Task type to match what's expected
+import { Task, TaskCreateInput } from "@/services/tasks/types"; // Import the Task type to match what's expected
 
 export const getLeadActivities = async (leadId: string): Promise<LeadActivity[]> => {
   try {
