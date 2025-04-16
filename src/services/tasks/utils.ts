@@ -22,21 +22,42 @@ export const castToTask = (data: TaskRecord): Task => {
   
   // Parse related_to safely
   let relatedTo: RelatedEntityReference | undefined = undefined;
-  if (data.related_to && typeof data.related_to === 'object') {
-    const relatedToObj = data.related_to as Record<string, unknown>;
-    if (
-      typeof relatedToObj.type === 'string' && 
-      typeof relatedToObj.id === 'string' && 
-      typeof relatedToObj.name === 'string'
-    ) {
-      // Only set if the type is one of the allowed values
-      const type = relatedToObj.type;
-      if (type === 'lead' || type === 'deal' || type === 'customer') {
-        relatedTo = {
-          type,
-          id: relatedToObj.id,
-          name: relatedToObj.name
-        };
+  if (data.related_to) {
+    // Handle the case where related_to is a string (JSON)
+    if (typeof data.related_to === 'string') {
+      try {
+        const parsed = JSON.parse(data.related_to);
+        if (typeof parsed === 'object' && parsed !== null) {
+          const type = parsed.type;
+          if (type === 'lead' || type === 'deal' || type === 'customer') {
+            relatedTo = {
+              type,
+              id: parsed.id,
+              name: parsed.name
+            };
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse related_to JSON:', e);
+      }
+    }
+    // Handle the case where related_to is already an object
+    else if (typeof data.related_to === 'object' && data.related_to !== null) {
+      const relatedToObj = data.related_to as Record<string, unknown>;
+      if (
+        typeof relatedToObj.type === 'string' && 
+        typeof relatedToObj.id === 'string' && 
+        typeof relatedToObj.name === 'string'
+      ) {
+        // Only set if the type is one of the allowed values
+        const type = relatedToObj.type;
+        if (type === 'lead' || type === 'deal' || type === 'customer') {
+          relatedTo = {
+            type,
+            id: relatedToObj.id,
+            name: relatedToObj.name
+          };
+        }
       }
     }
   }

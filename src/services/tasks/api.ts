@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-import { Task, TaskCreateInput, TaskRecord, RelatedEntityReference } from './types';
+import { Task, TaskCreateInput, TaskRecord } from './types';
 import { castToTask } from './utils';
 import { getMockTasks } from './mockData';
 
@@ -155,7 +155,7 @@ export async function updateTask(taskId: string, taskData: Partial<Task>): Promi
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
       // Convert related_to to JSON string if it exists
-      const updatesForDb = { ...updates };
+      const updatesForDb: Record<string, any> = { ...updates };
       if (updates.related_to) {
         updatesForDb.related_to = JSON.stringify(updates.related_to);
       }
