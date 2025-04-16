@@ -1,19 +1,24 @@
 
 import { Task, RelatedEntityType } from './types';
 
-// Completely detached from imported types - using raw data input
+/**
+ * Safely converts raw data to a Task object
+ * IMPORTANT: Uses explicit type handling to avoid deep type inference
+ * @param raw Any raw data from database or API
+ * @returns A properly formatted Task object
+ */
 export const castToTask = (raw: any): Task => {
-  // Validate and normalize status
+  // Validate and normalize status with explicit string assignment
   const status = ['pending', 'in-progress', 'completed', 'cancelled'].includes(raw.status)
     ? raw.status 
     : 'pending';
   
-  // Validate and normalize priority
+  // Validate and normalize priority with explicit string assignment
   const priority = ['high', 'medium', 'low'].includes(raw.priority)
     ? raw.priority
     : 'medium';
   
-  // Safely handle related_to as a completely isolated operation
+  // Isolated handling for related_to to prevent recursive type issues
   let relatedTo: { type: RelatedEntityType; id: string; name: string } | undefined = undefined;
   
   if (raw.related_to) {
@@ -38,7 +43,7 @@ export const castToTask = (raw: any): Task => {
     }
   }
   
-  // Return a manually constructed task object with clear, explicit field assignments
+  // Return a manually constructed task object with explicit field assignments
   return {
     id: String(raw.id),
     title: String(raw.title),

@@ -1,70 +1,78 @@
 
-// Type definitions for task-related entities
+/**
+ * Tasks Module Type Definitions
+ * 
+ * IMPORTANT: To avoid TypeScript's "excessively deep and possibly infinite" type instantiation errors:
+ * 1. Keep all types flat and non-recursive
+ * 2. Avoid complex mapped/conditional types
+ * 3. Use primitive types and simple interfaces
+ * 4. Keep database types separate from UI types
+ * 5. Use explicit string literals rather than nested type references
+ */
 
-// Define entity types as a string literal union
+// Simple string literal types
 export type RelatedEntityType = 'lead' | 'deal' | 'customer';
+export type TaskStatus = 'pending' | 'in-progress' | 'completed' | 'cancelled';
+export type TaskPriority = 'high' | 'medium' | 'low';
 
-// Simple reference interface with no recursive types
+// Flat interface for related entity - completely separate from task structure
 export interface RelatedEntityReference {
   type: RelatedEntityType;
   id: string;
   name: string;
 }
 
-// Define task status and priority as standalone types
-export type TaskStatus = 'pending' | 'in-progress' | 'completed' | 'cancelled';
-export type TaskPriority = 'high' | 'medium' | 'low';
-
-// Base properties for a task with only primitives
+// Core Task properties using only primitive types
 export interface TaskBase {
   id: string;
   title: string;
   description?: string;
   status: TaskStatus;
   priority: TaskPriority;
-  due_date?: string;
+  due_date?: string | null;
   created_at: string;
   updated_at: string;
-  assigned_to?: string;
-  assigned_to_name?: string;
-  lead_id?: string;
+  assigned_to?: string | null;
+  assigned_to_name?: string | null;
+  lead_id?: string | null;
 }
 
-// Full Task type extending base with optional related entity
+// Task including related entity - used only in UI, not for database operations
 export interface Task extends TaskBase {
-  related_to?: RelatedEntityReference; 
+  related_to?: RelatedEntityReference | null;
 }
 
-// Completely flat task input for creation
+// Input for task creation - totally flat with no nesting
 export interface TaskCreateInput {
   id?: string;
   title: string;
-  description?: string;
+  description?: string | null;
   status?: TaskStatus;
   priority?: TaskPriority;
   due_date?: string | null;
   created_at?: string;
   updated_at?: string;
-  assigned_to?: string;
-  assigned_to_name?: string;
-  lead_id?: string;
+  assigned_to?: string | null;
+  assigned_to_name?: string | null;
+  lead_id?: string | null;
+  // Flat fields for related entity data
   related_to_type?: RelatedEntityType;
   related_to_id?: string;
   related_to_name?: string;
 }
 
-// Raw database record type with no complex nested objects
+// Database record type - completely flat with no complex types
 export interface TaskRecord {
   id: string;
   title: string;
-  description?: string;
+  description?: string | null;
   status: string; 
   priority: string;
-  due_date?: string;
+  due_date?: string | null;
   created_at: string;
   updated_at: string;
-  assigned_to?: string;
-  assigned_to_name?: string;
-  related_to?: string | null; // Always stored as JSON string
-  lead_id?: string;
+  assigned_to?: string | null;
+  assigned_to_name?: string | null;
+  related_to?: string | null; // Always JSON string in DB
+  lead_id?: string | null;
 }
