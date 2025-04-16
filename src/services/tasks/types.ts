@@ -3,7 +3,7 @@
 
 export type RelatedEntityType = 'lead' | 'deal' | 'customer';
 
-// Simple interface for related entity references
+// Simple interface for related entity references - non-recursive definition
 export interface RelatedEntityReference {
   type: RelatedEntityType;
   id: string;
@@ -54,13 +54,13 @@ export interface TaskRecord {
   id: string;
   title: string;
   description?: string;
-  status: string; // Raw string from database
-  priority: string; // Raw string from database
+  status: string;
+  priority: string;
   due_date?: string;
   created_at: string;
   updated_at: string;
   assigned_to?: string;
   assigned_to_name?: string;
-  related_to?: string | Record<string, unknown>; // Could be a JSON string or an object
+  related_to?: string | null; // Store as string in DB (JSON)
   lead_id?: string;
 }
