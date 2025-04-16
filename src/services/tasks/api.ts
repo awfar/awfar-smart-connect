@@ -23,32 +23,34 @@ export async function getTasks(filters: Record<string, any> = {}): Promise<Task[
   try {
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
-      // Use explicit typing to avoid deep inference
+      // Avoiding type inference by using type assertions
+      const tasks: Task[] = [];
       const query = supabase.from('tasks');
       
-      // Explicitly typed selection to avoid excessive type instantiation
-      const selection = query.select('*');
+      // Build the query with separate steps to avoid deep type nesting
+      let selectQuery: any = query.select('*');
       
       // تطبيق الفلاتر
-      let filteredQuery = selection;
-      
       if (filters.status) {
-        filteredQuery = filteredQuery.eq('status', filters.status);
+        selectQuery = selectQuery.eq('status', filters.status);
       }
       
       if (filters.priority) {
-        filteredQuery = filteredQuery.eq('priority', filters.priority);
+        selectQuery = selectQuery.eq('priority', filters.priority);
       }
       
       // فرز حسب تاريخ الاستحقاق
-      filteredQuery = filteredQuery.order('due_date', { ascending: true });
+      selectQuery = selectQuery.order('due_date', { ascending: true });
       
       // فلتر بمرفق إذا تم توفيره
       if (filters.lead_id) {
-        filteredQuery = filteredQuery.eq('lead_id', filters.lead_id);
+        selectQuery = selectQuery.eq('lead_id', filters.lead_id);
       }
       
-      const { data, error } = await filteredQuery;
+      // Execute the query with minimal type inference
+      const result = await selectQuery;
+      const data = result.data;
+      const error = result.error;
       
       if (error) {
         console.error('Error fetching tasks:', error);
@@ -60,7 +62,6 @@ export async function getTasks(filters: Record<string, any> = {}): Promise<Task[
       }
       
       // Explicit handling with simple iteration to avoid type recursion
-      const tasks: Task[] = [];
       for (const item of data) {
         tasks.push(castToTask(item as any));
       }
