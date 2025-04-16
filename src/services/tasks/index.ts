@@ -1,4 +1,3 @@
-
 // سيتم إصلاح أخطاء الطباعة مع الحفاظ على وظائف الملف الأصلي
 // إصلاح خطأ Type instantiation is excessively deep and possibly infinite
 
@@ -29,8 +28,8 @@ export interface Task {
   lead_id?: string; // Added for direct lead relationship
 }
 
-// Use a more specific type for task creation that doesn't reference itself
-export type TaskCreate = {
+// Define a separate type for task creation to avoid circular references
+export interface TaskCreate {
   id?: string;
   title: string;
   description?: string;
@@ -43,7 +42,7 @@ export type TaskCreate = {
   assigned_to_name?: string;
   related_to?: RelatedEntity;
   lead_id?: string;
-};
+}
 
 // Define a separate type for raw task records from the database
 interface TaskRecord {
