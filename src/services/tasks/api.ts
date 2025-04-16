@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-import { Task, TaskCreateInput, TaskRecord } from './types';
+import { Task, TaskCreateInput, TaskRecord, RelatedEntityReference } from './types';
 import { castToTask } from './utils';
 import { getMockTasks } from './mockData';
 

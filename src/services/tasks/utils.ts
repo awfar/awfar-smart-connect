@@ -1,5 +1,5 @@
 
-import { Task, TaskRecord, RelatedEntity } from './types';
+import { Task, TaskRecord, RelatedEntityReference } from './types';
 
 // بدلاً من استخدام التحويل التلقائي، نقوم بعمل تحويل صريح مع فحوصات
 export const castToTask = (data: TaskRecord): Task => {
@@ -21,7 +21,7 @@ export const castToTask = (data: TaskRecord): Task => {
   }
   
   // Parse related_to safely
-  let relatedTo: RelatedEntity | undefined = undefined;
+  let relatedTo: RelatedEntityReference | undefined = undefined;
   if (data.related_to && typeof data.related_to === 'object') {
     const relatedToObj = data.related_to as Record<string, unknown>;
     if (
