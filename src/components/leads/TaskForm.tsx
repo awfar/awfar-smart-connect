@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -50,13 +49,11 @@ const TaskForm: React.FC<TaskFormProps> = ({
     setIsSubmitting(true);
     
     try {
-      // Create the new task
       const newTask = await createTask({
         ...formData,
         due_date: formData.due_date ? formData.due_date.toISOString() : null,
       });
       
-      // Reset form
       setFormData({
         title: "",
         description: "",
@@ -66,7 +63,6 @@ const TaskForm: React.FC<TaskFormProps> = ({
         lead_id: leadId,
       });
       
-      // Call the success callback with the new task
       onSuccess(newTask || undefined);
       
     } catch (error) {
