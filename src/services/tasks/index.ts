@@ -1,3 +1,4 @@
+
 // سيتم إصلاح أخطاء الطباعة مع الحفاظ على وظائف الملف الأصلي
 // إصلاح خطأ Type instantiation is excessively deep and possibly infinite
 
@@ -31,6 +32,7 @@ export type TaskCreate = Omit<Task, 'id' | 'created_at' | 'updated_at'> & {
   lead_id?: string;
 };
 
+// Define a separate type for raw task records from the database
 interface TaskRecord {
   id: string;
   title: string;
@@ -42,36 +44,62 @@ interface TaskRecord {
   updated_at: string;
   assigned_to?: string;
   assigned_to_name?: string;
-  related_to?: any;
+  related_to?: unknown; // Use unknown instead to avoid circular references
   lead_id?: string;
 }
 
 // بدلاً من استخدام التحويل التلقائي، نقوم بعمل تحويل صريح مع فحوصات
 export const castToTask = (data: TaskRecord): Task => {
-  let status = data.status;
-  // Validate status
-  if (status !== 'pending' && status !== 'in-progress' && status !== 'completed' && status !== 'cancelled') {
-    status = 'pending';
+  // Validate and convert status
+  let status: Task['status'] = 'pending';
+  if (data.status === 'pending' || 
+      data.status === 'in-progress' || 
+      data.status === 'completed' || 
+      data.status === 'cancelled') {
+    status = data.status;
   }
   
-  let priority = data.priority;
-  // Validate priority
-  if (priority !== 'high' && priority !== 'medium' && priority !== 'low') {
-    priority = 'medium';
+  // Validate and convert priority
+  let priority: Task['priority'] = 'medium';
+  if (data.priority === 'high' || 
+      data.priority === 'medium' || 
+      data.priority === 'low') {
+    priority = data.priority;
+  }
+  
+  // Parse related_to safely
+  let relatedTo: Task['related_to'] | undefined = undefined;
+  if (data.related_to && typeof data.related_to === 'object') {
+    const relatedToObj = data.related_to as any;
+    if (
+      relatedToObj && 
+      typeof relatedToObj.type === 'string' && 
+      typeof relatedToObj.id === 'string' && 
+      typeof relatedToObj.name === 'string'
+    ) {
+      // Only set if the type is one of the allowed values
+      if (['lead', 'deal', 'customer'].includes(relatedToObj.type)) {
+        relatedTo = {
+          type: relatedToObj.type as 'lead' | 'deal' | 'customer',
+          id: relatedToObj.id,
+          name: relatedToObj.name
+        };
+      }
+    }
   }
   
   return {
     id: data.id,
     title: data.title,
     description: data.description,
-    status: status as Task['status'],
-    priority: priority as Task['priority'],
+    status,
+    priority,
     due_date: data.due_date,
     created_at: data.created_at,
     updated_at: data.updated_at,
     assigned_to: data.assigned_to,
     assigned_to_name: data.assigned_to_name,
-    related_to: data.related_to as Task['related_to'],
+    related_to: relatedTo,
     lead_id: data.lead_id
   };
 };

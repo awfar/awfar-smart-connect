@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,15 +44,15 @@ const LeadTable: React.FC<LeadTableProps> = ({
     }
   };
 
-  // Get stage badge variant
+  // Get stage badge variant - Updated to use only valid badge variants
   const getStageBadgeVariant = (stage?: string) => {
     if (!stage) return "outline";
     
     switch (stage.toLowerCase()) {
       case 'جديد': case 'new': return "default";
       case 'مؤهل': case 'qualified': return "secondary";
-      case 'يتفاوض': case 'negotiating': return "warning";
-      case 'فرصة': case 'opportunity': return "info";
+      case 'يتفاوض': case 'negotiating': return "secondary"; // Changed from "warning"
+      case 'فرصة': case 'opportunity': return "secondary";   // Changed from "info"
       case 'مغلق مكسب': case 'closed won': return "success";
       case 'مغلق خسارة': case 'closed lost': return "destructive";
       default: return "outline";
