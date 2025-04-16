@@ -29,10 +29,19 @@ export interface Task {
   lead_id?: string; // Added for direct lead relationship
 }
 
-export type TaskCreate = Omit<Task, 'id' | 'created_at' | 'updated_at'> & {
+// Use a more specific type for task creation that doesn't reference itself
+export type TaskCreate = {
   id?: string;
+  title: string;
+  description?: string;
+  status?: 'pending' | 'in-progress' | 'completed' | 'cancelled';
+  priority?: 'high' | 'medium' | 'low';
+  due_date?: string | null;
   created_at?: string;
   updated_at?: string;
+  assigned_to?: string;
+  assigned_to_name?: string;
+  related_to?: RelatedEntity;
   lead_id?: string;
 };
 
