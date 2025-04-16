@@ -17,7 +17,7 @@ export interface Task {
   created_by?: string;
   created_at?: string;
   updated_at?: string;
-  lead_id?: string;
+  lead_id?: string;  // Added lead_id field
   related_to_type?: string;
   related_to_id?: string;
   related_to_name?: string;
@@ -37,7 +37,7 @@ export interface TaskCreateInput {
   due_date?: string;
   assigned_to?: string;
   assigned_to_name?: string;
-  lead_id?: string;
+  lead_id?: string;  // Added lead_id field
   related_to_type?: string;
   related_to_id?: string;
   related_to_name?: string;
@@ -56,5 +56,5 @@ export interface TaskRecord {
   assigned_to?: string | null;
   assigned_to_name?: string | null;
   related_to?: string | null;
-  lead_id?: string | null;
+  lead_id?: string | null;  // Added lead_id field
 }
