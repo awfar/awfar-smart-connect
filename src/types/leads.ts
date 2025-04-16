@@ -20,7 +20,7 @@ export interface Lead {
   updated_at?: string;
   assignedTo?: string;
   assigned_to?: string;
-  avatar_url?: string | null;
+  avatar_url?: string | null; // Add this line
   owner?: {
     name: string;
     avatar: string;
@@ -53,4 +53,3 @@ export interface TestResult {
   responseTimeMs: number;
   error?: any;
 }
-
