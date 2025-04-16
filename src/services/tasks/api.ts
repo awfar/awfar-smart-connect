@@ -78,7 +78,7 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
     const taskId = taskData.id || uuidv4();
     
     // Build task record manually without complex type operations
-    const taskRecord: Record<string, any> = {
+    const taskRecord: TaskRecord = {
       id: taskId,
       title: taskData.title,
       description: taskData.description,
@@ -89,7 +89,8 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
       updated_at: now,
       assigned_to: taskData.assigned_to,
       assigned_to_name: taskData.assigned_to_name,
-      lead_id: taskData.lead_id
+      lead_id: taskData.lead_id,
+      related_to: null // Initialize as null and populate below if needed
     };
     
     // Handle related_to conversion to string explicitly
@@ -104,8 +105,8 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
     
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
-      // Insert the complete task record - preventing the update error
-      const { error } = await supabase.from('tasks').insert(taskRecord);
+      // Insert using explicit TaskRecord type to ensure type compatibility
+      const { error } = await supabase.from('tasks').insert(taskRecord as any);
       
       if (error) {
         console.error('Error creating task in Supabase:', error);
