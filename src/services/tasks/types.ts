@@ -30,7 +30,7 @@ export interface Task extends TaskBase {
   related_to?: RelatedEntityReference;
 }
 
-// Flat task input for creation to avoid circular references
+// Completely flat task input for creation with no nested structures
 export interface TaskCreateInput {
   id?: string;
   title: string;
@@ -43,7 +43,7 @@ export interface TaskCreateInput {
   assigned_to?: string;
   assigned_to_name?: string;
   lead_id?: string;
-  // Flat fields for related entity
+  // Explicitly flatten related entity fields
   related_to_type?: RelatedEntityType;
   related_to_id?: string;
   related_to_name?: string;

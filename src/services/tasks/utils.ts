@@ -22,44 +22,39 @@ export const castToTask = (data: TaskRecord): Task => {
   
   // Parse related_to safely
   let relatedTo: RelatedEntityReference | undefined = undefined;
-  if (data.related_to) {
-    // Handle the case where related_to is a string (JSON)
-    if (typeof data.related_to === 'string') {
-      try {
+  
+  try {
+    if (data.related_to) {
+      // Handle the case where related_to is a string (JSON)
+      if (typeof data.related_to === 'string') {
         const parsed = JSON.parse(data.related_to);
-        if (typeof parsed === 'object' && parsed !== null) {
+        if (parsed && typeof parsed === 'object') {
           const type = parsed.type;
           if (type === 'lead' || type === 'deal' || type === 'customer') {
             relatedTo = {
               type,
-              id: parsed.id,
-              name: parsed.name
+              id: String(parsed.id),
+              name: String(parsed.name)
             };
           }
         }
-      } catch (e) {
-        console.error('Failed to parse related_to JSON:', e);
       }
-    }
-    // Handle the case where related_to is already an object
-    else if (typeof data.related_to === 'object' && data.related_to !== null) {
-      const relatedToObj = data.related_to as Record<string, unknown>;
-      if (
-        typeof relatedToObj.type === 'string' && 
-        typeof relatedToObj.id === 'string' && 
-        typeof relatedToObj.name === 'string'
-      ) {
-        // Only set if the type is one of the allowed values
-        const type = relatedToObj.type;
+      // Handle the case where related_to is already an object
+      else if (data.related_to && typeof data.related_to === 'object') {
+        const relatedToObj = data.related_to as Record<string, unknown>;
+        const type = relatedToObj.type as string;
+        
         if (type === 'lead' || type === 'deal' || type === 'customer') {
           relatedTo = {
-            type,
-            id: relatedToObj.id,
-            name: relatedToObj.name
+            type: type as RelatedEntityReference['type'],
+            id: String(relatedToObj.id || ''),
+            name: String(relatedToObj.name || '')
           };
         }
       }
     }
+  } catch (e) {
+    console.error('Failed to parse related_to:', e);
   }
   
   return {

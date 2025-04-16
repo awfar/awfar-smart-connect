@@ -36,6 +36,7 @@ export async function getTasks(filters: Record<string, any> = {}): Promise<Task[
         return getMockTasks(filters.lead_id);
       }
       
+      // Explicitly type data as TaskRecord[] to avoid deep typing issues
       return (data as TaskRecord[]).map(castToTask);
     }
     
@@ -54,7 +55,7 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
     const now = new Date().toISOString();
     const taskId = taskData.id || uuidv4();
     
-    // Initialize the task with base properties
+    // Create a Task object using base properties first
     const newTask: Task = {
       id: taskId,
       title: taskData.title,
@@ -69,7 +70,7 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
       lead_id: taskData.lead_id
     };
     
-    // Only add related_to if the needed properties exist
+    // Add related_to separately to avoid potential typing issues
     if (taskData.related_to_type && taskData.related_to_id && taskData.related_to_name) {
       newTask.related_to = {
         type: taskData.related_to_type,
@@ -80,10 +81,7 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
     
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
-      // Create a related_to object for database storage that will be stored as JSON
-      const relatedTo = newTask.related_to ? JSON.stringify(newTask.related_to) : null;
-      
-      // Create a database record
+      // Create database record with explicit JSON stringification for related_to
       const taskRecord = {
         id: newTask.id,
         title: newTask.title,
@@ -96,7 +94,7 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
         assigned_to: newTask.assigned_to,
         assigned_to_name: newTask.assigned_to_name,
         lead_id: taskData.lead_id || (newTask.related_to?.type === 'lead' ? newTask.related_to.id : null),
-        related_to: relatedTo
+        related_to: newTask.related_to ? JSON.stringify(newTask.related_to) : null
       };
 
       const { error } = await supabase.from('tasks').insert(taskRecord);
