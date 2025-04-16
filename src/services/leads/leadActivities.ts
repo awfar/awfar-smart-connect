@@ -113,8 +113,24 @@ export const completeLeadActivity = async (activityId: string): Promise<LeadActi
 // Function to create a lead task connection
 export const addLeadTask = async (leadId: string, taskId: string): Promise<boolean> => {
   try {
-    // Use the updated Task type with lead_id
-    const updateData = { lead_id: leadId };
+    // First retrieve the current task to ensure we have the correct types
+    const { data: taskData, error: fetchError } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('id', taskId)
+      .single();
+    
+    if (fetchError) {
+      console.error("Error fetching task:", fetchError);
+      return false;
+    }
+
+    // Then update with the lead_id - using a Record to ensure type compatibility
+    const updateData: Record<string, any> = { 
+      lead_id: leadId,
+      // Include any required fields for the update
+      updated_at: new Date().toISOString()
+    };
     
     const { error } = await supabase
       .from('tasks')
