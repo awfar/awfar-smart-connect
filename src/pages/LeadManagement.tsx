@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import LeadPermissionAlert from "@/components/leads/LeadPermissionAlert";
 import { useAuth } from '@/contexts/AuthContext';
 import { useBreakpoints } from '@/hooks/use-mobile';
-import { Lead } from "@/types/leads"; // Use the Lead type from types/leads
+import { Lead } from "@/services/leads/types"; // Use consistent Lead type
 
 const LeadManagement = () => {
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);

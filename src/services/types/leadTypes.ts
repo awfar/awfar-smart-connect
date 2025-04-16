@@ -19,18 +19,18 @@ export interface Lead {
   created_at?: string;
   updated_at?: string;
   assigned_to?: string;
-  avatar_url?: string | null; // Adding missing property
+  avatar_url?: string | null;
   owner?: Owner;
 }
 
 // Activity related to a lead
 export interface LeadActivity {
   id: string;
-  lead_id: string;
+  lead_id: string; // Making this required for consistency
   type: string;
   description: string;
-  created_at: string;
-  created_by?: string; // Changed to string only for compatibility
+  created_at?: string;
+  created_by?: string; // String only for consistency
   scheduled_at?: string | null;
   completed_at?: string | null;
   profiles?: any; // For join with profiles table
@@ -54,7 +54,7 @@ export interface LeadDBRow {
   created_at: string;
   updated_at: string;
   assigned_to?: string | null;
-  avatar_url?: string | null; // Adding missing property
+  avatar_url?: string | null;
   profiles?: {
     first_name: string | null;
     last_name: string | null;

@@ -32,25 +32,26 @@ export type TaskCreate = Omit<Task, 'id' | 'created_at' | 'updated_at'> & {
 };
 
 // تحسين دالة التحويل لتجنب الدوران المفرط
-export const castToTask = (data: unknown): Task => {
+export const castToTask = (data: any): Task => {
   // بدلاً من استخدام التحويل التلقائي، نقوم بعمل تحويل صريح مع فحوصات
   const record = data as Record<string, unknown>;
   
-  const status = record.status as string;
-  const priority = record.priority as string;
+  let status = String(record.status || 'pending');
+  if (status !== 'pending' && status !== 'in-progress' && status !== 'completed' && status !== 'cancelled') {
+    status = 'pending';
+  }
+  
+  let priority = String(record.priority || 'medium');
+  if (priority !== 'high' && priority !== 'medium' && priority !== 'low') {
+    priority = 'medium';
+  }
   
   return {
     id: String(record.id || ''),
     title: String(record.title || ''),
     description: record.description ? String(record.description) : undefined,
-    // Ensure we cast to one of the specific allowed status values
-    status: (status === 'pending' || status === 'in-progress' || status === 'completed' || status === 'cancelled') 
-      ? status as Task['status'] 
-      : 'pending',
-    // Ensure we cast to one of the specific allowed priority values
-    priority: (priority === 'high' || priority === 'medium' || priority === 'low') 
-      ? priority as Task['priority'] 
-      : 'medium',
+    status: status as Task['status'],
+    priority: priority as Task['priority'],
     due_date: record.due_date ? String(record.due_date) : undefined,
     created_at: String(record.created_at || new Date().toISOString()),
     updated_at: String(record.updated_at || new Date().toISOString()),

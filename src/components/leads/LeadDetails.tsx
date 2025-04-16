@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,7 +48,6 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({
   const [showActivityForm, setShowActivityForm] = useState(false);
   const [processingActivity, setProcessingActivity] = useState<string | null>(null);
   
-  // Fetch activities for this lead
   const { 
     data: activities = [], 
     isLoading: loadingActivities,
@@ -60,7 +58,6 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({
     enabled: !!lead?.id
   });
   
-  // If no lead is provided, show empty state
   if (!lead) {
     return (
       <Card className="h-full">
@@ -79,17 +76,14 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({
     );
   }
 
-  // Get full name from first and last name
   const fullName = `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || "بدون اسم";
   
-  // Use owner from lead or create default owner object
   const owner = lead.owner || { 
     name: "غير مخصص", 
     avatar: "/placeholder.svg", 
     initials: "؟" 
   };
   
-  // Handle activity actions
   const handleAddActivity = (activity?: LeadActivity) => {
     setShowActivityForm(false);
     if (activity) {
@@ -111,12 +105,10 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({
     }
   };
   
-  // Handle navigation to full lead details
   const handleViewDetails = () => {
     navigate(`/dashboard/leads/${lead.id}`);
   };
   
-  // Handle lead edit
   const handleEdit = () => {
     if (onEdit) {
       onEdit(lead);
@@ -125,7 +117,6 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({
     }
   };
   
-  // Handle lead deletion
   const handleDelete = () => {
     if (onDelete) {
       onDelete(lead.id);
@@ -134,7 +125,20 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({
     }
   };
   
-  // Filter activities by tab
+  const getCreatorInitials = (created_by: any): string => {
+    if (!created_by) return '؟';
+    
+    if (typeof created_by === 'string') {
+      return created_by.substring(0, 2).toUpperCase();
+    }
+    
+    if (created_by.first_name) {
+      return created_by.first_name.charAt(0) || '؟';
+    }
+    
+    return '؟';
+  };
+
   const filteredActivities = {
     activities: activities.filter(act => act.type !== 'task' && act.type !== 'note'),
     tasks: activities.filter(act => act.type === 'task'),
@@ -274,7 +278,7 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({
                       <div className="flex items-center gap-2">
                         <Avatar className="h-6 w-6">
                           <AvatarFallback>
-                            {activity.created_by ? typeof activity.created_by === 'string' ? activity.created_by.substring(0, 2).toUpperCase() : activity.created_by.first_name?.charAt(0) || '؟' : '؟'}
+                            {getCreatorInitials(activity.created_by)}
                           </AvatarFallback>
                         </Avatar>
                         <span className="text-sm font-medium">{owner?.name || "غير معروف"}</span>
@@ -413,7 +417,7 @@ const LeadDetails: React.FC<LeadDetailsProps> = ({
                     <div className="flex items-center gap-2 mb-2">
                       <Avatar className="h-6 w-6">
                         <AvatarFallback>
-                          {note.created_by ? typeof note.created_by === 'string' ? note.created_by.substring(0, 2).toUpperCase() : note.created_by.first_name?.charAt(0) || '؟' : '؟'}
+                          {getCreatorInitials(note.created_by)}
                         </AvatarFallback>
                       </Avatar>
                       <span className="text-sm font-medium">{owner?.name || "غير معروف"}</span>

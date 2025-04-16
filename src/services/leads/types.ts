@@ -29,13 +29,14 @@ export interface Lead {
 export interface LeadActivity {
   id: string;
   leadId?: string;
-  lead_id: string; // Making this required to match the other definition
+  lead_id: string; // Making this required for consistency
   type: string;
   description: string;
   createdBy?: string;
-  created_by?: string; // String only to match the other definition
+  created_by?: string; // String only for consistency
   createdAt?: string;
   created_at?: string;
   scheduled_at?: string | null;
   completed_at?: string | null;
+  profiles?: any; // For join with profiles table
 }

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -17,7 +18,7 @@ import { format } from "date-fns";
 import { ar } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from "sonner";
-import { LeadActivity } from "@/services/leads/types";
+import { LeadActivity } from "@/services/leads/types"; // Using consistent types
 
 export interface ActivityFormProps {
   leadId: string;
@@ -69,7 +70,11 @@ const ActivityForm: React.FC<ActivityFormProps> = ({
       });
       
       // Call the success callback with the new activity
-      onSuccess(newActivity as LeadActivity);
+      if (newActivity) {
+        onSuccess(newActivity as unknown as LeadActivity);
+      } else {
+        onSuccess();
+      }
       
     } catch (error) {
       console.error("Error adding activity:", error);
