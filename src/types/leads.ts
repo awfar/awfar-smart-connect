@@ -1,3 +1,4 @@
+
 // تعريف الأنواع للعميل المحتمل والأنشطة المرتبطة به
 
 export interface Lead {
@@ -20,13 +21,13 @@ export interface Lead {
   updated_at?: string;
   assignedTo?: string;
   assigned_to?: string;
-  avatar_url?: string | null; // إضافة حقل avatar_url
+  avatar_url?: string | null;
   owner?: {
     name: string;
     avatar: string;
     initials: string;
-    first_name?: string;  // إضافة الحقول المطلوبة للـ Owner
-    last_name?: string;   // إضافة الحقول المطلوبة للـ Owner
+    first_name?: string;
+    last_name?: string;
   };
 }
 

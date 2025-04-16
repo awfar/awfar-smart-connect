@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -47,7 +46,6 @@ const LeadDetailsPage = () => {
   const [isAppointmentDialogOpen, setIsAppointmentDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("details");
   
-  // Fetch lead details
   const { 
     data: lead,
     isLoading, 
@@ -59,7 +57,6 @@ const LeadDetailsPage = () => {
     enabled: !!id,
   });
   
-  // Fetch lead activities
   const {
     data: activities = [],
     isLoading: loadingActivities,
@@ -70,7 +67,6 @@ const LeadDetailsPage = () => {
     enabled: !!id
   });
   
-  // Fetch lead tasks
   const {
     data: tasks = [],
     isLoading: loadingTasks,
@@ -81,7 +77,6 @@ const LeadDetailsPage = () => {
     enabled: !!id
   });
   
-  // Fetch lead appointments
   const {
     data: appointments = [],
     isLoading: loadingAppointments,
@@ -92,7 +87,6 @@ const LeadDetailsPage = () => {
     enabled: !!id
   });
   
-  // Delete lead mutation
   const deleteMutation = useMutation({
     mutationFn: deleteLead,
     onSuccess: () => {
@@ -138,7 +132,6 @@ const LeadDetailsPage = () => {
   
   const fullName = `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || "بدون اسم";
   
-  // Handlers for form submissions
   const handleEditSuccess = (updatedLead?: Lead) => {
     setIsEditDialogOpen(false);
     if (updatedLead) {
@@ -171,7 +164,6 @@ const LeadDetailsPage = () => {
     }
   };
   
-  // Helper function to get priority badge color
   const getPriorityBadgeColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -185,7 +177,6 @@ const LeadDetailsPage = () => {
     }
   };
   
-  // Helper function to get status badge color for tasks
   const getTaskStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'completed':
@@ -195,12 +186,12 @@ const LeadDetailsPage = () => {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'cancelled':
+        return 'bg-gray-100 text-gray-800 border-gray-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
   
-  // Helper function to get status badge color for appointments
   const getAppointmentStatusBadgeColor = (status: string) => {
     switch (status) {
       case 'scheduled':
@@ -216,7 +207,6 @@ const LeadDetailsPage = () => {
     }
   };
   
-  // Helper function to format date with time
   const formatDateTime = (dateString: string) => {
     try {
       return format(new Date(dateString), 'yyyy/MM/dd HH:mm', { locale: ar });
@@ -225,7 +215,6 @@ const LeadDetailsPage = () => {
     }
   };
   
-  // Helper function to format date only
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), 'yyyy/MM/dd', { locale: ar });
@@ -237,7 +226,6 @@ const LeadDetailsPage = () => {
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Button 
@@ -288,9 +276,7 @@ const LeadDetailsPage = () => {
           </div>
         </div>
         
-        {/* Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Lead Details */}
           <div className="lg:col-span-2">
             <Card>
               <CardHeader>
@@ -402,7 +388,6 @@ const LeadDetailsPage = () => {
               </CardContent>
             </Card>
             
-            {/* Activities, Tasks, Appointments */}
             <Tabs defaultValue="activities" className="mt-6">
               <TabsList className="mb-4">
                 <TabsTrigger value="activities">الأنشطة</TabsTrigger>
@@ -410,7 +395,6 @@ const LeadDetailsPage = () => {
                 <TabsTrigger value="appointments">المواعيد</TabsTrigger>
               </TabsList>
               
-              {/* Activities Tab */}
               <TabsContent value="activities">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -483,7 +467,6 @@ const LeadDetailsPage = () => {
                 </Card>
               </TabsContent>
               
-              {/* Tasks Tab */}
               <TabsContent value="tasks">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -555,7 +538,6 @@ const LeadDetailsPage = () => {
                 </Card>
               </TabsContent>
               
-              {/* Appointments Tab */}
               <TabsContent value="appointments">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
@@ -630,9 +612,7 @@ const LeadDetailsPage = () => {
             </Tabs>
           </div>
           
-          {/* Right Column - Summary */}
           <div>
-            {/* Lead Summary Card */}
             <Card>
               <CardHeader>
                 <CardTitle>ملخص العميل</CardTitle>
@@ -707,7 +687,6 @@ const LeadDetailsPage = () => {
               </CardContent>
             </Card>
             
-            {/* Upcoming Events Card */}
             <Card className="mt-6">
               <CardHeader>
                 <CardTitle>الأحداث القادمة</CardTitle>
@@ -760,7 +739,6 @@ const LeadDetailsPage = () => {
         </div>
       </div>
       
-      {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -778,7 +756,6 @@ const LeadDetailsPage = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Activity Dialog */}
       <Dialog open={isActivityDialogOpen} onOpenChange={setIsActivityDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -792,7 +769,6 @@ const LeadDetailsPage = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Task Dialog */}
       <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -806,7 +782,6 @@ const LeadDetailsPage = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Appointment Dialog */}
       <Dialog open={isAppointmentDialogOpen} onOpenChange={setIsAppointmentDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -820,7 +795,6 @@ const LeadDetailsPage = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
