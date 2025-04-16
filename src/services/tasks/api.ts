@@ -24,26 +24,31 @@ export async function getTasks(filters: Record<string, any> = {}): Promise<Task[
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
       // Use explicit typing to avoid deep inference
-      let query = supabase.from('tasks').select('*');
+      const query = supabase.from('tasks');
+      
+      // Explicitly typed selection to avoid excessive type instantiation
+      const selection = query.select('*');
       
       // تطبيق الفلاتر
+      let filteredQuery = selection;
+      
       if (filters.status) {
-        query = query.eq('status', filters.status);
+        filteredQuery = filteredQuery.eq('status', filters.status);
       }
       
       if (filters.priority) {
-        query = query.eq('priority', filters.priority);
+        filteredQuery = filteredQuery.eq('priority', filters.priority);
       }
       
       // فرز حسب تاريخ الاستحقاق
-      query = query.order('due_date', { ascending: true });
+      filteredQuery = filteredQuery.order('due_date', { ascending: true });
       
       // فلتر بمرفق إذا تم توفيره
       if (filters.lead_id) {
-        query = query.eq('lead_id', filters.lead_id);
+        filteredQuery = filteredQuery.eq('lead_id', filters.lead_id);
       }
       
-      const { data, error } = await query;
+      const { data, error } = await filteredQuery;
       
       if (error) {
         console.error('Error fetching tasks:', error);
