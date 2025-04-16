@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getLead, updateLead, deleteLead, Lead, getLeadActivities, LeadActivity, completeLeadActivity } from '@/services/leads';
+import { getLead, updateLead, deleteLead, Lead, getLeadActivities, LeadActivity, completeLeadActivity, deleteLeadActivity } from '@/services/leads';
 import { getTasks, Task, updateTask, deleteTask } from '@/services/tasks';
 import { getAppointments, Appointment, updateAppointment, deleteAppointment } from '@/services/appointments';
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -21,7 +22,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Loader2, ArrowLeft, Edit, Trash, Calendar, Mail, Phone, MapPin, Building } from 'lucide-react';
+import { 
+  Loader2, ArrowLeft, Edit, Trash, Calendar, Mail, Phone, 
+  MapPin, Building, Clock, Check, MessageSquare, FileText, 
+  TicketIcon, Users, ChevronRight, Globe, Briefcase
+} from 'lucide-react';
 import { getStageColorClass } from '@/services/leads/utils';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -32,6 +37,7 @@ import TaskForm from '@/components/leads/TaskForm';
 import AppointmentForm from '@/components/leads/AppointmentForm';
 import LeadTimeline from '@/components/leads/LeadTimeline';
 import MobileOptimizedContainer from '@/components/ui/mobile-optimized-container';
+import { Link } from 'react-router-dom';
 
 const LeadDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -43,10 +49,31 @@ const LeadDetailsPage = () => {
   const [isActivityDialogOpen, setIsActivityDialogOpen] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [isAppointmentDialogOpen, setIsAppointmentDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("timeline");
+  const [activeTab, setActiveTab] = useState("overview");
   const [itemToEdit, setItemToEdit] = useState<any>(null);
   const [editType, setEditType] = useState<string | null>(null);
 
+  // Log view activity when the component mounts
+  useEffect(() => {
+    if (id) {
+      // Log that the lead was viewed
+      const logViewActivity = async () => {
+        try {
+          await addLeadActivity({
+            lead_id: id,
+            type: 'note',
+            description: 'تم عرض صفحة العميل المحتمل'
+          });
+        } catch (error) {
+          console.error("Error logging view activity:", error);
+        }
+      };
+      
+      logViewActivity();
+    }
+  }, [id]);
+
+  // Fetch lead data
   const { 
     data: lead,
     isLoading, 
@@ -58,6 +85,7 @@ const LeadDetailsPage = () => {
     enabled: !!id,
   });
   
+  // Fetch related activities
   const {
     data: activities = [],
     isLoading: loadingActivities,
@@ -68,6 +96,7 @@ const LeadDetailsPage = () => {
     enabled: !!id
   });
   
+  // Fetch related tasks
   const {
     data: tasks = [],
     isLoading: loadingTasks,
@@ -78,6 +107,7 @@ const LeadDetailsPage = () => {
     enabled: !!id
   });
   
+  // Fetch related appointments
   const {
     data: appointments = [],
     isLoading: loadingAppointments,
@@ -88,6 +118,7 @@ const LeadDetailsPage = () => {
     enabled: !!id
   });
 
+  // Delete lead mutation
   const deleteMutation = useMutation({
     mutationFn: deleteLead,
     onSuccess: () => {
@@ -100,6 +131,7 @@ const LeadDetailsPage = () => {
     },
   });
 
+  // Complete activity mutation
   const completeActivityMutation = useMutation({
     mutationFn: completeLeadActivity,
     onSuccess: () => {
@@ -112,6 +144,7 @@ const LeadDetailsPage = () => {
     }
   });
 
+  // Update task status mutation
   const taskCompletionMutation = useMutation({
     mutationFn: (taskId: string) => updateTask(taskId, { status: 'completed' }),
     onSuccess: () => {
@@ -124,6 +157,7 @@ const LeadDetailsPage = () => {
     }
   });
 
+  // Update appointment status mutation
   const appointmentCompletionMutation = useMutation({
     mutationFn: (appointmentId: string) => updateAppointment(appointmentId, { status: 'completed' }),
     onSuccess: () => {
@@ -136,16 +170,9 @@ const LeadDetailsPage = () => {
     }
   });
 
+  // Delete activity mutation
   const deleteActivityMutation = useMutation({
-    mutationFn: (activityId: string) => {
-      return fetch(`https://fpbuirtdlxwwfghlmqmi.supabase.co/rest/v1/lead_activities?id=eq.${activityId}`, {
-        method: 'DELETE',
-        headers: {
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwYnVpcnRkbHh3d2ZnaGxtcW1pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0NTc1MjAsImV4cCI6MjA2MDAzMzUyMH0.t15pPlefwCN9LhEzZOJXpPqXc5RE9oBhEVlZiyuNVgQ',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwYnVpcnRkbHh3d2ZnaGxtcW1pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0NTc1MjAsImV4cCI6MjA2MDAzMzUyMH0.t15pPlefwCN9LhEzZOJXpPqXc5RE9oBhEVlZiyuNVgQ'
-        }
-      });
-    },
+    mutationFn: deleteLeadActivity,
     onSuccess: () => {
       refetchActivities();
       toast.success('تم حذف النشاط بنجاح');
@@ -156,6 +183,7 @@ const LeadDetailsPage = () => {
     }
   });
 
+  // Delete task mutation
   const deleteTaskMutation = useMutation({
     mutationFn: deleteTask,
     onSuccess: () => {
@@ -168,6 +196,7 @@ const LeadDetailsPage = () => {
     }
   });
 
+  // Delete appointment mutation
   const deleteAppointmentMutation = useMutation({
     mutationFn: deleteAppointment,
     onSuccess: () => {
@@ -179,6 +208,36 @@ const LeadDetailsPage = () => {
       toast.error('فشل في حذف الموعد');
     }
   });
+
+  // Update lead status mutation
+  const updateLeadStatusMutation = useMutation({
+    mutationFn: (newStatus: string) => {
+      if (!lead) throw new Error("Lead not found");
+      return updateLead({ ...lead, status: newStatus });
+    },
+    onSuccess: () => {
+      refetch();
+      toast.success('تم تحديث حالة العميل المحتمل بنجاح');
+    },
+    onError: (error) => {
+      console.error('Error updating lead status:', error);
+      toast.error('فشل في تحديث حالة العميل المحتمل');
+    }
+  });
+
+  // Function to add lead activity
+  const addLeadActivity = async (activityData: Partial<LeadActivity>) => {
+    try {
+      // Import dynamically to avoid circular dependencies
+      const { addLeadActivity } = await import('@/services/leads/leadActivities');
+      const result = await addLeadActivity(activityData);
+      refetchActivities();
+      return result;
+    } catch (error) {
+      console.error("Error adding activity:", error);
+      throw error;
+    }
+  };
 
   if (isLoading) {
     return (
@@ -286,6 +345,10 @@ const LeadDetailsPage = () => {
     }
   };
 
+  const handleStatusChange = (newStatus: string) => {
+    updateLeadStatusMutation.mutate(newStatus);
+  };
+
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), 'yyyy/MM/dd', { locale: ar });
@@ -293,10 +356,30 @@ const LeadDetailsPage = () => {
       return 'تاريخ غير صالح';
     }
   };
+
+  // Combine all timeline items
+  const allTimelineItems = [
+    ...activities.map(activity => ({
+      ...activity,
+      itemType: 'activity',
+      timestamp: activity.created_at
+    })),
+    ...tasks.map(task => ({
+      ...task,
+      itemType: 'task',
+      timestamp: task.created_at || ''
+    })),
+    ...appointments.map(appointment => ({
+      ...appointment,
+      itemType: 'appointment',
+      timestamp: appointment.created_at || ''
+    }))
+  ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   
   return (
     <DashboardLayout>
-      <div className="flex flex-col gap-6">
+      {/* Sticky Header */}
+      <div className="sticky top-0 z-10 bg-background border-b pb-2 mb-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Button 
@@ -313,6 +396,25 @@ const LeadDetailsPage = () => {
             </Badge>
           </div>
           <div className="flex gap-2 flex-wrap">
+            <div className="flex items-center">
+              <Select 
+                defaultValue={lead.status || lead.stage || 'جديد'}
+                onValueChange={handleStatusChange}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="تغيير الحالة" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="جديد">جديد</SelectItem>
+                  <SelectItem value="مؤهل">مؤهل</SelectItem>
+                  <SelectItem value="اتصال">اتصال</SelectItem>
+                  <SelectItem value="مهتم">مهتم</SelectItem>
+                  <SelectItem value="تفاوض">تفاوض</SelectItem>
+                  <SelectItem value="مغلق">مغلق</SelectItem>
+                  <SelectItem value="خسارة">خسارة</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <Button 
               variant="outline" 
               onClick={() => {
@@ -321,7 +423,7 @@ const LeadDetailsPage = () => {
                 setIsActivityDialogOpen(true);
               }}
             >
-              إضافة نشاط
+              <MessageSquare className="mr-2 h-4 w-4" /> إضافة نشاط
             </Button>
             <Button
               variant="outline"
@@ -331,7 +433,7 @@ const LeadDetailsPage = () => {
                 setIsTaskDialogOpen(true);
               }}
             >
-              إضافة مهمة
+              <Check className="mr-2 h-4 w-4" /> إضافة مهمة
             </Button>
             <Button
               variant="outline"
@@ -341,7 +443,7 @@ const LeadDetailsPage = () => {
                 setIsAppointmentDialogOpen(true);
               }}
             >
-              إضافة موعد
+              <Calendar className="mr-2 h-4 w-4" /> إضافة موعد
             </Button>
             <Button onClick={() => setIsEditDialogOpen(true)}>
               <Edit className="mr-2 h-4 w-4" />
@@ -356,280 +458,800 @@ const LeadDetailsPage = () => {
             </Button>
           </div>
         </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>معلومات العميل المحتمل</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Tabs defaultValue="details" value={activeTab} onValueChange={setActiveTab}>
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="timeline">الخط الزمني</TabsTrigger>
-                    <TabsTrigger value="details">التفاصيل الشخصية</TabsTrigger>
-                    <TabsTrigger value="company">معلومات الشركة</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="timeline">
-                    <LeadTimeline 
-                      activities={activities}
-                      tasks={tasks}
-                      appointments={appointments}
-                      isLoading={loadingActivities || loadingTasks || loadingAppointments}
-                      onEdit={handleTimelineEdit}
-                      onDelete={handleTimelineDelete}
-                      onComplete={handleTimelineComplete}
-                    />
-                  </TabsContent>
-                  
-                  <TabsContent value="details" className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <p className="text-muted-foreground text-sm">الاسم الأول</p>
-                        <p className="font-medium">{lead.first_name || '-'}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-muted-foreground text-sm">اسم العائلة</p>
-                        <p className="font-medium">{lead.last_name || '-'}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-muted-foreground text-sm">البريد الإلكتروني</p>
-                        <div className="flex items-center gap-1">
-                          <Mail className="h-4 w-4 text-muted-foreground" />
-                          <p className="font-medium">{lead.email || '-'}</p>
+      </div>
+
+      <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="mb-4 w-full justify-start overflow-x-auto">
+          <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
+          <TabsTrigger value="timeline">الخط الزمني</TabsTrigger>
+          <TabsTrigger value="tasks">المهام</TabsTrigger>
+          <TabsTrigger value="appointments">المواعيد</TabsTrigger>
+          <TabsTrigger value="notes">الملاحظات</TabsTrigger>
+          <TabsTrigger value="related">العلاقات</TabsTrigger>
+        </TabsList>
+
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>معلومات العميل المحتمل</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="text-lg font-semibold mb-3">معلومات شخصية</h3>
+                        <div className="grid grid-cols-1 gap-3">
+                          <div className="flex flex-col">
+                            <span className="text-sm text-muted-foreground">الاسم الكامل</span>
+                            <span className="font-medium">{fullName}</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm text-muted-foreground">البريد الإلكتروني</span>
+                            <div className="flex items-center gap-1">
+                              <Mail className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">{lead.email || '-'}</span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm text-muted-foreground">رقم الهاتف</span>
+                            <div className="flex items-center gap-1">
+                              <Phone className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">{lead.phone || '-'}</span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm text-muted-foreground">الدولة</span>
+                            <div className="flex items-center gap-1">
+                              <MapPin className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">{lead.country || '-'}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-muted-foreground text-sm">رقم الهاتف</p>
-                        <div className="flex items-center gap-1">
-                          <Phone className="h-4 w-4 text-muted-foreground" />
-                          <p className="font-medium">{lead.phone || '-'}</p>
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-muted-foreground text-sm">الدولة</p>
-                        <div className="flex items-center gap-1">
-                          <MapPin className="h-4 w-4 text-muted-foreground" />
-                          <p className="font-medium">{lead.country || '-'}</p>
-                        </div>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-muted-foreground text-sm">المسؤول</p>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={lead.owner?.avatar || "/placeholder.svg"} />
-                            <AvatarFallback>{lead.owner?.initials || "؟"}</AvatarFallback>
-                          </Avatar>
-                          <p className="font-medium">{lead.owner?.name || 'غير مخصص'}</p>
+
+                      <div>
+                        <h3 className="text-lg font-semibold mb-3">معلومات المبيعات</h3>
+                        <div className="grid grid-cols-1 gap-3">
+                          <div className="flex flex-col">
+                            <span className="text-sm text-muted-foreground">المرحلة</span>
+                            <Badge className={`w-fit ${getStageColorClass(lead.status || lead.stage || 'جديد')}`}>
+                              {lead.status || lead.stage || 'جديد'}
+                            </Badge>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm text-muted-foreground">المصدر</span>
+                            <span className="font-medium">{lead.source || '-'}</span>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm text-muted-foreground">المسؤول</span>
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage src={lead.owner?.avatar || "/placeholder.svg"} />
+                                <AvatarFallback>{lead.owner?.initials || "؟"}</AvatarFallback>
+                              </Avatar>
+                              <span className="font-medium">{lead.owner?.name || 'غير مخصص'}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="company" className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <p className="text-muted-foreground text-sm">اسم الشركة</p>
-                        <div className="flex items-center gap-1">
-                          <Building className="h-4 w-4 text-muted-foreground" />
-                          <p className="font-medium">{lead.company || '-'}</p>
+
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="text-lg font-semibold mb-3">معلومات الشركة</h3>
+                        <div className="grid grid-cols-1 gap-3">
+                          <div className="flex flex-col">
+                            <span className="text-sm text-muted-foreground">اسم الشركة</span>
+                            <div className="flex items-center gap-1">
+                              <Building className="h-4 w-4 text-muted-foreground" />
+                              {lead.company ? (
+                                <Link 
+                                  to={`/dashboard/companies/${lead.company}`}
+                                  className="font-medium text-primary hover:underline flex items-center"
+                                >
+                                  {lead.company}
+                                  <ChevronRight className="h-4 w-4 mr-1" />
+                                </Link>
+                              ) : (
+                                <span className="font-medium">-</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm text-muted-foreground">المنصب</span>
+                            <div className="flex items-center gap-1">
+                              <Briefcase className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">{lead.position || '-'}</span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm text-muted-foreground">القطاع</span>
+                            <div className="flex items-center gap-1">
+                              <Globe className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">{lead.industry || '-'}</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-muted-foreground text-sm">المنصب</p>
-                        <p className="font-medium">{lead.position || '-'}</p>
+
+                      <div>
+                        <h3 className="text-lg font-semibold mb-3">معلومات التواريخ</h3>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="flex flex-col">
+                            <span className="text-sm text-muted-foreground">تاريخ الإنشاء</span>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">{formatDate(lead.created_at)}</span>
+                            </div>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-sm text-muted-foreground">آخر تحديث</span>
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">{formatDate(lead.updated_at)}</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-muted-foreground text-sm">القطاع</p>
-                        <p className="font-medium">{lead.industry || '-'}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-muted-foreground text-sm">المصدر</p>
-                        <p className="font-medium">{lead.source || '-'}</p>
-                      </div>
-                      <div className="space-y-1 col-span-2">
-                        <p className="text-muted-foreground text-sm">ملاحظات</p>
-                        <p className="whitespace-pre-wrap">{lead.notes || 'لا توجد ملاحظات'}</p>
+
+                      <div>
+                        <h3 className="text-lg font-semibold mb-3">ملاحظات</h3>
+                        <div className="bg-muted/50 p-3 rounded-md">
+                          <p className="whitespace-pre-wrap">{lead.notes || 'لا توجد ملاحظات'}</p>
+                        </div>
                       </div>
                     </div>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          </div>
-          
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>ملخص العميل</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex justify-center mb-4">
-                    <Avatar className="h-24 w-24">
-                      <AvatarImage src="/placeholder.svg" />
-                      <AvatarFallback className="text-2xl">
-                        {lead.first_name?.[0] || ''}
-                        {lead.last_name?.[0] || ''}
-                      </AvatarFallback>
-                    </Avatar>
                   </div>
-                  
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md text-center">
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>ملخص الأنشطة</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-muted/50 p-3 rounded-md text-center">
                       <p className="text-xs text-muted-foreground">الأنشطة</p>
                       <p className="text-xl font-bold">{activities.length || 0}</p>
                     </div>
-                    <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md text-center">
+                    <div className="bg-muted/50 p-3 rounded-md text-center">
                       <p className="text-xs text-muted-foreground">المهام</p>
                       <p className="text-xl font-bold">{tasks.length || 0}</p>
                     </div>
-                    <div className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md text-center">
+                    <div className="bg-muted/50 p-3 rounded-md text-center">
                       <p className="text-xs text-muted-foreground">المواعيد</p>
                       <p className="text-xl font-bold">{appointments.length || 0}</p>
                     </div>
                   </div>
-                  
-                  <div className="pt-3 border-t">
-                    <h4 className="text-sm font-medium mb-2">معلومات التواصل</h4>
-                    {lead.email && (
-                      <div className="flex items-center gap-2 mb-2">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <a href={`mailto:${lead.email}`} className="text-sm hover:underline">{lead.email}</a>
-                      </div>
-                    )}
-                    {lead.phone && (
-                      <div className="flex items-center gap-2 mb-2">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <a href={`tel:${lead.phone}`} className="text-sm hover:underline">{lead.phone}</a>
-                      </div>
-                    )}
-                    {lead.company && (
-                      <div className="flex items-center gap-2 mb-2">
-                        <Building className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{lead.company}</span>
-                      </div>
-                    )}
-                  </div>
+                </CardContent>
+              </Card>
 
-                  <div className="pt-3 border-t">
-                    <h4 className="text-sm font-medium mb-2">معلومات التواريخ</h4>
-                    <div className="grid grid-cols-2 gap-y-2 text-sm">
-                      <span className="text-muted-foreground">تاريخ الإنشاء:</span>
-                      <span>{formatDate(lead.created_at)}</span>
-                      <span className="text-muted-foreground">آخر تحديث:</span>
-                      <span>{formatDate(lead.updated_at)}</span>
+              <Card>
+                <CardHeader>
+                  <CardTitle>المواعيد القادمة</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {loadingAppointments ? (
+                    <div className="flex justify-center items-center py-4">
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      <span className="mr-2 text-sm">جاري التحميل...</span>
+                    </div>
+                  ) : (
+                    <>
+                      {appointments
+                        .filter(app => new Date(app.start_time) > new Date() && app.status !== 'cancelled')
+                        .slice(0, 3)
+                        .map(appointment => (
+                          <div key={appointment.id} className="border-b pb-3 mb-3 last:mb-0 last:border-0">
+                            <h4 className="font-medium">{appointment.title}</h4>
+                            <div className="flex items-center gap-1 mt-1">
+                              <Calendar className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-xs">{format(new Date(appointment.start_time), 'yyyy/MM/dd HH:mm', { locale: ar })}</span>
+                            </div>
+                          </div>
+                        ))}
+                      
+                      {(!appointments.length || !appointments.filter(app => new Date(app.start_time) > new Date() && app.status !== 'cancelled').length) && (
+                        <p className="text-center text-muted-foreground py-2">لا توجد مواعيد قادمة</p>
+                      )}
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>المهام المعلقة</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {loadingTasks ? (
+                    <div className="flex justify-center items-center py-4">
+                      <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                      <span className="mr-2 text-sm">جاري التحميل...</span>
+                    </div>
+                  ) : (
+                    <>
+                      {tasks
+                        .filter(task => task.status !== 'completed' && task.status !== 'cancelled')
+                        .slice(0, 3)
+                        .map(task => (
+                          <div key={task.id} className="border-b pb-3 mb-3 last:mb-0 last:border-0">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h4 className="font-medium">{task.title}</h4>
+                                <div className="flex items-center gap-1 mt-1">
+                                  {task.priority === 'high' && <Badge variant="destructive">عالية</Badge>}
+                                  {task.priority === 'medium' && <Badge variant="secondary">متوسطة</Badge>}
+                                  {task.priority === 'low' && <Badge variant="outline">منخفضة</Badge>}
+                                  {task.due_date && (
+                                    <span className="text-xs flex items-center text-muted-foreground">
+                                      <Clock className="h-3 w-3 mr-1" />
+                                      {formatDate(task.due_date)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-7 w-7 p-0" 
+                                onClick={() => handleTimelineComplete('task', task.id as string)}
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      
+                      {(!tasks.length || !tasks.filter(task => task.status !== 'completed' && task.status !== 'cancelled').length) && (
+                        <p className="text-center text-muted-foreground py-2">لا توجد مهام معلقة</p>
+                      )}
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Timeline Tab */}
+        <TabsContent value="timeline" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>الخط الزمني</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <LeadTimeline 
+                activities={activities}
+                tasks={tasks}
+                appointments={appointments}
+                isLoading={loadingActivities || loadingTasks || loadingAppointments}
+                onEdit={handleTimelineEdit}
+                onDelete={handleTimelineDelete}
+                onComplete={handleTimelineComplete}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tasks Tab */}
+        <TabsContent value="tasks" className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>المهام</CardTitle>
+              <Button 
+                onClick={() => {
+                  setItemToEdit(null);
+                  setEditType(null);
+                  setIsTaskDialogOpen(true);
+                }}
+                size="sm"
+              >
+                <Plus className="mr-1 h-4 w-4" />
+                مهمة جديدة
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {loadingTasks ? (
+                <div className="flex justify-center items-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <span className="mr-2">جاري التحميل...</span>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div>
+                      <h3 className="text-sm font-medium mb-3 border-b pb-2">معلقة</h3>
+                      <div className="space-y-2">
+                        {tasks
+                          .filter(task => task.status === 'pending')
+                          .map(task => (
+                            <div 
+                              key={task.id} 
+                              className="bg-muted/50 p-3 rounded-md"
+                            >
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h4 className="font-medium">{task.title}</h4>
+                                  {task.description && (
+                                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{task.description}</p>
+                                  )}
+                                  <div className="flex items-center gap-1 mt-1">
+                                    {task.priority === 'high' && <Badge variant="destructive">عالية</Badge>}
+                                    {task.priority === 'medium' && <Badge variant="secondary">متوسطة</Badge>}
+                                    {task.priority === 'low' && <Badge variant="outline">منخفضة</Badge>}
+                                    {task.due_date && (
+                                      <span className="text-xs flex items-center text-muted-foreground">
+                                        <Clock className="h-3 w-3 mr-1" />
+                                        {formatDate(task.due_date)}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex">
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    className="h-7 w-7 p-0" 
+                                    onClick={() => handleTimelineEdit('task', task)}
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    className="h-7 w-7 p-0" 
+                                    onClick={() => handleTimelineComplete('task', task.id as string)}
+                                  >
+                                    <Check className="h-3 w-3" />
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    className="h-7 w-7 p-0 text-destructive"
+                                    onClick={() => handleTimelineDelete('task', task.id as string)}
+                                  >
+                                    <Trash className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        {!tasks.filter(task => task.status === 'pending').length && (
+                          <p className="text-center text-muted-foreground py-2">لا توجد مهام معلقة</p>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium mb-3 border-b pb-2">قيد التنفيذ</h3>
+                      <div className="space-y-2">
+                        {tasks
+                          .filter(task => task.status === 'in_progress')
+                          .map(task => (
+                            <div 
+                              key={task.id} 
+                              className="bg-muted/50 p-3 rounded-md"
+                            >
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h4 className="font-medium">{task.title}</h4>
+                                  {task.description && (
+                                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{task.description}</p>
+                                  )}
+                                  <div className="flex items-center gap-1 mt-1">
+                                    {task.priority === 'high' && <Badge variant="destructive">عالية</Badge>}
+                                    {task.priority === 'medium' && <Badge variant="secondary">متوسطة</Badge>}
+                                    {task.priority === 'low' && <Badge variant="outline">منخفضة</Badge>}
+                                    {task.due_date && (
+                                      <span className="text-xs flex items-center text-muted-foreground">
+                                        <Clock className="h-3 w-3 mr-1" />
+                                        {formatDate(task.due_date)}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex">
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    className="h-7 w-7 p-0" 
+                                    onClick={() => handleTimelineEdit('task', task)}
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    className="h-7 w-7 p-0" 
+                                    onClick={() => handleTimelineComplete('task', task.id as string)}
+                                  >
+                                    <Check className="h-3 w-3" />
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    className="h-7 w-7 p-0 text-destructive"
+                                    onClick={() => handleTimelineDelete('task', task.id as string)}
+                                  >
+                                    <Trash className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        {!tasks.filter(task => task.status === 'in_progress').length && (
+                          <p className="text-center text-muted-foreground py-2">لا توجد مهام قيد التنفيذ</p>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium mb-3 border-b pb-2">مكتملة</h3>
+                      <div className="space-y-2">
+                        {tasks
+                          .filter(task => task.status === 'completed')
+                          .map(task => (
+                            <div 
+                              key={task.id} 
+                              className="bg-muted/50 p-3 rounded-md opacity-70"
+                            >
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h4 className="font-medium line-through">{task.title}</h4>
+                                  {task.description && (
+                                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{task.description}</p>
+                                  )}
+                                  <div className="flex items-center gap-1 mt-1">
+                                    {task.priority === 'high' && <Badge variant="destructive">عالية</Badge>}
+                                    {task.priority === 'medium' && <Badge variant="secondary">متوسطة</Badge>}
+                                    {task.priority === 'low' && <Badge variant="outline">منخفضة</Badge>}
+                                  </div>
+                                </div>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  className="h-7 w-7 p-0 text-destructive"
+                                  onClick={() => handleTimelineDelete('task', task.id as string)}
+                                >
+                                  <Trash className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        {!tasks.filter(task => task.status === 'completed').length && (
+                          <p className="text-center text-muted-foreground py-2">لا توجد مهام مكتملة</p>
+                        )}
+                      </div>
                     </div>
                   </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-                  <div className="pt-3 border-t">
-                    <h4 className="text-sm font-medium mb-2">العمليات السريعة</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button
-                        variant="outline"
-                        className="w-full"
+        {/* Appointments Tab */}
+        <TabsContent value="appointments" className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>المواعيد</CardTitle>
+              <Button 
+                onClick={() => {
+                  setItemToEdit(null);
+                  setEditType(null);
+                  setIsAppointmentDialogOpen(true);
+                }}
+                size="sm"
+              >
+                <Plus className="mr-1 h-4 w-4" />
+                موعد جديد
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {loadingAppointments ? (
+                <div className="flex justify-center items-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <span className="mr-2">جاري التحميل...</span>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div>
+                      <h3 className="text-sm font-medium mb-3 border-b pb-2">المواعيد القادمة</h3>
+                      <div className="space-y-3">
+                        {appointments
+                          .filter(app => new Date(app.start_time) > new Date() && app.status === 'scheduled')
+                          .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+                          .map(appointment => (
+                            <div 
+                              key={appointment.id} 
+                              className="bg-muted/50 p-3 rounded-md"
+                            >
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h4 className="font-medium">{appointment.title}</h4>
+                                  {appointment.description && (
+                                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{appointment.description}</p>
+                                  )}
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <div className="flex items-center">
+                                      <Calendar className="h-3 w-3 mr-1" />
+                                      <span className="text-xs">{format(new Date(appointment.start_time), 'yyyy/MM/dd', { locale: ar })}</span>
+                                    </div>
+                                    <div className="flex items-center">
+                                      <Clock className="h-3 w-3 mr-1" />
+                                      <span className="text-xs">
+                                        {format(new Date(appointment.start_time), 'HH:mm', { locale: ar })} - 
+                                        {format(new Date(appointment.end_time), 'HH:mm', { locale: ar })}
+                                      </span>
+                                    </div>
+                                    {appointment.location && (
+                                      <div className="flex items-center">
+                                        <MapPin className="h-3 w-3 mr-1" />
+                                        <span className="text-xs">{appointment.location}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex">
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    className="h-7 w-7 p-0" 
+                                    onClick={() => handleTimelineEdit('appointment', appointment)}
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    className="h-7 w-7 p-0" 
+                                    onClick={() => handleTimelineComplete('appointment', appointment.id)}
+                                  >
+                                    <Check className="h-3 w-3" />
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="ghost" 
+                                    className="h-7 w-7 p-0 text-destructive"
+                                    onClick={() => handleTimelineDelete('appointment', appointment.id)}
+                                  >
+                                    <Trash className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        {!appointments.filter(app => new Date(app.start_time) > new Date() && app.status === 'scheduled').length && (
+                          <p className="text-center text-muted-foreground py-2">لا توجد مواعيد قادمة</p>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium mb-3 border-b pb-2">المواعيد السابقة</h3>
+                      <div className="space-y-3">
+                        {appointments
+                          .filter(app => new Date(app.start_time) < new Date() || app.status === 'completed')
+                          .sort((a, b) => new Date(b.start_time).getTime() - new Date(a.start_time).getTime())
+                          .map(appointment => (
+                            <div 
+                              key={appointment.id} 
+                              className="bg-muted/50 p-3 rounded-md opacity-70"
+                            >
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <h4 className="font-medium">{appointment.title}</h4>
+                                  {appointment.description && (
+                                    <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{appointment.description}</p>
+                                  )}
+                                  <div className="flex items-center gap-2 mt-2">
+                                    <div className="flex items-center">
+                                      <Calendar className="h-3 w-3 mr-1" />
+                                      <span className="text-xs">{format(new Date(appointment.start_time), 'yyyy/MM/dd', { locale: ar })}</span>
+                                    </div>
+                                    <div className="flex items-center">
+                                      <Clock className="h-3 w-3 mr-1" />
+                                      <span className="text-xs">
+                                        {format(new Date(appointment.start_time), 'HH:mm', { locale: ar })} - 
+                                        {format(new Date(appointment.end_time), 'HH:mm', { locale: ar })}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <Button 
+                                  size="sm" 
+                                  variant="ghost" 
+                                  className="h-7 w-7 p-0 text-destructive"
+                                  onClick={() => handleTimelineDelete('appointment', appointment.id)}
+                                >
+                                  <Trash className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        {!appointments.filter(app => new Date(app.start_time) < new Date() || app.status === 'completed').length && (
+                          <p className="text-center text-muted-foreground py-2">لا توجد مواعيد سابقة</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Notes Tab */}
+        <TabsContent value="notes" className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>الملاحظات</CardTitle>
+              <Button 
+                onClick={() => {
+                  setItemToEdit(null);
+                  setEditType(null);
+                  setIsActivityDialogOpen(true);
+                }}
+                size="sm"
+              >
+                <Plus className="mr-1 h-4 w-4" />
+                ملاحظة جديدة
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {loadingActivities ? (
+                <div className="flex justify-center items-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <span className="mr-2">جاري التحميل...</span>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {activities
+                    .filter(activity => activity.type === 'note')
+                    .map(activity => {
+                      const creatorName = typeof activity.created_by === 'string' 
+                        ? activity.profiles?.first_name ? `${activity.profiles.first_name} ${activity.profiles.last_name || ''}` : 'مستخدم'
+                        : activity.created_by ? `${activity.created_by.first_name || ''} ${activity.created_by.last_name || ''}` : 'مستخدم';
+                      
+                      return (
+                        <div 
+                          key={activity.id} 
+                          className="bg-muted/50 p-4 rounded-md"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-2 w-full">
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-6 w-6">
+                                  <AvatarFallback>{creatorName?.[0] || '؟'}</AvatarFallback>
+                                </Avatar>
+                                <span className="font-medium text-sm">{creatorName}</span>
+                                <span className="text-xs text-muted-foreground">
+                                  {format(new Date(activity.created_at), 'yyyy/MM/dd HH:mm', { locale: ar })}
+                                </span>
+                              </div>
+                              <p className="text-sm whitespace-pre-wrap">{activity.description}</p>
+                            </div>
+                            <div className="flex">
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-7 w-7 p-0 text-destructive"
+                                onClick={() => handleTimelineDelete('activity', activity.id)}
+                              >
+                                <Trash className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  {!activities.filter(activity => activity.type === 'note').length && (
+                    <div className="flex flex-col items-center justify-center py-8">
+                      <FileText className="h-10 w-10 text-muted-foreground mb-2" />
+                      <p className="text-muted-foreground">لا توجد ملاحظات حتى الآن</p>
+                      <Button 
                         onClick={() => {
                           setItemToEdit(null);
                           setEditType(null);
                           setIsActivityDialogOpen(true);
                         }}
-                      >
-                        إضافة نشاط
-                      </Button>
-                      <Button
                         variant="outline"
-                        className="w-full"
-                        onClick={() => {
-                          setItemToEdit(null);
-                          setEditType(null);
-                          setIsTaskDialogOpen(true);
-                        }}
+                        className="mt-4"
                       >
-                        إضافة مهمة
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => {
-                          setItemToEdit(null);
-                          setEditType(null);
-                          setIsAppointmentDialogOpen(true);
-                        }}
-                      >
-                        إضافة موعد
-                      </Button>
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => setIsEditDialogOpen(true)}
-                      >
-                        تعديل البيانات
+                        <Plus className="mr-1 h-4 w-4" />
+                        إضافة ملاحظة
                       </Button>
                     </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Related Tab */}
+        <TabsContent value="related" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>العلاقات</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">الشركة</h3>
+                  {lead.company ? (
+                    <div className="bg-muted/50 p-4 rounded-md">
+                      <div className="flex items-center gap-2">
+                        <Building className="h-5 w-5" />
+                        <Link 
+                          to={`/dashboard/companies/${lead.company}`} 
+                          className="font-medium text-primary hover:underline"
+                        >
+                          {lead.company}
+                        </Link>
+                      </div>
+                      <div className="mt-2 flex items-center gap-2">
+                        <Briefcase className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{lead.position || 'بدون منصب'}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-muted/50 p-4 rounded-md flex justify-center items-center flex-col">
+                      <Building className="h-8 w-8 text-muted-foreground mb-2" />
+                      <p className="text-muted-foreground mb-2">لا توجد شركة مرتبطة</p>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">المسؤول</h3>
+                  {lead.assigned_to ? (
+                    <div className="bg-muted/50 p-4 rounded-md">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={lead.owner?.avatar || "/placeholder.svg"} />
+                          <AvatarFallback>{lead.owner?.initials || "؟"}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{lead.owner?.name || 'مستخدم'}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-muted/50 p-4 rounded-md flex justify-center items-center flex-col">
+                      <Users className="h-8 w-8 text-muted-foreground mb-2" />
+                      <p className="text-muted-foreground mb-2">غير مخصص لأي مسؤول</p>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">التذاكر</h3>
+                  <div className="bg-muted/50 p-4 rounded-md flex justify-center items-center flex-col">
+                    <TicketIcon className="h-8 w-8 text-muted-foreground mb-2" />
+                    <p className="text-muted-foreground mb-2">لا توجد تذاكر مرتبطة</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>الأحداث القادمة</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {loadingAppointments ? (
-                  <div className="flex justify-center py-4">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span className="mr-2 text-sm">جاري التحميل...</span>
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">الدردشات</h3>
+                  <div className="bg-muted/50 p-4 rounded-md flex justify-center items-center flex-col">
+                    <MessageSquare className="h-8 w-8 text-muted-foreground mb-2" />
+                    <p className="text-muted-foreground mb-2">لا توجد دردشات مرتبطة</p>
                   </div>
-                ) : (
-                  <div>
-                    {appointments
-                      .filter(app => new Date(app.start_time) > new Date() && app.status !== 'cancelled')
-                      .slice(0, 3)
-                      .map(appointment => (
-                        <div key={appointment.id} className="border-b pb-3 mb-3">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h4 className="text-sm font-medium">{appointment.title}</h4>
-                              <div className="flex items-center gap-1 mt-1">
-                                <Calendar className="h-3 w-3 text-muted-foreground" />
-                                <span className="text-xs">{formatDate(appointment.start_time)}</span>
-                              </div>
-                            </div>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              className="h-7"
-                              onClick={() => handleTimelineComplete('appointment', appointment.id)}
-                            >
-                              إكمال
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    
-                    {(!appointments.length || !appointments.filter(app => new Date(app.start_time) > new Date() && app.status !== 'cancelled').length) && (
-                      <p className="text-center text-sm text-muted-foreground py-2">
-                        لا توجد مواعيد قادمة
-                      </p>
-                    )}
-                    
-                    <Button variant="outline" size="sm" className="w-full mt-2" onClick={() => {
-                      setItemToEdit(null);
-                      setEditType(null);
-                      setIsAppointmentDialogOpen(true);
-                    }}>
-                      إضافة موعد جديد
-                    </Button>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
       
+      {/* Dialogs */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>

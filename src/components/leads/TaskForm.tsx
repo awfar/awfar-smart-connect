@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Task } from '@/services/tasks/types';
@@ -7,31 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { ar } from 'date-fns/locale';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export interface TaskFormProps {
   leadId: string;
@@ -47,7 +24,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
   task // The task to edit, if provided
 }) => {
   // Initialize form with the task data if it exists
-  const { register, handleSubmit, formState } = useForm({
+  const { register, handleSubmit, formState, setValue, watch } = useForm({
     defaultValues: {
       title: task?.title || '',
       description: task?.description || '',
@@ -94,7 +71,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
           placeholder="أدخل عنوان المهمة" 
           {...register("title", { required: 'العنوان مطلوب' })} 
         />
-        {formState.errors.title && <p className="text-red-500 text-sm">{formState.errors.title.message}</p>}
+        {formState.errors.title && <p className="text-red-500 text-sm">{formState.errors.title.message?.toString()}</p>}
       </div>
       
       <div>
@@ -108,8 +85,11 @@ const TaskForm: React.FC<TaskFormProps> = ({
       
       <div>
         <Label htmlFor="priority">الأولوية</Label>
-        <Select defaultValue="medium" {...register("priority")}>
-          <SelectTrigger className="w-full">
+        <Select 
+          defaultValue={watch("priority") || "medium"}
+          onValueChange={(value) => setValue("priority", value as "low" | "medium" | "high")}
+        >
+          <SelectTrigger>
             <SelectValue placeholder="اختر الأولوية" />
           </SelectTrigger>
           <SelectContent>
@@ -121,39 +101,12 @@ const TaskForm: React.FC<TaskFormProps> = ({
       </div>
 
       <div>
-        <Label>تاريخ الاستحقاق</Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className={cn(
-                "w-full justify-start text-left font-normal",
-                !watch("due_date") && "text-muted-foreground"
-              )}
-            >
-              {watch("due_date") ? (
-                format(new Date(watch("due_date")), "yyyy/MM/dd", { locale: ar })
-              ) : (
-                <span>اختر تاريخ</span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="center" side="bottom">
-            <Calendar
-              mode="single"
-              locale={ar}
-              selected={watch("due_date") ? new Date(watch("due_date")) : undefined}
-              onSelect={(date) => {
-                if (date) {
-                  const isoDate = date.toISOString().slice(0, 16);
-                  setValue("due_date", isoDate);
-                }
-              }}
-              disabled={(date) => date < new Date()}
-              initialFocus
-            />
-          </PopoverContent>
-        </Popover>
+        <Label htmlFor="due_date">تاريخ الاستحقاق</Label>
+        <Input
+          id="due_date"
+          type="datetime-local"
+          {...register("due_date")}
+        />
       </div>
       
       <div className="flex justify-end gap-2">

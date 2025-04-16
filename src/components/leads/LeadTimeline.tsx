@@ -1,57 +1,24 @@
 
-import React, { useMemo } from 'react';
-import { format } from 'date-fns';
-import { ar } from 'date-fns/locale';
+import React from 'react';
 import { LeadActivity } from '@/types/leads';
 import { Task } from '@/services/tasks/types';
 import { Appointment } from '@/services/appointments/types';
-import {
-  Calendar,
-  Clock,
-  MessageSquare,
-  CheckCircle,
-  Mail,
-  Phone,
-  MapPin,
-  FileText,
-  User,
-  MoreHorizontal,
-  Edit,
-  Trash,
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
+import { 
+  Calendar, Clock, Edit, Trash, Check, MoreVertical,
+  MessageSquare, Phone, Mail, FileText, User, RefreshCcw
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-
-// Define a unified timeline item type that can represent any activity
-interface TimelineItem {
-  id: string;
-  type: 'activity' | 'task' | 'appointment' | 'note';
-  subtype?: string;
-  title?: string;
-  description?: string;
-  date: string;
-  dueDate?: string;
-  status?: string;
-  priority?: string;
-  completed?: boolean;
-  createdBy?: {
-    id?: string;
-    name?: string;
-    avatar?: string;
-    initials?: string;
-  };
-  location?: string;
-  originalData: any; // Reference to the original data item
-}
+} from "@/components/ui/dropdown-menu";
 
 interface LeadTimelineProps {
   activities: LeadActivity[];
@@ -59,140 +26,32 @@ interface LeadTimelineProps {
   appointments: Appointment[];
   isLoading: boolean;
   onEdit?: (type: string, item: any) => void;
-  onDelete?: (type: string, itemId: string) => void;
-  onComplete?: (type: string, itemId: string) => void;
+  onDelete?: (type: string, id: string) => void;
+  onComplete?: (type: string, id: string) => void;
 }
 
-const LeadTimeline: React.FC<LeadTimelineProps> = ({
-  activities,
-  tasks,
+const LeadTimeline: React.FC<LeadTimelineProps> = ({ 
+  activities, 
+  tasks, 
   appointments,
   isLoading,
   onEdit,
   onDelete,
-  onComplete,
+  onComplete
 }) => {
-  // Convert all different items into a unified timeline format
-  const timelineItems = useMemo(() => {
-    const items: TimelineItem[] = [];
-
-    // Process activities
-    activities.forEach(activity => {
-      let createdBy;
-      if (activity.created_by) {
-        if (typeof activity.created_by === 'string') {
-          createdBy = {
-            id: activity.created_by,
-            initials: '??',
-          };
-        } else if (activity.profiles) {
-          // Fix for the type conversion error - converting profiles object to user name
-          const profiles = activity.profiles as { first_name?: string; last_name?: string };
-          createdBy = {
-            id: typeof activity.created_by === 'string' ? activity.created_by : 'unknown',
-            name: `${profiles.first_name || ''} ${profiles.last_name || ''}`.trim(),
-            initials: profiles.first_name?.[0] || '?',
-          };
-        } else if (typeof activity.created_by === 'object') {
-          const createdByObj = activity.created_by as any;
-          createdBy = {
-            id: 'unknown',
-            name: `${createdByObj.first_name || ''} ${createdByObj.last_name || ''}`.trim(),
-            initials: createdByObj.first_name?.[0] || '?',
-          };
-        }
-      }
-
-      const isNote = activity.type === 'note';
-      
-      items.push({
-        id: activity.id,
-        type: isNote ? 'note' : 'activity',
-        subtype: activity.type,
-        description: activity.description,
-        date: activity.created_at,
-        dueDate: activity.scheduled_at,
-        completed: !!activity.completed_at,
-        createdBy,
-        originalData: activity,
-      });
-    });
-
-    // Process tasks
-    tasks.forEach(task => {
-      items.push({
-        id: task.id || '',
-        type: 'task',
-        title: task.title,
-        description: task.description,
-        date: task.created_at || '',
-        dueDate: task.due_date,
-        status: task.status,
-        priority: task.priority,
-        completed: task.status === 'completed',
-        createdBy: task.assigned_to_name ? {
-          id: task.assigned_to,
-          name: task.assigned_to_name,
-          initials: task.assigned_to_name[0] || '?',
-        } : undefined,
-        originalData: task,
-      });
-    });
-
-    // Process appointments
-    appointments.forEach(appointment => {
-      items.push({
-        id: appointment.id,
-        type: 'appointment',
-        title: appointment.title,
-        description: appointment.description,
-        date: appointment.created_at || '',
-        dueDate: appointment.start_time,
-        status: appointment.status,
-        completed: appointment.status === 'completed',
-        location: appointment.location,
-        originalData: appointment,
-      });
-    });
-
-    // Sort all items by date, newest first
-    return items.sort((a, b) => {
-      // Sort by scheduled/due date if available, otherwise by created date
-      const dateA = a.dueDate || a.date;
-      const dateB = b.dueDate || b.date;
-      return new Date(dateB).getTime() - new Date(dateA).getTime();
-    });
-  }, [activities, tasks, appointments]);
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="border rounded-lg p-4">
-            <div className="flex items-center space-x-2">
-              <Skeleton className="h-10 w-10 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-[200px]" />
-                <Skeleton className="h-4 w-[150px]" />
-              </div>
-            </div>
-            <Skeleton className="h-16 w-full mt-3" />
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  if (timelineItems.length === 0) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        <MessageSquare className="mx-auto h-8 w-8 mb-2 opacity-50" />
-        <h3 className="text-lg font-medium">لا توجد أنشطة</h3>
-        <p>لم يتم تسجيل أي أنشطة أو مهام لهذا العميل بعد</p>
-      </div>
-    );
-  }
-
+  // Helper function to get creator name
+  const getCreatorName = (activity: LeadActivity) => {
+    if (typeof activity.created_by === 'string') {
+      return activity.profiles?.first_name 
+        ? `${activity.profiles.first_name} ${activity.profiles.last_name || ''}`
+        : 'مستخدم';
+    }
+    return activity.created_by 
+      ? `${activity.created_by.first_name || ''} ${activity.created_by.last_name || ''}`
+      : 'مستخدم';
+  };
+  
+  // Helper function for formatting dates
   const formatDate = (dateString: string) => {
     try {
       return format(new Date(dateString), 'yyyy/MM/dd HH:mm', { locale: ar });
@@ -200,203 +59,186 @@ const LeadTimeline: React.FC<LeadTimelineProps> = ({
       return 'تاريخ غير صالح';
     }
   };
-
-  const getTypeIcon = (item: TimelineItem) => {
-    if (item.type === 'task') return <CheckCircle className="h-5 w-5 text-blue-500" />;
-    if (item.type === 'appointment') return <Calendar className="h-5 w-5 text-green-500" />;
-    if (item.type === 'note') return <MessageSquare className="h-5 w-5 text-amber-500" />;
-    
-    // Activity subtypes
-    switch (item.subtype) {
-      case 'call': return <Phone className="h-5 w-5 text-indigo-500" />;
-      case 'email': return <Mail className="h-5 w-5 text-purple-500" />;
-      case 'meeting': return <Calendar className="h-5 w-5 text-orange-500" />;
-      case 'whatsapp': return <MessageSquare className="h-5 w-5 text-green-600" />;
-      case 'note': return <MessageSquare className="h-5 w-5 text-amber-500" />;
-      case 'update': return <Edit className="h-5 w-5 text-blue-500" />;
-      case 'create': return <FileText className="h-5 w-5 text-green-500" />;
-      case 'delete': return <Trash className="h-5 w-5 text-red-500" />;
-      default: return <FileText className="h-5 w-5 text-gray-500" />;
-    }
-  };
-
-  const getTypeBadge = (item: TimelineItem) => {
-    if (item.type === 'task') {
-      return (
-        <Badge variant={item.completed ? 'outline' : 'secondary'} className={item.completed ? 'bg-green-50 text-green-700' : ''}>
-          {item.completed ? 'مكتملة' : 'مهمة'}
-        </Badge>
-      );
-    }
-
-    if (item.type === 'appointment') {
-      let badgeClass = '';
-      let text = 'موعد';
-      
-      if (item.status === 'completed') {
-        badgeClass = 'bg-green-50 text-green-700';
-        text = 'تم الموعد';
-      } else if (item.status === 'cancelled') {
-        badgeClass = 'bg-red-50 text-red-700';
-        text = 'ملغي';
-      } else if (new Date(item.dueDate || '') < new Date()) {
-        badgeClass = 'bg-amber-50 text-amber-700';
-        text = 'فات الموعد';
-      }
-      
-      return <Badge variant="outline" className={badgeClass}>{text}</Badge>;
-    }
-
-    if (item.type === 'note') {
-      return <Badge variant="outline" className="bg-amber-50 text-amber-700">ملاحظة</Badge>;
-    }
-
-    // Regular activities
-    switch (item.subtype) {
-      case 'call': return <Badge variant="outline" className="bg-indigo-50 text-indigo-700">مكالمة</Badge>;
-      case 'email': return <Badge variant="outline" className="bg-purple-50 text-purple-700">بريد</Badge>;
-      case 'meeting': return <Badge variant="outline" className="bg-orange-50 text-orange-700">اجتماع</Badge>;
-      case 'whatsapp': return <Badge variant="outline" className="bg-green-50 text-green-700">واتساب</Badge>;
-      case 'update': return <Badge variant="outline" className="bg-blue-50 text-blue-700">تحديث</Badge>;
-      case 'create': return <Badge variant="outline" className="bg-green-50 text-green-700">إنشاء</Badge>;
-      case 'delete': return <Badge variant="outline" className="bg-red-50 text-red-700">حذف</Badge>;
-      default: return <Badge variant="outline">نشاط</Badge>;
-    }
-  };
-
-  const getPriorityBadge = (priority?: string) => {
-    if (!priority) return null;
-    
-    let badgeClass = '';
-    let text = '';
-    
-    switch (priority) {
-      case 'high':
-        badgeClass = 'bg-red-50 text-red-700';
-        text = 'عالية';
-        break;
-      case 'medium':
-        badgeClass = 'bg-amber-50 text-amber-700';
-        text = 'متوسطة';
-        break;
-      case 'low':
-        badgeClass = 'bg-green-50 text-green-700';
-        text = 'منخفضة';
-        break;
+  
+  // Helper function to get activity icon
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'note':
+        return <FileText className="h-5 w-5 text-blue-500" />;
+      case 'call':
+        return <Phone className="h-5 w-5 text-green-500" />;
+      case 'email':
+        return <Mail className="h-5 w-5 text-purple-500" />;
+      case 'meeting':
+        return <Calendar className="h-5 w-5 text-orange-500" />;
+      case 'task':
+        return <Check className="h-5 w-5 text-red-500" />;
+      case 'whatsapp':
+        return <MessageSquare className="h-5 w-5 text-green-500" />;
+      case 'update':
+        return <RefreshCcw className="h-5 w-5 text-yellow-500" />;
       default:
-        return null;
+        return <MessageSquare className="h-5 w-5 text-gray-500" />;
     }
-    
-    return <Badge variant="outline" className={badgeClass}>{text}</Badge>;
   };
-
-  const handleEdit = (item: TimelineItem) => {
-    if (onEdit) onEdit(item.type, item.originalData);
-  };
-
-  const handleDelete = (item: TimelineItem) => {
-    if (onDelete) onDelete(item.type, item.id);
-  };
-
-  const handleComplete = (item: TimelineItem) => {
-    if (onComplete) onComplete(item.type, item.id);
-  };
-
+  
+  // Combine all items into a single timeline
+  const timelineItems = [
+    ...activities.map(activity => ({
+      id: activity.id,
+      type: 'activity',
+      activityType: activity.type,
+      title: `${activity.type === 'note' ? 'ملاحظة جديدة' : activity.type === 'call' ? 'مكالمة' : 
+              activity.type === 'email' ? 'بريد إلكتروني' : activity.type === 'meeting' ? 'اجتماع' :
+              activity.type === 'task' ? 'مهمة' : activity.type === 'whatsapp' ? 'واتساب' : 'نشاط'}`,
+      description: activity.description,
+      timestamp: activity.created_at,
+      createdBy: getCreatorName(activity),
+      scheduled: activity.scheduled_at,
+      completed: activity.completed_at,
+      item: activity,
+    })),
+    ...tasks.map(task => ({
+      id: task.id as string,
+      type: 'task',
+      activityType: 'task',
+      title: `مهمة: ${task.title}`,
+      description: task.description,
+      timestamp: task.created_at || '',
+      scheduled: task.due_date,
+      createdBy: task.assigned_to_name || 'مستخدم',
+      priority: task.priority,
+      status: task.status,
+      item: task,
+    })),
+    ...appointments.map(appointment => ({
+      id: appointment.id,
+      type: 'appointment',
+      activityType: 'meeting',
+      title: `موعد: ${appointment.title}`,
+      description: appointment.description,
+      timestamp: appointment.created_at || '',
+      scheduled: appointment.start_time,
+      createdBy: '',
+      status: appointment.status,
+      location: appointment.location,
+      item: appointment,
+    })),
+  ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <span className="mr-2">جاري تحميل الخط الزمني...</span>
+      </div>
+    );
+  }
+  
+  if (timelineItems.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <Clock className="h-12 w-12 text-muted-foreground mb-4" />
+        <p className="text-muted-foreground mb-2">لا توجد أنشطة بعد</p>
+      </div>
+    );
+  }
+  
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {timelineItems.map((item) => (
         <div 
-          key={`${item.type}-${item.id}`} 
-          className={`bg-white dark:bg-gray-800 border rounded-lg p-4 shadow-sm ${
-            item.completed ? 'bg-gray-50 dark:bg-gray-900/70 border-gray-200' : ''
-          }`}
+          key={`${item.type}-${item.id}`}
+          className="bg-muted/50 p-4 rounded-md relative"
         >
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-3">
-              <div className="mt-1 bg-primary-50 dark:bg-primary-900/20 p-2 rounded-full">
-                {getTypeIcon(item)}
-              </div>
-              
-              <div className="flex-1">
-                <div className="flex flex-wrap items-center gap-2 mb-1">
-                  {getTypeBadge(item)}
-                  {item.priority && getPriorityBadge(item.priority)}
-                  
-                  {/* Show createdBy info if available */}
-                  {item.createdBy && (
-                    <div className="flex items-center gap-1">
-                      <Avatar className="h-5 w-5">
-                        <AvatarImage src={item.createdBy.avatar} />
-                        <AvatarFallback className="text-xs">{item.createdBy.initials}</AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm text-muted-foreground">
-                        {item.createdBy.name || 'مستخدم'}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Title and description */}
-                {item.title && <h4 className="font-medium mb-1">{item.title}</h4>}
-                <p className={`${item.completed ? 'text-muted-foreground' : ''} whitespace-pre-wrap`}>
-                  {item.description}
-                </p>
-                
-                {/* Date and location info */}
-                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    <span>{formatDate(item.date)}</span>
-                  </div>
-                  
-                  {item.dueDate && (
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      <span className={item.completed ? 'line-through' : ''}>
-                        {formatDate(item.dueDate)}
-                      </span>
-                    </div>
-                  )}
-                  
-                  {item.location && (
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      <span>{item.location}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
+          <div className="flex gap-3">
+            {/* Activity Icon */}
+            <div className="h-10 w-10 rounded-full bg-background flex items-center justify-center flex-shrink-0">
+              {getActivityIcon(item.activityType)}
             </div>
             
-            {/* Actions menu */}
-            <div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {!item.completed && item.type !== 'note' && (
-                    <DropdownMenuItem onClick={() => handleComplete(item)}>
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      إكمال
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onClick={() => handleEdit(item)}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    تعديل
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem 
-                    onClick={() => handleDelete(item)}
-                    className="text-red-600 focus:text-red-600"
-                  >
-                    <Trash className="mr-2 h-4 w-4" />
-                    حذف
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            {/* Content */}
+            <div className="flex-1">
+              {/* Header */}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h4 className="font-medium">{item.title}</h4>
+                  {item.status === 'completed' && <Badge variant="outline">مكتمل</Badge>}
+                  {item.priority === 'high' && <Badge variant="destructive">عالية</Badge>}
+                  {item.priority === 'medium' && <Badge variant="secondary">متوسطة</Badge>}
+                  {item.priority === 'low' && <Badge variant="outline">منخفضة</Badge>}
+                </div>
+                
+                {/* Actions */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="h-8 w-8 p-0">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {onEdit && item.type !== 'activity' && (
+                      <DropdownMenuItem onClick={() => onEdit(item.type, item.item)}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        تعديل
+                      </DropdownMenuItem>
+                    )}
+                    {onComplete && item.status !== 'completed' && (
+                      <DropdownMenuItem onClick={() => onComplete(item.type, item.id)}>
+                        <Check className="h-4 w-4 mr-2" />
+                        إكمال
+                      </DropdownMenuItem>
+                    )}
+                    {onDelete && (
+                      <DropdownMenuItem
+                        className="text-red-500 focus:text-red-500"
+                        onClick={() => onDelete(item.type, item.id)}
+                      >
+                        <Trash className="h-4 w-4 mr-2" />
+                        حذف
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              
+              {/* Description */}
+              {item.description && (
+                <p className="text-sm mt-2 whitespace-pre-wrap">{item.description}</p>
+              )}
+              
+              {/* Footer */}
+              <div className="flex flex-wrap gap-x-4 gap-y-2 mt-3 text-xs text-muted-foreground">
+                {/* Creator */}
+                {item.createdBy && (
+                  <div className="flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    <span>{item.createdBy}</span>
+                  </div>
+                )}
+                
+                {/* Created Time */}
+                <div className="flex items-center gap-1">
+                  <Clock className="h-3 w-3" />
+                  <span>{formatDate(item.timestamp)}</span>
+                </div>
+                
+                {/* Scheduled Time */}
+                {item.scheduled && (
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    <span>{formatDate(item.scheduled)}</span>
+                  </div>
+                )}
+                
+                {/* Location */}
+                {item.location && (
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    <span>{item.location}</span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -406,4 +248,3 @@ const LeadTimeline: React.FC<LeadTimelineProps> = ({
 };
 
 export default LeadTimeline;
-

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { LeadActivity } from '@/types/leads';
@@ -80,107 +81,53 @@ const ActivityForm: React.FC<ActivityFormProps> = ({
   };
 
   return (
-    <Form>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={{ ...register('type') }}
-          name="type"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>نوع النشاط</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="اختر نوع النشاط" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="note">ملاحظة</SelectItem>
-                  <SelectItem value="call">مكالمة</SelectItem>
-                  <SelectItem value="email">بريد إلكتروني</SelectItem>
-                  <SelectItem value="meeting">اجتماع</SelectItem>
-                  <SelectItem value="task">مهمة</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <div className="space-y-2">
+        <label className="text-sm font-medium">نوع النشاط</label>
+        <Select 
+          defaultValue={watch?.('type') || 'note'} 
+          onValueChange={(value) => setValue?.('type', value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="اختر نوع النشاط" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="note">ملاحظة</SelectItem>
+            <SelectItem value="call">مكالمة</SelectItem>
+            <SelectItem value="email">بريد إلكتروني</SelectItem>
+            <SelectItem value="meeting">اجتماع</SelectItem>
+            <SelectItem value="task">مهمة</SelectItem>
+            <SelectItem value="whatsapp">واتساب</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div className="space-y-2">
+        <label className="text-sm font-medium">الوصف</label>
+        <Textarea
+          placeholder="أدخل وصف النشاط"
+          className="resize-none"
+          {...register('description')}
         />
-        
-        <FormField
-          control={{ ...register('description') }}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>الوصف</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="أدخل وصف النشاط"
-                  className="resize-none"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+      </div>
+      
+      <div className="space-y-2">
+        <label className="text-sm font-medium">تاريخ ووقت الجدولة</label>
+        <Input 
+          type="datetime-local"
+          {...register('scheduled_at')}
         />
-        
-        <FormField
-          control={{ ...register('scheduled_at') }}
-          name="scheduled_at"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>تاريخ ووقت الجدولة</FormLabel>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <FormControl>
-                    <Button
-                      variant={"outline"}
-                      className={cn(
-                        "w-[240px] pl-3 text-left font-normal",
-                        !field.value && "text-muted-foreground"
-                      )}
-                    >
-                      {field.value ? (
-                        formatDate(new Date(field.value))
-                      ) : (
-                        <span>اختر التاريخ والوقت</span>
-                      )}
-                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                    </Button>
-                  </FormControl>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="center" side="bottom">
-                  <Calendar
-                    mode="single"
-                    locale={ar}
-                    selected={field.value ? new Date(field.value) : undefined}
-                    onSelect={(date) => {
-                      if (date) {
-                        const isoString = new Date(date).toISOString().slice(0, 16);
-                        setValue('scheduled_at', isoString);
-                      }
-                      field.onChange(date);
-                    }}
-                    disabled={(date) =>
-                      date < new Date()
-                    }
-                    className="rounded-md border"
-                  />
-                </PopoverContent>
-              </Popover>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      </div>
 
-        <div className="flex justify-end">
-          <Button type="submit" disabled={formState.isSubmitting}>
-            إضافة النشاط
-          </Button>
-        </div>
-      </form>
-    </Form>
+      <div className="flex justify-end">
+        <Button type="button" variant="outline" className="mr-2" onClick={onClose}>
+          إلغاء
+        </Button>
+        <Button type="submit" disabled={formState.isSubmitting}>
+          {formState.isSubmitting ? 'جاري الحفظ...' : 'إضافة النشاط'}
+        </Button>
+      </div>
+    </form>
   );
 };
 
