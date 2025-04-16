@@ -1,5 +1,5 @@
 
-import { Task, TaskRecord, RelatedEntityReference } from './types';
+import { Task, TaskRecord, RelatedEntityReference, RelatedEntityType } from './types';
 
 // Explicitly convert the TaskRecord to Task with proper type checking and no recursive types
 export const castToTask = (data: TaskRecord): Task => {
