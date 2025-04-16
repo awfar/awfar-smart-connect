@@ -1,4 +1,3 @@
-
 // Type definitions for task-related entities
 
 export type RelatedEntityType = 'lead' | 'deal' | 'customer';
@@ -30,7 +29,7 @@ export interface Task extends TaskBase {
   related_to?: RelatedEntityReference;
 }
 
-// Task input for creation - using a separate interface to avoid circular references
+// Task input for creation - keeping it flat to avoid circular references
 export interface TaskCreateInput {
   id?: string;
   title: string;
@@ -43,7 +42,10 @@ export interface TaskCreateInput {
   assigned_to?: string;
   assigned_to_name?: string;
   lead_id?: string;
-  related_to?: RelatedEntityReference;
+  // Using primitive properties instead of nested object
+  related_to_type?: RelatedEntityType;
+  related_to_id?: string;
+  related_to_name?: string;
 }
 
 // Raw task data from database

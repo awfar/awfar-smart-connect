@@ -55,11 +55,10 @@ const TaskForm: React.FC<TaskFormProps> = ({
       const newTask = await createTask({
         ...formData,
         due_date: formData.due_date ? formData.due_date.toISOString() : null,
-        related_to: {
-          type: 'lead',
-          id: leadId,
-          name: 'عميل محتمل'  // This will be updated by the backend
-        }
+        // Use flattened structure for related_to
+        related_to_type: 'lead',
+        related_to_id: leadId,
+        related_to_name: 'عميل محتمل'
       });
       
       toast.success("تمت إضافة المهمة بنجاح");

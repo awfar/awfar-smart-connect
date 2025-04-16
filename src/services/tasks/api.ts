@@ -69,17 +69,20 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
       lead_id: taskData.lead_id
     };
     
-    // Only add related_to if it exists in the input
-    if (taskData.related_to) {
+    // Only add related_to if the needed properties exist
+    if (taskData.related_to_type && taskData.related_to_id && taskData.related_to_name) {
       newTask.related_to = {
-        type: taskData.related_to.type,
-        id: taskData.related_to.id,
-        name: taskData.related_to.name
+        type: taskData.related_to_type,
+        id: taskData.related_to_id,
+        name: taskData.related_to_name
       };
     }
     
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
+      // Create a related_to object for database storage
+      const relatedTo = newTask.related_to ? JSON.stringify(newTask.related_to) : null;
+      
       // Create a database record
       const taskRecord = {
         id: newTask.id,
@@ -92,8 +95,8 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
         updated_at: newTask.updated_at,
         assigned_to: newTask.assigned_to,
         assigned_to_name: newTask.assigned_to_name,
-        lead_id: taskData.lead_id || (taskData.related_to?.type === 'lead' ? taskData.related_to.id : null),
-        related_to: newTask.related_to ? JSON.stringify(newTask.related_to) : null
+        lead_id: taskData.lead_id || (newTask.related_to?.type === 'lead' ? newTask.related_to.id : null),
+        related_to: relatedTo
       };
 
       const { error } = await supabase.from('tasks').insert(taskRecord);
@@ -151,9 +154,15 @@ export async function updateTask(taskId: string, taskData: Partial<Task>): Promi
     
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
+      // Convert related_to to JSON string if it exists
+      const updatesForDb = { ...updates };
+      if (updates.related_to) {
+        updatesForDb.related_to = JSON.stringify(updates.related_to);
+      }
+      
       const { data, error } = await supabase
         .from('tasks')
-        .update(updates)
+        .update(updatesForDb)
         .eq('id', taskId)
         .select()
         .single();
