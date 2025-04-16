@@ -54,7 +54,7 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
     const now = new Date().toISOString();
     const taskId = taskData.id || uuidv4();
     
-    // Create a new task object with proper typing
+    // Create a task object with proper typing
     const newTask: Task = {
       id: taskId,
       title: taskData.title,
