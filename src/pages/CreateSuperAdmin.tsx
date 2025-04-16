@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import CreateSuperAdminTool from "@/components/users/CreateSuperAdminTool";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import MobileOptimizedContainer from "@/components/ui/mobile-optimized-container";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
 
 const CreateSuperAdmin = () => {
   const navigate = useNavigate();

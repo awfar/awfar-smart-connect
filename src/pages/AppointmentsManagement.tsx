@@ -6,7 +6,7 @@ import AppointmentCalendar from "@/components/appointments/AppointmentCalendar";
 import AppointmentsList from "@/components/appointments/AppointmentsList";
 import AppointmentForm from "@/components/appointments/AppointmentForm";
 import { toast } from "sonner";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
 
 const AppointmentsManagement = () => {
   const [view, setView] = useState<"calendar" | "list">("calendar");

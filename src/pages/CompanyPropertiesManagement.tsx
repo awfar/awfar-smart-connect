@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import PropertyList from "@/components/properties/PropertyList";
 import PropertyForm from "@/components/properties/PropertyForm";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Property, getPropertiesByType, createProperty, updateProperty, deleteProperty } from "@/services/propertiesService";
 
 const CompanyPropertiesManagement = () => {

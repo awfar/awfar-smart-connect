@@ -54,15 +54,29 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
     const now = new Date().toISOString();
     const taskId = taskData.id || uuidv4();
     
-    const newTask = {
-      ...taskData,
+    // Create a new task object without circular references
+    const newTask: Task = {
       id: taskId,
+      title: taskData.title,
+      description: taskData.description,
+      status: taskData.status || 'pending',
+      priority: taskData.priority || 'medium',
+      due_date: taskData.due_date || undefined,
       created_at: now,
       updated_at: now,
-      // تعيين القيم الافتراضية إذا لم يتم توفيرها
-      status: taskData.status || 'pending',
-      priority: taskData.priority || 'medium'
-    } as Task; // Using type assertion to avoid potential circular reference issues
+      assigned_to: taskData.assigned_to,
+      assigned_to_name: taskData.assigned_to_name,
+      lead_id: taskData.lead_id
+    };
+    
+    // Only add related_to if it exists in the input
+    if (taskData.related_to) {
+      newTask.related_to = {
+        type: taskData.related_to.type,
+        id: taskData.related_to.id,
+        name: taskData.related_to.name
+      };
+    }
     
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
@@ -77,8 +91,10 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
         created_at: newTask.created_at,
         updated_at: newTask.updated_at,
         assigned_to: newTask.assigned_to,
+        assigned_to_name: newTask.assigned_to_name,
         // Handle the lead relationship
-        lead_id: taskData.lead_id || (taskData.related_to?.type === 'lead' ? taskData.related_to.id : null)
+        lead_id: taskData.lead_id || (taskData.related_to?.type === 'lead' ? taskData.related_to.id : null),
+        related_to: newTask.related_to ? JSON.stringify(newTask.related_to) : null
       };
 
       const { error } = await supabase.from('tasks').insert(taskRecord);

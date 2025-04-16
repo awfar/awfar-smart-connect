@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,7 +8,7 @@ import DealForm from "@/components/deals/DealForm";
 import DealFilters from "@/components/deals/DealFilters";
 import { getDeals, Deal } from "@/services/dealsService";
 import { toast } from "sonner";
-import DashboardLayout from "@/components/layout/DashboardLayout";
+import DashboardLayout from "@/components/dashboard/DashboardLayout";
 
 const DealsManagement = () => {
   const [view, setView] = useState<"all" | "active" | "won" | "lost">("all");

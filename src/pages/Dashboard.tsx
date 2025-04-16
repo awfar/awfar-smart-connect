@@ -1,6 +1,6 @@
 
 import React from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import StatsCards from '@/components/dashboard/StatsCards';
 import SalesChart from '@/components/dashboard/SalesChart';
 import LeadsOverview from '@/components/dashboard/LeadsOverview';

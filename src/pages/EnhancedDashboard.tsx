@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import StatsCards from '@/components/dashboard/StatsCards';
 import RecentActivities from '@/components/dashboard/RecentActivities';
 import { useQuery } from '@tanstack/react-query';
