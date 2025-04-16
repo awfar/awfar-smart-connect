@@ -30,7 +30,7 @@ export interface Task extends TaskBase {
   related_to?: RelatedEntityReference;
 }
 
-// Task input for creation - making it completely flat to avoid circular references
+// Task input for creation - completely flat structure to avoid circular references
 export interface TaskCreateInput {
   id?: string;
   title: string;
