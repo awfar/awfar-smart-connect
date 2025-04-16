@@ -57,7 +57,7 @@ export async function getTasks(filters: Record<string, any> = {}): Promise<Task[
       // Explicit handling with simple iteration to avoid type recursion
       const tasks: Task[] = [];
       for (const item of data) {
-        tasks.push(castToTask(item));
+        tasks.push(castToTask(item as any));
       }
       return tasks;
     }
@@ -150,7 +150,7 @@ export async function getTaskById(taskId: string): Promise<Task | null> {
         return null;
       }
       
-      return data ? castToTask(data) : null;
+      return data ? castToTask(data as any) : null;
     }
     
     // استخدم البيانات التجريبية إذا لم تكن Supabase متاحة
@@ -193,7 +193,7 @@ export async function updateTask(taskId: string, taskData: Partial<Task>): Promi
         return null;
       }
       
-      return data ? castToTask(data) : null;
+      return data ? castToTask(data as any) : null;
     }
     
     // محاكاة تحديث المهمة باستخدام البيانات التجريبية
@@ -205,7 +205,7 @@ export async function updateTask(taskId: string, taskData: Partial<Task>): Promi
         ...mockTasks[taskIndex],
         ...updates
       };
-      return castToTask(updatedTask);
+      return castToTask(updatedTask as any);
     }
     
     return null;
