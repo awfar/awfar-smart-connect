@@ -56,7 +56,7 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
     const taskId = taskData.id || uuidv4();
     
     // Build task data manually without complex type operations
-    const taskFields: Record<string, any> = {
+    const taskFields = {
       id: taskId,
       title: taskData.title,
       description: taskData.description,
@@ -90,6 +90,7 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
         related_to: relatedToJson
       };
 
+      // Pass the complete record as an array to insert
       const { error } = await supabase.from('tasks').insert([dbRecord]);
       
       if (error) {

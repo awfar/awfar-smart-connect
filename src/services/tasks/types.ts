@@ -1,22 +1,27 @@
 
 // Type definitions for task-related entities
 
+// Define entity types as a string literal union
 export type RelatedEntityType = 'lead' | 'deal' | 'customer';
 
-// Explicitly non-recursive reference
+// Simple reference interface with no recursive types
 export interface RelatedEntityReference {
   type: RelatedEntityType;
   id: string;
   name: string;
 }
 
-// Base properties for a task with all primitives or non-recursive types
+// Define task status and priority as standalone types
+export type TaskStatus = 'pending' | 'in-progress' | 'completed' | 'cancelled';
+export type TaskPriority = 'high' | 'medium' | 'low';
+
+// Base properties for a task with only primitives
 export interface TaskBase {
   id: string;
   title: string;
   description?: string;
-  status: 'pending' | 'in-progress' | 'completed' | 'cancelled';
-  priority: 'high' | 'medium' | 'low';
+  status: TaskStatus;
+  priority: TaskPriority;
   due_date?: string;
   created_at: string;
   updated_at: string;
@@ -25,31 +30,30 @@ export interface TaskBase {
   lead_id?: string;
 }
 
-// Full Task type extending the base - NO circular references allowed
+// Full Task type extending base with optional related entity
 export interface Task extends TaskBase {
   related_to?: RelatedEntityReference; 
 }
 
-// Explicitly flat task input for creation with no nested structures
+// Completely flat task input for creation
 export interface TaskCreateInput {
   id?: string;
   title: string;
   description?: string;
-  status?: 'pending' | 'in-progress' | 'completed' | 'cancelled';
-  priority?: 'high' | 'medium' | 'low';
+  status?: TaskStatus;
+  priority?: TaskPriority;
   due_date?: string | null;
   created_at?: string;
   updated_at?: string;
   assigned_to?: string;
   assigned_to_name?: string;
   lead_id?: string;
-  // Flat fields for related entity to completely avoid recursive types
   related_to_type?: RelatedEntityType;
   related_to_id?: string;
   related_to_name?: string;
 }
 
-// Raw task data from database - always treated as a plain object
+// Raw database record type with no complex nested objects
 export interface TaskRecord {
   id: string;
   title: string;
@@ -61,6 +65,6 @@ export interface TaskRecord {
   updated_at: string;
   assigned_to?: string;
   assigned_to_name?: string;
-  related_to?: string | null; // Always stored as JSON string in DB
+  related_to?: string | null; // Always stored as JSON string
   lead_id?: string;
 }

@@ -4,12 +4,12 @@ import { Task, RelatedEntityType } from './types';
 // Completely detached from imported types - using raw data input
 export const castToTask = (raw: any): Task => {
   // Validate and normalize status
-  const status: Task['status'] = ['pending', 'in-progress', 'completed', 'cancelled'].includes(raw.status)
+  const status = ['pending', 'in-progress', 'completed', 'cancelled'].includes(raw.status)
     ? raw.status as Task['status']
     : 'pending';
   
   // Validate and normalize priority
-  const priority: Task['priority'] = ['high', 'medium', 'low'].includes(raw.priority)
+  const priority = ['high', 'medium', 'low'].includes(raw.priority)
     ? raw.priority as Task['priority']
     : 'medium';
   
