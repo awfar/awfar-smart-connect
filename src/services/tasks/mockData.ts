@@ -28,7 +28,7 @@ export function getMockTasks(leadId?: string): Task[] {
       id: '2',
       title: 'إعداد عرض أسعار',
       description: 'إعداد عرض أسعار للعميل بناءً على احتياجاته',
-      status: 'in_progress',
+      status: 'in_progress', // Fixed from "in-progress" to "in_progress"
       priority: 'medium',
       due_date: new Date(Date.now() + 172800000).toISOString(),
       created_at: new Date().toISOString(),

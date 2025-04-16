@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -53,7 +54,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
     try {
       const newTask = await createTask({
         ...formData,
-        due_date: formData.due_date ? formData.due_date.toISOString() : null,
+        due_date: formData.due_date ? formData.due_date.toISOString() : undefined,
         related_to_type: 'lead',
         related_to_id: leadId,
         related_to_name: 'عميل محتمل'
@@ -140,7 +141,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="pending">معلقة</SelectItem>
-              <SelectItem value="in-progress">قيد التنفيذ</SelectItem>
+              <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
               <SelectItem value="completed">مكتملة</SelectItem>
               <SelectItem value="cancelled">ملغاة</SelectItem>
             </SelectContent>

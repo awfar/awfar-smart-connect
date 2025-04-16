@@ -55,8 +55,8 @@ export const castToTask = (raw: any): Task => {
     updated_at: String(raw.updated_at),
     assigned_to: raw.assigned_to,
     assigned_to_name: raw.assigned_to_name,
-    related_to: relatedTo,
     lead_id: raw.lead_id,
+    related_to: relatedTo,
     related_to_type: raw.related_to_type,
     related_to_id: raw.related_to_id,
     related_to_name: raw.related_to_name
