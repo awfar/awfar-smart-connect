@@ -779,4 +779,49 @@ const LeadDetailsPage = () => {
             onSuccess={handleTaskSuccess}
             onClose={() => setIsTaskDialogOpen(false)}
           />
-        </
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isAppointmentDialogOpen} onOpenChange={setIsAppointmentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>إضافة موعد جديد</DialogTitle>
+          </DialogHeader>
+          <AppointmentForm 
+            leadId={lead.id} 
+            onSuccess={handleAppointmentSuccess}
+            onClose={() => setIsAppointmentDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+      
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد حذف العميل المحتمل</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من رغبتك في حذف هذا العميل المحتمل؟ لا يمكن التراجع عن هذا الإجراء.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteLead} 
+              className="bg-red-500 hover:bg-red-600"
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  جاري الحذف...
+                </>
+              ) : "حذف"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </DashboardLayout>
+  );
+};
+
+export default LeadDetailsPage;
