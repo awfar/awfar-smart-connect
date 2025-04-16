@@ -10,14 +10,15 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { addLeadActivity } from "@/services/leads";
-import { LeadActivity } from "@/services/types/leadTypes";
+import { addLeadActivity } from "@/services/leads/leadActivities";
+import { LeadActivity } from "@/services/leads/types";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { toast } from "sonner";
 
 export interface ActivityFormProps {
   leadId: string;
@@ -43,7 +44,8 @@ const ActivityForm: React.FC<ActivityFormProps> = ({
     e.preventDefault();
     
     if (!formData.description.trim()) {
-      return; // Don't submit empty activities
+      toast.error("يرجى إدخال تفاصيل النشاط");
+      return;
     }
     
     setIsSubmitting(true);
@@ -57,6 +59,9 @@ const ActivityForm: React.FC<ActivityFormProps> = ({
         scheduled_at: formData.scheduled_at ? formData.scheduled_at.toISOString() : null,
       });
       
+      console.log("Activity saved successfully:", newActivity);
+      toast.success("تمت إضافة النشاط بنجاح");
+      
       // Reset form
       setFormData({
         type: "note",
@@ -69,6 +74,7 @@ const ActivityForm: React.FC<ActivityFormProps> = ({
       
     } catch (error) {
       console.error("Error adding activity:", error);
+      toast.error("حدث خطأ أثناء إضافة النشاط");
     } finally {
       setIsSubmitting(false);
     }

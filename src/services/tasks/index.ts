@@ -1,4 +1,3 @@
-
 // سيتم إصلاح أخطاء الطباعة مع الحفاظ على وظائف الملف الأصلي
 // إصلاح خطأ Type instantiation is excessively deep and possibly infinite
 
@@ -28,6 +27,7 @@ export type TaskCreate = Omit<Task, 'id' | 'created_at' | 'updated_at'> & {
   id?: string;
   created_at?: string;
   updated_at?: string;
+  lead_id?: string; // Added to support direct lead relationship
 };
 
 // تحسين دالة التحويل لتجنب الدوران المفرط
@@ -66,30 +66,36 @@ export async function getTasks(filters: Record<string, any> = {}) {
         query = query.eq('priority', filters.priority);
       }
       
-      // الفرز حسب تاريخ الاستحقاق
+      // فرز حسب تاريخ الاستحقاق
       query = query.order('due_date', { ascending: true });
+      
+      // فلتر بمرفق إذا تم توفيره
+      if (filters.lead_id) {
+        query = query.eq('lead_id', filters.lead_id);
+      }
       
       const { data, error } = await query;
       
       if (error) {
         console.error('Error fetching tasks:', error);
-        return getMockTasks();
+        return getMockTasks(filters.lead_id);
       }
       
       return data.map(castToTask);
     }
     
     // استخدم البيانات التجريبية إذا لم تكن Supabase متاحة
-    return getMockTasks();
+    return getMockTasks(filters.lead_id);
   } catch (error) {
     console.error('Error in getTasks:', error);
-    return getMockTasks();
+    return getMockTasks(filters.lead_id);
   }
 }
 
 // إنشاء مهمة جديدة
 export async function createTask(taskData: TaskCreate): Promise<Task> {
   try {
+    console.log("Creating task with data:", taskData);
     const now = new Date().toISOString();
     const taskId = taskData.id || uuidv4();
     
@@ -105,11 +111,28 @@ export async function createTask(taskData: TaskCreate): Promise<Task> {
     
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
-      const { error } = await supabase.from('tasks').insert(newTask);
+      // Create a database record with all the appropriate fields
+      const taskRecord = {
+        id: newTask.id,
+        title: newTask.title,
+        description: newTask.description,
+        status: newTask.status,
+        priority: newTask.priority,
+        due_date: newTask.due_date,
+        created_at: newTask.created_at,
+        updated_at: newTask.updated_at,
+        assigned_to: newTask.assigned_to,
+        // Handle the lead relationship
+        lead_id: taskData.lead_id || (taskData.related_to?.type === 'lead' ? taskData.related_to.id : null)
+      };
+
+      const { error } = await supabase.from('tasks').insert(taskRecord);
       
       if (error) {
         console.error('Error creating task in Supabase:', error);
         // استمر بإنشاء المهمة في الذاكرة المؤقتة
+      } else {
+        console.log('Task created successfully in database');
       }
     }
     
@@ -219,8 +242,8 @@ export async function deleteTask(taskId: string): Promise<boolean> {
 }
 
 // بيانات تجريبية للمهام
-function getMockTasks(): Task[] {
-  return [
+function getMockTasks(leadId?: string): Task[] {
+  const allMockTasks = [
     {
       id: '1',
       title: 'الاتصال بالعميل الجديد',
@@ -273,4 +296,13 @@ function getMockTasks(): Task[] {
       }
     }
   ];
+  
+  // If a lead ID is provided, filter tasks by that lead
+  if (leadId) {
+    return allMockTasks.filter(task => 
+      task.related_to?.type === 'lead' && task.related_to?.id === leadId
+    );
+  }
+  
+  return allMockTasks;
 }

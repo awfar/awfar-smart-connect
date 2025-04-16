@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -17,6 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { format } from "date-fns";
 import { ar } from 'date-fns/locale';
+import { toast } from "sonner";
 
 export interface TaskFormProps {
   leadId: string;
@@ -43,6 +45,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
     e.preventDefault();
     
     if (!formData.title.trim()) {
+      toast.error("يرجى إدخال عنوان المهمة");
       return;
     }
     
@@ -52,7 +55,14 @@ const TaskForm: React.FC<TaskFormProps> = ({
       const newTask = await createTask({
         ...formData,
         due_date: formData.due_date ? formData.due_date.toISOString() : null,
+        related_to: {
+          type: 'lead',
+          id: leadId,
+          name: 'عميل محتمل'  // This will be updated by the backend
+        }
       });
+      
+      toast.success("تمت إضافة المهمة بنجاح");
       
       setFormData({
         title: "",
@@ -67,6 +77,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
       
     } catch (error) {
       console.error("Error adding task:", error);
+      toast.error("حدث خطأ أثناء إضافة المهمة");
     } finally {
       setIsSubmitting(false);
     }

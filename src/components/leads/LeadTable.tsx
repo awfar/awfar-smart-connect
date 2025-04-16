@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lead } from "@/types/leads";
@@ -7,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button"; // Added Button import
+import { Button } from "@/components/ui/button";
 import {
   Loader2, User, Building, Calendar, Phone, Mail, PieChart, 
   MoreVertical, Eye, Pencil, Trash2
@@ -41,29 +40,24 @@ const LeadTable: React.FC<LeadTableProps> = ({
   const navigate = useNavigate();
   const { isMobile } = useBreakpoints();
 
-  // التعامل مع النقر على صف
   const handleRowClick = (leadId: string) => {
     onLeadSelect(leadId);
   };
 
-  // التعامل مع النقر المزدوج للانتقال إلى صفحة التفاصيل
   const handleRowDoubleClick = (leadId: string) => {
     navigate(`/dashboard/leads/${leadId}`);
   };
   
-  // التعامل مع زر التعديل
   const handleEdit = (e: React.MouseEvent, lead: Lead) => {
     e.stopPropagation();
     if (onEdit) onEdit(lead);
   };
   
-  // التعامل مع زر الحذف
   const handleDelete = (e: React.MouseEvent, leadId: string) => {
     e.stopPropagation();
     if (onDelete) onDelete(leadId);
   };
   
-  // التعامل مع النقر على زر العرض
   const handleView = (e: React.MouseEvent, leadId: string) => {
     e.stopPropagation();
     navigate(`/dashboard/leads/${leadId}`);
@@ -78,7 +72,6 @@ const LeadTable: React.FC<LeadTableProps> = ({
     );
   }
 
-  // عرض البطاقات للأجهزة المحمولة
   if (isMobile) {
     return (
       <div className="space-y-4 px-1">
@@ -90,17 +83,21 @@ const LeadTable: React.FC<LeadTableProps> = ({
               <div 
                 key={lead.id} 
                 className={cn(
-                  "border rounded-lg p-3 shadow-sm transition-all", 
+                  "border rounded-lg p-4 shadow-sm transition-all", 
                   lead.id === selectedLead ? 'bg-muted/50 border-primary' : 'bg-white hover:bg-muted/20'
                 )}
                 onClick={() => handleRowClick(lead.id)}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-10 w-10 border-2 border-muted-foreground/10">
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {getInitials(fullName)}
-                      </AvatarFallback>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-11 w-11 border-2 border-muted-foreground/10">
+                      {lead.avatar_url ? (
+                        <AvatarImage src={lead.avatar_url} alt={fullName} />
+                      ) : (
+                        <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                          {getInitials(fullName)}
+                        </AvatarFallback>
+                      )}
                     </Avatar>
                     <div>
                       <div className="font-bold text-base">{fullName}</div>
@@ -117,7 +114,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
                   </Badge>
                 </div>
                 
-                <div className="grid grid-cols-1 gap-y-2 mt-3 text-sm">
+                <div className="grid grid-cols-1 gap-y-2.5 mt-3 text-sm border-t border-gray-100 pt-3">
                   {lead.email && (
                     <div className="flex items-center gap-2 overflow-hidden">
                       <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -139,15 +136,32 @@ const LeadTable: React.FC<LeadTableProps> = ({
                     </div>
                   )}
                   
-                  {(lead.created_at || lead.createdAt) && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Calendar className="h-3.5 w-3.5 shrink-0" />
-                      <span>{format(new Date(lead.created_at || lead.createdAt || ''), "yyyy/MM/dd", { locale: ar })}</span>
-                    </div>
-                  )}
+                  <div className="flex justify-between items-center mt-1">
+                    {lead.owner ? (
+                      <div className="flex items-center gap-1.5">
+                        <Avatar className="h-5 w-5">
+                          <AvatarImage src={lead.owner.avatar} />
+                          <AvatarFallback className="text-xs">{lead.owner.initials}</AvatarFallback>
+                        </Avatar>
+                        <span className="text-xs">{lead.owner.name}</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 text-muted-foreground">
+                        <User className="h-3.5 w-3.5" />
+                        <span className="text-xs">غير مخصص</span>
+                      </div>
+                    )}
+                    
+                    {(lead.created_at || lead.createdAt) && (
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Calendar className="h-3.5 w-3.5 shrink-0" />
+                        <span>{format(new Date(lead.created_at || lead.createdAt || ''), "yyyy/MM/dd", { locale: ar })}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
-                <div className="flex justify-end mt-3 pt-2 border-t">
+                <div className="flex justify-end mt-3 pt-2 border-t border-gray-100">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button 
@@ -193,7 +207,6 @@ const LeadTable: React.FC<LeadTableProps> = ({
     );
   }
 
-  // عرض جدول للحاسوب
   return (
     <div className="rounded-md border overflow-hidden">
       <div className="overflow-x-auto">
@@ -314,7 +327,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
             ) : (
               <tr>
                 <td colSpan={7} className="p-8 text-center text-muted-foreground">
-                  لا توجد بيانات متاحة
+                  لا توجد ��يانات متاحة
                 </td>
               </tr>
             )}

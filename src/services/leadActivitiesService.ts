@@ -5,6 +5,7 @@ import { LeadActivity } from "./types/leadTypes";
 
 export const fetchLeadActivities = async (leadId: string): Promise<LeadActivity[]> => {
   try {
+    console.log("Fetching activities for lead:", leadId);
     const { data, error } = await supabase
       .from('lead_activities')
       .select('*')
@@ -23,6 +24,13 @@ export const fetchLeadActivities = async (leadId: string): Promise<LeadActivity[
 
 export const createLeadActivity = async (activity: Partial<LeadActivity>): Promise<LeadActivity | null> => {
   try {
+    if (!activity.lead_id) {
+      console.error("Cannot add activity without lead_id");
+      toast.error("بيانات النشاط غير مكتملة");
+      return null;
+    }
+
+    console.log("Creating lead activity:", activity);
     const { data, error } = await supabase
       .from('lead_activities')
       .insert([{
@@ -30,7 +38,7 @@ export const createLeadActivity = async (activity: Partial<LeadActivity>): Promi
         type: activity.type,
         description: activity.description,
         scheduled_at: activity.scheduled_at,
-        created_by: (await supabase.auth.getUser()).data.user?.id
+        created_by: (await supabase.auth.getUser()).data.user?.id || null
       }])
       .select()
       .single();
