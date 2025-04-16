@@ -477,7 +477,7 @@ const LeadDetailsPage = () => {
                       onClick={() => setIsTaskDialogOpen(true)}
                     >
                       <CheckCircle className="mr-2 h-4 w-4" />
-                      إضافة مهمة
+                      إض��فة مهمة
                     </Button>
                   </CardHeader>
                   <CardContent>
