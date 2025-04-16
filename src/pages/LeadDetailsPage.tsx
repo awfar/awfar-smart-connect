@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getLead, updateLead, deleteLead, Lead, getLeadActivities, LeadActivity } from '@/services/leads';
@@ -181,7 +181,7 @@ const LeadDetailsPage = () => {
     switch (status) {
       case 'completed':
         return 'bg-green-100 text-green-800 border-green-200';
-      case 'in-progress':
+      case 'in_progress':
         return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'pending':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
@@ -501,7 +501,7 @@ const LeadDetailsPage = () => {
                                   </Badge>
                                   <Badge className={getTaskStatusBadgeColor(task.status)}>
                                     {task.status === 'pending' && 'معلقة'}
-                                    {task.status === 'in-progress' && 'قيد التنفيذ'}
+                                    {task.status === 'in_progress' && 'قيد التنفيذ'}
                                     {task.status === 'completed' && 'مكتملة'}
                                     {task.status === 'cancelled' && 'ملغاة'}
                                   </Badge>

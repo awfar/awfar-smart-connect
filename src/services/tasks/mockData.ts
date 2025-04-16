@@ -19,13 +19,16 @@ export function getMockTasks(leadId?: string): Task[] {
         type: 'lead',
         id: 'lead1',
         name: 'شركة التقنية الحديثة'
-      }
+      },
+      related_to_type: 'lead',
+      related_to_id: 'lead1',
+      related_to_name: 'شركة التقنية الحديثة'
     },
     {
       id: '2',
       title: 'إعداد عرض أسعار',
       description: 'إعداد عرض أسعار للعميل بناءً على احتياجاته',
-      status: 'in-progress',
+      status: 'in_progress',
       priority: 'medium',
       due_date: new Date(Date.now() + 172800000).toISOString(),
       created_at: new Date().toISOString(),
@@ -36,7 +39,10 @@ export function getMockTasks(leadId?: string): Task[] {
         type: 'deal',
         id: 'deal1',
         name: 'صفقة برنامج المحاسبة'
-      }
+      },
+      related_to_type: 'deal',
+      related_to_id: 'deal1',
+      related_to_name: 'صفقة برنامج المحاسبة'
     },
     {
       id: '3',
@@ -53,14 +59,18 @@ export function getMockTasks(leadId?: string): Task[] {
         type: 'customer',
         id: 'customer1',
         name: 'مؤسسة المستقبل'
-      }
+      },
+      related_to_type: 'customer',
+      related_to_id: 'customer1',
+      related_to_name: 'مؤسسة المستقبل'
     }
   ];
   
   // If a lead ID is provided, filter tasks by that lead
   if (leadId) {
     return allMockTasks.filter(task => 
-      task.related_to?.type === 'lead' && task.related_to?.id === leadId
+      (task.related_to?.type === 'lead' && task.related_to?.id === leadId) || 
+      (task.lead_id === leadId)
     );
   }
   

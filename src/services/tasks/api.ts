@@ -1,4 +1,3 @@
-
 /**
  * Task API Service
  * 
@@ -181,6 +180,13 @@ export async function updateTask(taskId: string, taskData: Partial<Task>): Promi
     // Handle related_to conversion explicitly
     if (taskData.related_to) {
       updates.related_to = JSON.stringify(taskData.related_to);
+    } else if (taskData.related_to_type && taskData.related_to_id) {
+      const relatedTo = {
+        type: taskData.related_to_type,
+        id: taskData.related_to_id,
+        name: taskData.related_to_name || ''
+      };
+      updates.related_to = JSON.stringify(relatedTo);
     }
     
     // في بيئة الإنتاج، استخدم Supabase

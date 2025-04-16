@@ -9,7 +9,7 @@ import { Task, RelatedEntityType } from './types';
  */
 export const castToTask = (raw: any): Task => {
   // Validate and normalize status with explicit string assignment
-  const status = ['pending', 'in-progress', 'completed', 'cancelled'].includes(raw.status)
+  const status = ['pending', 'in_progress', 'completed', 'cancelled'].includes(raw.status)
     ? raw.status 
     : 'pending';
   
@@ -56,6 +56,9 @@ export const castToTask = (raw: any): Task => {
     assigned_to: raw.assigned_to,
     assigned_to_name: raw.assigned_to_name,
     related_to: relatedTo,
-    lead_id: raw.lead_id
+    lead_id: raw.lead_id,
+    related_to_type: raw.related_to_type,
+    related_to_id: raw.related_to_id,
+    related_to_name: raw.related_to_name
   };
 };
