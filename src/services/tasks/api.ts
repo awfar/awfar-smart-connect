@@ -36,8 +36,8 @@ export async function getTasks(filters: Record<string, any> = {}): Promise<Task[
         return getMockTasks(filters.lead_id);
       }
       
-      // Explicitly convert database records to Task objects using type assertion
-      return (data || []).map(record => castToTask(record as TaskRecord));
+      // Transform database records to Task objects
+      return (data || []).map((record: any) => castToTask(record as TaskRecord));
     }
     
     // استخدم البيانات التجريبية إذا لم تكن Supabase متاحة
