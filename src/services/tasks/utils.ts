@@ -1,9 +1,9 @@
 
 import { Task, TaskRecord, RelatedEntityReference } from './types';
 
-// Explicitly convert the TaskRecord to Task with proper type checking
+// Explicitly convert the TaskRecord to Task with proper type checking and no recursive types
 export const castToTask = (data: TaskRecord): Task => {
-  // Validate and convert status
+  // Validate and convert status to prevent type issues
   let status: Task['status'] = 'pending';
   if (data.status === 'pending' || 
       data.status === 'in-progress' || 
@@ -20,43 +20,32 @@ export const castToTask = (data: TaskRecord): Task => {
     priority = data.priority;
   }
   
-  // Parse related_to safely
+  // Parse related_to safely from string to object with explicit typing
   let relatedTo: RelatedEntityReference | undefined = undefined;
   
-  try {
-    if (data.related_to) {
+  if (data.related_to) {
+    try {
       // Handle the case where related_to is a string (JSON)
       if (typeof data.related_to === 'string') {
         const parsed = JSON.parse(data.related_to);
         if (parsed && typeof parsed === 'object') {
-          const type = parsed.type;
+          // Extract and validate fields individually to avoid deep type issues
+          const type = parsed.type as unknown;
           if (type === 'lead' || type === 'deal' || type === 'customer') {
             relatedTo = {
-              type,
-              id: String(parsed.id),
-              name: String(parsed.name)
+              type: type as RelatedEntityType,
+              id: String(parsed.id || ''),
+              name: String(parsed.name || '')
             };
           }
         }
-      }
-      // Handle the case where related_to is already an object
-      else if (data.related_to && typeof data.related_to === 'object') {
-        const relatedToObj = data.related_to as Record<string, unknown>;
-        const type = relatedToObj.type as string;
-        
-        if (type === 'lead' || type === 'deal' || type === 'customer') {
-          relatedTo = {
-            type: type as RelatedEntityReference['type'],
-            id: String(relatedToObj.id || ''),
-            name: String(relatedToObj.name || '')
-          };
-        }
-      }
+      } 
+    } catch (e) {
+      console.error('Failed to parse related_to:', e);
     }
-  } catch (e) {
-    console.error('Failed to parse related_to:', e);
   }
   
+  // Create a flat Task object with no recursive types
   return {
     id: data.id,
     title: data.title,

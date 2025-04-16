@@ -36,8 +36,9 @@ export async function getTasks(filters: Record<string, any> = {}): Promise<Task[
         return getMockTasks(filters.lead_id);
       }
       
-      // Transform database records to Task objects - use explicit casting to avoid deep type instantiation
-      return (data || []).map((record) => castToTask(record as TaskRecord));
+      // Use explicit type assertion and mapping to avoid deep type instantiation
+      const typedRecords = data as TaskRecord[];
+      return typedRecords.map(castToTask);
     }
     
     // استخدم البيانات التجريبية إذا لم تكن Supabase متاحة
@@ -55,7 +56,7 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
     const now = new Date().toISOString();
     const taskId = taskData.id || uuidv4();
     
-    // Create a Task object using base properties first
+    // Create a Task object with flattened properties
     const newTask: Task = {
       id: taskId,
       title: taskData.title,
@@ -70,19 +71,23 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
       lead_id: taskData.lead_id
     };
     
-    // Add related_to separately to avoid potential typing issues
-    if (taskData.related_to_type && taskData.related_to_id && taskData.related_to_name) {
+    // Add related_to separately from the flattened fields
+    if (taskData.related_to_type && taskData.related_to_id) {
       newTask.related_to = {
         type: taskData.related_to_type,
         id: taskData.related_to_id,
-        name: taskData.related_to_name
+        name: taskData.related_to_name || ''
       };
     }
     
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
       // Create database record with explicit JSON stringification for related_to
-      const taskRecord = {
+      const taskRecord: Omit<TaskRecord, 'status' | 'priority'> & {
+        status: string;
+        priority: string;
+        related_to: string | null;
+      } = {
         id: newTask.id,
         title: newTask.title,
         description: newTask.description,
@@ -93,7 +98,7 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
         updated_at: newTask.updated_at,
         assigned_to: newTask.assigned_to,
         assigned_to_name: newTask.assigned_to_name,
-        lead_id: taskData.lead_id || (newTask.related_to?.type === 'lead' ? newTask.related_to.id : null),
+        lead_id: taskData.lead_id || (newTask.related_to?.type === 'lead' ? newTask.related_to.id : undefined),
         related_to: newTask.related_to ? JSON.stringify(newTask.related_to) : null
       };
 
@@ -130,6 +135,7 @@ export async function getTaskById(taskId: string): Promise<Task | null> {
         return null;
       }
       
+      // Explicit casting to avoid type recursion
       return castToTask(data as TaskRecord);
     }
     
@@ -170,6 +176,7 @@ export async function updateTask(taskId: string, taskData: Partial<Task>): Promi
         return null;
       }
       
+      // Explicit type assertion to avoid recursive typing
       return castToTask(data as TaskRecord);
     }
     
