@@ -9,7 +9,8 @@ export interface RelatedEntity {
   name: string;
 }
 
-export interface Task {
+// Define the base properties for a task without circular references
+export interface TaskBase {
   id: string;
   title: string;
   description?: string;
@@ -20,11 +21,15 @@ export interface Task {
   updated_at: string;
   assigned_to?: string;
   assigned_to_name?: string;
-  related_to?: RelatedEntity;
   lead_id?: string;
 }
 
-// Separate interface for task creation to avoid circular references
+// Full Task type extending the base with related entity
+export interface Task extends TaskBase {
+  related_to?: RelatedEntity;
+}
+
+// Task input with simplified related_to structure
 export interface TaskCreateInput {
   id?: string;
   title: string;
@@ -37,7 +42,6 @@ export interface TaskCreateInput {
   assigned_to?: string;
   assigned_to_name?: string;
   lead_id?: string;
-  // Make related_to a simple object for task creation
   related_to?: {
     type: RelatedEntityType;
     id: string;
@@ -45,7 +49,7 @@ export interface TaskCreateInput {
   };
 }
 
-// Define a separate type for raw task records from the database
+// Raw task data from database
 export interface TaskRecord {
   id: string;
   title: string;
