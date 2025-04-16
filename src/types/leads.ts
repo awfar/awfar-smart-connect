@@ -1,4 +1,3 @@
-
 // تعريف الأنواع للعميل المحتمل والأنشطة المرتبطة به
 
 export interface Lead {
@@ -54,5 +53,3 @@ export interface TestResult {
   responseTimeMs: number;
   error?: any;
 }
-
-

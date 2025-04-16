@@ -1,4 +1,3 @@
-
 // Type definitions for leads-related functionality
 import { Owner } from "../types/commonTypes";
 
@@ -22,7 +21,7 @@ export interface Lead {
   updated_at?: string;
   assignedTo?: string;
   assigned_to?: string;
-  avatar_url?: string | null;
+  avatar_url?: string | null;  // Added this property
   owner?: Owner;
 }
 
