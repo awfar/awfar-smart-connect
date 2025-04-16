@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LeadActivity } from "@/types/leads"; // Using the central type definition
