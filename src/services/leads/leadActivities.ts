@@ -1,14 +1,20 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LeadActivity } from "./types";
+import { LeadActivity } from "@/types/leads"; // Using the central type definition
 
 export const getLeadActivities = async (leadId: string): Promise<LeadActivity[]> => {
   try {
     console.log("Fetching activities for lead:", leadId);
     const { data, error } = await supabase
       .from('lead_activities')
-      .select('*')
+      .select(`
+        *,
+        profiles:created_by (
+          first_name,
+          last_name
+        )
+      `)
       .eq('lead_id', leadId)
       .order('created_at', { ascending: false });
     
@@ -31,6 +37,8 @@ export const addLeadActivity = async (activity: Partial<LeadActivity>): Promise<
     }
 
     console.log("Creating lead activity:", activity);
+    const { data: userData } = await supabase.auth.getUser();
+    
     const { data, error } = await supabase
       .from('lead_activities')
       .insert([{
@@ -38,14 +46,23 @@ export const addLeadActivity = async (activity: Partial<LeadActivity>): Promise<
         type: activity.type,
         description: activity.description,
         scheduled_at: activity.scheduled_at,
-        created_by: (await supabase.auth.getUser()).data.user?.id || null
+        created_by: userData.user?.id || null
       }])
-      .select()
+      .select(`
+        *,
+        profiles:created_by (
+          first_name,
+          last_name
+        )
+      `)
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error creating lead activity:", error);
+      throw error;
+    }
     
-    toast.success("تم إضافة النشاط بنجاح");
+    console.log("Activity created successfully:", data);
     return data as LeadActivity;
   } catch (error) {
     console.error("Error creating lead activity:", error);
@@ -62,7 +79,13 @@ export const completeLeadActivity = async (activityId: string): Promise<LeadActi
         completed_at: new Date().toISOString()
       })
       .eq('id', activityId)
-      .select()
+      .select(`
+        *,
+        profiles:created_by (
+          first_name,
+          last_name
+        )
+      `)
       .single();
     
     if (error) throw error;

@@ -18,7 +18,7 @@ import { format } from "date-fns";
 import { ar } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from "sonner";
-import { LeadActivity } from "@/services/leads/types"; // Using consistent types
+import { LeadActivity } from "@/types/leads"; // Using the centralized type
 
 export interface ActivityFormProps {
   leadId: string;
@@ -71,7 +71,7 @@ const ActivityForm: React.FC<ActivityFormProps> = ({
       
       // Call the success callback with the new activity
       if (newActivity) {
-        onSuccess(newActivity as unknown as LeadActivity);
+        onSuccess(newActivity);
       } else {
         onSuccess();
       }

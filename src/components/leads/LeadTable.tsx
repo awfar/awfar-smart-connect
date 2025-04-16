@@ -1,339 +1,224 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Lead } from "@/types/leads";
-import { getStageColorClass, getInitials } from "@/services/leads/utils";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { format } from "date-fns";
-import { ar } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Loader2, User, Building, Calendar, Phone, Mail, PieChart, 
-  MoreVertical, Eye, Pencil, Trash2
-} from "lucide-react";
-import { cn } from '@/lib/utils';
-import { useBreakpoints } from '@/hooks/use-mobile';
+import { MoreHorizontal, Edit, Trash2, Calendar } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { format, parseISO } from "date-fns";
+import { ar } from "date-fns/locale";
+import { useBreakpoints } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
+import { Lead } from "@/types/leads";
 
 interface LeadTableProps {
   leads: Lead[];
   selectedLead: string | null;
   onLeadSelect: (leadId: string) => void;
-  isLoading?: boolean;
-  onEdit?: (lead: Lead) => void;
-  onDelete?: (leadId: string) => void;
+  onEdit: (lead: Lead) => void;
+  onDelete: (leadId: string) => void;
 }
 
 const LeadTable: React.FC<LeadTableProps> = ({ 
   leads, 
   selectedLead, 
-  onLeadSelect,
-  isLoading = false,
-  onEdit,
-  onDelete
+  onLeadSelect, 
+  onEdit, 
+  onDelete 
 }) => {
-  const navigate = useNavigate();
-  const { isMobile } = useBreakpoints();
+  const { isMobile, isSmallMobile } = useBreakpoints();
 
-  const handleRowClick = (leadId: string) => {
-    onLeadSelect(leadId);
-  };
-
-  const handleRowDoubleClick = (leadId: string) => {
-    navigate(`/dashboard/leads/${leadId}`);
-  };
-  
-  const handleEdit = (e: React.MouseEvent, lead: Lead) => {
-    e.stopPropagation();
-    if (onEdit) onEdit(lead);
-  };
-  
-  const handleDelete = (e: React.MouseEvent, leadId: string) => {
-    e.stopPropagation();
-    if (onDelete) onDelete(leadId);
-  };
-  
-  const handleView = (e: React.MouseEvent, leadId: string) => {
-    e.stopPropagation();
-    navigate(`/dashboard/leads/${leadId}`);
+  // Helper to format dates
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return '';
+    try {
+      return format(parseISO(dateString), "d MMM", { locale: ar });
+    } catch (error) {
+      console.error("Date parsing error:", error, dateString);
+      return '';
+    }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="mr-2 text-muted-foreground">جاري تحميل البيانات...</p>
-      </div>
-    );
-  }
+  // Get stage badge variant
+  const getStageBadgeVariant = (stage?: string) => {
+    if (!stage) return "outline";
+    
+    switch (stage.toLowerCase()) {
+      case 'جديد': case 'new': return "default";
+      case 'مؤهل': case 'qualified': return "secondary";
+      case 'يتفاوض': case 'negotiating': return "warning";
+      case 'فرصة': case 'opportunity': return "info";
+      case 'مغلق مكسب': case 'closed won': return "success";
+      case 'مغلق خسارة': case 'closed lost': return "destructive";
+      default: return "outline";
+    }
+  };
 
   if (isMobile) {
+    // Mobile card view
     return (
-      <div className="space-y-4 px-1">
-        {leads.length > 0 ? (
-          leads.map((lead) => {
-            const fullName = `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || "بدون اسم";
-            
-            return (
-              <div 
-                key={lead.id} 
-                className={cn(
-                  "border rounded-lg p-4 shadow-sm transition-all", 
-                  lead.id === selectedLead ? 'bg-muted/50 border-primary' : 'bg-white hover:bg-muted/20'
+      <div className="space-y-3">
+        {leads.map((lead) => (
+          <div 
+            key={lead.id}
+            className={cn(
+              "relative border rounded-md overflow-hidden",
+              selectedLead === lead.id ? "border-primary bg-primary/5" : "border-border bg-card"
+            )}
+            onClick={() => onLeadSelect(lead.id)}
+          >
+            <div className="p-3 pb-2.5 flex flex-col gap-1.5">
+              {/* Name and Stage/Status in header row */}
+              <div className="flex justify-between items-center">
+                <div className="font-medium">
+                  {lead.first_name} {lead.last_name}
+                </div>
+                <Badge variant={getStageBadgeVariant(lead.stage)}>
+                  {lead.stage || 'غير محدد'}
+                </Badge>
+              </div>
+              
+              {/* Company and email */}
+              <div className="text-sm text-muted-foreground flex flex-col">
+                {lead.company && (
+                  <div className="mb-0.5">{lead.company}</div>
                 )}
-                onClick={() => handleRowClick(lead.id)}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-11 w-11 border-2 border-muted-foreground/10">
-                      {lead.avatar_url ? (
-                        <AvatarImage src={lead.avatar_url} alt={fullName} />
-                      ) : (
-                        <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                          {getInitials(fullName)}
-                        </AvatarFallback>
-                      )}
+                <div className="text-xs">{lead.email}</div>
+                {lead.phone && (
+                  <div className="text-xs mt-0.5">{lead.phone}</div>
+                )}
+              </div>
+
+              {/* Bottom row with date and actions */}
+              <div className="flex justify-between items-center mt-1 pt-1.5 border-t">
+                <div className="flex items-center text-xs text-muted-foreground">
+                  <Calendar className="h-3 w-3 mr-1.5" />
+                  {lead.created_at ? formatDate(lead.created_at) : 'N/A'}
+                </div>
+                
+                <div className="flex items-center">
+                  {lead.owner && (
+                    <Avatar className="h-5 w-5 mr-2">
+                      <AvatarImage src={lead.owner.avatar} />
+                      <AvatarFallback className="text-[10px]">
+                        {lead.owner.initials}
+                      </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <div className="font-bold text-base">{fullName}</div>
-                      {lead.company && (
-                        <div className="flex items-center text-xs text-muted-foreground">
-                          <Building className="h-3 w-3 ml-1" />
-                          {lead.company}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <Badge className={getStageColorClass(lead.status || lead.stage || 'جديد')}>
-                    {lead.status || lead.stage || 'جديد'}
-                  </Badge>
-                </div>
-                
-                <div className="grid grid-cols-1 gap-y-2.5 mt-3 text-sm border-t border-gray-100 pt-3">
-                  {lead.email && (
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      <Mail className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <span className="truncate">{lead.email}</span>
-                    </div>
                   )}
                   
-                  {lead.phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <span dir="ltr">{lead.phone}</span>
-                    </div>
-                  )}
-                  
-                  {lead.source && (
-                    <div className="flex items-center gap-2">
-                      <PieChart className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      <span>{lead.source}</span>
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-between items-center mt-1">
-                    {lead.owner ? (
-                      <div className="flex items-center gap-1.5">
-                        <Avatar className="h-5 w-5">
-                          <AvatarImage src={lead.owner.avatar} />
-                          <AvatarFallback className="text-xs">{lead.owner.initials}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-xs">{lead.owner.name}</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1.5 text-muted-foreground">
-                        <User className="h-3.5 w-3.5" />
-                        <span className="text-xs">غير مخصص</span>
-                      </div>
-                    )}
-                    
-                    {(lead.created_at || lead.createdAt) && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Calendar className="h-3.5 w-3.5 shrink-0" />
-                        <span>{format(new Date(lead.created_at || lead.createdAt || ''), "yyyy/MM/dd", { locale: ar })}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="flex justify-end mt-3 pt-2 border-t border-gray-100">
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={(e) => e.stopPropagation()}
-                        className="h-8 w-8 p-0"
-                      >
-                        <MoreVertical className="h-4 w-4" />
-                        <span className="sr-only">خيارات</span>
+                    <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">Actions</span>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-[160px]">
-                      <DropdownMenuItem onClick={(e) => handleView(e, lead.id)}>
-                        <Eye className="ml-2 h-4 w-4" />
-                        <span>عرض التفاصيل</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={(e) => handleEdit(e, lead)}>
-                        <Pencil className="ml-2 h-4 w-4" />
-                        <span>تعديل</span>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(lead); }}>
+                        <Edit className="h-4 w-4 ml-2" />
+                        <span>تحرير</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem 
-                        className="text-red-600" 
-                        onClick={(e) => handleDelete(e, lead.id)}
+                        onClick={(e) => { e.stopPropagation(); onDelete(lead.id); }}
+                        className="text-red-600 focus:text-red-600"
                       >
-                        <Trash2 className="ml-2 h-4 w-4" />
+                        <Trash2 className="h-4 w-4 ml-2" />
                         <span>حذف</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
               </div>
-            );
-          })
-        ) : (
-          <div className="text-center py-8 px-4 border rounded-lg bg-muted/10">
-            <User className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-            <p className="text-muted-foreground">لا توجد بيانات متاحة</p>
-            <p className="text-xs text-muted-foreground mt-1">قم بإضافة عملاء محتملين جدد لعرضهم هنا</p>
+            </div>
           </div>
-        )}
+        ))}
       </div>
     );
   }
 
+  // Desktop table view
   return (
-    <div className="rounded-md border overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/50">
-              <th className="h-10 px-4 text-right font-medium">الاسم</th>
-              <th className="h-10 px-4 text-right font-medium">الشركة</th>
-              <th className="h-10 px-4 text-right font-medium">المرحلة</th>
-              <th className="h-10 px-4 text-right font-medium">المصدر</th>
-              <th className="h-10 px-4 text-right font-medium">المسؤول</th>
-              <th className="h-10 px-4 text-right font-medium">تاريخ الإنشاء</th>
-              <th className="h-10 px-4 text-right font-medium">الإجراءات</th>
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse">
+        <thead className="bg-muted/50">
+          <tr>
+            <th className="text-right py-2 px-3 font-medium text-muted-foreground">الاسم</th>
+            <th className="text-right py-2 px-3 font-medium text-muted-foreground">الشركة</th>
+            <th className="text-right py-2 px-3 font-medium text-muted-foreground hidden md:table-cell">البريد الإلكتروني</th>
+            <th className="text-right py-2 px-3 font-medium text-muted-foreground hidden lg:table-cell">الهاتف</th>
+            <th className="text-right py-2 px-3 font-medium text-muted-foreground">المرحلة</th>
+            <th className="text-right py-2 px-3 font-medium text-muted-foreground hidden lg:table-cell">المسؤول</th>
+            <th className="text-right py-2 px-3 font-medium text-muted-foreground hidden xl:table-cell">تاريخ الإضافة</th>
+            <th className="text-center py-2 px-3 font-medium text-muted-foreground w-[50px]">الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody>
+          {leads.map((lead) => (
+            <tr
+              key={lead.id}
+              className={cn(
+                "hover:bg-muted/50",
+                selectedLead === lead.id ? "bg-primary/5" : ""
+              )}
+            >
+              <td className="py-2 px-3 text-right font-medium">
+                {lead.first_name} {lead.last_name}
+              </td>
+              <td className="py-2 px-3 text-right">{lead.company}</td>
+              <td className="py-2 px-3 text-right hidden md:table-cell">{lead.email}</td>
+              <td className="py-2 px-3 text-right hidden lg:table-cell">{lead.phone || "غير محدد"}</td>
+              <td className="py-2 px-3 text-right">
+                <Badge variant={getStageBadgeVariant(lead.stage)}>
+                  {lead.stage || "غير محدد"}
+                </Badge>
+              </td>
+              <td className="py-2 px-3 text-right hidden lg:table-cell">
+                {lead.owner ? (
+                  <div className="flex items-center justify-end gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={lead.owner.avatar} alt={lead.owner.name} />
+                      <AvatarFallback>{lead.owner.initials}</AvatarFallback>
+                    </Avatar>
+                    <span>{lead.owner.name}</span>
+                  </div>
+                ) : (
+                  "غير معين"
+                )}
+              </td>
+              <td className="py-2 px-3 text-right hidden xl:table-cell">
+                {formatDate(lead.created_at)}
+              </td>
+              <td className="py-2 px-3 text-center">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreHorizontal className="h-4 w-4" />
+                      <span className="sr-only">Open menu</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => onEdit(lead)}>
+                      <Edit className="h-4 w-4 ml-2" />
+                      <span>تحرير</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => onDelete(lead.id)}
+                      className="text-red-600 focus:text-red-600"
+                    >
+                      <Trash2 className="h-4 w-4 ml-2" />
+                      <span>حذف</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {leads.length > 0 ? (
-              leads.map((lead) => {
-                const fullName = `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || "بدون اسم";
-                
-                return (
-                  <tr 
-                    key={lead.id} 
-                    className={`border-b hover:bg-muted/50 cursor-pointer transition-colors ${lead.id === selectedLead ? 'bg-muted/50' : ''}`}
-                    onClick={() => handleRowClick(lead.id)}
-                    onDoubleClick={() => handleRowDoubleClick(lead.id)}
-                  >
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback>{getInitials(fullName)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium">{fullName}</div>
-                          <div className="text-xs text-muted-foreground">{lead.email}</div>
-                          {lead.phone && <div className="text-xs text-muted-foreground">{lead.phone}</div>}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      {lead.company ? (
-                        <div className="flex items-center gap-1">
-                          <Building className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span>{lead.company}</span>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      <Badge className={getStageColorClass(lead.status || lead.stage || 'جديد')}>
-                        {lead.status || lead.stage || 'جديد'}
-                      </Badge>
-                    </td>
-                    <td className="p-4">{lead.source || 'غير محدد'}</td>
-                    <td className="p-4">
-                      {lead.owner ? (
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-6 w-6">
-                            <AvatarImage src={lead.owner.avatar} />
-                            <AvatarFallback>{lead.owner.initials}</AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm">{lead.owner.name}</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                          <User className="h-4 w-4" />
-                          <span>غير مخصص</span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      {(lead.created_at || lead.createdAt) ? (
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="text-sm">
-                            {format(new Date(lead.created_at || lead.createdAt || ''), "yyyy/MM/dd", { locale: ar })}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      <div className="flex items-center gap-2">
-                        <Button 
-                          size="sm" 
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                          onClick={(e) => handleView(e, lead.id)}
-                        >
-                          <Eye className="h-4 w-4" />
-                          <span className="sr-only">عرض</span>
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                          onClick={(e) => handleEdit(e, lead)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                          <span className="sr-only">تعديل</span>
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="ghost"
-                          className="h-8 w-8 p-0 text-red-600"
-                          onClick={(e) => handleDelete(e, lead.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          <span className="sr-only">حذف</span>
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })
-            ) : (
-              <tr>
-                <td colSpan={7} className="p-8 text-center text-muted-foreground">
-                  لا توجد ��يانات متاحة
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };

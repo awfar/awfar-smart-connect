@@ -1,4 +1,3 @@
-
 // سيتم إصلاح أخطاء الطباعة مع الحفاظ على وظائف الملف الأصلي
 // إصلاح خطأ Type instantiation is excessively deep and possibly infinite
 
@@ -22,47 +21,63 @@ export interface Task {
     id: string;
     name: string;
   };
+  lead_id?: string; // Added for direct lead relationship
 }
 
 export type TaskCreate = Omit<Task, 'id' | 'created_at' | 'updated_at'> & {
   id?: string;
   created_at?: string;
   updated_at?: string;
-  lead_id?: string; // Added to support direct lead relationship
+  lead_id?: string;
 };
 
-// تحسين دالة التحويل لتجنب الدوران المفرط
-export const castToTask = (data: any): Task => {
-  // بدلاً من استخدام التحويل التلقائي، نقوم بعمل تحويل صريح مع فحوصات
-  const record = data as Record<string, unknown>;
-  
-  let status = String(record.status || 'pending');
+interface TaskRecord {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  priority: string;
+  due_date?: string;
+  created_at: string;
+  updated_at: string;
+  assigned_to?: string;
+  assigned_to_name?: string;
+  related_to?: any;
+  lead_id?: string;
+}
+
+// بدلاً من استخدام التحويل التلقائي، نقوم بعمل تحويل صريح مع فحوصات
+export const castToTask = (data: TaskRecord): Task => {
+  let status = data.status;
+  // Validate status
   if (status !== 'pending' && status !== 'in-progress' && status !== 'completed' && status !== 'cancelled') {
     status = 'pending';
   }
   
-  let priority = String(record.priority || 'medium');
+  let priority = data.priority;
+  // Validate priority
   if (priority !== 'high' && priority !== 'medium' && priority !== 'low') {
     priority = 'medium';
   }
   
   return {
-    id: String(record.id || ''),
-    title: String(record.title || ''),
-    description: record.description ? String(record.description) : undefined,
+    id: data.id,
+    title: data.title,
+    description: data.description,
     status: status as Task['status'],
     priority: priority as Task['priority'],
-    due_date: record.due_date ? String(record.due_date) : undefined,
-    created_at: String(record.created_at || new Date().toISOString()),
-    updated_at: String(record.updated_at || new Date().toISOString()),
-    assigned_to: record.assigned_to ? String(record.assigned_to) : undefined,
-    assigned_to_name: record.assigned_to_name ? String(record.assigned_to_name) : undefined,
-    related_to: record.related_to as Task['related_to']
+    due_date: data.due_date,
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+    assigned_to: data.assigned_to,
+    assigned_to_name: data.assigned_to_name,
+    related_to: data.related_to as Task['related_to'],
+    lead_id: data.lead_id
   };
 };
 
 // جلب المهام
-export async function getTasks(filters: Record<string, any> = {}) {
+export async function getTasks(filters: Record<string, any> = {}): Promise<Task[]> {
   try {
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
@@ -92,7 +107,7 @@ export async function getTasks(filters: Record<string, any> = {}) {
         return getMockTasks(filters.lead_id);
       }
       
-      return data.map(castToTask);
+      return (data as TaskRecord[]).map(castToTask);
     }
     
     // استخدم البيانات التجريبية إذا لم تكن Supabase متاحة
@@ -170,7 +185,7 @@ export async function getTaskById(taskId: string): Promise<Task | null> {
         return null;
       }
       
-      return castToTask(data);
+      return castToTask(data as TaskRecord);
     }
     
     // استخدم البيانات التجريبية إذا لم تكن Supabase متاحة
@@ -204,7 +219,7 @@ export async function updateTask(taskId: string, taskData: Partial<Task>): Promi
         return null;
       }
       
-      return castToTask(data);
+      return castToTask(data as TaskRecord);
     }
     
     // محاكاة تحديث المهمة باستخدام البيانات التجريبية
@@ -254,13 +269,13 @@ export async function deleteTask(taskId: string): Promise<boolean> {
 
 // بيانات تجريبية للمهام
 function getMockTasks(leadId?: string): Task[] {
-  const allMockTasks = [
+  const allMockTasks: Task[] = [
     {
       id: '1',
       title: 'الاتصال بالعميل الجديد',
       description: 'متابعة العميل المحتمل الذي تم إضافته بالأمس',
-      status: 'pending' as Task['status'],
-      priority: 'high' as Task['priority'],
+      status: 'pending',
+      priority: 'high',
       due_date: new Date(Date.now() + 86400000).toISOString(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -276,8 +291,8 @@ function getMockTasks(leadId?: string): Task[] {
       id: '2',
       title: 'إعداد عرض أسعار',
       description: 'إعداد عرض أسعار للعميل بناءً على احتياجاته',
-      status: 'in-progress' as Task['status'],
-      priority: 'medium' as Task['priority'],
+      status: 'in-progress',
+      priority: 'medium',
       due_date: new Date(Date.now() + 172800000).toISOString(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -293,8 +308,8 @@ function getMockTasks(leadId?: string): Task[] {
       id: '3',
       title: 'متابعة الدفعة المستحقة',
       description: 'التواصل مع العميل لتذكيره بالدفعة المستحقة',
-      status: 'completed' as Task['status'],
-      priority: 'low' as Task['priority'],
+      status: 'completed',
+      priority: 'low',
       due_date: new Date(Date.now() - 86400000).toISOString(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),

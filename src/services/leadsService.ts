@@ -22,4 +22,4 @@ export {
 } from './leads';
 
 // Export types
-export type { Lead, LeadActivity } from './leads';
+export type { Lead, LeadActivity } from '@/types/leads';

@@ -1,6 +1,14 @@
 
 // تعريف الأنواع للعميل المحتمل والأنشطة المرتبطة به
 
+export interface Owner {
+  name: string;
+  avatar: string; // Made required to match usage
+  initials: string;
+  first_name?: string;
+  last_name?: string;
+}
+
 export interface Lead {
   id: string;
   first_name: string;
@@ -22,13 +30,7 @@ export interface Lead {
   assignedTo?: string;
   assigned_to?: string;
   avatar_url?: string | null;
-  owner?: {
-    name: string;
-    avatar: string;
-    initials: string;
-    first_name?: string;
-    last_name?: string;
-  };
+  owner?: Owner;
 }
 
 export interface LeadActivity {

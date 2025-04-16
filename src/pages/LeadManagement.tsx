@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import LeadHeader from "@/components/leads/LeadHeader";
@@ -13,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import LeadPermissionAlert from "@/components/leads/LeadPermissionAlert";
 import { useAuth } from '@/contexts/AuthContext';
 import { useBreakpoints } from '@/hooks/use-mobile';
-import { Lead } from "@/services/leads/types"; // Use consistent Lead type
+import { Lead } from "@/types/leads"; // Using the centralized Lead type
 
 const LeadManagement = () => {
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
@@ -68,6 +69,7 @@ const LeadManagement = () => {
     refetch
   } = useLeadManagement();
 
+  // Transform leads to ensure consistent structure with proper owner fields
   const leads: Lead[] = serviceLeads.map(lead => ({
     id: lead.id,
     first_name: lead.first_name,
