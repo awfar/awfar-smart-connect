@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Task } from '@/services/tasks/types';
+import { Task, TaskCreateInput } from '@/services/tasks/types';
 import { getTasks, createTask, updateTask, deleteTask } from '@/services/tasks';
 import { toast } from 'sonner';
 
@@ -69,13 +69,16 @@ export const useLeadTasks = (leadId?: string) => {
       return;
     }
     
-    addTask({
+    // Create a TaskCreateInput object with the correct properties
+    const taskCreateData: TaskCreateInput = {
       ...taskData,
       lead_id: leadId,
       related_to_type: 'lead',
       related_to_id: leadId,
       related_to_name: 'عميل محتمل'
-    });
+    };
+    
+    addTask(taskCreateData);
   };
 
   // Function to handle updating a task

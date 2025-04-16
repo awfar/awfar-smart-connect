@@ -59,7 +59,7 @@ export const updateLead = async (lead: Lead): Promise<Lead> => {
           const { data: userData } = await supabase.auth.getUser();
           await addLeadActivity({
             lead_id: lead.id,
-            type: "update",
+            type: 'note', // Use a standard activity type instead of 'update'
             description: "تم تحديث بيانات العميل المحتمل",
             created_by: userData.user?.id
           });
@@ -176,14 +176,14 @@ export const createLead = async (lead: Omit<Lead, "id">): Promise<Lead> => {
           
           await addLeadActivity({
             lead_id: transformedLead.id,
-            type: "create",
+            type: 'note', // Use a standard activity type instead of 'create'
             description: "تم إنشاء العميل المحتمل",
             created_by: userData.user?.id
           });
           
           await addLeadActivity({
             lead_id: transformedLead.id,
-            type: "call",
+            type: 'call',
             description: "متابعة هاتفية للعميل المحتمل الجديد",
             scheduled_at: followupDate.toISOString(),
             created_by: userData.user?.id
@@ -244,7 +244,7 @@ export const deleteLead = async (id: string): Promise<boolean> => {
         const { data: userData } = await supabase.auth.getUser();
         await addLeadActivity({
           lead_id: id,
-          type: "delete",
+          type: 'note', // Use a standard activity type instead of 'delete'
           description: "تم حذف العميل المحتمل",
           created_by: userData.user?.id
         });

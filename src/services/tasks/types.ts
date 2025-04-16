@@ -30,7 +30,7 @@ export interface Task {
 
 export interface TaskCreateInput {
   id?: string;
-  title: string;
+  title?: string;  // Making title optional
   description?: string;
   priority?: 'low' | 'medium' | 'high';
   status?: 'pending' | 'in_progress' | 'completed' | 'cancelled';

@@ -114,13 +114,10 @@ export const completeLeadActivity = async (activityId: string): Promise<LeadActi
 // Function to create a lead task connection
 export const addLeadTask = async (leadId: string, taskId: string): Promise<boolean> => {
   try {
-    // Here was the error - we need to explicitly use the updated Task type 
-    // that includes lead_id
+    // Use the updated Task type with lead_id
     const { error } = await supabase
       .from('tasks')
-      .update({ 
-        lead_id: leadId 
-      })
+      .update({ lead_id: leadId })
       .eq('id', taskId);
     
     if (error) {

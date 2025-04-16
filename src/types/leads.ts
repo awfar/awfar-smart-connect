@@ -26,12 +26,14 @@ export interface Owner {
   name?: string;
   avatar?: string;
   initials?: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface LeadActivity {
   id: string;
   lead_id: string;
-  type: 'note' | 'call' | 'meeting' | 'email' | 'task' | 'whatsapp';
+  type: 'note' | 'call' | 'meeting' | 'email' | 'task' | 'whatsapp' | 'update' | 'create' | 'delete';
   description: string;
   scheduled_at?: string | null;
   completed_at?: string | null;
@@ -44,4 +46,13 @@ export interface LeadActivity {
     first_name?: string;
     last_name?: string;
   };
+}
+
+export interface TestResult {
+  id: string;
+  name: string;
+  success: boolean;
+  details?: string;
+  component: string;
+  responseTimeMs: number;
 }

@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LeadActivity } from "./types/leadTypes";
+import { LeadActivity } from "@/types/leads";
 
 export const fetchLeadActivities = async (leadId: string): Promise<LeadActivity[]> => {
   try {
@@ -14,7 +14,7 @@ export const fetchLeadActivities = async (leadId: string): Promise<LeadActivity[
     
     if (error) throw error;
     
-    return data || [];
+    return (data || []) as LeadActivity[];
   } catch (error) {
     console.error("Error fetching lead activities:", error);
     toast.error("فشل في جلب أنشطة العميل المحتمل");
@@ -35,7 +35,7 @@ export const createLeadActivity = async (activity: Partial<LeadActivity>): Promi
       .from('lead_activities')
       .insert([{
         lead_id: activity.lead_id,
-        type: activity.type,
+        type: activity.type || 'note',
         description: activity.description,
         scheduled_at: activity.scheduled_at,
         created_by: (await supabase.auth.getUser()).data.user?.id || null
@@ -46,7 +46,7 @@ export const createLeadActivity = async (activity: Partial<LeadActivity>): Promi
     if (error) throw error;
     
     toast.success("تم إضافة النشاط بنجاح");
-    return data;
+    return data as LeadActivity;
   } catch (error) {
     console.error("Error creating lead activity:", error);
     toast.error("فشل في إضافة النشاط");
@@ -68,7 +68,7 @@ export const completeLeadActivity = async (activityId: string): Promise<LeadActi
     if (error) throw error;
     
     toast.success("تم إكمال النشاط بنجاح");
-    return data;
+    return data as LeadActivity;
   } catch (error) {
     console.error("Error completing lead activity:", error);
     toast.error("فشل في إكمال النشاط");

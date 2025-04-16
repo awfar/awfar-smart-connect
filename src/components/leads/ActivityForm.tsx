@@ -35,7 +35,7 @@ const ActivityForm: React.FC<ActivityFormProps> = ({
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    type: "note", // Default activity type
+    type: "note" as LeadActivity['type'], // Explicitly type this as LeadActivity['type']
     description: "",
     scheduled_at: null as Date | null,
   });
@@ -64,7 +64,7 @@ const ActivityForm: React.FC<ActivityFormProps> = ({
       
       // Reset form
       setFormData({
-        type: "note",
+        type: "note" as LeadActivity['type'],
         description: "",
         scheduled_at: null
       });
@@ -85,7 +85,11 @@ const ActivityForm: React.FC<ActivityFormProps> = ({
   };
   
   const handleChange = (key: string, value: string | Date | null) => {
-    setFormData(prev => ({ ...prev, [key]: value }));
+    if (key === 'type') {
+      setFormData(prev => ({ ...prev, [key]: value as LeadActivity['type'] }));
+    } else {
+      setFormData(prev => ({ ...prev, [key]: value }));
+    }
   };
   
   return (
