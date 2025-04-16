@@ -70,9 +70,8 @@ export const castToTask = (data: TaskRecord): Task => {
   // Parse related_to safely
   let relatedTo: Task['related_to'] | undefined = undefined;
   if (data.related_to && typeof data.related_to === 'object') {
-    const relatedToObj = data.related_to as any;
+    const relatedToObj = data.related_to as Record<string, unknown>;
     if (
-      relatedToObj && 
       typeof relatedToObj.type === 'string' && 
       typeof relatedToObj.id === 'string' && 
       typeof relatedToObj.name === 'string'
@@ -310,7 +309,7 @@ function getMockTasks(leadId?: string): Task[] {
       assigned_to: 'user1',
       assigned_to_name: 'أحمد محمد',
       related_to: {
-        type: 'lead' as const,
+        type: 'lead',
         id: 'lead1',
         name: 'شركة التقنية الحديثة'
       }
@@ -327,7 +326,7 @@ function getMockTasks(leadId?: string): Task[] {
       assigned_to: 'user2',
       assigned_to_name: 'سارة خالد',
       related_to: {
-        type: 'deal' as const,
+        type: 'deal',
         id: 'deal1',
         name: 'صفقة برنامج المحاسبة'
       }
@@ -344,7 +343,7 @@ function getMockTasks(leadId?: string): Task[] {
       assigned_to: 'user1',
       assigned_to_name: 'أحمد محمد',
       related_to: {
-        type: 'customer' as const,
+        type: 'customer',
         id: 'customer1',
         name: 'مؤسسة المستقبل'
       }
