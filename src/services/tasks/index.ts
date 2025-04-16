@@ -1,3 +1,4 @@
+
 // سيتم إصلاح أخطاء الطباعة مع الحفاظ على وظائف الملف الأصلي
 // إصلاح خطأ Type instantiation is excessively deep and possibly infinite
 
@@ -28,8 +29,8 @@ export interface Task {
   lead_id?: string; // Added for direct lead relationship
 }
 
-// Define a separate type for task creation to avoid circular references
-export interface TaskCreate {
+// Define a simplified type for task creation input without circular references
+export interface TaskCreateInput {
   id?: string;
   title: string;
   description?: string;
@@ -159,7 +160,7 @@ export async function getTasks(filters: Record<string, any> = {}): Promise<Task[
 }
 
 // إنشاء مهمة جديدة
-export async function createTask(taskData: TaskCreate): Promise<Task> {
+export async function createTask(taskData: TaskCreateInput): Promise<Task> {
   try {
     console.log("Creating task with data:", taskData);
     const now = new Date().toISOString();
