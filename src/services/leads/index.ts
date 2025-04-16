@@ -22,7 +22,8 @@ import {
 import { 
   getLeadActivities, 
   addLeadActivity,
-  completeLeadActivity
+  completeLeadActivity,
+  deleteLeadActivity
 } from "./leadActivities";
 
 // Re-export all functions
@@ -44,6 +45,7 @@ export {
   deleteLead,
   addLeadActivity,
   completeLeadActivity,
+  deleteLeadActivity,
   getLeadActivities
 };
 

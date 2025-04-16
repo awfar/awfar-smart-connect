@@ -1,4 +1,5 @@
 
+
 // Core types for leads section of the application
 export interface Lead {
   id: string;
@@ -56,3 +57,4 @@ export interface TestResult {
   component: string;
   responseTimeMs: number;
 }
+

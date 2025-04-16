@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LeadActivity } from "@/types/leads"; // Using the central type definition
@@ -107,6 +108,27 @@ export const completeLeadActivity = async (activityId: string): Promise<LeadActi
     console.error("Error completing lead activity:", error);
     toast.error("فشل في إكمال النشاط");
     return null;
+  }
+};
+
+export const deleteLeadActivity = async (activityId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('lead_activities')
+      .delete()
+      .eq('id', activityId);
+    
+    if (error) {
+      console.error("Error deleting lead activity:", error);
+      throw error;
+    }
+    
+    toast.success("تم حذف النشاط بنجاح");
+    return true;
+  } catch (error) {
+    console.error("Error deleting lead activity:", error);
+    toast.error("فشل في حذف النشاط");
+    return false;
   }
 };
 
