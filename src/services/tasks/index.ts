@@ -41,7 +41,11 @@ export interface TaskCreateInput {
   updated_at?: string;
   assigned_to?: string;
   assigned_to_name?: string;
-  related_to?: RelatedEntity;
+  related_to?: {
+    type: RelatedEntityType;
+    id: string;
+    name: string;
+  };
   lead_id?: string;
 }
 
@@ -174,7 +178,7 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
       // تعيين القيم الافتراضية إذا لم يتم توفيرها
       status: taskData.status || 'pending',
       priority: taskData.priority || 'medium'
-    };
+    } as Task; // Using type assertion to avoid potential circular reference issues
     
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
