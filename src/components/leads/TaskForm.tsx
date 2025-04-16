@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -55,7 +54,6 @@ const TaskForm: React.FC<TaskFormProps> = ({
       const newTask = await createTask({
         ...formData,
         due_date: formData.due_date ? formData.due_date.toISOString() : null,
-        // Use flattened structure for related_to
         related_to_type: 'lead',
         related_to_id: leadId,
         related_to_name: 'عميل محتمل'

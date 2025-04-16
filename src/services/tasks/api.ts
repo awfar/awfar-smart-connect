@@ -54,7 +54,7 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
     const now = new Date().toISOString();
     const taskId = taskData.id || uuidv4();
     
-    // Create a new task object
+    // Create a new task object with proper typing
     const newTask: Task = {
       id: taskId,
       title: taskData.title,
@@ -80,7 +80,7 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
     
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
-      // Create a related_to object for database storage
+      // Create a related_to object for database storage that will be stored as JSON
       const relatedTo = newTask.related_to ? JSON.stringify(newTask.related_to) : null;
       
       // Create a database record

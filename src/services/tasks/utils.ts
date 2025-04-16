@@ -1,7 +1,7 @@
 
 import { Task, TaskRecord, RelatedEntityReference } from './types';
 
-// بدلاً من استخدام التحويل التلقائي، نقوم بعمل تحويل صريح مع فحوصات
+// Explicitly convert the TaskRecord to Task with proper type checking
 export const castToTask = (data: TaskRecord): Task => {
   // Validate and convert status
   let status: Task['status'] = 'pending';
