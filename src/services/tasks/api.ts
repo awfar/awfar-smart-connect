@@ -83,19 +83,24 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
     const now = new Date().toISOString();
     const taskId = taskData.id || uuidv4();
     
+    // Ensure required fields are present
+    if (!taskData.title) {
+      throw new Error('Task title is required');
+    }
+    
     // Build task record manually without complex type operations
     const taskRecord: TaskRecord = {
       id: taskId,
       title: taskData.title,
-      description: taskData.description,
+      description: taskData.description || null,
       status: taskData.status || 'pending',
       priority: taskData.priority || 'medium',
       due_date: taskData.due_date || null,
       created_at: now,
       updated_at: now,
-      assigned_to: taskData.assigned_to,
-      assigned_to_name: taskData.assigned_to_name,
-      lead_id: taskData.lead_id,
+      assigned_to: taskData.assigned_to || null,
+      assigned_to_name: taskData.assigned_to_name || null,
+      lead_id: taskData.lead_id || null,
       related_to: null // Initialize as null and populate below if needed
     };
     
@@ -111,14 +116,19 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
     
     // في بيئة الإنتاج، استخدم Supabase
     if (typeof supabase !== 'undefined') {
-      // Insert using explicit TaskRecord type to ensure type compatibility
-      const { error } = await supabase.from('tasks').insert(taskRecord as any);
+      // Insert using explicit record to ensure type compatibility
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert(taskRecord)
+        .select()
+        .single();
       
       if (error) {
         console.error('Error creating task in Supabase:', error);
         // استمر بإنشاء المهمة في الذاكرة المؤقتة
       } else {
-        console.log('Task created successfully in database');
+        console.log('Task created successfully in database:', data);
+        return castToTask(data);
       }
     }
     
@@ -171,8 +181,6 @@ export async function updateTask(taskId: string, taskData: Partial<Task>): Promi
     // Handle related_to conversion explicitly
     if (taskData.related_to) {
       updates.related_to = JSON.stringify(taskData.related_to);
-      // Remove the object reference to prevent type recursion
-      delete updates.related_to;
     }
     
     // في بيئة الإنتاج، استخدم Supabase

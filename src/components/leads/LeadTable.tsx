@@ -51,8 +51,8 @@ const LeadTable: React.FC<LeadTableProps> = ({
     switch (stage.toLowerCase()) {
       case 'جديد': case 'new': return "default";
       case 'مؤهل': case 'qualified': return "secondary";
-      case 'يتفاوض': case 'negotiating': return "secondary"; // Changed from "warning"
-      case 'فرصة': case 'opportunity': return "secondary";   // Changed from "info"
+      case 'يتفاوض': case 'negotiating': return "secondary"; 
+      case 'فرصة': case 'opportunity': return "secondary";   
       case 'مغلق مكسب': case 'closed won': return "success";
       case 'مغلق خسارة': case 'closed lost': return "destructive";
       default: return "outline";
@@ -60,62 +60,78 @@ const LeadTable: React.FC<LeadTableProps> = ({
   };
 
   if (isMobile) {
-    // Mobile card view
+    // Enhanced mobile card view with better spacing and readability
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         {leads.map((lead) => (
           <div 
             key={lead.id}
             className={cn(
-              "relative border rounded-md overflow-hidden",
-              selectedLead === lead.id ? "border-primary bg-primary/5" : "border-border bg-card"
+              "relative border rounded-lg overflow-hidden shadow-sm",
+              selectedLead === lead.id ? "border-primary bg-primary/5" : "border-gray-200 bg-white"
             )}
             onClick={() => onLeadSelect(lead.id)}
           >
-            <div className="p-3 pb-2.5 flex flex-col gap-1.5">
-              {/* Name and Stage/Status in header row */}
-              <div className="flex justify-between items-center">
-                <div className="font-medium">
+            <div className="p-4 pb-3 flex flex-col gap-2">
+              {/* Name and Stage/Status in header row with improved spacing */}
+              <div className="flex justify-between items-center mb-1">
+                <div className="font-medium text-base">
                   {lead.first_name} {lead.last_name}
                 </div>
-                <Badge variant={getStageBadgeVariant(lead.stage)}>
+                <Badge variant={getStageBadgeVariant(lead.stage)} className="px-2 py-1">
                   {lead.stage || 'غير محدد'}
                 </Badge>
               </div>
               
-              {/* Company and email */}
-              <div className="text-sm text-muted-foreground flex flex-col">
-                {lead.company && (
-                  <div className="mb-0.5">{lead.company}</div>
+              {/* Company with better visibility */}
+              {lead.company && (
+                <div className="text-sm font-medium text-muted-foreground">
+                  {lead.company}
+                </div>
+              )}
+              
+              {/* Contact details with clear separation */}
+              <div className="space-y-1.5 py-1.5 border-y border-gray-100">
+                {lead.email && (
+                  <div className="text-sm flex items-center">
+                    <span className="text-muted-foreground ml-2">البريد:</span>
+                    <span className="truncate">{lead.email}</span>
+                  </div>
                 )}
-                <div className="text-xs">{lead.email}</div>
+                
                 {lead.phone && (
-                  <div className="text-xs mt-0.5">{lead.phone}</div>
+                  <div className="text-sm flex items-center">
+                    <span className="text-muted-foreground ml-2">الهاتف:</span>
+                    <span>{lead.phone}</span>
+                  </div>
                 )}
               </div>
 
-              {/* Bottom row with date and actions */}
-              <div className="flex justify-between items-center mt-1 pt-1.5 border-t">
+              {/* Bottom row with date, owner and actions */}
+              <div className="flex justify-between items-center pt-1.5 mt-1">
                 <div className="flex items-center text-xs text-muted-foreground">
-                  <Calendar className="h-3 w-3 mr-1.5" />
-                  {lead.created_at ? formatDate(lead.created_at) : 'N/A'}
+                  <Calendar className="h-3 w-3 ml-1.5" />
+                  {lead.created_at ? formatDate(lead.created_at) : 'غير محدد'}
                 </div>
                 
                 <div className="flex items-center">
                   {lead.owner && (
-                    <Avatar className="h-5 w-5 mr-2">
-                      <AvatarImage src={lead.owner.avatar} />
-                      <AvatarFallback className="text-[10px]">
-                        {lead.owner.initials}
-                      </AvatarFallback>
-                    </Avatar>
+                    <div className="flex items-center mr-2">
+                      <Avatar className="h-5 w-5 mr-1">
+                        <AvatarImage src={lead.owner.avatar} />
+                        <AvatarFallback className="text-[10px]">
+                          {lead.owner.initials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-xs">{lead.owner.name}</span>
+                    </div>
                   )}
                   
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
                       <Button variant="ghost" size="icon" className="h-7 w-7">
                         <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Actions</span>
+                        <span className="sr-only">خيارات</span>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">

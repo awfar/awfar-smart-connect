@@ -18,8 +18,12 @@ export const getLeadActivities = async (leadId: string): Promise<LeadActivity[]>
       .eq('lead_id', leadId)
       .order('created_at', { ascending: false });
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching lead activities:", error);
+      throw error;
+    }
     
+    console.log("Retrieved lead activities:", data);
     return data as LeadActivity[] || [];
   } catch (error) {
     console.error("Error fetching lead activities:", error);
@@ -39,15 +43,18 @@ export const addLeadActivity = async (activity: Partial<LeadActivity>): Promise<
     console.log("Creating lead activity:", activity);
     const { data: userData } = await supabase.auth.getUser();
     
+    // Ensure we have all required fields
+    const newActivity = {
+      lead_id: activity.lead_id,
+      type: activity.type || 'note',
+      description: activity.description || '',
+      scheduled_at: activity.scheduled_at || null,
+      created_by: userData.user?.id || null
+    };
+    
     const { data, error } = await supabase
       .from('lead_activities')
-      .insert([{
-        lead_id: activity.lead_id,
-        type: activity.type,
-        description: activity.description,
-        scheduled_at: activity.scheduled_at,
-        created_by: userData.user?.id || null
-      }])
+      .insert([newActivity])
       .select(`
         *,
         profiles:created_by (
@@ -63,6 +70,7 @@ export const addLeadActivity = async (activity: Partial<LeadActivity>): Promise<
     }
     
     console.log("Activity created successfully:", data);
+    toast.success("تم إضافة النشاط بنجاح");
     return data as LeadActivity;
   } catch (error) {
     console.error("Error creating lead activity:", error);
@@ -88,7 +96,10 @@ export const completeLeadActivity = async (activityId: string): Promise<LeadActi
       `)
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error completing lead activity:", error);
+      throw error;
+    }
     
     toast.success("تم إكمال النشاط بنجاح");
     return data as LeadActivity;
@@ -96,5 +107,47 @@ export const completeLeadActivity = async (activityId: string): Promise<LeadActi
     console.error("Error completing lead activity:", error);
     toast.error("فشل في إكمال النشاط");
     return null;
+  }
+};
+
+// Function to create a lead task connection
+export const addLeadTask = async (leadId: string, taskId: string): Promise<boolean> => {
+  try {
+    // Update the task with the lead_id reference
+    const { error } = await supabase
+      .from('tasks')
+      .update({ lead_id: leadId })
+      .eq('id', taskId);
+    
+    if (error) {
+      console.error("Error associating task with lead:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error in addLeadTask:", error);
+    return false;
+  }
+};
+
+// Function to create a lead appointment connection
+export const addLeadAppointment = async (leadId: string, appointmentId: string): Promise<boolean> => {
+  try {
+    // Update the appointment with the lead_id reference
+    const { error } = await supabase
+      .from('appointments')
+      .update({ client_id: leadId })
+      .eq('id', appointmentId);
+    
+    if (error) {
+      console.error("Error associating appointment with lead:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error in addLeadAppointment:", error);
+    return false;
   }
 };

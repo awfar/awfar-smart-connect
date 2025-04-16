@@ -74,9 +74,10 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuToggle }) => {
         </div>
 
         <div className="flex items-center gap-2 md:gap-3">
-          {/* System Status */}
+          {/* System Status - now visible on both mobile and desktop */}
           <SystemStatus />
           
+          {/* Notification Bell - now visible on both mobile and desktop */}
           <Button variant="ghost" size="icon" className="relative text-white hover:bg-awfar-primary/80">
             <Bell className="h-5 w-5" />
             <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[10px] font-medium text-white flex items-center justify-center">
@@ -85,6 +86,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuToggle }) => {
             <span className="sr-only">الإشعارات</span>
           </Button>
           
+          {/* User Profile Dropdown - now visible on both mobile and desktop */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
