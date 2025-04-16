@@ -49,6 +49,7 @@ import SubscriptionManagement from "./pages/SubscriptionManagement";
 
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";
+import DashboardLayoutWrapper from "./components/layout/DashboardLayoutWrapper";
 
 function App() {
   return (
@@ -57,37 +58,43 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dashboard/enhanced" element={<EnhancedDashboard />} />
-            <Route path="/dashboard/leads" element={<LeadManagement />} />
-            <Route path="/dashboard/leads/:id" element={<LeadDetailsPage />} />
-            <Route path="/dashboard/users" element={<UserManagement />} />
-            <Route path="/dashboard/roles" element={<RolesManagement />} />
-            <Route path="/dashboard/permissions" element={<PermissionsManagement />} />
-            <Route path="/dashboard/forms" element={<FormBuilderManagement />} />
-            <Route path="/dashboard/super-admin" element={<CreateSuperAdmin />} />
-            <Route path="/dashboard/tasks" element={<TasksManagement />} />
-            <Route path="/dashboard/appointments" element={<AppointmentsManagement />} />
-            <Route path="/dashboard/tickets" element={<TicketsManagement />} />
-            <Route path="/dashboard/deals" element={<DealsManagement />} />
-            <Route path="/dashboard/catalog" element={<CatalogManagement />} />
-            <Route path="/dashboard/cms" element={<CMS />} />
-            <Route path="/dashboard/settings" element={<Settings />} />
-            <Route path="/dashboard/lead/:id" element={<LeadDetails />} />
-            <Route path="/dashboard/ai-agent" element={<AIAgent />} />
-            <Route path="/dashboard/chats" element={<ChatsManagement />} />
-            <Route path="/dashboard/channels" element={<Channels />} />
-            <Route path="/dashboard/invoices" element={<InvoiceManagement />} />
-            <Route path="/dashboard/packages" element={<PackageManagement />} />
-            <Route path="/dashboard/catalog/:id" element={<ProductDetails />} />
-            <Route path="/dashboard/companies" element={<CompaniesManagement />} />
-            <Route path="/dashboard/companies/properties" element={<CompanyPropertiesManagement />} />
-            <Route path="/dashboard/system-tests" element={<SystemTests />} />
-            <Route path="/dashboard/teams" element={<TeamsManagement />} />
-            <Route path="/dashboard/departments" element={<DepartmentsManagement />} />
-            <Route path="/dashboard/properties" element={<PropertiesManagement />} />
-            <Route path="/dashboard/reports" element={<ReportsManagement />} />
-            <Route path="/dashboard/subscriptions" element={<SubscriptionManagement />} />
+            
+            {/* Dashboard routes with consistent layout */}
+            <Route element={<DashboardLayoutWrapper />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboard/enhanced" element={<EnhancedDashboard />} />
+              <Route path="/dashboard/leads" element={<LeadManagement />} />
+              <Route path="/dashboard/leads/:id" element={<LeadDetailsPage />} />
+              <Route path="/dashboard/users" element={<UserManagement />} />
+              <Route path="/dashboard/roles" element={<RolesManagement />} />
+              <Route path="/dashboard/permissions" element={<PermissionsManagement />} />
+              <Route path="/dashboard/forms" element={<FormBuilderManagement />} />
+              <Route path="/dashboard/super-admin" element={<CreateSuperAdmin />} />
+              <Route path="/dashboard/tasks" element={<TasksManagement />} />
+              <Route path="/dashboard/appointments" element={<AppointmentsManagement />} />
+              <Route path="/dashboard/tickets" element={<TicketsManagement />} />
+              <Route path="/dashboard/deals" element={<DealsManagement />} />
+              <Route path="/dashboard/catalog" element={<CatalogManagement />} />
+              <Route path="/dashboard/cms" element={<CMS />} />
+              <Route path="/dashboard/settings" element={<Settings />} />
+              <Route path="/dashboard/lead/:id" element={<LeadDetails />} />
+              <Route path="/dashboard/ai-agent" element={<AIAgent />} />
+              <Route path="/dashboard/chats" element={<ChatsManagement />} />
+              <Route path="/dashboard/channels" element={<Channels />} />
+              <Route path="/dashboard/invoices" element={<InvoiceManagement />} />
+              <Route path="/dashboard/packages" element={<PackageManagement />} />
+              <Route path="/dashboard/catalog/:id" element={<ProductDetails />} />
+              <Route path="/dashboard/companies" element={<CompaniesManagement />} />
+              <Route path="/dashboard/companies/properties" element={<CompanyPropertiesManagement />} />
+              <Route path="/dashboard/system-tests" element={<SystemTests />} />
+              <Route path="/dashboard/teams" element={<TeamsManagement />} />
+              <Route path="/dashboard/departments" element={<DepartmentsManagement />} />
+              <Route path="/dashboard/properties" element={<PropertiesManagement />} />
+              <Route path="/dashboard/reports" element={<ReportsManagement />} />
+              <Route path="/dashboard/subscriptions" element={<SubscriptionManagement />} />
+            </Route>
+            
+            {/* Auth and public routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/try-ai-agent" element={<TryAIAgent />} />

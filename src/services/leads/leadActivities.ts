@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LeadActivity } from "@/types/leads"; // Using the central type definition
-import { Task, TaskCreateInput } from "@/services/tasks/types"; // Import the Task type to match what's expected
+import { Task } from "@/services/tasks/types"; // Import the Task type to match what's expected
 
 export const getLeadActivities = async (leadId: string): Promise<LeadActivity[]> => {
   try {
@@ -114,10 +114,10 @@ export const completeLeadActivity = async (activityId: string): Promise<LeadActi
 // Function to create a lead task connection
 export const addLeadTask = async (leadId: string, taskId: string): Promise<boolean> => {
   try {
-    // Update the task with the lead_id reference
+    // Update the task with the lead_id reference using a valid task object structure
     const { error } = await supabase
       .from('tasks')
-      .update({ lead_id: leadId })
+      .update({ lead_id: leadId })  // This is now a valid property of Task
       .eq('id', taskId);
     
     if (error) {

@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { 
   fetchProducts,
   fetchCategories
@@ -47,35 +46,33 @@ const CatalogManagement: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
-      <div className="p-6 space-y-6 rtl">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">إدارة الكتالوج</h1>
-          <ProductFormDialog 
-            open={showProductForm}
-            onOpenChange={setShowProductForm}
-            onSuccess={handleProductSuccess}
-          />
-        </div>
-
-        <CatalogTabs
-          selectedTab={selectedTab}
-          onTabChange={setSelectedTab}
-        >
-          <CatalogFilters
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            filterType={filterType}
-            setFilterType={setFilterType}
-            resetFilters={resetFilters}
-          />
-          <ProductGrid
-            products={filteredProducts}
-            isLoading={isLoadingProducts}
-          />
-        </CatalogTabs>
+    <div className="p-6 space-y-6 rtl">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold">إدارة الكتالوج</h1>
+        <ProductFormDialog 
+          open={showProductForm}
+          onOpenChange={setShowProductForm}
+          onSuccess={handleProductSuccess}
+        />
       </div>
-    </DashboardLayout>
+
+      <CatalogTabs
+        selectedTab={selectedTab}
+        onTabChange={setSelectedTab}
+      >
+        <CatalogFilters
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          filterType={filterType}
+          setFilterType={setFilterType}
+          resetFilters={resetFilters}
+        />
+        <ProductGrid
+          products={filteredProducts}
+          isLoading={isLoadingProducts}
+        />
+      </CatalogTabs>
+    </div>
   );
 };
 

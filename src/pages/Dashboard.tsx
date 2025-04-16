@@ -1,6 +1,5 @@
 
 import React from 'react';
-import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import StatsCards from '@/components/dashboard/StatsCards';
 import SalesChart from '@/components/dashboard/SalesChart';
 import LeadsOverview from '@/components/dashboard/LeadsOverview';
@@ -30,36 +29,34 @@ const Dashboard: React.FC = () => {
   const isAdmin = userPermissions.includes('admin.access');
 
   return (
-    <DashboardLayout>
-      <div className="flex flex-col gap-8 px-2 py-4 md:px-4 md:py-6">
-        <div className="flex flex-col gap-3 bg-gradient-to-r from-awfar-primary/5 to-transparent p-4 rounded-lg">
-          <h1 className="text-2xl md:text-3xl font-bold text-awfar-primary">لوحة التحكم</h1>
-          <p className="text-muted-foreground text-sm md:text-base">مرحبًا بك في لوحة التحكم، إليك نظرة عامة على أداء الأعمال</p>
-        </div>
-        
-        <StatsCards isLoading={statsLoading} stats={stats} />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <SalesChart />
-          <LeadsOverview />
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <RecentActivities isLoading={activitiesLoading} activities={activities} />
-          </div>
-          <div>
-            <TeamPerformance />
-          </div>
-        </div>
-
-        {isAdmin && (
-          <div className="mt-8">
-            <UserActivityAnalytics />
-          </div>
-        )}
+    <div className="flex flex-col gap-8 px-2 py-4 md:px-4 md:py-6">
+      <div className="flex flex-col gap-3 bg-gradient-to-r from-awfar-primary/5 to-transparent p-4 rounded-lg">
+        <h1 className="text-2xl md:text-3xl font-bold text-awfar-primary">لوحة التحكم</h1>
+        <p className="text-muted-foreground text-sm md:text-base">مرحبًا بك في لوحة التحكم، إليك نظرة عامة على أداء الأعمال</p>
       </div>
-    </DashboardLayout>
+      
+      <StatsCards isLoading={statsLoading} stats={stats} />
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <SalesChart />
+        <LeadsOverview />
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          <RecentActivities isLoading={activitiesLoading} activities={activities} />
+        </div>
+        <div>
+          <TeamPerformance />
+        </div>
+      </div>
+
+      {isAdmin && (
+        <div className="mt-8">
+          <UserActivityAnalytics />
+        </div>
+      )}
+    </div>
   );
 };
 
