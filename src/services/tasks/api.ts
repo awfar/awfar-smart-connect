@@ -90,7 +90,7 @@ export async function createTask(taskData: TaskCreateInput): Promise<Task> {
         related_to: relatedToJson
       };
 
-      const { error } = await supabase.from('tasks').insert(dbRecord);
+      const { error } = await supabase.from('tasks').insert([dbRecord]);
       
       if (error) {
         console.error('Error creating task in Supabase:', error);
