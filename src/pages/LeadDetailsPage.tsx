@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -194,7 +195,6 @@ const LeadDetailsPage = () => {
       case 'pending':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'cancelled':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -779,4 +779,75 @@ const LeadDetailsPage = () => {
       </Dialog>
       
       {/* Activity Dialog */}
-      <Dialog open={isActivityDialogOpen} onOpenChange={setIs
+      <Dialog open={isActivityDialogOpen} onOpenChange={setIsActivityDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>إضافة نشاط جديد</DialogTitle>
+          </DialogHeader>
+          <ActivityForm 
+            leadId={lead.id} 
+            onSuccess={handleActivitySuccess}
+            onClose={() => setIsActivityDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+      
+      {/* Task Dialog */}
+      <Dialog open={isTaskDialogOpen} onOpenChange={setIsTaskDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>إضافة مهمة جديدة</DialogTitle>
+          </DialogHeader>
+          <TaskForm 
+            leadId={lead.id} 
+            onSuccess={handleTaskSuccess}
+            onClose={() => setIsTaskDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+      
+      {/* Appointment Dialog */}
+      <Dialog open={isAppointmentDialogOpen} onOpenChange={setIsAppointmentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>إضافة موعد جديد</DialogTitle>
+          </DialogHeader>
+          <AppointmentForm 
+            leadId={lead.id} 
+            onSuccess={handleAppointmentSuccess}
+            onClose={() => setIsAppointmentDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد حذف العميل المحتمل</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من رغبتك في حذف هذا العميل المحتمل؟ لا يمكن التراجع عن هذا الإجراء.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteLead} 
+              className="bg-red-500 hover:bg-red-600"
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  جاري الحذف...
+                </>
+              ) : "حذف"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </DashboardLayout>
+  );
+};
+
+export default LeadDetailsPage;
