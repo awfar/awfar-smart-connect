@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -11,7 +10,6 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { addLeadActivity } from "@/services/leads/leadActivities";
-import { LeadActivity } from "@/services/leads/types";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, Loader2 } from "lucide-react";
@@ -19,6 +17,7 @@ import { format } from "date-fns";
 import { ar } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { toast } from "sonner";
+import { LeadActivity } from "@/services/leads/types";
 
 export interface ActivityFormProps {
   leadId: string;
@@ -70,7 +69,7 @@ const ActivityForm: React.FC<ActivityFormProps> = ({
       });
       
       // Call the success callback with the new activity
-      onSuccess(newActivity);
+      onSuccess(newActivity as LeadActivity);
       
     } catch (error) {
       console.error("Error adding activity:", error);

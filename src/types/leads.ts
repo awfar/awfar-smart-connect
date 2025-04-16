@@ -1,3 +1,4 @@
+
 // تعريف الأنواع للعميل المحتمل والأنشطة المرتبطة به
 
 export interface Lead {
@@ -20,7 +21,7 @@ export interface Lead {
   updated_at?: string;
   assignedTo?: string;
   assigned_to?: string;
-  avatar_url?: string | null; // Add this line
+  avatar_url?: string | null;
   owner?: {
     name: string;
     avatar: string;
@@ -33,7 +34,7 @@ export interface Lead {
 export interface LeadActivity {
   id: string;
   leadId?: string;
-  lead_id?: string;
+  lead_id: string; // Making this required for compatibility
   type: string;
   description: string;
   createdBy?: string;

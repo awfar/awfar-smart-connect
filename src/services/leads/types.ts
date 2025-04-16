@@ -29,11 +29,11 @@ export interface Lead {
 export interface LeadActivity {
   id: string;
   leadId?: string;
-  lead_id?: string;
+  lead_id: string; // Making this required to match the other definition
   type: string;
   description: string;
   createdBy?: string;
-  created_by?: string;
+  created_by?: string; // String only to match the other definition
   createdAt?: string;
   created_at?: string;
   scheduled_at?: string | null;

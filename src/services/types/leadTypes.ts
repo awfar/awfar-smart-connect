@@ -19,6 +19,7 @@ export interface Lead {
   created_at?: string;
   updated_at?: string;
   assigned_to?: string;
+  avatar_url?: string | null; // Adding missing property
   owner?: Owner;
 }
 
@@ -29,7 +30,7 @@ export interface LeadActivity {
   type: string;
   description: string;
   created_at: string;
-  created_by?: string | { id: string; first_name: string; last_name: string };
+  created_by?: string; // Changed to string only for compatibility
   scheduled_at?: string | null;
   completed_at?: string | null;
   profiles?: any; // For join with profiles table
@@ -53,6 +54,7 @@ export interface LeadDBRow {
   created_at: string;
   updated_at: string;
   assigned_to?: string | null;
+  avatar_url?: string | null; // Adding missing property
   profiles?: {
     first_name: string | null;
     last_name: string | null;

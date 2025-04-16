@@ -13,18 +13,30 @@ interface DashboardHeaderProps {
   onMenuToggle: () => void;
 }
 
+// Extended user type to match what we're using in the component
+interface ExtendedUser {
+  id?: string;
+  email?: string;
+  avatar_url?: string | null;
+  first_name?: string;
+  last_name?: string;
+}
+
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuToggle }) => {
   const { isMobile } = useBreakpoints();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  
+  // Cast the user to our extended type
+  const extendedUser = user as unknown as ExtendedUser;
   
   const handleLogout = async () => {
     await logout();
     navigate('/login');
   };
   
-  const userInitials = user?.email ? 
-    user.email.substring(0, 2).toUpperCase() : 
+  const userInitials = extendedUser?.email ? 
+    extendedUser.email.substring(0, 2).toUpperCase() : 
     'مس';
 
   return (
@@ -77,7 +89,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuToggle }) => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                 <Avatar className="h-8 w-8 border border-white/30">
-                  <AvatarImage src={user?.avatar_url || "/placeholder.svg"} alt="صورة المستخدم" />
+                  <AvatarImage src={extendedUser?.avatar_url || "/placeholder.svg"} alt="صورة المستخدم" />
                   <AvatarFallback>{userInitials}</AvatarFallback>
                 </Avatar>
               </Button>
@@ -85,9 +97,9 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuToggle }) => {
             <DropdownMenuContent className="w-56 rtl mt-1" align="end" forceMount>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user?.first_name || ''} {user?.last_name || ''}</p>
+                  <p className="text-sm font-medium leading-none">{extendedUser?.first_name || ''} {extendedUser?.last_name || ''}</p>
                   <p className="text-xs leading-none text-muted-foreground">
-                    {user?.email || 'مستخدم غير معروف'}
+                    {extendedUser?.email || 'مستخدم غير معروف'}
                   </p>
                 </div>
               </DropdownMenuLabel>

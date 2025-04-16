@@ -1,3 +1,4 @@
+
 // سيتم إصلاح أخطاء الطباعة مع الحفاظ على وظائف الملف الأصلي
 // إصلاح خطأ Type instantiation is excessively deep and possibly infinite
 
@@ -35,12 +36,21 @@ export const castToTask = (data: unknown): Task => {
   // بدلاً من استخدام التحويل التلقائي، نقوم بعمل تحويل صريح مع فحوصات
   const record = data as Record<string, unknown>;
   
+  const status = record.status as string;
+  const priority = record.priority as string;
+  
   return {
     id: String(record.id || ''),
     title: String(record.title || ''),
     description: record.description ? String(record.description) : undefined,
-    status: (record.status as Task['status']) || 'pending',
-    priority: (record.priority as Task['priority']) || 'medium',
+    // Ensure we cast to one of the specific allowed status values
+    status: (status === 'pending' || status === 'in-progress' || status === 'completed' || status === 'cancelled') 
+      ? status as Task['status'] 
+      : 'pending',
+    // Ensure we cast to one of the specific allowed priority values
+    priority: (priority === 'high' || priority === 'medium' || priority === 'low') 
+      ? priority as Task['priority'] 
+      : 'medium',
     due_date: record.due_date ? String(record.due_date) : undefined,
     created_at: String(record.created_at || new Date().toISOString()),
     updated_at: String(record.updated_at || new Date().toISOString()),
@@ -248,15 +258,15 @@ function getMockTasks(leadId?: string): Task[] {
       id: '1',
       title: 'الاتصال بالعميل الجديد',
       description: 'متابعة العميل المحتمل الذي تم إضافته بالأمس',
-      status: 'pending',
-      priority: 'high',
+      status: 'pending' as Task['status'],
+      priority: 'high' as Task['priority'],
       due_date: new Date(Date.now() + 86400000).toISOString(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       assigned_to: 'user1',
       assigned_to_name: 'أحمد محمد',
       related_to: {
-        type: 'lead',
+        type: 'lead' as const,
         id: 'lead1',
         name: 'شركة التقنية الحديثة'
       }
@@ -265,15 +275,15 @@ function getMockTasks(leadId?: string): Task[] {
       id: '2',
       title: 'إعداد عرض أسعار',
       description: 'إعداد عرض أسعار للعميل بناءً على احتياجاته',
-      status: 'in-progress',
-      priority: 'medium',
+      status: 'in-progress' as Task['status'],
+      priority: 'medium' as Task['priority'],
       due_date: new Date(Date.now() + 172800000).toISOString(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       assigned_to: 'user2',
       assigned_to_name: 'سارة خالد',
       related_to: {
-        type: 'deal',
+        type: 'deal' as const,
         id: 'deal1',
         name: 'صفقة برنامج المحاسبة'
       }
@@ -282,15 +292,15 @@ function getMockTasks(leadId?: string): Task[] {
       id: '3',
       title: 'متابعة الدفعة المستحقة',
       description: 'التواصل مع العميل لتذكيره بالدفعة المستحقة',
-      status: 'completed',
-      priority: 'low',
+      status: 'completed' as Task['status'],
+      priority: 'low' as Task['priority'],
       due_date: new Date(Date.now() - 86400000).toISOString(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
       assigned_to: 'user1',
       assigned_to_name: 'أحمد محمد',
       related_to: {
-        type: 'customer',
+        type: 'customer' as const,
         id: 'customer1',
         name: 'مؤسسة المستقبل'
       }
