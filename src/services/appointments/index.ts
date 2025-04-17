@@ -1,11 +1,13 @@
 
 // Export all appointment-related functions and types
 export { 
-  getAppointments, 
-  getAppointment,
+  fetchAppointments,
+  fetchAppointmentsByLeadId,
   createAppointment,
   updateAppointment,
-  deleteAppointment
+  deleteAppointment,
+  getAppointments,
+  getAppointment
 } from './appointmentsService';
 
 export type { Appointment, AppointmentCreateInput } from './types';

@@ -1,43 +1,51 @@
-
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getLead, updateLead, deleteLead, Lead, getLeadActivities, LeadActivity, completeLeadActivity, deleteLeadActivity } from '@/services/leads';
-import { getTasks, Task, updateTask, deleteTask } from '@/services/tasks';
-import { getAppointments, Appointment, updateAppointment, deleteAppointment } from '@/services/appointments';
-import DashboardLayout from "@/components/layout/DashboardLayout";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  ArrowLeft, Check, Clock, List, Mail, Phone, User, 
+  Building, MapPin, Briefcase, Edit, Trash2, Plus as PlusIcon 
+} from "lucide-react";
+import { toast } from "sonner";
+import { 
+  getLead, 
+  getLeadActivities, 
+  addLeadActivity,
+  updateLead,
+  completeLeadActivity,
+  Lead,
+  deleteLead
+} from "@/services/leads";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { 
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  Loader2, ArrowLeft, Edit, Trash, Calendar, Mail, Phone, 
-  MapPin, Building, Clock, Check, MessageSquare, FileText, 
-  TicketIcon, Users, ChevronRight, Globe, Briefcase
-} from 'lucide-react';
-import { getStageColorClass } from '@/services/leads/utils';
-import { toast } from 'sonner';
-import { format } from 'date-fns';
-import { ar } from 'date-fns/locale';
-import LeadForm from '@/components/leads/LeadForm';
-import ActivityForm from '@/components/leads/ActivityForm';
-import TaskForm from '@/components/leads/TaskForm';
-import AppointmentForm from '@/components/leads/AppointmentForm';
-import LeadTimeline from '@/components/leads/LeadTimeline';
-import MobileOptimizedContainer from '@/components/ui/mobile-optimized-container';
-import { Link } from 'react-router-dom';
+import ActivityForm from "@/components/leads/ActivityForm";
+import LeadForm from "@/components/leads/LeadForm";
+import { LeadActivity } from "@/services/types/leadTypes";
+import { getStageColorClass } from "@/services/leads/utils";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const LeadDetailStatus = ({ status, onStatusChange }: { status: string, onStatusChange: (status: string) => void }) => {
+  return (
+    <Select defaultValue={status} onValueChange={onStatusChange}>
+      <SelectTrigger>
+        <SelectValue placeholder="اختر الحالة" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="جديد">جديد</SelectItem>
+        <SelectItem value="مؤهل">مؤهل</SelectItem>
+        <SelectItem value="عرض سعر">عرض سعر</SelectItem>
+        <SelectItem value="تفاوض">تفاوض</SelectItem>
+        <SelectItem value="مغلق">مغلق</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+};
 
 const LeadDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -53,10 +61,8 @@ const LeadDetailsPage = () => {
   const [itemToEdit, setItemToEdit] = useState<any>(null);
   const [editType, setEditType] = useState<string | null>(null);
 
-  // Log view activity when the component mounts
   useEffect(() => {
     if (id) {
-      // Log that the lead was viewed
       const logViewActivity = async () => {
         try {
           await addLeadActivity({
@@ -73,7 +79,6 @@ const LeadDetailsPage = () => {
     }
   }, [id]);
 
-  // Fetch lead data
   const { 
     data: lead,
     isLoading, 
@@ -85,7 +90,6 @@ const LeadDetailsPage = () => {
     enabled: !!id,
   });
   
-  // Fetch related activities
   const {
     data: activities = [],
     isLoading: loadingActivities,
@@ -96,7 +100,6 @@ const LeadDetailsPage = () => {
     enabled: !!id
   });
   
-  // Fetch related tasks
   const {
     data: tasks = [],
     isLoading: loadingTasks,
@@ -107,7 +110,6 @@ const LeadDetailsPage = () => {
     enabled: !!id
   });
   
-  // Fetch related appointments
   const {
     data: appointments = [],
     isLoading: loadingAppointments,
@@ -118,7 +120,6 @@ const LeadDetailsPage = () => {
     enabled: !!id
   });
 
-  // Delete lead mutation
   const deleteMutation = useMutation({
     mutationFn: deleteLead,
     onSuccess: () => {
@@ -131,7 +132,6 @@ const LeadDetailsPage = () => {
     },
   });
 
-  // Complete activity mutation
   const completeActivityMutation = useMutation({
     mutationFn: completeLeadActivity,
     onSuccess: () => {
@@ -144,7 +144,6 @@ const LeadDetailsPage = () => {
     }
   });
 
-  // Update task status mutation
   const taskCompletionMutation = useMutation({
     mutationFn: (taskId: string) => updateTask(taskId, { status: 'completed' }),
     onSuccess: () => {
@@ -157,7 +156,6 @@ const LeadDetailsPage = () => {
     }
   });
 
-  // Update appointment status mutation
   const appointmentCompletionMutation = useMutation({
     mutationFn: (appointmentId: string) => updateAppointment(appointmentId, { status: 'completed' }),
     onSuccess: () => {
@@ -170,7 +168,6 @@ const LeadDetailsPage = () => {
     }
   });
 
-  // Delete activity mutation
   const deleteActivityMutation = useMutation({
     mutationFn: deleteLeadActivity,
     onSuccess: () => {
@@ -183,7 +180,6 @@ const LeadDetailsPage = () => {
     }
   });
 
-  // Delete task mutation
   const deleteTaskMutation = useMutation({
     mutationFn: deleteTask,
     onSuccess: () => {
@@ -196,7 +192,6 @@ const LeadDetailsPage = () => {
     }
   });
 
-  // Delete appointment mutation
   const deleteAppointmentMutation = useMutation({
     mutationFn: deleteAppointment,
     onSuccess: () => {
@@ -209,7 +204,6 @@ const LeadDetailsPage = () => {
     }
   });
 
-  // Update lead status mutation
   const updateLeadStatusMutation = useMutation({
     mutationFn: (newStatus: string) => {
       if (!lead) throw new Error("Lead not found");
@@ -225,10 +219,8 @@ const LeadDetailsPage = () => {
     }
   });
 
-  // Function to add lead activity
   const addLeadActivity = async (activityData: Partial<LeadActivity>) => {
     try {
-      // Import dynamically to avoid circular dependencies
       const { addLeadActivity } = await import('@/services/leads/leadActivities');
       const result = await addLeadActivity(activityData);
       refetchActivities();
@@ -357,7 +349,6 @@ const LeadDetailsPage = () => {
     }
   };
 
-  // Combine all timeline items
   const allTimelineItems = [
     ...activities.map(activity => ({
       ...activity,
@@ -375,10 +366,9 @@ const LeadDetailsPage = () => {
       timestamp: appointment.created_at || ''
     }))
   ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  
+
   return (
     <DashboardLayout>
-      {/* Sticky Header */}
       <div className="sticky top-0 z-10 bg-background border-b pb-2 mb-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2">
@@ -397,23 +387,7 @@ const LeadDetailsPage = () => {
           </div>
           <div className="flex gap-2 flex-wrap">
             <div className="flex items-center">
-              <Select 
-                defaultValue={lead.status || lead.stage || 'جديد'}
-                onValueChange={handleStatusChange}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="تغيير الحالة" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="جديد">جديد</SelectItem>
-                  <SelectItem value="مؤهل">مؤهل</SelectItem>
-                  <SelectItem value="اتصال">اتصال</SelectItem>
-                  <SelectItem value="مهتم">مهتم</SelectItem>
-                  <SelectItem value="تفاوض">تفاوض</SelectItem>
-                  <SelectItem value="مغلق">مغلق</SelectItem>
-                  <SelectItem value="خسارة">خسارة</SelectItem>
-                </SelectContent>
-              </Select>
+              <LeadDetailStatus status={lead.status || lead.stage || 'جديد'} onStatusChange={handleStatusChange} />
             </div>
             <Button 
               variant="outline" 
@@ -453,7 +427,7 @@ const LeadDetailsPage = () => {
               variant="destructive" 
               onClick={() => setIsDeleteDialogOpen(true)}
             >
-              <Trash className="mr-2 h-4 w-4" />
+              <Trash2 className="mr-2 h-4 w-4" />
               حذف
             </Button>
           </div>
@@ -470,7 +444,6 @@ const LeadDetailsPage = () => {
           <TabsTrigger value="related">العلاقات</TabsTrigger>
         </TabsList>
 
-        {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
@@ -720,7 +693,6 @@ const LeadDetailsPage = () => {
           </div>
         </TabsContent>
 
-        {/* Timeline Tab */}
         <TabsContent value="timeline" className="space-y-6">
           <Card>
             <CardHeader>
@@ -740,7 +712,6 @@ const LeadDetailsPage = () => {
           </Card>
         </TabsContent>
 
-        {/* Tasks Tab */}
         <TabsContent value="tasks" className="space-y-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -753,7 +724,7 @@ const LeadDetailsPage = () => {
                 }}
                 size="sm"
               >
-                <Plus className="mr-1 h-4 w-4" />
+                <PlusIcon className="mr-1 h-4 w-4" />
                 مهمة جديدة
               </Button>
             </CardHeader>
@@ -817,7 +788,7 @@ const LeadDetailsPage = () => {
                                     className="h-7 w-7 p-0 text-destructive"
                                     onClick={() => handleTimelineDelete('task', task.id as string)}
                                   >
-                                    <Trash className="h-3 w-3" />
+                                    <Trash2 className="h-3 w-3" />
                                   </Button>
                                 </div>
                               </div>
@@ -879,7 +850,7 @@ const LeadDetailsPage = () => {
                                     className="h-7 w-7 p-0 text-destructive"
                                     onClick={() => handleTimelineDelete('task', task.id as string)}
                                   >
-                                    <Trash className="h-3 w-3" />
+                                    <Trash2 className="h-3 w-3" />
                                   </Button>
                                 </div>
                               </div>
@@ -916,9 +887,9 @@ const LeadDetailsPage = () => {
                                   size="sm" 
                                   variant="ghost" 
                                   className="h-7 w-7 p-0 text-destructive"
-                                  onClick={() => handleTimelineDelete('task', task.id as string)}
+                                  onClick={() => handleTimelineDelete('task', task.id)}
                                 >
-                                  <Trash className="h-3 w-3" />
+                                  <Trash2 className="h-3 w-3" />
                                 </Button>
                               </div>
                             </div>
@@ -935,7 +906,6 @@ const LeadDetailsPage = () => {
           </Card>
         </TabsContent>
 
-        {/* Appointments Tab */}
         <TabsContent value="appointments" className="space-y-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -948,7 +918,7 @@ const LeadDetailsPage = () => {
                 }}
                 size="sm"
               >
-                <Plus className="mr-1 h-4 w-4" />
+                <PlusIcon className="mr-1 h-4 w-4" />
                 موعد جديد
               </Button>
             </CardHeader>
@@ -1021,7 +991,7 @@ const LeadDetailsPage = () => {
                                     className="h-7 w-7 p-0 text-destructive"
                                     onClick={() => handleTimelineDelete('appointment', appointment.id)}
                                   >
-                                    <Trash className="h-3 w-3" />
+                                    <Trash2 className="h-3 w-3" />
                                   </Button>
                                 </div>
                               </div>
@@ -1069,7 +1039,7 @@ const LeadDetailsPage = () => {
                                   className="h-7 w-7 p-0 text-destructive"
                                   onClick={() => handleTimelineDelete('appointment', appointment.id)}
                                 >
-                                  <Trash className="h-3 w-3" />
+                                  <Trash2 className="h-3 w-3" />
                                 </Button>
                               </div>
                             </div>
@@ -1086,7 +1056,6 @@ const LeadDetailsPage = () => {
           </Card>
         </TabsContent>
 
-        {/* Notes Tab */}
         <TabsContent value="notes" className="space-y-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -1099,7 +1068,7 @@ const LeadDetailsPage = () => {
                 }}
                 size="sm"
               >
-                <Plus className="mr-1 h-4 w-4" />
+                <PlusIcon className="mr-1 h-4 w-4" />
                 ملاحظة جديدة
               </Button>
             </CardHeader>
@@ -1143,7 +1112,7 @@ const LeadDetailsPage = () => {
                                 className="h-7 w-7 p-0 text-destructive"
                                 onClick={() => handleTimelineDelete('activity', activity.id)}
                               >
-                                <Trash className="h-3 w-3" />
+                                <Trash2 className="h-3 w-3" />
                               </Button>
                             </div>
                           </div>
@@ -1163,7 +1132,7 @@ const LeadDetailsPage = () => {
                         variant="outline"
                         className="mt-4"
                       >
-                        <Plus className="mr-1 h-4 w-4" />
+                        <PlusIcon className="mr-1 h-4 w-4" />
                         إضافة ملاحظة
                       </Button>
                     </div>
@@ -1174,7 +1143,6 @@ const LeadDetailsPage = () => {
           </Card>
         </TabsContent>
 
-        {/* Related Tab */}
         <TabsContent value="related" className="space-y-6">
           <Card>
             <CardHeader>
@@ -1251,7 +1219,6 @@ const LeadDetailsPage = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Dialogs */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>

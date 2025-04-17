@@ -25,6 +25,9 @@ import { ar } from 'date-fns/locale';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
+// Define valid activity types for type safety
+type ActivityType = "note" | "call" | "meeting" | "email" | "task" | "whatsapp" | "update" | "create" | "delete";
+
 export interface ActivityFormProps {
   leadId: string;
   onSuccess?: () => void;
@@ -56,8 +59,8 @@ const ActivityForm: React.FC<ActivityFormProps> = ({
       // Ensure scheduled_at is either a valid date string or null
       const scheduledAt = data.scheduled_at ? new Date(data.scheduled_at).toISOString() : null;
       
-      // Fix: Type assertion to ensure type is one of the allowed values
-      const activityType = data.type as "note" | "call" | "meeting" | "email" | "task" | "whatsapp" | "update" | "create" | "delete";
+      // Ensure type is cast properly to one of the valid activity types
+      const activityType = data.type as ActivityType;
       
       const activityData = {
         lead_id: leadId,

@@ -209,11 +209,17 @@ const LeadTimeline: React.FC<LeadTimelineProps> = ({
                 <div className="flex flex-wrap items-center gap-2">
                   <h4 className="font-medium">{item.title}</h4>
                   {/* Status badges */}
-                  {item.type !== 'activity' && item.status === 'completed' && <Badge variant="outline">مكتمل</Badge>}
+                  {item.type !== 'activity' && (
+                    item.type === 'task' || item.type === 'appointment' ? (
+                      item.status === 'completed' && <Badge variant="outline">مكتمل</Badge>
+                    ) : null
+                  )}
                   {/* Priority badges - only for tasks */}
-                  {item.type === 'task' && item.priority === 'high' && <Badge variant="destructive">عالية</Badge>}
-                  {item.type === 'task' && item.priority === 'medium' && <Badge variant="secondary">متوسطة</Badge>}
-                  {item.type === 'task' && item.priority === 'low' && <Badge variant="outline">منخفضة</Badge>}
+                  {item.type === 'task' && (
+                    item.priority === 'high' ? <Badge variant="destructive">عالية</Badge> :
+                    item.priority === 'medium' ? <Badge variant="secondary">متوسطة</Badge> :
+                    item.priority === 'low' ? <Badge variant="outline">منخفضة</Badge> : null
+                  )}
                 </div>
                 
                 {/* Actions */}
@@ -230,11 +236,22 @@ const LeadTimeline: React.FC<LeadTimelineProps> = ({
                         تعديل
                       </DropdownMenuItem>
                     )}
-                    {onComplete && item.type !== 'activity' && item.status !== 'completed' && (
-                      <DropdownMenuItem onClick={() => onComplete(item.type, item.id)}>
-                        <Check className="h-4 w-4 mr-2" />
-                        إكمال
-                      </DropdownMenuItem>
+                    {onComplete && item.type !== 'activity' && (
+                      item.type === 'task' ? (
+                        item.status !== 'completed' && (
+                          <DropdownMenuItem onClick={() => onComplete(item.type, item.id)}>
+                            <Check className="h-4 w-4 mr-2" />
+                            إكمال
+                          </DropdownMenuItem>
+                        )
+                      ) : item.type === 'appointment' ? (
+                        item.status !== 'completed' && (
+                          <DropdownMenuItem onClick={() => onComplete(item.type, item.id)}>
+                            <Check className="h-4 w-4 mr-2" />
+                            إكمال
+                          </DropdownMenuItem>
+                        )
+                      ) : null
                     )}
                     {onDelete && (
                       <DropdownMenuItem
