@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 export interface AppointmentFormProps {
   onSubmit: (data: any) => Promise<void>;
   onCancel: () => void;
-  onClose?: () => void; // Add onClose as an optional prop
+  onClose?: () => void;
   appointment?: Appointment;
   leadId?: string;
   isSubmitting?: boolean;

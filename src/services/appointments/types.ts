@@ -9,7 +9,7 @@ export interface Appointment {
   end_time: string;
   location?: string;
   status: AppointmentStatus;
-  lead_id?: string;
+  lead_id?: string | null;
   client_id?: string;
   participants?: string[];
   created_by?: string;

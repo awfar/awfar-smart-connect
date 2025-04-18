@@ -36,7 +36,7 @@ export const fetchAppointments = async (filters?: { lead_id?: string; status?: A
       end_time: item.end_time,
       location: item.location,
       status: item.status as AppointmentStatus,
-      lead_id: item.lead_id,
+      lead_id: item.lead_id || null,
       client_id: item.client_id,
       participants: item.participants,
       created_by: item.created_by,
@@ -72,7 +72,7 @@ export const getAppointment = async (id: string): Promise<Appointment | null> =>
       end_time: data.end_time,
       location: data.location,
       status: data.status as AppointmentStatus,
-      lead_id: data.lead_id,
+      lead_id: data.lead_id || null,
       client_id: data.client_id,
       participants: data.participants,
       created_by: data.created_by,
@@ -110,8 +110,8 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
         status: appointment.status || 'scheduled',
         client_id: appointment.client_id,
         lead_id: appointment.lead_id,
-        // Only include created_by if it's in the input
-        ...(appointment.created_by ? { created_by: appointment.created_by } : {})
+        participants: appointment.participants,
+        created_by: appointment.created_by
       })
       .select()
       .single();
@@ -129,7 +129,7 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
       end_time: data.end_time,
       location: data.location,
       status: data.status as AppointmentStatus,
-      lead_id: data.lead_id,
+      lead_id: data.lead_id || null,
       client_id: data.client_id,
       participants: data.participants,
       created_by: data.created_by,
@@ -156,6 +156,7 @@ export const updateAppointment = async (id: string, updates: Partial<Appointment
         status: updates.status,
         client_id: updates.client_id,
         lead_id: updates.lead_id,
+        participants: updates.participants,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -173,7 +174,7 @@ export const updateAppointment = async (id: string, updates: Partial<Appointment
       end_time: data.end_time,
       location: data.location,
       status: data.status as AppointmentStatus,
-      lead_id: data.lead_id,
+      lead_id: data.lead_id || null,
       client_id: data.client_id,
       participants: data.participants,
       created_by: data.created_by,

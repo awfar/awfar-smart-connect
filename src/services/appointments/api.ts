@@ -15,9 +15,20 @@ export const getAppointmentsByLeadId = async (leadId: string): Promise<Appointme
     if (error) throw error;
     
     return (data || []).map(item => ({
-      ...item,
-      status: item.status as AppointmentStatus
-    })) as Appointment[];
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      start_time: item.start_time,
+      end_time: item.end_time,
+      location: item.location,
+      status: item.status as AppointmentStatus,
+      lead_id: item.lead_id || null,
+      client_id: item.client_id,
+      participants: item.participants,
+      created_by: item.created_by,
+      created_at: item.created_at,
+      updated_at: item.updated_at
+    }));
   } catch (error) {
     console.error("Error fetching appointments:", error);
     toast.error("حدث خطأ أثناء تحميل المواعيد");
@@ -45,8 +56,7 @@ export const createAppointment = async (appointmentData: AppointmentCreateInput)
         lead_id: appointmentData.lead_id,
         client_id: appointmentData.client_id,
         participants: appointmentData.participants,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        created_by: appointmentData.created_by
       })
       .select()
       .single();
@@ -54,7 +64,21 @@ export const createAppointment = async (appointmentData: AppointmentCreateInput)
     if (error) throw error;
     
     toast.success("تم إنشاء الموعد بنجاح");
-    return data as Appointment;
+    return {
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      start_time: data.start_time,
+      end_time: data.end_time,
+      location: data.location,
+      status: data.status as AppointmentStatus,
+      lead_id: data.lead_id || null,
+      client_id: data.client_id,
+      participants: data.participants,
+      created_by: data.created_by,
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    };
   } catch (error) {
     console.error("Error creating appointment:", error);
     toast.error("حدث خطأ أثناء إنشاء الموعد");
@@ -77,6 +101,8 @@ export const updateAppointment = async (appointmentId: string, appointmentData: 
     if (appointmentData.location !== undefined) updateData.location = appointmentData.location;
     if (appointmentData.status !== undefined) updateData.status = appointmentData.status;
     if (appointmentData.participants !== undefined) updateData.participants = appointmentData.participants;
+    if (appointmentData.lead_id !== undefined) updateData.lead_id = appointmentData.lead_id;
+    if (appointmentData.client_id !== undefined) updateData.client_id = appointmentData.client_id;
     
     const { data, error } = await supabase
       .from('appointments')
@@ -88,7 +114,21 @@ export const updateAppointment = async (appointmentId: string, appointmentData: 
     if (error) throw error;
     
     toast.success("تم تحديث الموعد بنجاح");
-    return data as Appointment;
+    return {
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      start_time: data.start_time,
+      end_time: data.end_time,
+      location: data.location,
+      status: data.status as AppointmentStatus,
+      lead_id: data.lead_id || null,
+      client_id: data.client_id,
+      participants: data.participants,
+      created_by: data.created_by,
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    };
   } catch (error) {
     console.error("Error updating appointment:", error);
     toast.error("حدث خطأ أثناء تحديث الموعد");

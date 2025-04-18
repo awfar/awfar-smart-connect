@@ -43,7 +43,9 @@ const INITIAL_APPOINTMENTS: Partial<Appointment>[] = [
     start_time: new Date(2025, 3, 14).toISOString(), 
     end_time: new Date(2025, 3, 14, 11, 0).toISOString(), 
     status: "scheduled", 
-    description: "اجتماع"
+    description: "اجتماع",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   },
   { 
     id: "2", 
@@ -51,7 +53,9 @@ const INITIAL_APPOINTMENTS: Partial<Appointment>[] = [
     start_time: new Date(2025, 3, 15).toISOString(), 
     end_time: new Date(2025, 3, 15, 15, 30).toISOString(), 
     status: "scheduled", 
-    description: "عرض" 
+    description: "عرض",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   },
   { 
     id: "3", 
@@ -59,7 +63,9 @@ const INITIAL_APPOINTMENTS: Partial<Appointment>[] = [
     start_time: new Date(2025, 3, 15).toISOString(), 
     end_time: new Date(2025, 3, 15, 16, 0).toISOString(), 
     status: "scheduled", 
-    description: "مراجعة" 
+    description: "مراجعة",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   },
   { 
     id: "4", 
@@ -67,7 +73,9 @@ const INITIAL_APPOINTMENTS: Partial<Appointment>[] = [
     start_time: new Date(2025, 3, 20).toISOString(), 
     end_time: new Date(2025, 3, 20, 12, 0).toISOString(), 
     status: "cancelled", 
-    description: "مكالمة" 
+    description: "مكالمة",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   },
   { 
     id: "5", 
@@ -75,15 +83,17 @@ const INITIAL_APPOINTMENTS: Partial<Appointment>[] = [
     start_time: new Date(2025, 3, 25).toISOString(), 
     end_time: new Date(2025, 3, 25, 14, 0).toISOString(), 
     status: "scheduled", 
-    description: "اجتماع" 
+    description: "اجتماع",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   },
 ];
 
 const AppointmentsList = () => {
   const [appointments, setAppointments] = useState<Appointment[]>(INITIAL_APPOINTMENTS.map(app => ({
     ...app,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    created_at: app.created_at || new Date().toISOString(),
+    updated_at: app.updated_at || new Date().toISOString()
   })) as Appointment[]);
   const [showForm, setShowForm] = useState<boolean>(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | undefined>(undefined);
