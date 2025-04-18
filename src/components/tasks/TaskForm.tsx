@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { format } from 'date-fns';
 import { toast } from 'sonner';
 
 interface TaskFormProps {
@@ -38,11 +37,20 @@ const TaskForm: React.FC<TaskFormProps> = ({
 
   const handleFormSubmit = async (data: any) => {
     try {
+      // Make sure priority is one of the allowed values
+      if (data.priority && !['low', 'medium', 'high'].includes(data.priority)) {
+        data.priority = 'medium';
+      }
+      
       await onSubmit(data);
     } catch (error) {
       console.error("Error submitting task:", error);
       toast.error("حدث خطأ في حفظ المهمة");
     }
+  };
+
+  const handlePriorityChange = (value: "low" | "medium" | "high") => {
+    setValue('priority', value);
   };
 
   return (
@@ -69,7 +77,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
         <label className="text-sm font-medium">الأولوية</label>
         <Select 
           defaultValue={watchPriority} 
-          onValueChange={(value) => setValue('priority', value)}
+          onValueChange={handlePriorityChange}
         >
           <SelectTrigger>
             <SelectValue placeholder="اختر الأولوية" />

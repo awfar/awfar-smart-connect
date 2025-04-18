@@ -37,9 +37,10 @@ export const getTasks = async (filters?: { lead_id?: string; status?: string }):
 
 export const createTask = async (task: Partial<Task>): Promise<Task | null> => {
   try {
+    // Make sure we're inserting a single task object, not an array
     const { data, error } = await supabase
       .from('tasks')
-      .insert([task])
+      .insert(task)
       .select()
       .single();
       

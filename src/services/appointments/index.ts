@@ -6,7 +6,6 @@ export {
   createAppointment,
   updateAppointment,
   deleteAppointment,
-  fetchAppointments as getAppointments,
   getAppointment
 } from './appointmentsService';
 
