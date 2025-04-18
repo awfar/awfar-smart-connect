@@ -27,7 +27,7 @@ export const fetchAppointments = async (filters?: { lead_id?: string; status?: A
       throw error;
     }
 
-    // Explicitly map each item to ensure type safety and avoid deep instantiation issues
+    // Map database response to our Appointment interface
     return (data || []).map(item => ({
       id: item.id,
       title: item.title,
@@ -36,7 +36,7 @@ export const fetchAppointments = async (filters?: { lead_id?: string; status?: A
       end_time: item.end_time,
       location: item.location,
       status: item.status as AppointmentStatus,
-      lead_id: item.lead_id || null,
+      lead_id: item.lead_id,
       client_id: item.client_id,
       participants: item.participants,
       created_by: item.created_by,
@@ -72,7 +72,7 @@ export const getAppointment = async (id: string): Promise<Appointment | null> =>
       end_time: data.end_time,
       location: data.location,
       status: data.status as AppointmentStatus,
-      lead_id: data.lead_id || null,
+      lead_id: data.lead_id,
       client_id: data.client_id,
       participants: data.participants,
       created_by: data.created_by,
@@ -129,7 +129,7 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
       end_time: data.end_time,
       location: data.location,
       status: data.status as AppointmentStatus,
-      lead_id: data.lead_id || null,
+      lead_id: data.lead_id,
       client_id: data.client_id,
       participants: data.participants,
       created_by: data.created_by,
@@ -178,7 +178,7 @@ export const updateAppointment = async (id: string, updates: Partial<Appointment
       end_time: data.end_time,
       location: data.location,
       status: data.status as AppointmentStatus,
-      lead_id: data.lead_id || null,
+      lead_id: data.lead_id,
       client_id: data.client_id,
       participants: data.participants,
       created_by: data.created_by,

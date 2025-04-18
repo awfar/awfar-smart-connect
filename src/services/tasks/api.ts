@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Task } from "./types";
 import { toast } from "sonner";
@@ -31,7 +30,7 @@ export const getTasks = async (filterOptions?: {
     
     if (error) throw error;
 
-    // Explicitly map each property to match the Task interface
+    // Explicitly map each property to match the Task interface with default values for missing fields
     return (data || []).map(task => ({
       id: task.id,
       title: task.title,
@@ -44,8 +43,8 @@ export const getTasks = async (filterOptions?: {
       created_by: task.created_by,
       created_at: task.created_at,
       updated_at: task.updated_at,
-      assigned_to_name: task.assigned_to_name,
-      related_to: task.related_to
+      assigned_to_name: task.assigned_to_name || undefined,
+      related_to: task.related_to || undefined
     }));
   } catch (error) {
     console.error("Error fetching tasks:", error);
@@ -91,8 +90,8 @@ export const createTask = async (taskData: any): Promise<Task> => {
       created_by: data.created_by,
       created_at: data.created_at,
       updated_at: data.updated_at,
-      assigned_to_name: data.assigned_to_name,
-      related_to: data.related_to
+      assigned_to_name: data.assigned_to_name || undefined,
+      related_to: data.related_to || undefined
     };
   } catch (error) {
     console.error("Error creating task:", error);
@@ -130,8 +129,8 @@ export const updateTask = async (taskId: string, taskData: Partial<Task>): Promi
       created_by: data.created_by,
       created_at: data.created_at,
       updated_at: data.updated_at,
-      assigned_to_name: data.assigned_to_name,
-      related_to: data.related_to
+      assigned_to_name: data.assigned_to_name || undefined,
+      related_to: data.related_to || undefined
     };
   } catch (error) {
     console.error("Error updating task:", error);
