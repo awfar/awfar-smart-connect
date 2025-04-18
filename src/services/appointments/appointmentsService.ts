@@ -27,7 +27,7 @@ export const fetchAppointments = async (filters?: { lead_id?: string; status?: A
       throw error;
     }
 
-    // Explicitly type the returned data to avoid deep instantiation
+    // Explicitly type the returned data
     return (data || []).map(item => ({
       id: item.id,
       title: item.title,
@@ -145,20 +145,22 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
 
 export const updateAppointment = async (id: string, updates: Partial<Appointment>): Promise<Appointment> => {
   try {
+    const updateData: any = {};
+    
+    if (updates.title !== undefined) updateData.title = updates.title;
+    if (updates.description !== undefined) updateData.description = updates.description;
+    if (updates.start_time !== undefined) updateData.start_time = updates.start_time;
+    if (updates.end_time !== undefined) updateData.end_time = updates.end_time;
+    if (updates.location !== undefined) updateData.location = updates.location;
+    if (updates.status !== undefined) updateData.status = updates.status;
+    if (updates.client_id !== undefined) updateData.client_id = updates.client_id;
+    if (updates.lead_id !== undefined) updateData.lead_id = updates.lead_id;
+    if (updates.participants !== undefined) updateData.participants = updates.participants;
+    updateData.updated_at = new Date().toISOString();
+
     const { data, error } = await supabase
       .from('appointments')
-      .update({
-        title: updates.title,
-        description: updates.description,
-        start_time: updates.start_time,
-        end_time: updates.end_time,
-        location: updates.location,
-        status: updates.status,
-        client_id: updates.client_id,
-        lead_id: updates.lead_id,
-        participants: updates.participants,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
