@@ -74,7 +74,7 @@ export const createLead = async (lead: Partial<Lead>): Promise<Lead | null> => {
   try {
     const { data, error } = await supabase
       .from('leads')
-      .insert([lead])
+      .insert(lead)
       .select()
       .single();
 
@@ -168,7 +168,7 @@ export const addLeadActivity = async (activity: Partial<LeadActivity>): Promise<
   try {
     const { data, error } = await supabase
       .from('lead_activities')
-      .insert([activity])
+      .insert(activity)
       .select()
       .single();
 
@@ -234,16 +234,16 @@ export const getLeadStages = async (): Promise<string[]> => {
   try {
     const { data, error } = await supabase
       .from('leads')
-      .select('stage, status');
+      .select('status');
 
     if (error) {
       throw error;
     }
 
-    // Extract unique stages, using either stage or status field
+    // Extract unique stages, using status field
     const stages = [...new Set(
       data
-        .map(item => item.stage || item.status)
+        .map(item => item.status)
         .filter(Boolean)
     )];
     
@@ -321,16 +321,16 @@ export const getLeadCountByStatus = async (): Promise<Record<string, number>> =>
   try {
     const { data, error } = await supabase
       .from('leads')
-      .select('stage, status');
+      .select('status');
 
     if (error) {
       throw error;
     }
 
-    // Count leads by status/stage
+    // Count leads by status
     const counts: Record<string, number> = {};
     data.forEach(lead => {
-      const status = lead.stage || lead.status || 'unknown';
+      const status = lead.status || 'unknown';
       counts[status] = (counts[status] || 0) + 1;
     });
     

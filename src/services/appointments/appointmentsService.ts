@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Appointment } from "./types";
+import { Appointment, AppointmentCreateInput } from "./types";
 import { toast } from "sonner";
 
 export const fetchAppointments = async (filters?: { lead_id?: string; status?: string }): Promise<Appointment[]> => {
@@ -54,9 +54,20 @@ export const getAppointment = async (id: string): Promise<Appointment | null> =>
   }
 };
 
-export const createAppointment = async (appointment: Partial<Appointment>): Promise<Appointment | null> => {
+export const createAppointment = async (appointment: AppointmentCreateInput): Promise<Appointment | null> => {
   try {
-    // Ensure we're inserting a single object, not an array
+    // Validate required fields
+    if (!appointment.title) {
+      throw new Error("Title is required");
+    }
+    if (!appointment.start_time) {
+      throw new Error("Start time is required");
+    }
+    if (!appointment.end_time) {
+      throw new Error("End time is required");
+    }
+
+    // Ensure we're inserting a single object with required fields
     const { data, error } = await supabase
       .from('appointments')
       .insert(appointment)

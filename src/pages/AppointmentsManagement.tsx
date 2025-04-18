@@ -19,9 +19,10 @@ const AppointmentsManagement = () => {
     setIsCreating(false);
   };
 
-  const handleSaveAppointment = () => {
+  const handleSaveAppointment = async () => {
     toast.success("تم حفظ الموعد بنجاح");
     setIsCreating(false);
+    return Promise.resolve();
   };
 
   return (
@@ -47,9 +48,8 @@ const AppointmentsManagement = () => {
           </CardHeader>
           <CardContent>
             <AppointmentForm 
-              onClose={handleCancelCreate}
+              onCancel={handleCancelCreate}
               onSubmit={handleSaveAppointment}
-              title="موعد جديد"
             />
           </CardContent>
         </Card>

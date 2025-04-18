@@ -5,27 +5,24 @@ import { useBreakpoints } from '@/hooks/use-mobile';
 interface MobileOptimizedContainerProps {
   children: React.ReactNode;
   className?: string;
-  fullHeight?: boolean;
-  noPadding?: boolean;
 }
 
 const MobileOptimizedContainer: React.FC<MobileOptimizedContainerProps> = ({ 
   children, 
-  className = '',
-  fullHeight = false,
-  noPadding = false
+  className = "" 
 }) => {
-  const { isMobile, isSmallMobile } = useBreakpoints();
+  const { isMobile } = useBreakpoints();
+  
+  if (isMobile) {
+    return (
+      <div className={`p-4 ${className}`}>
+        {children}
+      </div>
+    );
+  }
   
   return (
-    <div 
-      className={`
-        ${noPadding ? '' : isSmallMobile ? 'p-2' : isMobile ? 'p-3' : 'p-4'}
-        ${fullHeight ? 'h-full' : ''}
-        max-w-full overflow-x-hidden
-        ${className}
-      `}
-    >
+    <div className={`p-6 ${className}`}>
       {children}
     </div>
   );

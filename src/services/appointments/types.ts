@@ -16,11 +16,10 @@ export interface Appointment {
 }
 
 export interface AppointmentCreateInput {
-  id?: string;
   title: string;
   description?: string;
-  start_time: string;
-  end_time: string;
+  start_time: string; // Required
+  end_time: string; // Required  
   location?: string;
   status?: string;
   client_id?: string;

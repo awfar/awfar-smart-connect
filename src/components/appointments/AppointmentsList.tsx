@@ -12,10 +12,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CalendarClock, Edit, Trash2, PlusCircle } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import AppointmentForm, { Appointment } from "./AppointmentForm";
+import AppointmentForm from "./AppointmentForm";
 import { useBreakpoints } from "@/hooks/use-mobile";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
+import { Appointment } from "@/services/appointments/types";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -29,22 +30,23 @@ import {
 
 // Mock data for appointments
 const INITIAL_APPOINTMENTS = [
-  { id: 1, title: "اجتماع مع عميل جديد", date: new Date(2025, 3, 14), clientName: "أحمد محمد", time: "10:00 ص", type: "اجتماع", status: "مؤكد" },
-  { id: 2, title: "متابعة عرض المنتج", date: new Date(2025, 3, 15), clientName: "سارة خالد", time: "02:30 م", type: "عرض", status: "مؤكد" },
-  { id: 3, title: "مراجعة مشروع", date: new Date(2025, 3, 15), clientName: "محمد علي", time: "04:00 م", type: "مراجعة", status: "مؤكد" },
-  { id: 4, title: "مكالمة مع فريق التطوير", date: new Date(2025, 3, 20), clientName: "فريق التطوير", time: "11:00 ص", type: "مكالمة", status: "معلق" },
-  { id: 5, title: "اجتماع استراتيجي", date: new Date(2025, 3, 25), clientName: "خالد عبدالله", time: "01:00 م", type: "اجتماع", status: "مؤكد" },
+  { id: "1", title: "اجتماع مع عميل جديد", start_time: new Date(2025, 3, 14).toISOString(), clientName: "أحمد محمد", end_time: new Date(2025, 3, 14, 11, 0).toISOString(), type: "اجتماع", status: "مؤكد" },
+  { id: "2", title: "متابعة عرض المنتج", start_time: new Date(2025, 3, 15).toISOString(), clientName: "سارة خالد", end_time: new Date(2025, 3, 15, 15, 30).toISOString(), type: "عرض", status: "مؤكد" },
+  { id: "3", title: "مراجعة مشروع", start_time: new Date(2025, 3, 15).toISOString(), clientName: "محمد علي", end_time: new Date(2025, 3, 15, 16, 0).toISOString(), type: "مراجعة", status: "مؤكد" },
+  { id: "4", title: "مكالمة مع فريق التطوير", start_time: new Date(2025, 3, 20).toISOString(), clientName: "فريق التطوير", end_time: new Date(2025, 3, 20, 12, 0).toISOString(), type: "مكالمة", status: "معلق" },
+  { id: "5", title: "اجتماع استراتيجي", start_time: new Date(2025, 3, 25).toISOString(), clientName: "خالد عبدالله", end_time: new Date(2025, 3, 25, 14, 0).toISOString(), type: "اجتماع", status: "مؤكد" },
 ];
 
 const AppointmentsList = () => {
-  const [appointments, setAppointments] = useState<Appointment[]>(INITIAL_APPOINTMENTS);
+  const [appointments, setAppointments] = useState<Appointment[]>(INITIAL_APPOINTMENTS as unknown as Appointment[]);
   const [showForm, setShowForm] = useState<boolean>(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | undefined>(undefined);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState<boolean>(false);
-  const [appointmentToDelete, setAppointmentToDelete] = useState<number | null>(null);
+  const [appointmentToDelete, setAppointmentToDelete] = useState<string | null>(null);
   const { isMobile } = useBreakpoints();
 
-  const formatDate = (date: Date) => {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
     return date.toLocaleDateString('ar-SA');
   };
 
@@ -53,7 +55,7 @@ const AppointmentsList = () => {
     setShowForm(true);
   };
 
-  const handleEdit = (appointmentId: number) => {
+  const handleEdit = (appointmentId: string) => {
     const appointment = appointments.find(a => a.id === appointmentId);
     if (appointment) {
       setEditingAppointment(appointment);
@@ -61,7 +63,7 @@ const AppointmentsList = () => {
     }
   };
 
-  const handleDelete = (appointmentId: number) => {
+  const handleDelete = (appointmentId: string) => {
     setAppointmentToDelete(appointmentId);
     setDeleteConfirmOpen(true);
   };
@@ -75,28 +77,30 @@ const AppointmentsList = () => {
     }
   };
 
-  const handleFormSubmit = (appointmentData: Partial<Appointment>) => {
+  const handleFormSubmit = async (appointmentData: any) => {
     if (editingAppointment) {
       // Edit existing appointment
       setAppointments(appointments.map(a => 
         a.id === editingAppointment.id ? { ...a, ...appointmentData } : a
       ));
+      toast.success("تم تحديث الموعد بنجاح");
     } else {
       // Add new appointment
-      const newId = Math.max(...appointments.map(a => a.id), 0) + 1;
+      const newId = Math.max(...appointments.map(a => parseInt(a.id)), 0) + 1;
       const newAppointment: Appointment = {
-        id: newId,
+        id: newId.toString(),
         title: appointmentData.title || "",
-        clientName: appointmentData.clientName || "",
-        date: appointmentData.date || new Date(),
-        time: appointmentData.time || "",
-        type: appointmentData.type || "اجتماع",
+        start_time: appointmentData.start_time || new Date().toISOString(),
+        end_time: appointmentData.end_time || new Date().toISOString(),
+        location: appointmentData.location || "",
         status: appointmentData.status || "مؤكد",
         description: appointmentData.description,
       };
       setAppointments([newAppointment, ...appointments]);
+      toast.success("تم إضافة الموعد بنجاح");
     }
     setShowForm(false);
+    return Promise.resolve();
   };
 
   return (
@@ -121,11 +125,11 @@ const AppointmentsList = () => {
                   </Badge>
                 </div>
                 <div className="text-sm text-muted-foreground mt-1">
-                  {appointment.clientName}
+                  {appointment.client_id}
                 </div>
                 <div className="flex items-center gap-2 mt-2 text-sm">
                   <CalendarClock className="h-4 w-4 text-muted-foreground" />
-                  <span>{formatDate(appointment.date)} - {appointment.time}</span>
+                  <span>{formatDate(appointment.start_time)} - {appointment.end_time ? new Date(appointment.end_time).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
                 </div>
                 <div className="flex justify-end space-x-2 rtl:space-x-reverse mt-3">
                   <Button variant="ghost" size="sm" onClick={() => handleEdit(appointment.id)}>
@@ -157,13 +161,13 @@ const AppointmentsList = () => {
               {appointments.map((appointment) => (
                 <TableRow key={appointment.id}>
                   <TableCell className="font-medium">{appointment.title}</TableCell>
-                  <TableCell>{appointment.clientName}</TableCell>
-                  <TableCell>{formatDate(appointment.date)}</TableCell>
-                  <TableCell>{appointment.time}</TableCell>
+                  <TableCell>{appointment.client_id}</TableCell>
+                  <TableCell>{formatDate(appointment.start_time)}</TableCell>
+                  <TableCell>{new Date(appointment.start_time).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</TableCell>
                   <TableCell>
                     <div className="flex items-center">
                       <CalendarClock className="ml-2 h-4 w-4 text-muted-foreground" />
-                      <span>{appointment.type}</span>
+                      <span>{appointment.description || "موعد"}</span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -193,8 +197,7 @@ const AppointmentsList = () => {
           <AppointmentForm 
             onClose={() => setShowForm(false)} 
             onSubmit={handleFormSubmit} 
-            initialData={editingAppointment}
-            title={editingAppointment ? "تحديث موعد" : "إضافة موعد جديد"} 
+            appointment={editingAppointment}
           />
         </DialogContent>
       </Dialog>
