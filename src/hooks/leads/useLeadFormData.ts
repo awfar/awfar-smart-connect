@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Lead } from "@/services/leads";
+import { Lead } from "@/services/leads/types";
 import { FormErrors } from './useLeadFormValidation';
 
 export const useLeadFormData = (lead?: Lead) => {
@@ -12,7 +12,7 @@ export const useLeadFormData = (lead?: Lead) => {
     phone: lead?.phone || "",
     position: lead?.position || "",
     source: lead?.source || "",
-    status: lead?.status || lead?.stage || "جديد",
+    status: lead?.status || "",
     notes: lead?.notes || "",
     assigned_to: lead?.assigned_to || null,
     country: lead?.country || "",

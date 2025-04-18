@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Table,
@@ -195,7 +194,7 @@ const AppointmentsList = () => {
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="sm:max-w-[600px]">
           <AppointmentForm 
-            onClose={() => setShowForm(false)} 
+            onCancel={() => setShowForm(false)} 
             onSubmit={handleFormSubmit} 
             appointment={editingAppointment}
           />

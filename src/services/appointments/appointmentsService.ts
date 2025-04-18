@@ -54,7 +54,7 @@ export const getAppointment = async (id: string): Promise<Appointment | null> =>
   }
 };
 
-export const createAppointment = async (appointment: AppointmentCreateInput): Promise<Appointment | null> => {
+export const createAppointment = async (appointment: AppointmentCreateInput): Promise<Appointment> => {
   try {
     // Validate required fields
     if (!appointment.title) {
@@ -70,7 +70,17 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
     // Ensure we're inserting a single object with required fields
     const { data, error } = await supabase
       .from('appointments')
-      .insert(appointment)
+      .insert({
+        title: appointment.title,
+        description: appointment.description,
+        start_time: appointment.start_time,
+        end_time: appointment.end_time,
+        location: appointment.location,
+        status: appointment.status || 'scheduled',
+        client_id: appointment.client_id,
+        lead_id: appointment.lead_id,
+        created_by: appointment.created_by
+      })
       .select()
       .single();
 
@@ -83,15 +93,25 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
   } catch (error) {
     console.error("Error creating appointment:", error);
     toast.error("فشل في إنشاء الموعد");
-    return null;
+    throw error;
   }
 };
 
-export const updateAppointment = async (id: string, updates: Partial<Appointment>): Promise<Appointment | null> => {
+export const updateAppointment = async (id: string, updates: Partial<Appointment>): Promise<Appointment> => {
   try {
     const { data, error } = await supabase
       .from('appointments')
-      .update(updates)
+      .update({
+        title: updates.title,
+        description: updates.description,
+        start_time: updates.start_time,
+        end_time: updates.end_time,
+        location: updates.location,
+        status: updates.status,
+        client_id: updates.client_id,
+        lead_id: updates.lead_id,
+        updated_at: new Date().toISOString()
+      })
       .eq('id', id)
       .select()
       .single();
@@ -103,7 +123,7 @@ export const updateAppointment = async (id: string, updates: Partial<Appointment
   } catch (error) {
     console.error("Error updating appointment:", error);
     toast.error("فشل في تحديث الموعد");
-    return null;
+    throw error;
   }
 };
 

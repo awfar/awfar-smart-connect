@@ -12,3 +12,14 @@ export interface Task {
   created_at: string;
   updated_at: string;
 }
+
+export interface TaskCreateInput {
+  title: string;
+  description?: string;
+  status?: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  priority?: 'low' | 'medium' | 'high';
+  due_date?: string | null;
+  lead_id?: string | null;
+  assigned_to?: string | null;
+  created_by?: string | null;
+}

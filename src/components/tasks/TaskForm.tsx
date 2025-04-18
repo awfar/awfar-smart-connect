@@ -1,14 +1,14 @@
 
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { Task } from '@/services/tasks/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Task, TaskCreateInput } from '@/services/tasks/types';
 import { toast } from 'sonner';
 
-interface TaskFormProps {
+export interface TaskFormProps {
   onSubmit: (data: any) => Promise<void>;
   onCancel: () => void;
   task?: Task;
@@ -28,20 +28,15 @@ const TaskForm: React.FC<TaskFormProps> = ({
       title: task?.title || '',
       description: task?.description || '',
       priority: task?.priority || 'medium',
+      status: task?.status || 'pending',
       due_date: task?.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
-      lead_id: leadId || task?.lead_id || ''
+      lead_id: leadId || task?.lead_id || '',
+      assigned_to: task?.assigned_to || ''
     }
   });
 
-  const watchPriority = watch('priority');
-
   const handleFormSubmit = async (data: any) => {
     try {
-      // Make sure priority is one of the allowed values
-      if (data.priority && !['low', 'medium', 'high'].includes(data.priority)) {
-        data.priority = 'medium';
-      }
-      
       await onSubmit(data);
     } catch (error) {
       console.error("Error submitting task:", error);
@@ -49,8 +44,8 @@ const TaskForm: React.FC<TaskFormProps> = ({
     }
   };
 
-  const handlePriorityChange = (value: "low" | "medium" | "high") => {
-    setValue('priority', value);
+  const handleSelectChange = (field: string, value: string) => {
+    setValue(field, value);
   };
 
   return (
@@ -73,21 +68,41 @@ const TaskForm: React.FC<TaskFormProps> = ({
         />
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-medium">الأولوية</label>
-        <Select 
-          defaultValue={watchPriority} 
-          onValueChange={handlePriorityChange}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="اختر الأولوية" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="low">منخفضة</SelectItem>
-            <SelectItem value="medium">متوسطة</SelectItem>
-            <SelectItem value="high">عالية</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">الأولوية</label>
+          <Select 
+            value={watch('priority')} 
+            onValueChange={(value) => handleSelectChange('priority', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="اختر الأولوية" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="low">منخفضة</SelectItem>
+              <SelectItem value="medium">متوسطة</SelectItem>
+              <SelectItem value="high">عالية</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium">الحالة</label>
+          <Select 
+            value={watch('status')} 
+            onValueChange={(value) => handleSelectChange('status', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="اختر الحالة" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pending">قيد الانتظار</SelectItem>
+              <SelectItem value="in_progress">قيد التنفيذ</SelectItem>
+              <SelectItem value="completed">مكتملة</SelectItem>
+              <SelectItem value="cancelled">ملغاة</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="space-y-2">

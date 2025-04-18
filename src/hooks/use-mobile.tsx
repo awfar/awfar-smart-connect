@@ -1,28 +1,28 @@
 
 import * as React from "react"
 
-// ثوابت لنقاط التجاوب
+// Constants for breakpoints
 const MOBILE_BREAKPOINT = 768
 const TABLET_BREAKPOINT = 1024
 const SMALL_MOBILE_BREAKPOINT = 480
 
-// نوع بيانات لنقاط التجاوب
-export type Breakpoints = {
-  isSmallMobile: boolean; // أقل من 480px
-  isMobile: boolean;      // أقل من 768px
-  isTablet: boolean;      // بين 768px و 1024px
-  isDesktop: boolean;     // أكبر من 1024px
+// Type for breakpoints
+export type BreakpointState = {
+  isSmallMobile: boolean; // Less than 480px
+  isMobile: boolean;      // Less than 768px
+  isTablet: boolean;      // Between 768px and 1024px
+  isDesktop: boolean;     // Greater than 1024px
 }
 
 /**
- * هوك للتحقق من ما إذا كان الجهاز محمولاً
- * @returns boolean - هل الجهاز محمول؟
+ * Hook to check if the device is mobile
+ * @returns boolean - Is the device mobile?
  */
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean>(false)
 
   React.useEffect(() => {
-    // تعيين القيمة الأولية بناءً على عرض النافذة الحالي
+    // Set initial value based on current window width
     setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     
     const updateSize = () => {
@@ -38,11 +38,11 @@ export function useIsMobile() {
 }
 
 /**
- * هوك للحصول على معلومات متكاملة عن جميع نقاط التجاوب
- * @returns Breakpoints - كائن يحتوي على معلومات عن نقاط التجاوب
+ * Hook to get complete information about all breakpoints
+ * @returns Breakpoints - Object containing information about breakpoints
  */
-export function useBreakpoints(): Breakpoints {
-  const [breakpoints, setBreakpoints] = React.useState<Breakpoints>({
+export function useBreakpoints(): BreakpointState {
+  const [breakpoints, setBreakpoints] = React.useState<BreakpointState>({
     isSmallMobile: false,
     isMobile: false,
     isTablet: false,
@@ -60,13 +60,13 @@ export function useBreakpoints(): Breakpoints {
       })
     }
     
-    // فحص أولي
+    // Initial check
     checkBreakpoints()
     
-    // إضافة مستمع لحدث تغيير حجم النافذة
+    // Add event listener for window resize
     window.addEventListener('resize', checkBreakpoints)
     
-    // التنظيف
+    // Cleanup
     return () => window.removeEventListener('resize', checkBreakpoints)
   }, [])
   
@@ -74,10 +74,10 @@ export function useBreakpoints(): Breakpoints {
 }
 
 /**
- * هوك debounce لتحسين أداء استجابة تغيير الحجم
- * @param value القيمة التي سيتم تأخيرها
- * @param delay مدة التأخير بالميلي ثانية
- * @returns القيمة بعد التأخير
+ * Debounce hook to improve resize response performance
+ * @param value Value to be delayed
+ * @param delay Delay in milliseconds
+ * @returns Value after delay
  */
 export function useDebounce<T>(value: T, delay = 250): T {
   const [debouncedValue, setDebouncedValue] = React.useState(value)
@@ -96,14 +96,14 @@ export function useDebounce<T>(value: T, delay = 250): T {
 }
 
 /**
- * هوك للحصول على عرض الشاشة الحالي
- * @returns عرض الشاشة الحالي بالبكسل
+ * Hook to get current viewport width
+ * @returns Current viewport width in pixels
  */
 export function useViewportWidth(): number {
   const [width, setWidth] = React.useState<number>(0)
   
   React.useEffect(() => {
-    // تعيين القيمة الأولية
+    // Set initial value
     setWidth(window.innerWidth)
     
     const handleResize = () => {

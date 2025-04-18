@@ -1,100 +1,124 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Task } from "./types";
+import { Task, TaskCreateInput } from "./types";
 import { toast } from "sonner";
 import { castToTask } from "./utils";
 
-export const getTasks = async (filters?: { lead_id?: string; status?: string }): Promise<Task[]> => {
+// Fetch tasks
+export const fetchTasks = async (filterOptions?: {
+  status?: string;
+  assigned_to?: string;
+  lead_id?: string;
+}): Promise<Task[]> => {
   try {
     let query = supabase
-      .from('tasks')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
+      .from("tasks")
+      .select(`
+        *,
+        assigned_profiles:assigned_to (
+          id, first_name, last_name
+        ),
+        creator_profiles:created_by (
+          id, first_name, last_name
+        )
+      `)
+      .order("created_at", { ascending: false });
+
     // Apply filters if provided
-    if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) {
-          query = query.eq(key, value);
-        }
-      });
+    if (filterOptions) {
+      if (filterOptions.status) {
+        query = query.eq("status", filterOptions.status);
+      }
+      if (filterOptions.assigned_to) {
+        query = query.eq("assigned_to", filterOptions.assigned_to);
+      }
+      if (filterOptions.lead_id) {
+        query = query.eq("lead_id", filterOptions.lead_id);
+      }
     }
-    
+
     const { data, error } = await query;
+
+    if (error) throw error;
     
-    if (error) {
-      console.error("Error fetching tasks:", error);
-      throw error;
-    }
-    
-    // Cast each task through our safety function
     return (data || []).map(castToTask);
   } catch (error) {
-    console.error("Error in getTasks:", error);
+    console.error("Error fetching tasks:", error);
+    toast.error("حدث خطأ أثناء تحميل المهام");
     return [];
   }
 };
 
-export const createTask = async (task: Partial<Task>): Promise<Task | null> => {
+// Create a new task
+export const createTask = async (taskData: TaskCreateInput): Promise<Task> => {
   try {
-    // Make sure we have a title at minimum
-    if (!task.title) {
+    // Ensure required fields are present
+    if (!taskData.title) {
       throw new Error("Task title is required");
     }
-    
-    // Make sure we're inserting a single task object, not an array
+
     const { data, error } = await supabase
-      .from('tasks')
-      .insert(task)
+      .from("tasks")
+      .insert({
+        title: taskData.title,
+        description: taskData.description,
+        status: taskData.status || "pending",
+        priority: taskData.priority || "medium",
+        due_date: taskData.due_date,
+        lead_id: taskData.lead_id,
+        assigned_to: taskData.assigned_to,
+        created_by: taskData.created_by,
+      })
       .select()
       .single();
-      
-    if (error) {
-      throw error;
-    }
-    
+
+    if (error) throw error;
+
     toast.success("تم إنشاء المهمة بنجاح");
     return castToTask(data);
   } catch (error) {
     console.error("Error creating task:", error);
     toast.error("حدث خطأ أثناء إنشاء المهمة");
-    return null;
+    throw error;
   }
 };
 
-export const updateTask = async (id: string, updates: Partial<Task>): Promise<Task | null> => {
+// Update an existing task
+export const updateTask = async (taskId: string, taskData: Partial<Task>): Promise<Task> => {
   try {
     const { data, error } = await supabase
-      .from('tasks')
-      .update(updates)
-      .eq('id', id)
+      .from("tasks")
+      .update({
+        title: taskData.title,
+        description: taskData.description,
+        status: taskData.status,
+        priority: taskData.priority,
+        due_date: taskData.due_date,
+        assigned_to: taskData.assigned_to,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", taskId)
       .select()
       .single();
-      
-    if (error) {
-      throw error;
-    }
-    
+
+    if (error) throw error;
+
     toast.success("تم تحديث المهمة بنجاح");
     return castToTask(data);
   } catch (error) {
     console.error("Error updating task:", error);
     toast.error("حدث خطأ أثناء تحديث المهمة");
-    return null;
+    throw error;
   }
 };
 
-export const deleteTask = async (id: string): Promise<boolean> => {
+// Delete a task
+export const deleteTask = async (taskId: string): Promise<boolean> => {
   try {
-    const { error } = await supabase
-      .from('tasks')
-      .delete()
-      .eq('id', id);
-      
-    if (error) {
-      throw error;
-    }
-    
+    const { error } = await supabase.from("tasks").delete().eq("id", taskId);
+
+    if (error) throw error;
+
     toast.success("تم حذف المهمة بنجاح");
     return true;
   } catch (error) {
@@ -104,8 +128,7 @@ export const deleteTask = async (id: string): Promise<boolean> => {
   }
 };
 
-export const completeTask = async (id: string): Promise<Task | null> => {
-  return updateTask(id, {
-    status: 'completed'
-  });
+// Get tasks for a specific lead
+export const getTasksByLeadId = async (leadId: string): Promise<Task[]> => {
+  return fetchTasks({ lead_id: leadId });
 };

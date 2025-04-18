@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -33,40 +32,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import MobileOptimizedContainer from "@/components/ui/MobileOptimizedContainer";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-
-import { getTasks, createTask, updateTask, deleteTask, completeTask } from "@/services/tasks/api";
-import { Task } from "@/services/tasks/types";
-import TaskForm from "@/components/tasks/TaskForm";
-
-import { 
-  fetchAppointmentsByLeadId as getAppointments,
-  createAppointment,
-  updateAppointment,
-  deleteAppointment,
-  Appointment
-} from "@/services/appointments";
-import AppointmentForm from "@/components/appointments/AppointmentForm";
-
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog";
-
+import { leadId } from '@/types/leads';
+import { fetchAppointmentsByLeadId, createAppointment, updateAppointment, deleteAppointment } from '@/services/appointments'; 
+import { getTasksByLeadId, createTask, updateTask, deleteTask } from '@/services/tasks/api';
+import TaskForm from '@/components/tasks/TaskForm';
+import AppointmentForm from '@/components/appointments/AppointmentForm';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
+import { Loader2, MessageSquare, Calendar, Globe, ChevronRight, FileText, Users, TicketIcon } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { AvatarImage } from '@/components/ui/avatar';
+import { Link } from 'react-router-dom';
 
 const LeadDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
-  // State hooks
   const [activeTab, setActiveTab] = useState<string>("overview");
   const [showActivityForm, setShowActivityForm] = useState<boolean>(false);
   const [isEditLeadOpen, setIsEditLeadOpen] = useState<boolean>(false);
@@ -79,7 +61,6 @@ const LeadDetailsPage = () => {
   const [itemToDelete, setItemToDelete] = useState<{type: string, id: string} | null>(null);
   const [newNote, setNewNote] = useState<string>("");
   
-  // Fetch lead data
   const { 
     data: lead,
     isLoading: isLoadingLead,
@@ -91,40 +72,36 @@ const LeadDetailsPage = () => {
     enabled: !!id
   });
   
-  // Fetch lead activities
   const { 
     data: activities = [],
     isLoading: isLoadingActivities,
     refetch: refetchActivities
   } = useQuery({
     queryKey: ['leadActivities', id],
-    queryFn: () => id ? getLeadActivities(id) : [],
+    queryFn: () => id ? getLeadActivitiesById({ lead_id: id }) : [],
     enabled: !!id
   });
   
-  // Fetch tasks
   const {
     data: tasks = [],
     isLoading: isLoadingTasks,
     refetch: refetchTasks
   } = useQuery({
     queryKey: ['tasks', id],
-    queryFn: () => id ? getTasks({ lead_id: id }) : [],
+    queryFn: () => id ? fetchTasks(id) : [],
     enabled: !!id
   });
   
-  // Fetch appointments
   const {
     data: appointments = [],
     isLoading: isLoadingAppointments,
     refetch: refetchAppointments
   } = useQuery({
     queryKey: ['appointments', id],
-    queryFn: () => id ? getAppointments({ lead_id: id }) : [],
+    queryFn: () => id ? fetchAppointments(id) : [],
     enabled: !!id
   });
   
-  // Mutations
   const completeMutation = useMutation({
     mutationFn: completeLeadActivity,
     onSuccess: () => {
@@ -146,32 +123,32 @@ const LeadDetailsPage = () => {
   const taskMutation = useMutation({
     mutationFn: async (data: any) => {
       if (taskToEdit?.id) {
-        return updateTask(taskToEdit.id, { ...data, lead_id: id });
+        await updateTask(taskToEdit.id, data);
       } else {
-        return createTask({ ...data, lead_id: id });
+        await createTask({
+          ...data,
+          lead_id: id
+        });
       }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', id] });
       setShowTaskForm(false);
-      setTaskToEdit(null);
-      toast.success(taskToEdit ? "تم تحديث المهمة بنجاح" : "تم إضافة المهمة بنجاح");
+      queryClient.invalidateQueries({ queryKey: ['tasks', id] });
+      toast.success("تم حفظ المهمة بنجاح");
     }
   });
   
   const appointmentMutation = useMutation({
     mutationFn: async (data: any) => {
       if (appointmentToEdit?.id) {
-        return updateAppointment(appointmentToEdit.id, { ...data, lead_id: id });
+        await updateAppointment(appointmentToEdit.id, data);
       } else {
-        return createAppointment({ ...data, lead_id: id });
+        await createAppointment({
+          ...data,
+          lead_id: id
+        });
       }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments', id] });
       setShowAppointmentForm(false);
-      setAppointmentToEdit(null);
-      toast.success(appointmentToEdit ? "تم تحديث الموعد بنجاح" : "تم إضافة الموعد بنجاح");
+      queryClient.invalidateQueries({ queryKey: ['appointments', id] });
+      toast.success("تم حفظ الموعد بنجاح");
     }
   });
   
@@ -213,7 +190,6 @@ const LeadDetailsPage = () => {
     }
   });
   
-  // Event handlers
   const handleAddActivity = () => {
     setShowActivityForm(true);
   };
@@ -286,7 +262,6 @@ const LeadDetailsPage = () => {
     }
   };
 
-  // Helper functions
   const getLeadName = () => {
     if (!lead) return "جاري التحميل...";
     return `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || "بدون اسم";
@@ -339,7 +314,6 @@ const LeadDetailsPage = () => {
 
   return (
     <DashboardLayout>
-      {/* Header Section */}
       <div className="bg-white border-b">
         <MobileOptimizedContainer>
           <div className="py-4">
@@ -414,7 +388,6 @@ const LeadDetailsPage = () => {
         </MobileOptimizedContainer>
       </div>
       
-      {/* Main Content */}
       <MobileOptimizedContainer className="py-6">
         <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <TabsList className="grid grid-cols-5 sm:w-[500px]">
@@ -425,17 +398,14 @@ const LeadDetailsPage = () => {
             <TabsTrigger value="notes">الملاحظات</TabsTrigger>
           </TabsList>
           
-          {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-4">
             <div className="grid md:grid-cols-3 gap-6">
-              {/* Left Column */}
               <div className="space-y-6 md:col-span-2">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">المعلومات الشخصية</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Contact Information */}
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
                         <h3 className="text-sm font-medium text-muted-foreground mb-2">الاسم الأول</h3>
@@ -564,7 +534,6 @@ const LeadDetailsPage = () => {
                       </div>
                     </div>
                     
-                    {/* Company Information */}
                     <div className="pt-4 border-t">
                       <h3 className="text-sm font-medium text-muted-foreground mb-2">معلومات الشركة</h3>
                       <div className="grid sm:grid-cols-2 gap-4">
@@ -634,7 +603,6 @@ const LeadDetailsPage = () => {
                   </CardContent>
                 </Card>
                 
-                {/* Recent Activities */}
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="text-lg">آخر الأنشطة</CardTitle>
@@ -694,9 +662,7 @@ const LeadDetailsPage = () => {
                 </Card>
               </div>
               
-              {/* Right Column */}
               <div className="space-y-6">
-                {/* Status */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">الحالة</CardTitle>
@@ -750,7 +716,6 @@ const LeadDetailsPage = () => {
                   </CardContent>
                 </Card>
                 
-                {/* Quick Links */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">روابط سريعة</CardTitle>
@@ -783,7 +748,6 @@ const LeadDetailsPage = () => {
                   </CardContent>
                 </Card>
                 
-                {/* Related Records */}
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">السجلات ذات الصلة</CardTitle>
@@ -800,8 +764,7 @@ const LeadDetailsPage = () => {
                         <Badge className="mr-auto" variant="outline">0</Badge>
                       </Button>
                       <Button variant="ghost" className="w-full justify-start">
-                        {/* Add TicketIcon icon */}
-                        <MessageSquare className="h-4 w-4 mr-2" />
+                        <TicketIcon className="h-4 w-4 mr-2" />
                         التذاكر
                         <Badge className="mr-auto" variant="outline">0</Badge>
                       </Button>
@@ -817,7 +780,6 @@ const LeadDetailsPage = () => {
             </div>
           </TabsContent>
           
-          {/* Timeline Tab */}
           <TabsContent value="timeline">
             <MobileOptimizedContainer>
               <div className="flex justify-between items-center mb-6">
@@ -840,7 +802,6 @@ const LeadDetailsPage = () => {
             </MobileOptimizedContainer>
           </TabsContent>
           
-          {/* Tasks Tab */}
           <TabsContent value="tasks">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -934,7 +895,6 @@ const LeadDetailsPage = () => {
             </Card>
           </TabsContent>
           
-          {/* Appointments Tab */}
           <TabsContent value="appointments">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
@@ -1014,7 +974,6 @@ const LeadDetailsPage = () => {
             </Card>
           </TabsContent>
           
-          {/* Notes Tab */}
           <TabsContent value="notes">
             <Card>
               <CardHeader>
@@ -1086,9 +1045,6 @@ const LeadDetailsPage = () => {
         </Tabs>
       </MobileOptimizedContainer>
       
-      {/* Dialogs */}
-      
-      {/* Activity Form Dialog */}
       <Dialog open={showActivityForm} onOpenChange={setShowActivityForm}>
         <DialogContent>
           <DialogHeader>
@@ -1102,7 +1058,6 @@ const LeadDetailsPage = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Edit Lead Dialog */}
       <Dialog open={isEditLeadOpen} onOpenChange={setIsEditLeadOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -1120,16 +1075,15 @@ const LeadDetailsPage = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Task Form Dialog */}
       <Dialog open={showTaskForm} onOpenChange={setShowTaskForm}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{taskToEdit ? "تعديل المهمة" : "إضافة مهمة جديدة"}</DialogTitle>
           </DialogHeader>
           <TaskForm
-            task={taskToEdit || undefined}
+            task={taskToEdit}
             leadId={id}
-            onSubmit={taskMutation.mutateAsync}
+            onSubmit={handleTaskSubmit}
             onCancel={() => {
               setShowTaskForm(false);
               setTaskToEdit(null);
@@ -1139,16 +1093,15 @@ const LeadDetailsPage = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Appointment Form Dialog */}
       <Dialog open={showAppointmentForm} onOpenChange={setShowAppointmentForm}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{appointmentToEdit ? "تعديل الموعد" : "إضافة موعد جديد"}</DialogTitle>
           </DialogHeader>
           <AppointmentForm
-            appointment={appointmentToEdit || undefined}
+            appointment={appointmentToEdit}
             leadId={id}
-            onSubmit={appointmentMutation.mutateAsync}
+            onSubmit={handleAppointmentSubmit}
             onCancel={() => {
               setShowAppointmentForm(false);
               setAppointmentToEdit(null);
@@ -1158,7 +1111,6 @@ const LeadDetailsPage = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Delete Item Confirmation Dialog */}
       <AlertDialog open={!!itemToDelete} onOpenChange={(open) => !open && setItemToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

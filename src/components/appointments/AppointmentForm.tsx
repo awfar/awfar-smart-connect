@@ -7,9 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 
-interface AppointmentFormProps {
+export interface AppointmentFormProps {
   onSubmit: (data: any) => Promise<void>;
-  onCancel: () => void;
+  onCancel: () => void; // Change onClose to onCancel
   appointment?: Appointment;
   leadId?: string;
   isSubmitting?: boolean;
@@ -17,7 +17,7 @@ interface AppointmentFormProps {
 
 const AppointmentForm: React.FC<AppointmentFormProps> = ({ 
   onSubmit, 
-  onCancel, 
+  onCancel,  // Changed from onClose to onCancel
   appointment, 
   leadId,
   isSubmitting = false 
