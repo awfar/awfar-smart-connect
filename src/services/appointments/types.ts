@@ -9,7 +9,7 @@ export interface Appointment {
   end_time: string;
   location?: string;
   status: AppointmentStatus;
-  lead_id?: string | null;
+  lead_id?: string | null;  // Add this line
   client_id?: string;
   participants?: string[];
   created_by?: string;
@@ -24,7 +24,7 @@ export interface AppointmentCreateInput {
   end_time: string;
   location?: string;
   status?: AppointmentStatus;
-  lead_id?: string;
+  lead_id?: string;  // Add this line
   client_id?: string;
   participants?: string[];
   created_by?: string;

@@ -6,13 +6,12 @@ export interface Task {
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
   priority: 'low' | 'medium' | 'high';
   due_date?: string | null;
-  lead_id?: string | null;
+  lead_id?: string | null;  // Ensure this is included
   assigned_to?: string | null;
   created_by?: string | null;
   created_at: string;
   updated_at: string;
-  // Adding these fields to match usage in the codebase
-  assigned_to_name?: string;
+  assigned_to_name?: string;  // Add this line
   related_to?: {
     type: string;
     id: string;
@@ -29,7 +28,10 @@ export interface TaskCreateInput {
   lead_id?: string | null;
   assigned_to?: string | null;
   created_by?: string | null;
-  related_to_type?: string;
-  related_to_id?: string;
-  related_to_name?: string;
+  assigned_to_name?: string;  // Add this line
+  related_to?: {
+    type: string;
+    id: string;
+    name: string;
+  };
 }
