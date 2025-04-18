@@ -31,12 +31,22 @@ export const getTasks = async (filterOptions?: {
     
     if (error) throw error;
 
-    // Ensure we're returning a properly typed array
+    // Explicitly map each property to avoid deep instantiation issues
     return (data || []).map(task => ({
-      ...task,
+      id: task.id,
+      title: task.title,
+      description: task.description,
       status: task.status as Task['status'],
-      priority: task.priority as Task['priority']
-    })) as Task[];
+      priority: task.priority as Task['priority'],
+      due_date: task.due_date,
+      lead_id: task.lead_id,
+      assigned_to: task.assigned_to,
+      created_by: task.created_by,
+      created_at: task.created_at,
+      updated_at: task.updated_at,
+      assigned_to_name: task.assigned_to_name,
+      related_to: task.related_to
+    }));
   } catch (error) {
     console.error("Error fetching tasks:", error);
     toast.error("حدث خطأ أثناء تحميل المهام");
@@ -69,7 +79,21 @@ export const createTask = async (taskData: any): Promise<Task> => {
     if (error) throw error;
 
     toast.success("تم إنشاء المهمة بنجاح");
-    return data as Task;
+    return {
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      status: data.status as Task['status'],
+      priority: data.priority as Task['priority'],
+      due_date: data.due_date,
+      lead_id: data.lead_id,
+      assigned_to: data.assigned_to,
+      created_by: data.created_by,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      assigned_to_name: data.assigned_to_name,
+      related_to: data.related_to
+    };
   } catch (error) {
     console.error("Error creating task:", error);
     toast.error("حدث خطأ أثناء إنشاء المهمة");
@@ -94,7 +118,21 @@ export const updateTask = async (taskId: string, taskData: Partial<Task>): Promi
     if (error) throw error;
 
     toast.success("تم تحديث المهمة بنجاح");
-    return data as Task;
+    return {
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      status: data.status as Task['status'],
+      priority: data.priority as Task['priority'],
+      due_date: data.due_date,
+      lead_id: data.lead_id,
+      assigned_to: data.assigned_to,
+      created_by: data.created_by,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      assigned_to_name: data.assigned_to_name,
+      related_to: data.related_to
+    };
   } catch (error) {
     console.error("Error updating task:", error);
     toast.error("حدث خطأ أثناء تحديث المهمة");

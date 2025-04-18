@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 export interface AppointmentFormProps {
   onSubmit: (data: any) => Promise<void>;
   onCancel: () => void;
+  onClose?: () => void; // Add onClose as an optional prop
   appointment?: Appointment;
   leadId?: string;
   isSubmitting?: boolean;
@@ -18,6 +19,7 @@ export interface AppointmentFormProps {
 const AppointmentForm: React.FC<AppointmentFormProps> = ({ 
   onSubmit, 
   onCancel,
+  onClose,
   appointment, 
   leadId,
   isSubmitting = false 
@@ -45,6 +47,10 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
       }
       
       await onSubmit(data);
+      // Call onClose if it exists
+      if (onClose) {
+        onClose();
+      }
     } catch (error) {
       console.error("Error submitting appointment:", error);
       toast.error("حدث خطأ في حفظ الموعد");
