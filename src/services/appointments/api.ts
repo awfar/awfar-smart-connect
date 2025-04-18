@@ -14,6 +14,7 @@ export const getAppointmentsByLeadId = async (leadId: string): Promise<Appointme
       
     if (error) throw error;
     
+    // Explicitly map each property to match the Appointment interface
     return (data || []).map(item => ({
       id: item.id,
       title: item.title,

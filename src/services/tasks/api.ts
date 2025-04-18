@@ -31,7 +31,7 @@ export const getTasks = async (filterOptions?: {
     
     if (error) throw error;
 
-    // Explicitly map each property to avoid deep instantiation issues
+    // Explicitly map each property to match the Task interface
     return (data || []).map(task => ({
       id: task.id,
       title: task.title,
@@ -44,7 +44,6 @@ export const getTasks = async (filterOptions?: {
       created_by: task.created_by,
       created_at: task.created_at,
       updated_at: task.updated_at,
-      // Add optional properties
       assigned_to_name: task.assigned_to_name,
       related_to: task.related_to
     }));
@@ -92,7 +91,6 @@ export const createTask = async (taskData: any): Promise<Task> => {
       created_by: data.created_by,
       created_at: data.created_at,
       updated_at: data.updated_at,
-      // Add optional properties
       assigned_to_name: data.assigned_to_name,
       related_to: data.related_to
     };
@@ -132,7 +130,6 @@ export const updateTask = async (taskId: string, taskData: Partial<Task>): Promi
       created_by: data.created_by,
       created_at: data.created_at,
       updated_at: data.updated_at,
-      // Add optional properties
       assigned_to_name: data.assigned_to_name,
       related_to: data.related_to
     };
