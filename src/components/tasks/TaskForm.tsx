@@ -10,7 +10,8 @@ import { toast } from 'sonner';
 
 export interface TaskFormProps {
   onSubmit: (data: any) => Promise<void>;
-  onCancel: () => void;
+  onCancel?: () => void;
+  onClose?: () => void; // Added this property
   task?: Task;
   leadId?: string;
   isSubmitting?: boolean;
@@ -19,6 +20,7 @@ export interface TaskFormProps {
 const TaskForm: React.FC<TaskFormProps> = ({ 
   onSubmit, 
   onCancel, 
+  onClose, // Added this property
   task, 
   leadId,
   isSubmitting = false 
@@ -46,6 +48,15 @@ const TaskForm: React.FC<TaskFormProps> = ({
 
   const handleSelectChange = (field: "priority" | "status" | "title" | "description" | "due_date" | "lead_id" | "assigned_to", value: string) => {
     setValue(field, value);
+  };
+
+  // Use either onCancel or onClose, with onCancel taking precedence
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else if (onClose) {
+      onClose();
+    }
   };
 
   return (
@@ -114,7 +125,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
       </div>
 
       <div className="flex justify-end">
-        <Button type="button" variant="outline" className="mr-2" onClick={onCancel}>
+        <Button type="button" variant="outline" className="mr-2" onClick={handleCancel}>
           إلغاء
         </Button>
         <Button type="submit" disabled={isSubmitting}>

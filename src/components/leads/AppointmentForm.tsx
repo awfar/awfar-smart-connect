@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Appointment } from '@/services/appointments/types';
@@ -12,6 +13,8 @@ export interface AppointmentFormProps {
   leadId: string;
   onSuccess?: () => void;
   onClose?: () => void;
+  onCancel?: () => void; // Added this property
+  onSubmit?: (data: any) => Promise<void>; // Added this property
   appointment?: Appointment; // Add the appointment prop for editing
 }
 
@@ -19,6 +22,8 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
   leadId, 
   onSuccess, 
   onClose,
+  onCancel,
+  onSubmit,
   appointment // The appointment to edit, if provided
 }) => {
   // Initialize form with the appointment data if it exists
@@ -32,7 +37,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
     }
   });
   
-  const onSubmit = async (data: any) => {
+  const onFormSubmit = async (data: any) => {
     const startTime = new Date(data.start_time).toISOString();
     const endTime = new Date(data.end_time).toISOString();
     
@@ -44,12 +49,18 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
     };
     
     try {
-      if (appointment) {
-        // Editing existing appointment
-        await updateAppointment(appointment.id, appointmentData);
+      if (onSubmit) {
+        // Use provided onSubmit function if available
+        await onSubmit(appointmentData);
       } else {
-        // Creating a new appointment
-        await createAppointment(appointmentData);
+        // Use default create/update logic if no onSubmit provided
+        if (appointment) {
+          // Editing existing appointment
+          await updateAppointment(appointment.id, appointmentData);
+        } else {
+          // Creating a new appointment
+          await createAppointment(appointmentData);
+        }
       }
       
       onSuccess?.();
@@ -60,8 +71,17 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
     }
   };
 
+  // Handle cancel - use either onCancel or onClose
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else if (onClose) {
+      onClose();
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
       <div>
         <Label htmlFor="title">عنوان الموعد</Label>
         <Input 
@@ -118,7 +138,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
       </div>
       
       <div className="flex justify-end gap-2">
-        <Button type="button" variant="secondary" onClick={onClose}>
+        <Button type="button" variant="secondary" onClick={handleCancel}>
           إلغاء
         </Button>
         <Button type="submit" disabled={formState.isSubmitting}>

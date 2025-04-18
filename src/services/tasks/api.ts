@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Task } from "./types";
 import { toast } from "sonner";
@@ -30,7 +31,8 @@ export const getTasks = async (filterOptions?: {
     
     if (error) throw error;
 
-    return data || [];
+    // Ensure we're returning a properly typed array by explicitly casting
+    return (data || []) as Task[];
   } catch (error) {
     console.error("Error fetching tasks:", error);
     toast.error("حدث خطأ أثناء تحميل المهام");
@@ -44,6 +46,16 @@ export const getTasksByLeadId = async (leadId: string): Promise<Task[]> => {
 
 export const createTask = async (taskData: any): Promise<Task> => {
   try {
+    // Ensure status is one of the allowed values
+    if (taskData.status && !['pending', 'in_progress', 'completed', 'cancelled'].includes(taskData.status)) {
+      taskData.status = 'pending';
+    }
+    
+    // Set default status if not provided
+    if (!taskData.status) {
+      taskData.status = 'pending';
+    }
+    
     const { data, error } = await supabase
       .from('tasks')
       .insert(taskData)
@@ -63,6 +75,11 @@ export const createTask = async (taskData: any): Promise<Task> => {
 
 export const updateTask = async (taskId: string, taskData: Partial<Task>): Promise<Task> => {
   try {
+    // Ensure status is one of the allowed values
+    if (taskData.status && !['pending', 'in_progress', 'completed', 'cancelled'].includes(taskData.status)) {
+      taskData.status = 'pending';
+    }
+    
     const { data, error } = await supabase
       .from('tasks')
       .update(taskData)
@@ -103,7 +120,7 @@ export const completeTask = async (taskId: string): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('tasks')
-      .update({ status: 'completed' })
+      .update({ status: 'completed' as const })
       .eq('id', taskId);
 
     if (error) throw error;

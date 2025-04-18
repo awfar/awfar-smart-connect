@@ -6,13 +6,13 @@ export interface Appointment {
   start_time: string;
   end_time: string;
   location?: string;
-  status?: string;
+  status: 'scheduled' | 'completed' | 'cancelled';
   lead_id?: string;
   client_id?: string;
   participants?: string[];
   created_by?: string;
-  created_at?: string;
-  updated_at?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface AppointmentCreateInput {
@@ -21,9 +21,8 @@ export interface AppointmentCreateInput {
   start_time: string;
   end_time: string;
   location?: string;
-  status?: string;
+  status?: 'scheduled' | 'completed' | 'cancelled';
   lead_id?: string;
   client_id?: string;
   participants?: string[];
-  created_by?: string; // Adding this field to fix the error
 }
