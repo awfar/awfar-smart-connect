@@ -23,7 +23,7 @@ export const getAppointmentsByLeadId = async (leadId: string): Promise<Appointme
       end_time: item.end_time,
       location: item.location,
       status: item.status as AppointmentStatus,
-      lead_id: item.lead_id || null,
+      lead_id: item.lead_id || null,  // Ensure lead_id is properly mapped
       client_id: item.client_id,
       participants: item.participants,
       created_by: item.created_by,
@@ -73,7 +73,7 @@ export const createAppointment = async (appointmentData: AppointmentCreateInput)
       end_time: data.end_time,
       location: data.location,
       status: data.status as AppointmentStatus,
-      lead_id: data.lead_id || null,
+      lead_id: data.lead_id || null,  // Ensure lead_id is properly mapped
       client_id: data.client_id,
       participants: data.participants,
       created_by: data.created_by,
@@ -123,7 +123,7 @@ export const updateAppointment = async (appointmentId: string, appointmentData: 
       end_time: data.end_time,
       location: data.location,
       status: data.status as AppointmentStatus,
-      lead_id: data.lead_id || null,
+      lead_id: data.lead_id || null,  // Ensure lead_id is properly mapped
       client_id: data.client_id,
       participants: data.participants,
       created_by: data.created_by,

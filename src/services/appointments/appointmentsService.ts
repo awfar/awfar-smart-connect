@@ -27,7 +27,7 @@ export const fetchAppointments = async (filters?: { lead_id?: string; status?: A
       throw error;
     }
 
-    // Explicitly map each property to match the Appointment interface
+    // Explicitly map each item to match the Appointment interface
     return (data || []).map(item => ({
       id: item.id,
       title: item.title,

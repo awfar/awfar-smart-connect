@@ -11,7 +11,7 @@ export interface Task {
   created_by?: string | null;
   created_at: string;
   updated_at: string;
-  assigned_to_name?: string;  // Add this line
+  assigned_to_name?: string;  // Make sure this is included
   related_to?: {
     type: string;
     id: string;
@@ -28,7 +28,7 @@ export interface TaskCreateInput {
   lead_id?: string | null;
   assigned_to?: string | null;
   created_by?: string | null;
-  assigned_to_name?: string;  // Add this line
+  assigned_to_name?: string;  // Make sure this is included
   related_to?: {
     type: string;
     id: string;
