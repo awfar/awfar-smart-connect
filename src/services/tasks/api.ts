@@ -30,7 +30,7 @@ export const getTasks = async (filterOptions?: {
     
     if (error) throw error;
 
-    return data as Task[] || [];
+    return data || [];
   } catch (error) {
     console.error("Error fetching tasks:", error);
     toast.error("حدث خطأ أثناء تحميل المهام");
