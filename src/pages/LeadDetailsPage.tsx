@@ -367,13 +367,12 @@ const LeadDetailsPage = () => {
         <MobileOptimizedContainer>
           <div className="py-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-              <Button 
-                variant="link" 
-                className="p-0 h-auto text-muted-foreground" 
-                onClick={() => navigate("/dashboard/leads")}
+              <Link 
+                to="/dashboard/leads" 
+                className="text-muted-foreground hover:text-primary"
               >
-                العملاء الم��تملين
-              </Button>
+                العملاء المحتملين
+              </Link>
               <ChevronRight className="h-4 w-4" />
               <span>{getLeadName()}</span>
             </div>

@@ -25,4 +25,5 @@ export interface AppointmentCreateInput {
   lead_id?: string;
   client_id?: string;
   participants?: string[];
+  created_by?: string; // Adding this field to fix the error
 }

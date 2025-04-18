@@ -14,7 +14,7 @@ export const getAppointmentsByLeadId = async (leadId: string): Promise<Appointme
       
     if (error) throw error;
     
-    return data || [];
+    return data as Appointment[] || [];
   } catch (error) {
     console.error("Error fetching appointments:", error);
     toast.error("حدث خطأ أثناء تحميل المواعيد");

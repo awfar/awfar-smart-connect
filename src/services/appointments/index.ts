@@ -1,8 +1,6 @@
 
 // Export all appointment-related functions and types
 export { 
-  fetchAppointments,
-  fetchAppointmentsByLeadId,
   createAppointment,
   updateAppointment,
   deleteAppointment,
@@ -11,8 +9,13 @@ export {
 
 export type { Appointment, AppointmentCreateInput } from './types';
 
-// Add a shorthand to match function names expected in LeadDetailsPage
-export const fetchAppointments = async (leadId: string) => {
-  const { getAppointmentsByLeadId } = await import('./appointmentsService');
+// Export functions from api.ts
+export { 
+  getAppointmentsByLeadId,
+} from './api';
+
+// Add a consistent naming for fetching appointments by lead ID
+export const fetchAppointmentsByLeadId = async (leadId: string) => {
+  const { getAppointmentsByLeadId } = await import('./api');
   return getAppointmentsByLeadId(leadId);
 };
