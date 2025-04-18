@@ -1,5 +1,4 @@
 
-// Basic appointment type definition
 export interface Appointment {
   id: string;
   title: string;
@@ -7,21 +6,24 @@ export interface Appointment {
   start_time: string;
   end_time: string;
   location?: string;
+  status?: string;
+  client_id?: string;
+  lead_id?: string;
+  created_by?: string;
   created_at?: string;
   updated_at?: string;
-  status: 'scheduled' | 'completed' | 'cancelled' | 'rescheduled';
-  client_id?: string;
-  created_by?: string;
   participants?: string[];
 }
 
 export interface AppointmentCreateInput {
+  id?: string;
   title: string;
   description?: string;
   start_time: string;
   end_time: string;
   location?: string;
-  status?: 'scheduled' | 'completed' | 'cancelled' | 'rescheduled';
+  status?: string;
   client_id?: string;
-  participants?: string[];
+  lead_id?: string;
+  created_by?: string;
 }

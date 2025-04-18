@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Appointment } from "./types";
+import { Appointment, AppointmentCreateInput } from "./types";
 import { toast } from "sonner";
 
 // Define filter type explicitly to avoid infinite type instantiation
@@ -20,11 +20,10 @@ export async function fetchAppointments(filters?: AppointmentFilter): Promise<Ap
     
     // Apply filters if provided
     if (filters) {
-      // Use explicit type casting to prevent infinite type instantiation
       Object.entries(filters).forEach(([key, value]) => {
         if (value) {
-          // Cast key to keyof AppointmentFilter to avoid type errors
-          query = query.eq(key as keyof AppointmentFilter, value);
+          // Use type assertion to avoid type errors
+          query = query.eq(key, value);
         }
       });
     }
@@ -45,12 +44,12 @@ export async function fetchAppointmentsByLeadId(leadId: string): Promise<Appoint
   return fetchAppointments({ lead_id: leadId });
 }
 
-export async function createAppointment(appointment: Partial<Appointment>): Promise<Appointment | null> {
+export async function createAppointment(appointment: AppointmentCreateInput): Promise<Appointment | null> {
   try {
-    // Fix: Ensure we're passing a single object, not an array
+    // Fix: Pass a single object wrapped in an array
     const { data, error } = await supabase
       .from('appointments')
-      .insert([appointment]) // Insert expects an array, but with a single object
+      .insert([appointment]) // Insert expects an array of objects
       .select()
       .single();
     
@@ -101,11 +100,6 @@ export async function deleteAppointment(id: string): Promise<boolean> {
     toast.error('حدث خطأ في حذف الموعد');
     return false;
   }
-}
-
-// Add these missing functions to match the export in index.ts
-export async function getAppointments(filters?: AppointmentFilter): Promise<Appointment[]> {
-  return fetchAppointments(filters);
 }
 
 export async function getAppointment(id: string): Promise<Appointment | null> {

@@ -1,208 +1,102 @@
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Calendar as CalendarIcon, Clock } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { format } from "date-fns";
-import { ar } from "date-fns/locale";
-import { Checkbox } from "@/components/ui/checkbox";
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { Task } from '@/services/tasks/types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 interface TaskFormProps {
+  onSubmit: (data: any) => Promise<void>;
   onCancel: () => void;
-  onSave: () => void;
+  task?: Task;
+  leadId?: string;
+  isSubmitting?: boolean;
 }
 
-const TaskForm: React.FC<TaskFormProps> = ({ onCancel, onSave }) => {
-  const [date, setDate] = useState<Date | undefined>();
-  const [reminderEnabled, setReminderEnabled] = useState(false);
-  
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave();
+const TaskForm: React.FC<TaskFormProps> = ({ 
+  onSubmit, 
+  onCancel, 
+  task, 
+  leadId,
+  isSubmitting = false 
+}) => {
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
+    defaultValues: {
+      title: task?.title || '',
+      description: task?.description || '',
+      priority: task?.priority || 'medium',
+      due_date: task?.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
+      lead_id: leadId || task?.lead_id || ''
+    }
+  });
+
+  const watchPriority = watch('priority');
+
+  const handleFormSubmit = async (data: any) => {
+    try {
+      await onSubmit(data);
+    } catch (error) {
+      console.error("Error submitting task:", error);
+      toast.error("حدث خطأ في حفظ المهمة");
+    }
   };
 
   return (
-    <form className="space-y-6" onSubmit={handleSubmit}>
-      <div className="space-y-4">
-        <div>
-          <Label htmlFor="title">عنوان المهمة</Label>
-          <Input id="title" placeholder="أدخل عنوان المهمة" className="mt-1" />
-        </div>
-
-        <div>
-          <Label htmlFor="description">وصف المهمة</Label>
-          <Textarea
-            id="description"
-            placeholder="أدخل وصفاً تفصيلياً للمهمة"
-            className="mt-1"
-            rows={3}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="assignee">تعيين إلى</Label>
-            <Select>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="اختر الشخص المكلف" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>الفريق</SelectLabel>
-                  <SelectItem value="ahmed">أحمد محمد</SelectItem>
-                  <SelectItem value="sara">سارة خالد</SelectItem>
-                  <SelectItem value="khalid">خالد أحمد</SelectItem>
-                  <SelectItem value="fatima">فاطمة محمد</SelectItem>
-                  <SelectItem value="mohammed">محمد خالد</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="status">الحالة</Label>
-            <Select>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="اختر الحالة" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="قيد التنفيذ">قيد التنفيذ</SelectItem>
-                <SelectItem value="مكتمل">مكتمل</SelectItem>
-                <SelectItem value="معلق">معلق</SelectItem>
-                <SelectItem value="ملغي">ملغي</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="priority">الأولوية</Label>
-            <Select>
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="اختر الأولوية" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="منخفض">منخفض</SelectItem>
-                <SelectItem value="متوسط">متوسط</SelectItem>
-                <SelectItem value="عالي">عالي</SelectItem>
-                <SelectItem value="عاجل">عاجل</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label>تاريخ الاستحقاق</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full mt-1 justify-start text-right"
-                >
-                  <CalendarIcon className="ml-2 h-4 w-4" />
-                  {date ? (
-                    format(date, "PPP", { locale: ar })
-                  ) : (
-                    <span>اختر تاريخاً</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={setDate}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2 rtl:space-x-reverse">
-            <Checkbox 
-              id="reminder"
-              checked={reminderEnabled}
-              onCheckedChange={(checked) => setReminderEnabled(!!checked)} 
-            />
-            <Label htmlFor="reminder" className="cursor-pointer">تفعيل التذكير</Label>
-          </div>
-          
-          {reminderEnabled && (
-            <div className="ml-6 grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-              <div>
-                <Label htmlFor="reminderDate">تاريخ التذكير</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full mt-1 justify-start text-right"
-                    >
-                      <CalendarIcon className="ml-2 h-4 w-4" />
-                      <span>اختر تاريخاً</span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-              <div>
-                <Label htmlFor="reminderTime">وقت التذكير</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full mt-1 justify-start text-right"
-                    >
-                      <Clock className="ml-2 h-4 w-4" />
-                      <span>اختر وقتاً</span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-56" align="start">
-                    <div className="grid grid-cols-2 gap-2 py-2">
-                      {["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"].map((time) => (
-                        <Button
-                          key={time}
-                          variant="ghost"
-                          className="justify-start font-normal"
-                        >
-                          {time}
-                        </Button>
-                      ))}
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-          )}
-        </div>
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+      <div className="space-y-2">
+        <label className="text-sm font-medium">عنوان المهمة</label>
+        <Input 
+          placeholder="أدخل عنوان المهمة"
+          {...register('title', { required: true })}
+        />
+        {errors.title && <p className="text-sm text-red-500">العنوان مطلوب</p>}
       </div>
 
-      <div className="flex justify-end gap-4">
-        <Button variant="outline" onClick={onCancel}>إلغاء</Button>
-        <Button type="submit">حفظ المهمة</Button>
+      <div className="space-y-2">
+        <label className="text-sm font-medium">الوصف</label>
+        <Textarea 
+          placeholder="أدخل وصف المهمة"
+          className="resize-none"
+          {...register('description')}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium">الأولوية</label>
+        <Select 
+          defaultValue={watchPriority} 
+          onValueChange={(value) => setValue('priority', value)}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="اختر الأولوية" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="low">منخفضة</SelectItem>
+            <SelectItem value="medium">متوسطة</SelectItem>
+            <SelectItem value="high">عالية</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <label className="text-sm font-medium">تاريخ الاستحقاق</label>
+        <Input 
+          type="datetime-local"
+          {...register('due_date')}
+        />
+      </div>
+
+      <div className="flex justify-end">
+        <Button type="button" variant="outline" className="mr-2" onClick={onCancel}>
+          إلغاء
+        </Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'جاري الحفظ...' : task ? 'تحديث المهمة' : 'إضافة مهمة'}
+        </Button>
       </div>
     </form>
   );

@@ -26,7 +26,7 @@ import { ar } from 'date-fns/locale';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 // Define valid activity types for type safety
-type ActivityType = "note" | "call" | "meeting" | "email" | "task" | "whatsapp" | "update" | "create" | "delete";
+export type ActivityType = "note" | "call" | "meeting" | "email" | "task" | "whatsapp" | "update" | "create" | "delete";
 
 export interface ActivityFormProps {
   leadId: string;
@@ -74,8 +74,8 @@ const ActivityForm: React.FC<ActivityFormProps> = ({
       await addLeadActivity(activityData);
       
       toast.success("تم إضافة النشاط بنجاح");
-      onSuccess?.();
-      onClose?.();
+      if (onSuccess) onSuccess();
+      if (onClose) onClose();
     } catch (error) {
       console.error("Error creating lead activity:", error);
       toast.error("فشل في إضافة النشاط");
@@ -91,8 +91,8 @@ const ActivityForm: React.FC<ActivityFormProps> = ({
       <div className="space-y-2">
         <label className="text-sm font-medium">نوع النشاط</label>
         <Select 
-          defaultValue={watch?.('type') || 'note'} 
-          onValueChange={(value) => setValue?.('type', value)}
+          defaultValue={watch('type') || 'note'} 
+          onValueChange={(value: ActivityType) => setValue('type', value)}
         >
           <SelectTrigger>
             <SelectValue placeholder="اختر نوع النشاط" />

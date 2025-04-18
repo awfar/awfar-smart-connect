@@ -1,53 +1,27 @@
 
-// Main entry point for lead services - exports all functionality
-import { Lead, LeadActivity } from "../types/leadTypes";
-import { 
-  getLeads, 
-  getLead,
-  getLeadSources, 
-  getLeadStages,
-  getSalesOwners,
-  getCountries,
-  getIndustries,
-  getLeadCountByStatus,
-  getTotalLeadCount
-} from "./leadQueries";
+// Re-export all the types and functions from other files
+export * from './types';
+export * from './utils';
+export * from './api';
 
-import { 
-  updateLead, 
-  createLead, 
-  deleteLead 
-} from "./leadMutations";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-import { 
-  getLeadActivities, 
-  addLeadActivity,
-  completeLeadActivity,
-  deleteLeadActivity
-} from "./leadActivities";
-
-// Re-export all functions
-export {
-  // Query functions
-  getLeads,
-  getLead,
-  getLeadSources,
-  getLeadStages,
-  getSalesOwners,
-  getCountries,
-  getIndustries,
-  getLeadCountByStatus,
-  getTotalLeadCount,
-  
-  // Mutation functions
-  updateLead,
-  createLead,
-  deleteLead,
-  addLeadActivity,
-  completeLeadActivity,
-  deleteLeadActivity,
-  getLeadActivities
+// Delete lead activity function
+export const deleteLeadActivity = async (activityId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('lead_activities')
+      .delete()
+      .eq('id', activityId);
+      
+    if (error) throw error;
+    
+    toast.success("تم حذف النشاط بنجاح");
+    return true;
+  } catch (error) {
+    console.error("Error deleting lead activity:", error);
+    toast.error("حدث خطأ في حذف النشاط");
+    return false;
+  }
 };
-
-// Re-export all types
-export type { Lead, LeadActivity };
