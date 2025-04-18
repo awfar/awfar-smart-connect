@@ -5,15 +5,6 @@ export {
   getLeads,
   getLead,
   
-  // Utility functions
-  getLeadSources,
-  getLeadStages,
-  getSalesOwners,
-  getCountries,
-  getIndustries,
-  getLeadCountByStatus,
-  getTotalLeadCount,
-  
   // Mutation functions
   updateLead,
   createLead,
@@ -23,7 +14,7 @@ export {
   getLeadActivities,
 } from './leads';
 
-// Also export the utility functions directly
+// Export utility functions from the proper location
 export {
   getLeadSources,
   getLeadStages,
@@ -32,6 +23,7 @@ export {
   getIndustries,
   getLeadCountByStatus,
   getTotalLeadCount,
+  getStageColorClass,
 } from './leads/utils';
 
 // Export types

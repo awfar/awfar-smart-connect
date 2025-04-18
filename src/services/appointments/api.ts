@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Appointment } from "./types";
+import { Appointment, AppointmentCreateInput } from "./types";
 import { toast } from "sonner";
 
 // Get appointments for a specific lead
@@ -23,8 +23,13 @@ export const getAppointmentsByLeadId = async (leadId: string): Promise<Appointme
 };
 
 // Create a new appointment
-export const createAppointment = async (appointmentData: Partial<Appointment>): Promise<Appointment> => {
+export const createAppointment = async (appointmentData: AppointmentCreateInput): Promise<Appointment> => {
   try {
+    // Ensure all required fields are present
+    if (!appointmentData.title || !appointmentData.start_time || !appointmentData.end_time) {
+      throw new Error("Missing required appointment fields");
+    }
+
     const { data, error } = await supabase
       .from('appointments')
       .insert({
@@ -57,18 +62,22 @@ export const createAppointment = async (appointmentData: Partial<Appointment>): 
 // Update an appointment
 export const updateAppointment = async (appointmentId: string, appointmentData: Partial<Appointment>): Promise<Appointment> => {
   try {
+    const updateData: any = {
+      updated_at: new Date().toISOString()
+    };
+    
+    // Only add fields that are present in the appointmentData
+    if (appointmentData.title !== undefined) updateData.title = appointmentData.title;
+    if (appointmentData.description !== undefined) updateData.description = appointmentData.description;
+    if (appointmentData.start_time !== undefined) updateData.start_time = appointmentData.start_time;
+    if (appointmentData.end_time !== undefined) updateData.end_time = appointmentData.end_time;
+    if (appointmentData.location !== undefined) updateData.location = appointmentData.location;
+    if (appointmentData.status !== undefined) updateData.status = appointmentData.status;
+    if (appointmentData.participants !== undefined) updateData.participants = appointmentData.participants;
+    
     const { data, error } = await supabase
       .from('appointments')
-      .update({
-        title: appointmentData.title,
-        description: appointmentData.description,
-        start_time: appointmentData.start_time,
-        end_time: appointmentData.end_time,
-        location: appointmentData.location,
-        status: appointmentData.status,
-        participants: appointmentData.participants,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', appointmentId)
       .select()
       .single();

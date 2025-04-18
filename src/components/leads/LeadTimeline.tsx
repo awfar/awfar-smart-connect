@@ -1,167 +1,176 @@
 
 import React from 'react';
-import { Card } from "@/components/ui/card";
-import { Loader2, FileText, Phone, Mail, Calendar, MessageSquare } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Check, Clock, MessageSquare, Calendar, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 
 export interface LeadTimelineProps {
   activities: any[];
   tasks: any[];
   appointments: any[];
   isLoading: boolean;
-  onEdit: (type: string, item: any) => void;
-  onDelete: (type: string, itemId: string) => void;
-  onComplete: (type: string, itemId: string) => void;
+  onEdit?: (type: string, item: any) => void;
+  onDelete?: (type: string, itemId: string) => void;
+  onComplete?: (type: string, itemId: string) => void;
 }
 
-const LeadTimeline: React.FC<LeadTimelineProps> = ({ 
-  activities, 
-  tasks, 
-  appointments, 
+const LeadTimeline: React.FC<LeadTimelineProps> = ({
+  activities,
+  tasks,
+  appointments,
   isLoading,
   onEdit,
   onDelete,
   onComplete
 }) => {
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="mr-2">جاري تحميل البيانات...</span>
-      </div>
-    );
-  }
-
-  // Combine and sort all timeline items by date
-  const allItems = [
-    ...(activities || []).map(item => ({ ...item, itemType: 'activity' })),
-    ...(tasks || []).map(item => ({ ...item, itemType: 'task' })),
-    ...(appointments || []).map(item => ({ ...item, itemType: 'appointment' }))
-  ].sort((a, b) => {
-    const dateA = new Date(a.created_at || a.scheduled_at || a.due_date || 0);
-    const dateB = new Date(b.created_at || b.scheduled_at || b.due_date || 0);
-    return dateB.getTime() - dateA.getTime();
-  });
-
-  const formatDate = (date: string | undefined) => {
-    if (!date) return '';
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "";
     try {
-      return format(new Date(date), 'yyyy/MM/dd', { locale: ar });
-    } catch (e) {
-      return 'تاريخ غير صالح';
+      return format(new Date(dateString), 'PPpp', { locale: ar });
+    } catch (error) {
+      return dateString;
     }
   };
 
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'note': return <FileText className="h-4 w-4" />;
-      case 'call': return <Phone className="h-4 w-4" />;
-      case 'email': return <Mail className="h-4 w-4" />;
-      case 'meeting': return <Calendar className="h-4 w-4" />;
-      case 'whatsapp': return <MessageSquare className="h-4 w-4" />;
-      default: return <FileText className="h-4 w-4" />;
+  const renderActivities = () => {
+    if (activities.length === 0) {
+      return <p className="text-center text-muted-foreground py-4">لا توجد أنشطة بعد</p>;
     }
-  };
 
-  if (allItems.length === 0) {
-    return (
-      <Card className="p-8 text-center text-muted-foreground">
-        لا توجد أنشطة أو مهام مسجلة بعد.
-      </Card>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      {allItems.map(item => (
-        <Card key={`${item.itemType}-${item.id}`} className="p-4">
-          <div className="flex gap-4">
-            <div className="rounded-full bg-primary/10 p-2 h-10 w-10 flex items-center justify-center">
-              {item.itemType === 'activity' && getActivityIcon(item.type)}
-              {item.itemType === 'task' && <FileText className="h-4 w-4" />}
-              {item.itemType === 'appointment' && <Calendar className="h-4 w-4" />}
+    return activities.map((activity, index) => (
+      <div key={activity.id || index} className="border-b pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+        <div className="flex justify-between items-start">
+          <div className="flex items-start gap-2">
+            <MessageSquare className="h-5 w-5 text-blue-500 mt-1" />
+            <div>
+              <p className="font-medium">{activity.type === 'note' ? 'ملاحظة' : activity.type}</p>
+              <p className="text-sm text-muted-foreground">{activity.description}</p>
+              <p className="text-xs text-muted-foreground mt-1">{formatDate(activity.created_at)}</p>
             </div>
-            
-            <div className="flex-1">
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-medium">
-                      {item.itemType === 'activity' && (
-                        item.type === 'note' ? 'ملاحظة' : 
-                        item.type === 'call' ? 'مكالمة' : 
-                        item.type === 'email' ? 'بريد إلكتروني' : 
-                        item.type === 'meeting' ? 'اجتماع' : 
-                        item.type === 'whatsapp' ? 'واتساب' : 'نشاط'
-                      )}
-                      {item.itemType === 'task' && item.title}
-                      {item.itemType === 'appointment' && item.title}
-                    </h3>
-                    {item.itemType === 'task' && item.status && (
-                      <Badge variant={item.status === 'completed' ? 'success' : 'secondary'}>
-                        {item.status === 'pending' ? 'قيد الانتظار' : 
-                         item.status === 'in_progress' ? 'قيد التنفيذ' :
-                         item.status === 'completed' ? 'مكتملة' : 'ملغاة'}
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-sm mt-1">
-                    {item.description}
-                  </p>
-                  
-                  <div className="flex flex-wrap gap-4 mt-2 text-xs text-muted-foreground">
-                    {item.created_at && (
-                      <span>تاريخ الإنشاء: {formatDate(item.created_at)}</span>
-                    )}
-                    {item.scheduled_at && (
-                      <span>موعد: {formatDate(item.scheduled_at)}</span>
-                    )}
-                    {item.due_date && (
-                      <span>تاريخ الاستحقاق: {formatDate(item.due_date)}</span>
-                    )}
-                    {item.created_by && (
-                      <span>بواسطة: {typeof item.created_by === 'object' ? 
-                        `${item.created_by.first_name || ''} ${item.created_by.last_name || ''}`.trim() : 
-                        item.created_by}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="flex gap-1">
-                  {item.itemType !== 'activity' && item.status !== 'completed' && (
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => onComplete(item.itemType, item.id)}
-                    >
-                      إكمال
-                    </Button>
-                  )}
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    onClick={() => onEdit(item.itemType, item)}
-                  >
-                    تعديل
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    onClick={() => onDelete(item.itemType, item.id)}
-                  >
-                    حذف
-                  </Button>
-                </div>
+          </div>
+          {onDelete && (
+            <Button variant="ghost" size="sm" onClick={() => onDelete('activity', activity.id)}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+      </div>
+    ));
+  };
+
+  const renderTasks = () => {
+    if (tasks.length === 0) {
+      return <p className="text-center text-muted-foreground py-4">لا توجد مهام بعد</p>;
+    }
+
+    return tasks.map((task) => (
+      <div key={task.id} className="border-b pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+        <div className="flex justify-between items-start">
+          <div className="flex items-start gap-2">
+            <Clock className={`h-5 w-5 ${task.status === 'completed' ? 'text-green-500' : 'text-amber-500'} mt-1`} />
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="font-medium">{task.title}</p>
+                <Badge variant={task.status === 'completed' ? 'outline' : 'default'} className="ml-2">
+                  {task.status === 'pending' ? 'قيد الانتظار' : 
+                   task.status === 'in_progress' ? 'قيد التنفيذ' : 
+                   task.status === 'completed' ? 'مكتمل' : 'ملغي'}
+                </Badge>
+              </div>
+              {task.description && <p className="text-sm text-muted-foreground">{task.description}</p>}
+              <p className="text-xs text-muted-foreground mt-1">
+                تاريخ الاستحقاق: {task.due_date ? formatDate(task.due_date) : 'غير محدد'}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-1">
+            {task.status !== 'completed' && onComplete && (
+              <Button variant="ghost" size="sm" onClick={() => onComplete('task', task.id)}>
+                <Check className="h-4 w-4 text-green-500" />
+              </Button>
+            )}
+            {onEdit && (
+              <Button variant="ghost" size="sm" onClick={() => onEdit('task', task)}>
+                <Edit className="h-4 w-4" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button variant="ghost" size="sm" onClick={() => onDelete('task', task.id)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    ));
+  };
+
+  const renderAppointments = () => {
+    if (appointments.length === 0) {
+      return <p className="text-center text-muted-foreground py-4">لا توجد مواعيد بعد</p>;
+    }
+
+    return appointments.map((appointment) => (
+      <div key={appointment.id} className="border-b pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+        <div className="flex justify-between items-start">
+          <div className="flex items-start gap-2">
+            <Calendar className="h-5 w-5 text-indigo-500 mt-1" />
+            <div>
+              <p className="font-medium">{appointment.title}</p>
+              {appointment.description && <p className="text-sm text-muted-foreground">{appointment.description}</p>}
+              <div className="text-xs text-muted-foreground mt-1">
+                <p>من: {formatDate(appointment.start_time)}</p>
+                <p>إلى: {formatDate(appointment.end_time)}</p>
+                {appointment.location && <p>المكان: {appointment.location}</p>}
               </div>
             </div>
           </div>
-        </Card>
-      ))}
-    </div>
+          <div className="flex gap-1">
+            {onEdit && (
+              <Button variant="ghost" size="sm" onClick={() => onEdit('appointment', appointment)}>
+                <Edit className="h-4 w-4" />
+              </Button>
+            )}
+            {onDelete && (
+              <Button variant="ghost" size="sm" onClick={() => onDelete('appointment', appointment.id)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    ));
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>الأنشطة والمهام</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="py-8 text-center">
+            <Clock className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
+            <p>جاري التحميل...</p>
+          </div>
+        ) : (
+          <Tabs defaultValue="activities">
+            <TabsList className="grid grid-cols-3 mb-4">
+              <TabsTrigger value="activities">الأنشطة</TabsTrigger>
+              <TabsTrigger value="tasks">المهام</TabsTrigger>
+              <TabsTrigger value="appointments">المواعيد</TabsTrigger>
+            </TabsList>
+            <TabsContent value="activities">{renderActivities()}</TabsContent>
+            <TabsContent value="tasks">{renderTasks()}</TabsContent>
+            <TabsContent value="appointments">{renderAppointments()}</TabsContent>
+          </Tabs>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

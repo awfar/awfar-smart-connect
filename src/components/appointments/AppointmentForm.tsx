@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 
 export interface AppointmentFormProps {
   onSubmit: (data: any) => Promise<void>;
-  onCancel: () => void; // Change onClose to onCancel
+  onCancel: () => void;
   appointment?: Appointment;
   leadId?: string;
   isSubmitting?: boolean;
@@ -17,7 +17,7 @@ export interface AppointmentFormProps {
 
 const AppointmentForm: React.FC<AppointmentFormProps> = ({ 
   onSubmit, 
-  onCancel,  // Changed from onClose to onCancel
+  onCancel,
   appointment, 
   leadId,
   isSubmitting = false 

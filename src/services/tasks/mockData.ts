@@ -1,78 +1,70 @@
 
 import { Task } from './types';
 
-// بيانات تجريبية للمهام
-export function getMockTasks(leadId?: string): Task[] {
-  const allMockTasks: Task[] = [
-    {
-      id: '1',
-      title: 'الاتصال بالعميل الجديد',
-      description: 'متابعة العميل المحتمل الذي تم إضافته بالأمس',
-      status: 'pending',
-      priority: 'high',
-      due_date: new Date(Date.now() + 86400000).toISOString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      assigned_to: 'user1',
-      assigned_to_name: 'أحمد محمد',
-      related_to: {
-        type: 'lead',
-        id: 'lead1',
-        name: 'شركة التقنية الحديثة'
-      },
-      related_to_type: 'lead',
-      related_to_id: 'lead1',
-      related_to_name: 'شركة التقنية الحديثة'
-    },
-    {
-      id: '2',
-      title: 'إعداد عرض أسعار',
-      description: 'إعداد عرض أسعار للعميل بناءً على احتياجاته',
-      status: 'in_progress', // Fixed from "in-progress" to "in_progress"
-      priority: 'medium',
-      due_date: new Date(Date.now() + 172800000).toISOString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      assigned_to: 'user2',
-      assigned_to_name: 'سارة خالد',
-      related_to: {
-        type: 'deal',
-        id: 'deal1',
-        name: 'صفقة برنامج المحاسبة'
-      },
-      related_to_type: 'deal',
-      related_to_id: 'deal1',
-      related_to_name: 'صفقة برنامج المحاسبة'
-    },
-    {
-      id: '3',
-      title: 'متابعة الدفعة المستحقة',
-      description: 'التواصل مع العميل لتذكيره بالدفعة المستحقة',
-      status: 'completed',
-      priority: 'low',
-      due_date: new Date(Date.now() - 86400000).toISOString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      assigned_to: 'user1',
-      assigned_to_name: 'أحمد محمد',
-      related_to: {
-        type: 'customer',
-        id: 'customer1',
-        name: 'مؤسسة المستقبل'
-      },
-      related_to_type: 'customer',
-      related_to_id: 'customer1',
-      related_to_name: 'مؤسسة المستقبل'
+// Mock data for tasks
+export const mockTasks: Task[] = [
+  {
+    id: "1",
+    title: "اتصال متابعة مع العميل",
+    description: "متابعة العميل بخصوص العرض المقدم",
+    status: "pending",
+    priority: "high",
+    due_date: "2025-04-20T10:00:00",
+    lead_id: "lead-1",
+    assigned_to: "user-1",
+    created_by: "user-2",
+    created_at: "2025-04-15T08:30:00",
+    updated_at: "2025-04-15T08:30:00",
+    assigned_to_name: "أحمد محمد",
+    related_to: {
+      type: "lead",
+      id: "lead-1",
+      name: "شركة التقنية العربية"
     }
-  ];
-  
-  // If a lead ID is provided, filter tasks by that lead
-  if (leadId) {
-    return allMockTasks.filter(task => 
-      (task.related_to?.type === 'lead' && task.related_to?.id === leadId) || 
-      (task.lead_id === leadId)
-    );
+  },
+  {
+    id: "2",
+    title: "إرسال عرض سعر",
+    description: "إعداد وإرسال عرض سعر للخدمات المطلوبة",
+    status: "completed",
+    priority: "medium",
+    due_date: "2025-04-17T14:00:00",
+    lead_id: "lead-2",
+    assigned_to: "user-1",
+    created_by: "user-1",
+    created_at: "2025-04-14T09:15:00",
+    updated_at: "2025-04-16T11:30:00",
+    assigned_to_name: "أحمد محمد",
+    related_to: {
+      type: "lead",
+      id: "lead-2",
+      name: "مؤسسة النور للتجارة"
+    }
+  },
+  {
+    id: "3",
+    title: "اجتماع تقديمي",
+    description: "تقديم عرض تفصيلي عن الخدمات",
+    status: "in_progress",
+    priority: "high",
+    due_date: "2025-04-22T15:30:00",
+    lead_id: "lead-3",
+    assigned_to: "user-2",
+    created_by: "user-3",
+    created_at: "2025-04-16T13:45:00",
+    updated_at: "2025-04-16T13:45:00",
+    assigned_to_name: "سارة خالد",
+    related_to: {
+      type: "lead",
+      id: "lead-3",
+      name: "شركة الأفق للتكنولوجيا"
+    }
   }
-  
-  return allMockTasks;
-}
+];
+
+// Function to get tasks by related entity
+export const getTasksByRelatedEntity = (entityType: string, entityId: string): Task[] => {
+  return mockTasks.filter(task => 
+    task.related_to && task.related_to.type === entityType && task.related_to.id === entityId
+  );
+};

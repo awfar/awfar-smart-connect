@@ -44,7 +44,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
     }
   };
 
-  const handleSelectChange = (field: keyof TaskCreateInput, value: string) => {
+  const handleSelectChange = (field: "priority" | "status" | "title" | "description" | "due_date" | "lead_id" | "assigned_to", value: string) => {
     setValue(field, value);
   };
 

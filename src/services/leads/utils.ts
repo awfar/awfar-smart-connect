@@ -1,153 +1,185 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Lead } from "./types";
-import { toast } from "sonner";
 
-// Transform Supabase lead data to our Lead type
-export const transformLeadFromSupabase = (data: any): Lead => {
-  return {
-    id: data.id || "",
-    first_name: data.first_name || "",
-    last_name: data.last_name || "",
-    email: data.email || "",
-    phone: data.phone || "",
-    company: data.company || "",
-    position: data.position || "",
-    industry: data.industry || "",
-    country: data.country || "",
-    status: data.status || data.stage || "جديد",
-    stage: data.stage || data.status || "جديد",
-    source: data.source || "",
-    notes: data.notes || "",
-    assigned_to: data.assigned_to || null,
-    created_at: data.created_at || new Date().toISOString(),
-    updated_at: data.updated_at || new Date().toISOString(),
-    avatar_url: data.avatar_url || null,
-    owner: data.owner ? {
-      id: data.owner.id || "",
-      first_name: data.owner.first_name || "",
-      last_name: data.owner.last_name || "",
-      name: data.owner.name || (data.owner.first_name && data.owner.last_name ? `${data.owner.first_name} ${data.owner.last_name}` : ''),
-      avatar: data.owner.avatar || null,
-      initials: data.owner.initials || `${data.owner.first_name?.[0] || ''}${data.owner.last_name?.[0] || ''}`
-    } : undefined
-  };
-};
-
-// Get color class based on lead stage
-export const getStageColorClass = (stage: string): string => {
-  switch(stage.toLowerCase()) {
-    case 'new':
-    case 'جديد':
-      return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
-    case 'qualified':
-    case 'مؤهل':
-      return 'bg-green-100 text-green-800 hover:bg-green-200';
-    case 'negotiation':
-    case 'تفاوض':
-      return 'bg-amber-100 text-amber-800 hover:bg-amber-200';
-    case 'proposal':
-    case 'عرض سعر':
-      return 'bg-purple-100 text-purple-800 hover:bg-purple-200';
-    case 'won':
-    case 'مغلق - فائز':
-      return 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200';
-    case 'lost':
-    case 'مغلق - خاسر':
-      return 'bg-red-100 text-red-800 hover:bg-red-200';
-    default:
-      return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
-  }
-};
-
-// Create utility functions that were missing according to the error messages
+// Function to get lead stages for filtering
 export const getLeadStages = async (): Promise<string[]> => {
   try {
-    // In a real app, this would fetch from a database table
-    return ["جديد", "اتصال أولي", "تفاوض", "عرض سعر", "مؤهل", "فاز", "خسر", "مؤجل"];
+    // Get unique statuses from the leads table
+    const { data, error } = await supabase
+      .from("leads")
+      .select("status")
+      .not("status", "is", null);
+
+    if (error) throw error;
+
+    // Extract unique statuses
+    const stages = Array.from(new Set(data.map(item => item.status)));
+    return stages.length ? stages : ["جديد", "اتصال أولي", "مؤهل", "عرض سعر", "تفاوض", "فاز", "خسر"];
   } catch (error) {
     console.error("Error fetching lead stages:", error);
-    toast.error("حدث خطأ أثناء تحميل مراحل العملاء");
-    return [];
+    return ["جديد", "اتصال أولي", "مؤهل", "عرض سعر", "تفاوض", "فاز", "خسر"];
   }
 };
 
+// Function to get lead sources for filtering
 export const getLeadSources = async (): Promise<string[]> => {
   try {
-    // In a real app, this would fetch from a database table
-    return ["إعلان", "مواقع التواصل الاجتماعي", "التسويق الإلكتروني", "توصية من عميل", "معرض", "اتصال مباشر", "موقع الويب"];
+    // Get unique sources from the leads table
+    const { data, error } = await supabase
+      .from("leads")
+      .select("source")
+      .not("source", "is", null);
+
+    if (error) throw error;
+
+    // Extract unique sources
+    const sources = Array.from(new Set(data.map(item => item.source)));
+    return sources.length ? sources : ["إعلان", "موقع الويب", "توصية", "معرض", "وسائل التواصل الاجتماعي"];
   } catch (error) {
     console.error("Error fetching lead sources:", error);
-    toast.error("حدث خطأ أثناء تحميل مصادر العملاء");
-    return [];
+    return ["إعلان", "موقع الويب", "توصية", "معرض", "وسائل التواصل الاجتماعي"];
   }
 };
 
-export const getIndustries = async (): Promise<string[]> => {
-  try {
-    // In a real app, this would fetch from a database table
-    return ["التكنولوجيا والاتصالات", "الرعاية الصحية", "التعليم", "العقارات", "المالية والتأمين", "التجزئة"];
-  } catch (error) {
-    console.error("Error fetching industries:", error);
-    toast.error("حدث خطأ أثناء تحميل القطاعات");
-    return [];
-  }
-};
-
+// Function to get countries for filtering
 export const getCountries = async (): Promise<string[]> => {
   try {
-    // In a real app, this would fetch from a database table
-    return ["المملكة العربية السعودية", "الإمارات العربية المتحدة", "قطر", "الكويت", "البحرين", "عمان", "لبنان"];
+    // Get unique countries from the leads table
+    const { data, error } = await supabase
+      .from("leads")
+      .select("country")
+      .not("country", "is", null);
+
+    if (error) throw error;
+
+    // Extract unique countries
+    const countries = Array.from(new Set(data.map(item => item.country)));
+    return countries.length ? countries : ["السعودية", "الإمارات", "قطر", "الكويت", "البحرين", "عمان"];
   } catch (error) {
     console.error("Error fetching countries:", error);
-    toast.error("حدث خطأ أثناء تحميل الدول");
-    return [];
+    return ["السعودية", "الإمارات", "قطر", "الكويت", "البحرين", "عمان"];
   }
 };
 
+// Function to get industries for filtering
+export const getIndustries = async (): Promise<string[]> => {
+  try {
+    // Get unique industries from the leads table
+    const { data, error } = await supabase
+      .from("leads")
+      .select("industry")
+      .not("industry", "is", null);
+
+    if (error) throw error;
+
+    // Extract unique industries
+    const industries = Array.from(new Set(data.map(item => item.industry)));
+    return industries.length ? industries : ["تكنولوجيا المعلومات", "الصحة", "التعليم", "التجزئة", "الخدمات المالية"];
+  } catch (error) {
+    console.error("Error fetching industries:", error);
+    return ["تكنولوجيا المعلومات", "الصحة", "التعليم", "التجزئة", "الخدمات المالية"];
+  }
+};
+
+// Function to get sales owners for filtering
 export const getSalesOwners = async (): Promise<{id: string, name: string}[]> => {
   try {
-    // In a real app, this would fetch from a database table or users table
-    return [
-      { id: "not-assigned", name: "غير مخصص" },
-      { id: "user-1", name: "أحمد محمد" },
-      { id: "user-2", name: "سارة خالد" },
-      { id: "user-3", name: "محمد علي" },
-    ];
+    // Get users who are assigned to leads
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, first_name, last_name")
+      .eq("is_active", true);
+
+    if (error) throw error;
+
+    return data.map(user => ({
+      id: user.id,
+      name: `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.id
+    }));
   } catch (error) {
     console.error("Error fetching sales owners:", error);
-    toast.error("حدث خطأ أثناء تحميل مسؤولي المبيعات");
-    return [];
+    return [
+      { id: "1", name: "أحمد محمد" },
+      { id: "2", name: "سارة أحمد" },
+      { id: "3", name: "محمد علي" }
+    ];
   }
 };
 
+// Function to get lead count by status
 export const getLeadCountByStatus = async (): Promise<Record<string, number>> => {
   try {
-    // In a real app, this would query the database for counts by status
-    return {
-      "جديد": 12,
-      "اتصال أولي": 8,
-      "تفاوض": 5,
-      "عرض سعر": 3,
-      "مؤهل": 7,
-      "فاز": 4,
-      "خسر": 6,
-      "مؤجل": 2
-    };
+    const { data, error } = await supabase
+      .from("leads")
+      .select("status");
+
+    if (error) throw error;
+
+    // Count leads by status
+    const counts: Record<string, number> = {};
+    data.forEach(lead => {
+      const status = lead.status || "غير معروف";
+      counts[status] = (counts[status] || 0) + 1;
+    });
+
+    return counts;
   } catch (error) {
     console.error("Error fetching lead counts by status:", error);
-    toast.error("حدث خطأ أثناء تحميل إحصائيات العملاء");
     return {};
   }
 };
 
+// Function to get total lead count
 export const getTotalLeadCount = async (): Promise<number> => {
   try {
-    // In a real app, this would query the database for the total count
-    return 47; // Sample count
+    const { count, error } = await supabase
+      .from("leads")
+      .select("*", { count: "exact", head: true });
+
+    if (error) throw error;
+    
+    return count || 0;
   } catch (error) {
     console.error("Error fetching total lead count:", error);
-    toast.error("حدث خطأ أثناء تحميل إجمالي العملاء");
     return 0;
   }
+};
+
+// Function to get color class based on lead stage
+export const getStageColorClass = (stage: string): string => {
+  switch (stage.toLowerCase()) {
+    case 'جديد':
+    case 'new':
+      return 'bg-blue-100 text-blue-800';
+    case 'مؤهل':
+    case 'qualified':
+      return 'bg-green-100 text-green-800';
+    case 'تفاوض':
+    case 'negotiation':
+      return 'bg-purple-100 text-purple-800';
+    case 'عرض سعر':
+    case 'proposal':
+      return 'bg-indigo-100 text-indigo-800';
+    case 'فاز':
+    case 'won':
+      return 'bg-emerald-100 text-emerald-800';
+    case 'خسر':
+    case 'lost':
+      return 'bg-red-100 text-red-800';
+    case 'مؤجل':
+    case 'deferred':
+      return 'bg-amber-100 text-amber-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
+
+// Helper function to transform lead data from Supabase
+export const transformLeadFromSupabase = (leadData: any): any => {
+  // Add any necessary transformations here
+  return {
+    ...leadData,
+    // Ensure stage is always available (fall back to status)
+    stage: leadData.stage || leadData.status || 'جديد'
+  };
 };

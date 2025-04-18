@@ -11,8 +11,13 @@ export interface Task {
   created_by?: string | null;
   created_at: string;
   updated_at: string;
-  assigned_to_name?: string; // Added for mock data
-  related_to?: string; // Added for mock data
+  // Adding these fields to match usage in the codebase
+  assigned_to_name?: string;
+  related_to?: {
+    type: string;
+    id: string;
+    name: string;
+  };
 }
 
 export interface TaskCreateInput {
@@ -24,7 +29,7 @@ export interface TaskCreateInput {
   lead_id?: string | null;
   assigned_to?: string | null;
   created_by?: string | null;
-  related_to_type?: string; // Added for useLeadTasks
-  related_to_id?: string; // Added for useLeadTasks
-  related_to_name?: string; // Added for useLeadTasks
+  related_to_type?: string;
+  related_to_id?: string;
+  related_to_name?: string;
 }
