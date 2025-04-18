@@ -313,7 +313,7 @@ const LeadDetailsPage = () => {
                   className="mt-4"
                   onClick={() => navigate("/dashboard/leads")}
                 >
-                  العودة إلى قائمة العملاء المحتملين
+                  عودة إلى قائمة العملاء المحتملين
                 </Button>
               </CardContent>
             </Card>
@@ -487,7 +487,7 @@ const LeadDetailsPage = () => {
                       </div>
                       
                       <div>
-                        <h3 className="text-sm font-medium text-muted-foreground mb-2">الاسم الأخير</h3>
+                        <h3 className="text-sm font-medium text-muted-foreground mb-2">الاسم ال��خير</h3>
                         {editField?.field === "last_name" ? (
                           <div className="flex items-center gap-2">
                             <Input 

@@ -38,6 +38,10 @@ export const getTasks = async (filterOptions?: {
   }
 };
 
+export const getTasksByLeadId = async (leadId: string): Promise<Task[]> => {
+  return getTasks({ lead_id: leadId });
+};
+
 export const createTask = async (taskData: any): Promise<Task> => {
   try {
     const { data, error } = await supabase

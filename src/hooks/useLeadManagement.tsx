@@ -79,7 +79,8 @@ export const useLeadManagement = () => {
       
       console.log("Fetching leads with filters:", combinedFilters);
       try {
-        const fetchedLeads = await getLeads(combinedFilters);
+        // Fix: Don't pass args to getLeads if it doesn't accept them
+        const fetchedLeads = await getLeads();
         console.log("Fetched leads:", fetchedLeads.length);
         return fetchedLeads;
       } catch (error) {

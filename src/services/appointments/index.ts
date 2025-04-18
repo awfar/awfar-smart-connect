@@ -4,7 +4,8 @@ export {
   createAppointment,
   updateAppointment,
   deleteAppointment,
-  getAppointment
+  getAppointment,
+  fetchAppointments
 } from './appointmentsService';
 
 export type { Appointment, AppointmentCreateInput } from './types';
@@ -14,8 +15,4 @@ export {
   getAppointmentsByLeadId,
 } from './api';
 
-// Add a consistent naming for fetching appointments by lead ID
-export const fetchAppointmentsByLeadId = async (leadId: string) => {
-  const { getAppointmentsByLeadId } = await import('./api');
-  return getAppointmentsByLeadId(leadId);
-};
+// We don't need the duplicate fetchAppointmentsByLeadId since we have getAppointmentsByLeadId

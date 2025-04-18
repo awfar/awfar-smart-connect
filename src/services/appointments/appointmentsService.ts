@@ -12,11 +12,12 @@ export const fetchAppointments = async (filters?: { lead_id?: string; status?: s
 
     // Apply filters if provided
     if (filters) {
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) {
-          query = query.eq(key, value);
-        }
-      });
+      if (filters.lead_id) {
+        query = query.eq('lead_id', filters.lead_id);
+      }
+      if (filters.status) {
+        query = query.eq('status', filters.status);
+      }
     }
 
     const { data, error } = await query;
