@@ -31,8 +31,12 @@ export const getTasks = async (filterOptions?: {
     
     if (error) throw error;
 
-    // Ensure we're returning a properly typed array by explicitly casting
-    return (data || []) as Task[];
+    // Ensure we're returning a properly typed array
+    return (data || []).map(task => ({
+      ...task,
+      status: task.status as Task['status'],
+      priority: task.priority as Task['priority']
+    })) as Task[];
   } catch (error) {
     console.error("Error fetching tasks:", error);
     toast.error("حدث خطأ أثناء تحميل المهام");

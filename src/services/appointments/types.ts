@@ -1,4 +1,6 @@
 
+export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled';
+
 export interface Appointment {
   id: string;
   title: string;
@@ -6,7 +8,7 @@ export interface Appointment {
   start_time: string;
   end_time: string;
   location?: string;
-  status: 'scheduled' | 'completed' | 'cancelled';
+  status: AppointmentStatus;
   lead_id?: string;
   client_id?: string;
   participants?: string[];
@@ -21,8 +23,9 @@ export interface AppointmentCreateInput {
   start_time: string;
   end_time: string;
   location?: string;
-  status?: 'scheduled' | 'completed' | 'cancelled';
+  status?: AppointmentStatus;
   lead_id?: string;
   client_id?: string;
   participants?: string[];
+  created_by?: string;
 }

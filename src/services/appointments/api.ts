@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Appointment, AppointmentCreateInput } from "./types";
+import { Appointment, AppointmentCreateInput, AppointmentStatus } from "./types";
 import { toast } from "sonner";
 
 // Get appointments for a specific lead
@@ -14,7 +14,10 @@ export const getAppointmentsByLeadId = async (leadId: string): Promise<Appointme
       
     if (error) throw error;
     
-    return data || [];
+    return (data || []).map(item => ({
+      ...item,
+      status: item.status as AppointmentStatus
+    })) as Appointment[];
   } catch (error) {
     console.error("Error fetching appointments:", error);
     toast.error("حدث خطأ أثناء تحميل المواعيد");

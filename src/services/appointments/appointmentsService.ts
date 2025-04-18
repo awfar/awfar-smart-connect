@@ -1,9 +1,9 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Appointment, AppointmentCreateInput } from "./types";
+import { Appointment, AppointmentCreateInput, AppointmentStatus } from "./types";
 import { toast } from "sonner";
 
-export const fetchAppointments = async (filters?: { lead_id?: string; status?: string }): Promise<Appointment[]> => {
+export const fetchAppointments = async (filters?: { lead_id?: string; status?: AppointmentStatus }): Promise<Appointment[]> => {
   try {
     let query = supabase
       .from('appointments')
@@ -27,7 +27,10 @@ export const fetchAppointments = async (filters?: { lead_id?: string; status?: s
       throw error;
     }
 
-    return (data || []) as Appointment[];
+    return (data || []).map(item => ({
+      ...item,
+      status: item.status as AppointmentStatus
+    })) as Appointment[];
   } catch (error) {
     console.error("Error in fetchAppointments:", error);
     toast.error("فشل في تحميل المواعيد");
@@ -48,7 +51,10 @@ export const getAppointment = async (id: string): Promise<Appointment | null> =>
       .single();
 
     if (error) throw error;
-    return data as Appointment;
+    return {
+      ...data,
+      status: data.status as AppointmentStatus
+    } as Appointment;
   } catch (error) {
     console.error("Error fetching appointment:", error);
     return null;

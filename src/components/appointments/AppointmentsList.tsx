@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Table,
@@ -15,7 +16,7 @@ import AppointmentForm from "./AppointmentForm";
 import { useBreakpoints } from "@/hooks/use-mobile";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Appointment } from "@/services/appointments/types";
+import { Appointment, AppointmentStatus } from "@/services/appointments/types";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -27,17 +28,63 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 
-// Mock data for appointments
-const INITIAL_APPOINTMENTS = [
-  { id: "1", title: "اجتماع مع عميل جديد", start_time: new Date(2025, 3, 14).toISOString(), clientName: "أحمد محمد", end_time: new Date(2025, 3, 14, 11, 0).toISOString(), type: "اجتماع", status: "مؤكد" },
-  { id: "2", title: "متابعة عرض المنتج", start_time: new Date(2025, 3, 15).toISOString(), clientName: "سارة خالد", end_time: new Date(2025, 3, 15, 15, 30).toISOString(), type: "عرض", status: "مؤكد" },
-  { id: "3", title: "مراجعة مشروع", start_time: new Date(2025, 3, 15).toISOString(), clientName: "محمد علي", end_time: new Date(2025, 3, 15, 16, 0).toISOString(), type: "مراجعة", status: "مؤكد" },
-  { id: "4", title: "مكالمة مع فريق التطوير", start_time: new Date(2025, 3, 20).toISOString(), clientName: "فريق التطوير", end_time: new Date(2025, 3, 20, 12, 0).toISOString(), type: "مكالمة", status: "معلق" },
-  { id: "5", title: "اجتماع استراتيجي", start_time: new Date(2025, 3, 25).toISOString(), clientName: "خالد عبدالله", end_time: new Date(2025, 3, 25, 14, 0).toISOString(), type: "اجتماع", status: "مؤكد" },
+// Define new status mapping for display
+const statusDisplay = {
+  scheduled: "مؤكد",
+  completed: "مكتمل",
+  cancelled: "ملغي"
+};
+
+// Sample initial appointments data
+const INITIAL_APPOINTMENTS: Partial<Appointment>[] = [
+  { 
+    id: "1", 
+    title: "اجتماع مع عميل جديد", 
+    start_time: new Date(2025, 3, 14).toISOString(), 
+    end_time: new Date(2025, 3, 14, 11, 0).toISOString(), 
+    status: "scheduled", 
+    description: "اجتماع"
+  },
+  { 
+    id: "2", 
+    title: "متابعة عرض المنتج", 
+    start_time: new Date(2025, 3, 15).toISOString(), 
+    end_time: new Date(2025, 3, 15, 15, 30).toISOString(), 
+    status: "scheduled", 
+    description: "عرض" 
+  },
+  { 
+    id: "3", 
+    title: "مراجعة مشروع", 
+    start_time: new Date(2025, 3, 15).toISOString(), 
+    end_time: new Date(2025, 3, 15, 16, 0).toISOString(), 
+    status: "scheduled", 
+    description: "مراجعة" 
+  },
+  { 
+    id: "4", 
+    title: "مكالمة مع فريق التطوير", 
+    start_time: new Date(2025, 3, 20).toISOString(), 
+    end_time: new Date(2025, 3, 20, 12, 0).toISOString(), 
+    status: "cancelled", 
+    description: "مكالمة" 
+  },
+  { 
+    id: "5", 
+    title: "اجتماع استراتيجي", 
+    start_time: new Date(2025, 3, 25).toISOString(), 
+    end_time: new Date(2025, 3, 25, 14, 0).toISOString(), 
+    status: "scheduled", 
+    description: "اجتماع" 
+  },
 ];
 
 const AppointmentsList = () => {
-  const [appointments, setAppointments] = useState<Appointment[]>(INITIAL_APPOINTMENTS as unknown as Appointment[]);
+  const [appointments, setAppointments] = useState<Appointment[]>(INITIAL_APPOINTMENTS.map(app => ({
+    ...app,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  })) as Appointment[]);
   const [showForm, setShowForm] = useState<boolean>(false);
   const [editingAppointment, setEditingAppointment] = useState<Appointment | undefined>(undefined);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState<boolean>(false);
@@ -92,14 +139,28 @@ const AppointmentsList = () => {
         start_time: appointmentData.start_time || new Date().toISOString(),
         end_time: appointmentData.end_time || new Date().toISOString(),
         location: appointmentData.location || "",
-        status: appointmentData.status || "مؤكد",
+        status: (appointmentData.status || "scheduled") as AppointmentStatus,
         description: appointmentData.description,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
       setAppointments([newAppointment, ...appointments]);
       toast.success("تم إضافة الموعد بنجاح");
     }
     setShowForm(false);
     return Promise.resolve();
+  };
+
+  // Map status to display text
+  const getStatusDisplay = (status: AppointmentStatus) => {
+    return statusDisplay[status] || status;
+  };
+
+  // Determine badge variant based on status
+  const getStatusVariant = (status: AppointmentStatus) => {
+    if (status === "scheduled") return "default";
+    if (status === "completed") return "success";
+    return "outline";
   };
 
   return (
@@ -119,12 +180,12 @@ const AppointmentsList = () => {
               <CardContent className="p-4">
                 <div className="flex justify-between">
                   <h3 className="font-medium">{appointment.title}</h3>
-                  <Badge variant={appointment.status === "مؤكد" ? "default" : "outline"}>
-                    {appointment.status}
+                  <Badge variant={getStatusVariant(appointment.status)}>
+                    {getStatusDisplay(appointment.status)}
                   </Badge>
                 </div>
                 <div className="text-sm text-muted-foreground mt-1">
-                  {appointment.client_id}
+                  {appointment.client_id || "-"}
                 </div>
                 <div className="flex items-center gap-2 mt-2 text-sm">
                   <CalendarClock className="h-4 w-4 text-muted-foreground" />
@@ -160,7 +221,7 @@ const AppointmentsList = () => {
               {appointments.map((appointment) => (
                 <TableRow key={appointment.id}>
                   <TableCell className="font-medium">{appointment.title}</TableCell>
-                  <TableCell>{appointment.client_id}</TableCell>
+                  <TableCell>{appointment.client_id || "-"}</TableCell>
                   <TableCell>{formatDate(appointment.start_time)}</TableCell>
                   <TableCell>{new Date(appointment.start_time).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</TableCell>
                   <TableCell>
@@ -170,8 +231,8 @@ const AppointmentsList = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={appointment.status === "مؤكد" ? "default" : "outline"}>
-                      {appointment.status}
+                    <Badge variant={getStatusVariant(appointment.status)}>
+                      {getStatusDisplay(appointment.status)}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -194,7 +255,9 @@ const AppointmentsList = () => {
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="sm:max-w-[600px]">
           <AppointmentForm 
+            leadId=""
             onCancel={() => setShowForm(false)} 
+            onClose={() => setShowForm(false)}
             onSubmit={handleFormSubmit} 
             appointment={editingAppointment}
           />
