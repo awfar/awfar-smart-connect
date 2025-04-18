@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -37,14 +38,14 @@ import { Link } from "react-router-dom";
 import { Task } from "@/services/tasks/types";
 import { Appointment } from "@/services/appointments/types";
 import { 
-  getTasksByLeadId as fetchTasks, 
+  getTasks, 
   createTask, 
   updateTask, 
   deleteTask,
   completeTask 
 } from "@/services/tasks/api";
 import { 
-  getAppointmentsByLeadId as fetchAppointments, 
+  getAppointmentsByLeadId, 
   createAppointment, 
   updateAppointment, 
   deleteAppointment 
@@ -99,7 +100,7 @@ const LeadDetailsPage = () => {
     refetch: refetchTasks
   } = useQuery({
     queryKey: ['tasks', id],
-    queryFn: () => id ? fetchTasks(id) : [],
+    queryFn: () => id ? getTasks({ lead_id: id }) : [],
     enabled: !!id
   });
   
@@ -109,7 +110,7 @@ const LeadDetailsPage = () => {
     refetch: refetchAppointments
   } = useQuery({
     queryKey: ['appointments', id],
-    queryFn: () => id ? fetchAppointments(id) : [],
+    queryFn: () => id ? getAppointmentsByLeadId(id) : [],
     enabled: !!id
   });
 
@@ -814,4 +815,397 @@ const LeadDetailsPage = () => {
                       <Button variant="ghost" className="w-full justify-start">
                         <TicketIcon className="h-4 w-4 mr-2" />
                         التذاكر
-                        <Badge className="mr-
+                        <Badge className="mr-auto" variant="outline">0</Badge>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="timeline">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">الخط الزمني</CardTitle>
+                <CardDescription>سجل كامل للأنشطة والتفاعلات</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoadingActivities ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <span className="mr-2">جاري تحميل الأنشطة...</span>
+                  </div>
+                ) : activities.length > 0 ? (
+                  <LeadTimeline 
+                    activities={activities} 
+                    onComplete={handleCompleteActivity} 
+                    onDelete={(activityId) => handleDeleteItem('activity', activityId)} 
+                  />
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    لا توجد أنشطة مسجلة حتى الآن
+                    <div className="mt-4">
+                      <Button onClick={handleAddActivity}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        إضافة نشاط
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="tasks">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">المهام</CardTitle>
+                  <CardDescription>متابعة المهام المرتبطة بهذا العميل المحتمل</CardDescription>
+                </div>
+                <Button size="sm" onClick={() => setShowTaskForm(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  إضافة مهمة
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {isLoadingTasks ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <span className="mr-2">جاري تحميل المهام...</span>
+                  </div>
+                ) : tasks.length > 0 ? (
+                  <div className="space-y-4">
+                    {tasks.map((task) => (
+                      <div key={task.id} className="border rounded-lg p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-start gap-2">
+                            <div className="mt-1">
+                              {task.status === 'completed' ? (
+                                <div className="rounded-full bg-green-100 p-1">
+                                  <Check className="h-5 w-5 text-green-600" />
+                                </div>
+                              ) : (
+                                <Button 
+                                  variant="outline" 
+                                  size="icon" 
+                                  className="h-7 w-7 rounded-full p-0"
+                                  onClick={() => handleCompleteItem('task', task.id)}
+                                >
+                                  <span className="sr-only">Mark Complete</span>
+                                </Button>
+                              )}
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-medium">{task.title}</h4>
+                              {task.description && (
+                                <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
+                              )}
+                              <div className="flex items-center flex-wrap gap-x-4 gap-y-2 mt-2 text-xs">
+                                {task.due_date && (
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3 text-muted-foreground" />
+                                    <span>{formatDateTime(task.due_date)}</span>
+                                  </div>
+                                )}
+                                {task.priority && (
+                                  <Badge variant={
+                                    task.priority === 'high' ? 'destructive' : 
+                                    task.priority === 'medium' ? 'default' : 
+                                    'outline'
+                                  } className="text-[10px] px-1">
+                                    {task.priority === 'high' ? 'عالي' : 
+                                    task.priority === 'medium' ? 'متوسط' : 'منخفض'}
+                                  </Badge>
+                                )}
+                                <Badge variant="outline" className="text-[10px] px-1">
+                                  {task.status === 'completed' ? 'مكتمل' : 
+                                   task.status === 'in_progress' ? 'قيد التنفيذ' : 'جديد'}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                          <Button variant="ghost" size="sm" onClick={() => handleItemEdit('task', task)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleDeleteItem('task', task.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    لا توجد مهام مرتبطة بهذا العميل المحتمل
+                    <div className="mt-4">
+                      <Button onClick={() => setShowTaskForm(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        إضافة مهمة
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="appointments">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">المواعيد</CardTitle>
+                  <CardDescription>إدارة المواعيد والاجتماعات مع العميل المحتمل</CardDescription>
+                </div>
+                <Button size="sm" onClick={() => setShowAppointmentForm(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  جدولة موعد
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {isLoadingAppointments ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <span className="mr-2">جاري تحميل المواعيد...</span>
+                  </div>
+                ) : appointments.length > 0 ? (
+                  <div className="space-y-4">
+                    {appointments.map((appointment) => (
+                      <div key={appointment.id} className="border rounded-lg p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                        <div className="flex-1">
+                          <div className="flex items-start gap-3">
+                            <div className="rounded-full bg-blue-100 p-2">
+                              <Calendar className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <h4 className="font-medium">{appointment.title}</h4>
+                              {appointment.description && (
+                                <p className="text-sm text-muted-foreground mt-1">{appointment.description}</p>
+                              )}
+                              <div className="flex items-center flex-wrap gap-x-4 gap-y-2 mt-2 text-xs">
+                                <div className="flex items-center gap-1">
+                                  <Clock className="h-3 w-3 text-muted-foreground" />
+                                  <span>
+                                    {formatDateTime(appointment.start_time)} - {formatDateTime(appointment.end_time)}
+                                  </span>
+                                </div>
+                                {appointment.location && (
+                                  <div className="flex items-center gap-1">
+                                    <MapPin className="h-3 w-3 text-muted-foreground" />
+                                    <span>{appointment.location}</span>
+                                  </div>
+                                )}
+                                <Badge variant={
+                                  appointment.status === 'scheduled' ? 'default' : 
+                                  appointment.status === 'completed' ? 'outline' : 
+                                  'secondary'
+                                } className="text-[10px] px-1">
+                                  {appointment.status === 'scheduled' ? 'مجدول' : 
+                                   appointment.status === 'completed' ? 'مكتمل' : 
+                                   appointment.status === 'cancelled' ? 'ملغي' : appointment.status}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 justify-end">
+                          <Button variant="ghost" size="sm" onClick={() => handleItemEdit('appointment', appointment)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => handleDeleteItem('appointment', appointment.id)}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    لا توجد مواعيد مرتبطة بهذا العميل المحتمل
+                    <div className="mt-4">
+                      <Button onClick={() => setShowAppointmentForm(true)}>
+                        <Plus className="h-4 w-4 mr-2" />
+                        جدولة موعد
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="notes">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">الملاحظات</CardTitle>
+                  <CardDescription>تسجيل الملاحظات والمعلومات الإضافية</CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="border rounded-lg p-4">
+                  <h4 className="font-medium mb-2">إضافة ملاحظة جديدة</h4>
+                  <Textarea
+                    placeholder="اكتب ملاحظة جديدة هنا..."
+                    className="min-h-[100px]"
+                    value={newNote}
+                    onChange={(e) => setNewNote(e.target.value)}
+                  />
+                  <div className="flex justify-end mt-3">
+                    <Button 
+                      onClick={handleAddNote}
+                      disabled={!newNote.trim() || addNoteMutation.isPending}
+                    >
+                      {addNoteMutation.isPending ? "جاري الحفظ..." : "إضافة ملاحظة"}
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-3">الملاحظات السابقة</h4>
+                  {isLoadingActivities ? (
+                    <div className="flex justify-center py-4">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      <span className="mr-2">جاري تحميل الملاحظات...</span>
+                    </div>
+                  ) : activities.filter(activity => activity.type === 'note').length > 0 ? (
+                    <div className="space-y-4">
+                      {activities
+                        .filter(activity => activity.type === 'note')
+                        .map((note) => (
+                          <div key={note.id} className="border rounded-lg p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-start gap-3">
+                                <div className="rounded-full bg-gray-100 p-2">
+                                  <FileText className="h-4 w-4 text-gray-600" />
+                                </div>
+                                <div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {format(new Date(note.created_at), 'yyyy/MM/dd HH:mm', { locale: ar })}
+                                  </div>
+                                  <p className="mt-1">{note.description}</p>
+                                </div>
+                              </div>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => handleDeleteItem('activity', note.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ))
+                      }
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 text-muted-foreground border rounded-lg">
+                      لا توجد ملاحظات مسجلة حتى الآن
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </MobileOptimizedContainer>
+
+      {/* Create/Edit Task Dialog */}
+      <Dialog open={showTaskForm} onOpenChange={setShowTaskForm}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{taskToEdit ? "تعديل المهمة" : "إضافة مهمة جديدة"}</DialogTitle>
+          </DialogHeader>
+          <TaskForm 
+            onClose={() => {
+              setShowTaskForm(false);
+              setTaskToEdit(null);
+            }}
+            onSubmit={handleTaskSubmit}
+            task={taskToEdit}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Create/Edit Appointment Dialog */}
+      <Dialog open={showAppointmentForm} onOpenChange={setShowAppointmentForm}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{appointmentToEdit ? "تعديل الموعد" : "إضافة موعد جديد"}</DialogTitle>
+          </DialogHeader>
+          <AppointmentForm 
+            onClose={() => {
+              setShowAppointmentForm(false);
+              setAppointmentToEdit(null);
+            }}
+            onSubmit={handleAppointmentSubmit}
+            appointment={appointmentToEdit}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Activity Form Dialog */}
+      <Dialog open={showActivityForm} onOpenChange={setShowActivityForm}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>إضافة نشاط جديد</DialogTitle>
+          </DialogHeader>
+          <ActivityForm 
+            onClose={() => setShowActivityForm(false)} 
+            onSuccess={handleActivitySuccess} 
+            leadId={id || ""}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Lead Dialog */}
+      <Dialog open={isEditLeadOpen} onOpenChange={setIsEditLeadOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">تحرير بيانات العميل المحتمل</DialogTitle>
+          </DialogHeader>
+          {lead && (
+            <div className="mt-4">
+              <LeadForm 
+                lead={lead}
+                onClose={() => setIsEditLeadOpen(false)}
+                onSuccess={handleLeadUpdate}
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!itemToDelete} onOpenChange={() => setItemToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>تأكيد الحذف</AlertDialogTitle>
+            <AlertDialogDescription>
+              هل أنت متأكد من رغبتك في حذف هذا العنصر؟ لا يمكن التراجع عن هذا الإجراء.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex space-x-2 justify-end rtl:space-x-reverse">
+            <AlertDialogCancel>إلغاء</AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-red-600 hover:bg-red-700"
+              onClick={() => {
+                if (itemToDelete) {
+                  deleteItemMutation.mutate(itemToDelete);
+                }
+              }}
+              disabled={deleteItemMutation.isPending}
+            >
+              {deleteItemMutation.isPending ? "جاري الحذف..." : "حذف"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </DashboardLayout>
+  );
+};
+
+export default LeadDetailsPage;
