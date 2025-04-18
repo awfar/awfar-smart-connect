@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { 
   getLeadSources, 
@@ -6,7 +5,7 @@ import {
   getSalesOwners, 
   getCountries, 
   getIndustries 
-} from "@/services/leads";
+} from "@/services/leads/utils";
 
 export interface LeadFormOptions {
   sources: string[];

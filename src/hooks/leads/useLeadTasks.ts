@@ -1,8 +1,8 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Task, TaskCreateInput } from '@/services/tasks/types';
-import { getTasks, createTask, updateTask, deleteTask } from '@/services/tasks';
+import { Task } from '@/services/tasks/types';
+import { getTasks, createTask, updateTask, deleteTask } from '@/services/tasks/api';
 import { toast } from 'sonner';
 
 export const useLeadTasks = (leadId?: string) => {
@@ -69,13 +69,10 @@ export const useLeadTasks = (leadId?: string) => {
       return;
     }
     
-    // Create a TaskCreateInput object with the correct properties
-    const taskCreateData: TaskCreateInput = {
+    // Create task data with lead_id
+    const taskCreateData = {
       ...taskData,
       lead_id: leadId,
-      related_to_type: 'lead',
-      related_to_id: leadId,
-      related_to_name: 'عميل محتمل'
     };
     
     addTask(taskCreateData);

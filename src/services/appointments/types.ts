@@ -7,22 +7,22 @@ export interface Appointment {
   end_time: string;
   location?: string;
   status?: string;
-  client_id?: string;
   lead_id?: string;
+  client_id?: string;
+  participants?: string[];
   created_by?: string;
   created_at?: string;
   updated_at?: string;
-  participants?: string[];
 }
 
 export interface AppointmentCreateInput {
   title: string;
   description?: string;
-  start_time: string; // Required
-  end_time: string; // Required  
+  start_time: string;
+  end_time: string;
   location?: string;
   status?: string;
-  client_id?: string;
   lead_id?: string;
-  created_by?: string;
+  client_id?: string;
+  participants?: string[];
 }

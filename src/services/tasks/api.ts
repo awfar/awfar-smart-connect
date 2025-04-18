@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { castToTask } from "./utils";
 
 // Fetch tasks
-export const fetchTasks = async (filterOptions?: {
+export const getTasks = async (filterOptions?: {
   status?: string;
   assigned_to?: string;
   lead_id?: string;
@@ -130,5 +130,13 @@ export const deleteTask = async (taskId: string): Promise<boolean> => {
 
 // Get tasks for a specific lead
 export const getTasksByLeadId = async (leadId: string): Promise<Task[]> => {
-  return fetchTasks({ lead_id: leadId });
+  return getTasks({ lead_id: leadId });
+};
+
+// Complete a task
+export const completeTask = async (taskId: string): Promise<Task> => {
+  return updateTask(taskId, {
+    status: 'completed',
+    updated_at: new Date().toISOString()
+  });
 };

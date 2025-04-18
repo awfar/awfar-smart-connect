@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getLeadStages, getLeadSources, getIndustries, getCountries, getSalesOwners } from "@/services/leads";
+import { getLeadStages, getLeadSources, getIndustries, getCountries, getSalesOwners } from "@/services/leads/utils";
 import { Loader2 } from "lucide-react";
 
 interface LeadFiltersProps {

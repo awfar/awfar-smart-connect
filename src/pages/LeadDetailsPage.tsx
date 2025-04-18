@@ -8,7 +8,7 @@ import {
   ArrowLeft, Check, Clock, List, Mail, Phone, User, 
   Building, MapPin, Briefcase, Edit, Trash2, Plus,
   MessageSquare, Calendar, ChevronRight, Globe, FileText,
-  Users, FileEdit, Loader2, Link
+  Users, FileEdit, Loader2, Link as LinkIcon, TicketIcon
 } from "lucide-react";
 import { toast } from "sonner";
 import { 
@@ -19,6 +19,7 @@ import {
   completeLeadActivity,
   deleteLeadActivity,
   Lead,
+  LeadActivity,
 } from "@/services/leads";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -32,17 +33,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import MobileOptimizedContainer from "@/components/ui/MobileOptimizedContainer";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { leadId } from '@/types/leads';
-import { fetchAppointmentsByLeadId, createAppointment, updateAppointment, deleteAppointment } from '@/services/appointments'; 
-import { getTasksByLeadId, createTask, updateTask, deleteTask } from '@/services/tasks/api';
-import TaskForm from '@/components/tasks/TaskForm';
-import AppointmentForm from '@/components/appointments/AppointmentForm';
-import { format } from 'date-fns';
-import { ar } from 'date-fns/locale';
-import { Loader2, MessageSquare, Calendar, Globe, ChevronRight, FileText, Users, TicketIcon } from 'lucide-react';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { AvatarImage } from '@/components/ui/avatar';
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
+import { Task } from "@/services/tasks/types";
+import { Appointment } from "@/services/appointments/types";
+import { 
+  getTasksByLeadId as fetchTasks, 
+  createTask, 
+  updateTask, 
+  deleteTask,
+  completeTask 
+} from "@/services/tasks/api";
+import { 
+  getAppointmentsByLeadId as fetchAppointments, 
+  createAppointment, 
+  updateAppointment, 
+  deleteAppointment 
+} from "@/services/appointments/api";
+import TaskForm from "@/components/tasks/TaskForm";
+import AppointmentForm from "@/components/appointments/AppointmentForm";
+import { format } from "date-fns";
+import { ar } from "date-fns/locale";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const LeadDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -78,7 +89,7 @@ const LeadDetailsPage = () => {
     refetch: refetchActivities
   } = useQuery({
     queryKey: ['leadActivities', id],
-    queryFn: () => id ? getLeadActivitiesById({ lead_id: id }) : [],
+    queryFn: () => id ? getLeadActivities(id) : [],
     enabled: !!id
   });
   
@@ -101,7 +112,7 @@ const LeadDetailsPage = () => {
     queryFn: () => id ? fetchAppointments(id) : [],
     enabled: !!id
   });
-  
+
   const completeMutation = useMutation({
     mutationFn: completeLeadActivity,
     onSuccess: () => {
@@ -312,6 +323,44 @@ const LeadDetailsPage = () => {
     );
   }
 
+  const handleTaskSubmit = async (data: any): Promise<void> => {
+    try {
+      if (taskToEdit?.id) {
+        await updateTask(taskToEdit.id, data);
+      } else {
+        await createTask({
+          ...data,
+          lead_id: id
+        });
+      }
+      setShowTaskForm(false);
+      queryClient.invalidateQueries({ queryKey: ['tasks', id] });
+      toast.success("تم حفظ المهمة بنجاح");
+    } catch (error) {
+      console.error("Error saving task:", error);
+      toast.error("حدث خطأ في حفظ المهمة");
+    }
+  };
+
+  const handleAppointmentSubmit = async (data: any): Promise<void> => {
+    try {
+      if (appointmentToEdit?.id) {
+        await updateAppointment(appointmentToEdit.id, data);
+      } else {
+        await createAppointment({
+          ...data,
+          lead_id: id
+        });
+      }
+      setShowAppointmentForm(false);
+      queryClient.invalidateQueries({ queryKey: ['appointments', id] });
+      toast.success("تم حفظ الموعد بنجاح");
+    } catch (error) {
+      console.error("Error saving appointment:", error);
+      toast.error("حدث خطأ في حفظ الموعد");
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="bg-white border-b">
@@ -323,7 +372,7 @@ const LeadDetailsPage = () => {
                 className="p-0 h-auto text-muted-foreground" 
                 onClick={() => navigate("/dashboard/leads")}
               >
-                العملاء المحتملين
+                العملاء الم��تملين
               </Button>
               <ChevronRight className="h-4 w-4" />
               <span>{getLeadName()}</span>
@@ -724,12 +773,12 @@ const LeadDetailsPage = () => {
                     <div className="grid gap-0.5">
                       <Button variant="ghost" className="w-full justify-start" asChild>
                         <Link href="#">
-                          <Link className="h-4 w-4 mr-2" />
+                          <LinkIcon className="h-4 w-4 mr-2" />
                           إنشاء فرصة
                         </Link>
                       </Button>
                       <Button variant="ghost" className="w-full justify-start" onClick={() => setShowTaskForm(true)}>
-                        <Link className="h-4 w-4 mr-2" />
+                        <LinkIcon className="h-4 w-4 mr-2" />
                         إضافة مهمة
                       </Button>
                       <Button variant="ghost" className="w-full justify-start" onClick={() => setShowAppointmentForm(true)}>
@@ -795,9 +844,9 @@ const LeadDetailsPage = () => {
                 tasks={tasks}
                 appointments={appointments}
                 isLoading={isLoadingActivities || isLoadingTasks || isLoadingAppointments}
-                onEdit={handleItemEdit}
-                onDelete={handleDeleteItem}
-                onComplete={handleCompleteItem}
+                onEdit={(type, item) => handleItemEdit(type, item)}
+                onDelete={(type, itemId) => handleDeleteItem(type, itemId)}
+                onComplete={(type, itemId) => handleCompleteItem(type, itemId)}
               />
             </MobileOptimizedContainer>
           </TabsContent>
