@@ -23,7 +23,7 @@ export const getAppointmentsByLeadId = async (leadId: string): Promise<Appointme
       end_time: item.end_time,
       location: item.location,
       status: item.status as AppointmentStatus,
-      lead_id: item.lead_id || null,  // Explicitly map lead_id
+      lead_id: item.lead_id || null,
       client_id: item.client_id,
       participants: item.participants,
       created_by: item.created_by,
@@ -54,7 +54,7 @@ export const createAppointment = async (appointmentData: AppointmentCreateInput)
         end_time: appointmentData.end_time,
         location: appointmentData.location,
         status: appointmentData.status || 'scheduled',
-        lead_id: appointmentData.lead_id,  // Include lead_id in insert
+        lead_id: appointmentData.lead_id,
         client_id: appointmentData.client_id,
         participants: appointmentData.participants,
         created_by: appointmentData.created_by
@@ -73,7 +73,7 @@ export const createAppointment = async (appointmentData: AppointmentCreateInput)
       end_time: data.end_time,
       location: data.location,
       status: data.status as AppointmentStatus,
-      lead_id: data.lead_id || null,  // Explicitly map lead_id
+      lead_id: data.lead_id || null,
       client_id: data.client_id,
       participants: data.participants,
       created_by: data.created_by,
@@ -102,7 +102,7 @@ export const updateAppointment = async (appointmentId: string, appointmentData: 
     if (appointmentData.location !== undefined) updateData.location = appointmentData.location;
     if (appointmentData.status !== undefined) updateData.status = appointmentData.status;
     if (appointmentData.participants !== undefined) updateData.participants = appointmentData.participants;
-    if (appointmentData.lead_id !== undefined) updateData.lead_id = appointmentData.lead_id;  // Include lead_id in update
+    if (appointmentData.lead_id !== undefined) updateData.lead_id = appointmentData.lead_id;
     if (appointmentData.client_id !== undefined) updateData.client_id = appointmentData.client_id;
     
     const { data, error } = await supabase
@@ -123,7 +123,7 @@ export const updateAppointment = async (appointmentId: string, appointmentData: 
       end_time: data.end_time,
       location: data.location,
       status: data.status as AppointmentStatus,
-      lead_id: data.lead_id || null,  // Explicitly map lead_id
+      lead_id: data.lead_id || null,
       client_id: data.client_id,
       participants: data.participants,
       created_by: data.created_by,
