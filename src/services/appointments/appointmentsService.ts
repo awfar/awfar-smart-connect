@@ -36,7 +36,7 @@ export const fetchAppointments = async (filters?: { lead_id?: string; status?: A
       end_time: item.end_time,
       location: item.location,
       status: item.status as AppointmentStatus,
-      lead_id: item.lead_id || null,
+      lead_id: item.lead_id || null,  // Explicitly map lead_id
       client_id: item.client_id,
       participants: item.participants,
       created_by: item.created_by,
@@ -72,7 +72,7 @@ export const getAppointment = async (id: string): Promise<Appointment | null> =>
       end_time: data.end_time,
       location: data.location,
       status: data.status as AppointmentStatus,
-      lead_id: data.lead_id || null,
+      lead_id: data.lead_id || null,  // Explicitly map lead_id
       client_id: data.client_id,
       participants: data.participants,
       created_by: data.created_by,
@@ -109,7 +109,7 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
         location: appointment.location,
         status: appointment.status || 'scheduled',
         client_id: appointment.client_id,
-        lead_id: appointment.lead_id,
+        lead_id: appointment.lead_id,  // Include lead_id in insert
         participants: appointment.participants,
         created_by: appointment.created_by
       })
@@ -129,7 +129,7 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
       end_time: data.end_time,
       location: data.location,
       status: data.status as AppointmentStatus,
-      lead_id: data.lead_id || null,
+      lead_id: data.lead_id || null,  // Explicitly map lead_id
       client_id: data.client_id,
       participants: data.participants,
       created_by: data.created_by,
@@ -157,7 +157,7 @@ export const updateAppointment = async (id: string, updates: Partial<Appointment
     if (updates.location !== undefined) updateData.location = updates.location;
     if (updates.status !== undefined) updateData.status = updates.status;
     if (updates.client_id !== undefined) updateData.client_id = updates.client_id;
-    if (updates.lead_id !== undefined) updateData.lead_id = updates.lead_id;
+    if (updates.lead_id !== undefined) updateData.lead_id = updates.lead_id;  // Include lead_id in update
     if (updates.participants !== undefined) updateData.participants = updates.participants;
 
     const { data, error } = await supabase
@@ -178,7 +178,7 @@ export const updateAppointment = async (id: string, updates: Partial<Appointment
       end_time: data.end_time,
       location: data.location,
       status: data.status as AppointmentStatus,
-      lead_id: data.lead_id || null,
+      lead_id: data.lead_id || null,  // Explicitly map lead_id
       client_id: data.client_id,
       participants: data.participants,
       created_by: data.created_by,

@@ -39,13 +39,13 @@ export const getTasks = async (filterOptions?: {
       status: task.status as Task['status'],
       priority: task.priority as Task['priority'],
       due_date: task.due_date || null,
-      lead_id: task.lead_id || null,
+      lead_id: task.lead_id || null,  // Explicitly map lead_id
       assigned_to: task.assigned_to || null,
       created_by: task.created_by || null,
       created_at: task.created_at,
       updated_at: task.updated_at,
-      assigned_to_name: task.assigned_to_name || undefined,
-      related_to: task.related_to || undefined
+      assigned_to_name: task.assigned_to_name || undefined,  // Explicitly map assigned_to_name
+      related_to: task.related_to || undefined  // Explicitly map related_to
     }));
   } catch (error) {
     console.error("Error fetching tasks:", error);
@@ -86,13 +86,13 @@ export const createTask = async (taskData: any): Promise<Task> => {
       status: data.status as Task['status'],
       priority: data.priority as Task['priority'],
       due_date: data.due_date || null,
-      lead_id: data.lead_id || null,
+      lead_id: data.lead_id || null,  // Explicitly map lead_id
       assigned_to: data.assigned_to || null,
       created_by: data.created_by || null,
       created_at: data.created_at,
       updated_at: data.updated_at,
-      assigned_to_name: data.assigned_to_name || undefined,
-      related_to: data.related_to || undefined
+      assigned_to_name: data.assigned_to_name || undefined,  // Explicitly map assigned_to_name
+      related_to: data.related_to || undefined  // Explicitly map related_to
     };
   } catch (error) {
     console.error("Error creating task:", error);
@@ -125,13 +125,13 @@ export const updateTask = async (taskId: string, taskData: Partial<Task>): Promi
       status: data.status as Task['status'],
       priority: data.priority as Task['priority'],
       due_date: data.due_date || null,
-      lead_id: data.lead_id || null,
+      lead_id: data.lead_id || null,  // Explicitly map lead_id
       assigned_to: data.assigned_to || null,
       created_by: data.created_by || null,
       created_at: data.created_at,
       updated_at: data.updated_at,
-      assigned_to_name: data.assigned_to_name || undefined,
-      related_to: data.related_to || undefined
+      assigned_to_name: data.assigned_to_name || undefined,  // Explicitly map assigned_to_name
+      related_to: data.related_to || undefined  // Explicitly map related_to
     };
   } catch (error) {
     console.error("Error updating task:", error);
