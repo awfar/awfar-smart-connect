@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Task } from "./types";
+import { Task, TaskCreateInput } from "./types";
 import { toast } from "sonner";
 
 export const getTasks = async (filterOptions?: {
@@ -58,7 +58,7 @@ export const getTasksByLeadId = async (leadId: string): Promise<Task[]> => {
   return getTasks({ lead_id: leadId });
 };
 
-export const createTask = async (taskData: any): Promise<Task> => {
+export const createTask = async (taskData: TaskCreateInput): Promise<Task> => {
   try {
     // Ensure status is one of the allowed values
     if (taskData.status && !['pending', 'in_progress', 'completed', 'cancelled'].includes(taskData.status)) {
