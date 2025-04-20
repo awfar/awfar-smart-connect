@@ -27,7 +27,7 @@ export const fetchAppointments = async (filters?: { lead_id?: string; status?: A
       throw error;
     }
 
-    // Map database response to our Appointment interface
+    // Map database response to Appointment interface
     return (data || []).map(item => ({
       id: item.id,
       title: item.title,

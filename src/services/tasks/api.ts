@@ -31,21 +31,21 @@ export const getTasks = async (filterOptions?: {
     
     if (error) throw error;
 
-    // Explicitly map each property to match the Task interface with default values for missing fields
-    return (data || []).map(task => ({
-      id: task.id,
-      title: task.title,
-      description: task.description || undefined,
-      status: task.status as Task['status'],
-      priority: task.priority as Task['priority'],
-      due_date: task.due_date || null,
-      lead_id: task.lead_id || null,
-      assigned_to: task.assigned_to || null,
-      created_by: task.created_by || null,
-      created_at: task.created_at,
-      updated_at: task.updated_at,
-      assigned_to_name: task.assigned_to_name || undefined,
-      related_to: task.related_to || undefined
+    // Map database response to Task interface
+    return (data || []).map(item => ({
+      id: item.id,
+      title: item.title,
+      description: item.description || undefined,
+      status: item.status as Task['status'],
+      priority: item.priority as Task['priority'],
+      due_date: item.due_date || null,
+      lead_id: item.lead_id || null,
+      assigned_to: item.assigned_to || null,
+      created_by: item.created_by || null,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+      assigned_to_name: item.assigned_to_name || undefined,
+      related_to: item.related_to || undefined
     }));
   } catch (error) {
     console.error("Error fetching tasks:", error);
