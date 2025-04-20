@@ -2,22 +2,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Task, TaskCreateInput } from '@/services/tasks/types';
-import { createTask, updateTask, deleteTask } from '@/services/tasks/api';
+import { createTask, updateTask, deleteTask, getTasksByLeadId } from '@/services/tasks/api';
 import { toast } from 'sonner';
-
-// Add the missing getTasks function
-const getTasks = async (filters?: { lead_id?: string; status?: string; assigned_to?: string }): Promise<Task[]> => {
-  try {
-    // This is a temporary implementation until we fix the API
-    console.log("Fetching tasks with filters:", filters);
-    // In a real implementation, this would call the API
-    return [];
-  } catch (error) {
-    console.error("Error fetching tasks:", error);
-    toast.error("خطأ في جلب المهام");
-    return [];
-  }
-};
 
 export const useLeadTasks = (leadId?: string) => {
   const queryClient = useQueryClient();
@@ -31,7 +17,7 @@ export const useLeadTasks = (leadId?: string) => {
     refetch
   } = useQuery({
     queryKey: ['leadTasks', leadId],
-    queryFn: () => leadId ? getTasks({ lead_id: leadId }) : Promise.resolve([]),
+    queryFn: () => leadId ? getTasksByLeadId(leadId) : Promise.resolve([]),
     enabled: !!leadId,
   });
 
