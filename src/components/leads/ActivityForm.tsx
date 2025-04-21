@@ -8,20 +8,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { addLeadActivity } from '@/services/leads/api';
 import { toast } from 'sonner';
 import { LeadActivityType } from '@/services/leads/types';
-import { LeadActivity } from '@/types/leads';
 
 interface ActivityFormProps {
   leadId: string;
-  activityType?: LeadActivityType; // Make activityType optional
-  onSuccess?: (activity?: LeadActivity) => void;
+  onSuccess?: () => void;
   onClose?: () => void;
   title?: string;
 }
 
-const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, onSuccess, onClose, title, activityType: initialActivityType }) => {
+const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, onSuccess, onClose, title }) => {
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm({
     defaultValues: {
-      type: initialActivityType || 'note' as LeadActivityType, // Use initialActivityType if provided
+      type: 'note' as LeadActivityType,
       description: '',
       scheduled_at: ''
     }
@@ -42,7 +40,7 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, onSuccess, onClose,
 
       await addLeadActivity(activity);
       toast.success('تمت إضافة النشاط بنجاح');
-      onSuccess?.(activity as LeadActivity);
+      onSuccess?.();
       onClose?.();
     } catch (error) {
       console.error('Error adding activity:', error);
@@ -59,7 +57,7 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, onSuccess, onClose,
       <div>
         <label className="text-sm font-medium">نوع النشاط</label>
         <Select 
-          defaultValue={initialActivityType || "note"}
+          defaultValue="note"
           onValueChange={(value) => setValue('type', value as LeadActivityType)}
         >
           <SelectTrigger>
