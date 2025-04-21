@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Lead, LeadActivity, LeadActivityInput } from './types';
 import { transformLeadFromSupabase } from './utils';
@@ -12,7 +11,7 @@ export const getLeads = async (): Promise<Lead[]> => {
     
     if (error) throw error;
     
-    return data.map(transformLeadFromSupabase) || [];
+    return data.map(transformLeadFromSupabase).filter(Boolean) as Lead[];
   } catch (error) {
     console.error('Error fetching leads:', error);
     return [];

@@ -1,169 +1,136 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Loader2, AlertCircle, ShieldCheck, ShieldAlert, User, Check, X } from "lucide-react";
-import { checkCurrentUserStatus, grantSuperAdminToUser } from '@/services/permissions/userStatusChecker';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, Shield, UserCheck } from "lucide-react";
+import { getUserPermissions } from '@/services/users/permissions';
+import { checkUserStatus, grantSuperAdminToUser } from '@/services/permissions/userStatusChecker';
+import { supabase } from '@/integrations/supabase/client';
 
-const UserPermissionChecker: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [userStatus, setUserStatus] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
-  
-  const checkUserStatus = async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const status = await checkCurrentUserStatus();
-      setUserStatus(status);
-      
-      if (status.error) {
-        setError(status.error);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'حدث خطأ أثناء التحقق من صلاحيات المستخدم');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const handleGrantSuperAdmin = async () => {
-    if (!userStatus?.currentUserId) return;
-    
-    setIsProcessing(true);
-    
-    try {
-      const success = await grantSuperAdminToUser(userStatus.currentUserId);
-      if (success) {
-        // إعادة تحميل معلومات المستخدم بعد التحديث
-        await checkUserStatus();
-      }
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-  
+interface UserPermissionCheckerProps {
+  requiredPermission?: string;
+  children: React.ReactNode;
+  fallback?: React.ReactNode;
+}
+
+const UserPermissionChecker: React.FC<UserPermissionCheckerProps> = ({
+  requiredPermission,
+  children,
+  fallback
+}) => {
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [userPermissions, setUserPermissions] = useState<string[]>([]);
+  const [userRole, setUserRole] = useState<string>('');
+
   useEffect(() => {
-    checkUserStatus();
-  }, []);
-  
-  return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>فحص صلاحيات المستخدم</CardTitle>
-        <CardDescription>التحقق من صلاحيات المستخدم الحالي في النظام</CardDescription>
-      </CardHeader>
-      
-      <CardContent>
-        {isLoading ? (
-          <div className="flex items-center justify-center py-6">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <span className="mr-3">جاري التحقق من صلاحيات المستخدم...</span>
-          </div>
-        ) : error ? (
-          <Alert variant="destructive">
+    const checkAuth = async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (data && data.user) {
+          setUserId(data.user.id);
+          setUserEmail(data.user.email);
+          
+          // Check user status to get role
+          const userStatus = await checkUserStatus(data.user.id);
+          if (userStatus) {
+            setUserRole(userStatus.roleName);
+          }
+          
+          // Get permissions
+          if (requiredPermission) {
+            const permissions = await getUserPermissions(data.user.id);
+            setUserPermissions(permissions);
+            
+            // Check if user has the required permission or is a super_admin
+            const hasPerm = permissions.includes(requiredPermission) || userStatus?.roleName === 'super_admin';
+            setHasPermission(hasPerm);
+          } else {
+            // If no specific permission is required, allow access
+            setHasPermission(true);
+          }
+        } else {
+          setHasPermission(false);
+        }
+      } catch (error) {
+        console.error("Error checking permissions:", error);
+        setHasPermission(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [requiredPermission]);
+
+  const handleGrantSuperAdmin = async () => {
+    if (!userId) return;
+    
+    const success = await grantSuperAdminToUser(userId);
+    if (success) {
+      setUserRole('super_admin');
+      setHasPermission(true);
+    }
+  };
+
+  if (isLoading) {
+    return <div className="flex justify-center p-4">جاري التحقق من الصلاحيات...</div>;
+  }
+
+  if (hasPermission === false) {
+    return fallback || (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-red-500" />
+            غير مصرح
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert className="mb-4">
             <AlertCircle className="h-4 w-4" />
-            <AlertTitle>خطأ في التحقق</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
+            <AlertTitle>صلاحيات غير كافية</AlertTitle>
+            <AlertDescription>
+              ليس لديك الصلاحية المطلوبة للوصول إلى هذه الصفحة.
+              {requiredPermission && (
+                <p className="mt-2 text-sm">
+                  الصلاحية المطلوبة: <strong>{requiredPermission}</strong>
+                </p>
+              )}
+            </AlertDescription>
           </Alert>
-        ) : (
+          
           <div className="space-y-4">
-            <div className="flex items-center justify-between border-b pb-2">
-              <span className="font-medium">حالة المصادقة:</span>
-              <div className="flex items-center">
-                {userStatus?.isAuthenticated ? (
-                  <Badge variant="success" className="flex items-center gap-1 bg-green-100 text-green-800 hover:bg-green-200">
-                    <Check className="h-3 w-3" /> مسجل الدخول
-                  </Badge>
-                ) : (
-                  <Badge variant="destructive" className="flex items-center gap-1">
-                    <X className="h-3 w-3" /> غير مسجل الدخول
-                  </Badge>
-                )}
-              </div>
+            <div>
+              <p className="text-sm text-muted-foreground">
+                البريد الإلكتروني: {userEmail || "غير مسجل الدخول"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                الدور: {userRole || "غير معروف"}
+              </p>
             </div>
             
-            {userStatus?.isAuthenticated && (
-              <>
-                <div className="flex items-center justify-between border-b pb-2">
-                  <span className="font-medium">البريد الإلكتروني:</span>
-                  <span className="text-gray-700">{userStatus?.email || "غير معروف"}</span>
-                </div>
-                
-                <div className="flex items-center justify-between border-b pb-2">
-                  <span className="font-medium">معرف المستخدم:</span>
-                  <span className="text-gray-700 text-xs max-w-[200px] truncate">{userStatus?.currentUserId || "غير معروف"}</span>
-                </div>
-                
-                <div className="flex items-center justify-between border-b pb-2">
-                  <span className="font-medium">الدور:</span>
-                  <Badge variant="outline" className={userStatus?.isSuperAdmin ? "bg-purple-100 text-purple-800 hover:bg-purple-200" : ""}>
-                    {userStatus?.role || "غير محدد"}
-                  </Badge>
-                </div>
-                
-                <div className="flex items-center justify-between border-b pb-2">
-                  <span className="font-medium">صلاحيات سوبر أدمن:</span>
-                  <div>
-                    {userStatus?.isSuperAdmin ? (
-                      <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200 flex items-center gap-1">
-                        <ShieldCheck className="h-3 w-3" /> نعم
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        <ShieldAlert className="h-3 w-3" /> لا
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="pt-2">
-                  <h3 className="font-medium mb-2">الصلاحيات المتاحة:</h3>
-                  {userStatus?.permissions && userStatus.permissions.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {userStatus.permissions.map((perm: string, idx: number) => (
-                        <Badge key={idx} variant="outline" className="bg-blue-50 text-blue-800 hover:bg-blue-100">
-                          {perm}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-500 text-sm">لا توجد صلاحيات محددة</p>
-                  )}
-                </div>
-              </>
-            )}
+            <div className="space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleGrantSuperAdmin}
+                disabled={!userId}
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                منح صلاحية المسؤول الأعلى (للتطوير فقط)
+              </Button>
+            </div>
           </div>
-        )}
-      </CardContent>
-      
-      <CardFooter className="flex justify-between">
-        <Button 
-          variant="outline" 
-          onClick={checkUserStatus} 
-          disabled={isLoading}
-        >
-          {isLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-          تحديث البيانات
-        </Button>
-        
-        {userStatus?.isAuthenticated && !userStatus?.isSuperAdmin && (
-          <Button 
-            onClick={handleGrantSuperAdmin} 
-            disabled={isProcessing}
-            className="bg-purple-600 hover:bg-purple-700"
-          >
-            {isProcessing && <Loader2 className="ml-2 h-4 w-4 animate-spin" />}
-            منح صلاحية سوبر أدمن
-          </Button>
-        )}
-      </CardFooter>
-    </Card>
-  );
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return <>{children}</>;
 };
 
 export default UserPermissionChecker;

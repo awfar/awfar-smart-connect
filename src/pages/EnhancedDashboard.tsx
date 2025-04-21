@@ -1,155 +1,109 @@
 
-import React, { useState } from 'react';
-import StatsCards from '@/components/dashboard/StatsCards';
-import RecentActivities from '@/components/dashboard/RecentActivities';
-import { useQuery } from '@tanstack/react-query';
-import { fetchDashboardStats, fetchRecentActivities, DashboardStats } from '@/services/dashboardService';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import AnalyticsDashboard from '@/components/dashboard/AnalyticsDashboard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarIcon, LineChart, BarChart4, ListChecks } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import StatsCards from "@/components/dashboard/StatsCards";
+import RecentActivities from "@/components/dashboard/RecentActivities";
+import { 
+  fetchDashboardData, 
+  fetchRecentActivities,
+  DashboardStats,
+  RecentActivity
+} from "@/services/dashboardService";
 
 const EnhancedDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [statsData, setStatsData] = useState<DashboardStats | null>(null);
+  const [activities, setActivities] = useState<RecentActivity[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   
-  const { data: stats, isLoading: statsLoading } = useQuery({
-    queryKey: ['dashboardStats'],
-    queryFn: fetchDashboardStats,
-  });
-
-  const { data: activities = [], isLoading: activitiesLoading } = useQuery({
-    queryKey: ['recentActivities'],
-    queryFn: fetchRecentActivities,
-  });
-
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        // Fetch dashboard stats
+        const stats = await fetchDashboardData();
+        setStatsData(stats);
+        
+        // Fetch recent activities
+        const recentActivities = await fetchRecentActivities();
+        setActivities(recentActivities || []);
+      } catch (err) {
+        console.error("Error loading dashboard data:", err);
+        setError("فشل في تحميل بيانات لوحة المعلومات");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadDashboardData();
+  }, []);
+  
   return (
-    <div className="space-y-6 p-6 rtl">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">لوحة التحكم الرئيسية</h1>
-        <span className="text-sm text-muted-foreground">
-          آخر تحديث: {new Date().toLocaleDateString('ar-SA')} {new Date().toLocaleTimeString('ar-SA')}
-        </span>
-      </div>
-      
-      <StatsCards isLoading={statsLoading} stats={stats} />
-      
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full md:w-auto grid-cols-2 md:grid-cols-4 gap-2">
-          <TabsTrigger value="overview" className="gap-2">
-            <BarChart4 className="h-4 w-4" /> نظرة عامة
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="gap-2">
-            <LineChart className="h-4 w-4" /> تحليلات
-          </TabsTrigger>
-          <TabsTrigger value="activities" className="gap-2">
-            <ListChecks className="h-4 w-4" /> النشاطات
-          </TabsTrigger>
-          <TabsTrigger value="calendar" className="gap-2">
-            <CalendarIcon className="h-4 w-4" /> التقويم
-          </TabsTrigger>
-        </TabsList>
+    <DashboardLayout>
+      <div className="container mx-auto py-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">لوحة المعلومات</h1>
+          <p className="text-muted-foreground">نظرة عامة على نشاط الأعمال والأداء</p>
+        </div>
         
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="col-span-2">
-              <CardHeader>
-                <CardTitle>نظرة عامة على النظام</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground mb-4">
-                  مرحباً بك في لوحة تحكم النظام، من هنا يمكنك متابعة وإدارة جميع الوظائف المتاحة.
-                </p>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="border p-4 rounded-md">
-                    <h3 className="font-medium mb-2">الكتالوج</h3>
-                    <p className="text-sm text-muted-foreground">إدارة المنتجات، الباقات، والفواتير</p>
-                    <div className="mt-4">
-                      <a href="/catalog-management" className="text-primary hover:underline text-sm">
-                        الانتقال إلى الكتالوج &rarr;
-                      </a>
-                    </div>
-                  </div>
-                  
-                  <div className="border p-4 rounded-md">
-                    <h3 className="font-medium mb-2">الاشتراكات</h3>
-                    <p className="text-sm text-muted-foreground">إدارة اشتراكات العملاء والباقات</p>
-                    <div className="mt-4">
-                      <a href="/subscription-management" className="text-primary hover:underline text-sm">
-                        الانتقال إلى الاشتراكات &rarr;
-                      </a>
-                    </div>
-                  </div>
-                  
-                  <div className="border p-4 rounded-md">
-                    <h3 className="font-medium mb-2">الفواتير</h3>
-                    <p className="text-sm text-muted-foreground">إدارة الفواتير والمدفوعات</p>
-                    <div className="mt-4">
-                      <a href="/invoice-management" className="text-primary hover:underline text-sm">
-                        الانتقال إلى الفواتير &rarr;
-                      </a>
-                    </div>
-                  </div>
-                  
-                  <div className="border p-4 rounded-md">
-                    <h3 className="font-medium mb-2">التقارير</h3>
-                    <p className="text-sm text-muted-foreground">عرض التقارير والإحصائيات</p>
-                    <div className="mt-4">
-                      <a href="/reports-management" className="text-primary hover:underline text-sm">
-                        الانتقال إلى التقارير &rarr;
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>النشاطات الأخيرة</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <RecentActivities 
-                  isLoading={activitiesLoading} 
-                  activities={activities.slice(0, 5)} 
-                />
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
+        {/* Stats Cards */}
+        <div className="mb-8">
+          <StatsCards data={statsData} isLoading={isLoading} />
+        </div>
         
-        <TabsContent value="analytics">
-          <AnalyticsDashboard />
-        </TabsContent>
-        
-        <TabsContent value="activities">
-          <Card>
-            <CardHeader>
-              <CardTitle>سجل النشاطات</CardTitle>
+        {/* Main Dashboard Content */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Recent Activities Section */}
+          <Card className="md:col-span-2">
+            <CardHeader className="pb-2">
+              <CardTitle>أحدث الأنشطة</CardTitle>
+              <CardDescription>آخر الإجراءات والتحديثات في النظام</CardDescription>
             </CardHeader>
             <CardContent>
               <RecentActivities 
-                isLoading={activitiesLoading} 
-                activities={activities} 
+                activities={activities && Array.isArray(activities) ? activities.slice(0, 10) : []} 
+                isLoading={isLoading} 
               />
             </CardContent>
           </Card>
-        </TabsContent>
-        
-        <TabsContent value="calendar">
+          
+          {/* System Status Section */}
           <Card>
-            <CardHeader>
-              <CardTitle>تقويم الأحداث</CardTitle>
+            <CardHeader className="pb-2">
+              <CardTitle>حالة النظام</CardTitle>
+              <CardDescription>معلومات عن حالة الخدمات والوحدات</CardDescription>
             </CardHeader>
-            <CardContent className="h-[500px]">
-              <p className="text-center text-muted-foreground py-20">
-                سيتم إضافة التقويم قريباً...
-              </p>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span>قاعدة البيانات</span>
+                  <span className="text-green-600 text-sm font-medium bg-green-100 px-2 py-1 rounded-full">متصل</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>خدمة البريد الإلكتروني</span>
+                  <span className="text-green-600 text-sm font-medium bg-green-100 px-2 py-1 rounded-full">متصل</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>واجهة برمجة التطبيقات</span>
+                  <span className="text-green-600 text-sm font-medium bg-green-100 px-2 py-1 rounded-full">متصل</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>نظام المهام الخلفي</span>
+                  <span className="text-amber-600 text-sm font-medium bg-amber-100 px-2 py-1 rounded-full">تحذير</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>الوقت المنقضي منذ آخر إعادة تشغيل</span>
+                  <span className="text-sm font-medium">3 أيام، 7 ساعات</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+        </div>
+      </div>
+    </DashboardLayout>
   );
 };
 

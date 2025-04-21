@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ChangeEvent } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,277 +10,295 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
-import { useLeadForm } from "@/hooks/leads/useLeadForm";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 import { Lead } from "@/services/leads/types";
-import { createLead, updateLead } from "@/services/leads/api";
+import { useLeadForm } from '@/hooks/leads/useLeadForm';
+import { Loader2 } from "lucide-react";
 
 export interface LeadFormProps {
   lead?: Lead;
-  onClose: () => void;
-  onSuccess: (lead?: Lead) => void;
+  onSuccess: (updatedLead?: Lead) => void;
+  onCancel?: () => void;
+  onClose?: () => void; // Added onClose prop to match expected props
+  onSubmit?: (updatedLead: Lead) => void; // Added onSubmit prop to match expected props
 }
 
-const LeadForm: React.FC<LeadFormProps> = ({ lead, onClose, onSuccess }) => {
+const LeadForm: React.FC<LeadFormProps> = ({
+  lead,
+  onSuccess,
+  onCancel,
+  onClose, // Handle both onClose and onCancel
+  onSubmit // Handle both onSubmit and onSuccess
+}) => {
   const {
     formData,
-    setFormData,
-    options,
+    errors,
     isLoading,
-    formErrors,
+    sourceOptions,
+    stageOptions,
+    countryOptions,
+    industryOptions,
+    ownerOptions,
     handleChange,
     handleSelectChange,
     validateForm,
+    saveLead
   } = useLeadForm(lead);
 
-  const [submitting, setSubmitting] = useState(false);
+  // Use either onClose or onCancel function
+  const handleCancel = () => {
+    if (onClose) onClose();
+    if (onCancel) onCancel();
+  };
 
+  // Use either onSubmit or onSuccess function
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (!validateForm()) {
+      toast.error("يرجى إدخال جميع الحقول المطلوبة");
       return;
     }
-
-    setSubmitting(true);
-
+    
     try {
-      let result: Lead | null = null;
-
-      if (lead?.id) {
-        // Update existing lead
-        result = await updateLead({
-          ...formData,
-          id: lead.id,
-        });
-      } else {
-        // Create new lead
-        result = await createLead(formData);
-      }
-
-      if (result) {
-        onSuccess(result);
-      } else {
-        throw new Error("Failed to save lead");
-      }
+      const savedLead = await saveLead();
+      if (savedLead) {
+        toast.success(`تم ${lead ? 'تحديث' : 'إضافة'} العميل المحتمل بنجاح`);
+        if (onSubmit) onSubmit(savedLead);
+        onSuccess(savedLead);
+      } 
     } catch (error) {
-      console.error("Error saving lead:", error);
-    } finally {
-      setSubmitting(false);
+      console.error('Error saving lead:', error);
+      toast.error(`فشل في ${lead ? 'تحديث' : 'إضافة'} العميل المحتمل`);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="first_name" className="block text-sm font-medium mb-1">الاسم الأول</label>
+        {/* First Name */}
+        <div className="space-y-2">
+          <Label htmlFor="first_name">الاسم الأول</Label>
           <Input
             id="first_name"
             name="first_name"
-            value={formData.first_name || ''}
+            value={formData.first_name}
             onChange={handleChange}
             placeholder="أدخل الاسم الأول"
             required
-            className="w-full"
-            error={formErrors.first_name}
+            className={errors.first_name ? "border-red-500" : ""}
           />
-          {formErrors.first_name && (
-            <p className="text-xs text-red-500 mt-1">{formErrors.first_name}</p>
+          {errors.first_name && (
+            <p className="text-sm text-red-500">{errors.first_name}</p>
           )}
         </div>
-
-        <div>
-          <label htmlFor="last_name" className="block text-sm font-medium mb-1">اسم العائلة</label>
+        
+        {/* Last Name */}
+        <div className="space-y-2">
+          <Label htmlFor="last_name">اسم العائلة</Label>
           <Input
             id="last_name"
             name="last_name"
-            value={formData.last_name || ''}
+            value={formData.last_name}
             onChange={handleChange}
             placeholder="أدخل اسم العائلة"
             required
-            className="w-full"
-            error={formErrors.last_name}
+            className={errors.last_name ? "border-red-500" : ""}
           />
-          {formErrors.last_name && (
-            <p className="text-xs text-red-500 mt-1">{formErrors.last_name}</p>
+          {errors.last_name && (
+            <p className="text-sm text-red-500">{errors.last_name}</p>
           )}
         </div>
-      </div>
-
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium mb-1">البريد الإلكتروني</label>
-        <Input
-          id="email"
-          name="email"
-          type="email"
-          value={formData.email || ''}
-          onChange={handleChange}
-          placeholder="example@company.com"
-          required
-          className="w-full"
-          error={formErrors.email}
-        />
-        {formErrors.email && (
-          <p className="text-xs text-red-500 mt-1">{formErrors.email}</p>
-        )}
-      </div>
-
-      <div>
-        <label htmlFor="phone" className="block text-sm font-medium mb-1">رقم الهاتف</label>
-        <Input
-          id="phone"
-          name="phone"
-          value={formData.phone || ''}
-          onChange={handleChange}
-          placeholder="05xxxxxxxx"
-          className="w-full"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="company" className="block text-sm font-medium mb-1">الشركة</label>
+        
+        {/* Email */}
+        <div className="space-y-2">
+          <Label htmlFor="email">البريد الإلكتروني</Label>
+          <Input
+            id="email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="example@domain.com"
+            required
+            className={errors.email ? "border-red-500" : ""}
+          />
+          {errors.email && (
+            <p className="text-sm text-red-500">{errors.email}</p>
+          )}
+        </div>
+        
+        {/* Phone */}
+        <div className="space-y-2">
+          <Label htmlFor="phone">رقم الهاتف</Label>
+          <Input
+            id="phone"
+            name="phone"
+            value={formData.phone || ''}
+            onChange={handleChange}
+            placeholder="+966 55 555 5555"
+            className=""
+          />
+        </div>
+        
+        {/* Company */}
+        <div className="space-y-2">
+          <Label htmlFor="company">الشركة</Label>
           <Input
             id="company"
             name="company"
             value={formData.company || ''}
             onChange={handleChange}
             placeholder="اسم الشركة"
-            className="w-full"
+            className=""
           />
         </div>
-
-        <div>
-          <label htmlFor="position" className="block text-sm font-medium mb-1">المنصب</label>
+        
+        {/* Position */}
+        <div className="space-y-2">
+          <Label htmlFor="position">المنصب</Label>
           <Input
             id="position"
             name="position"
             value={formData.position || ''}
             onChange={handleChange}
             placeholder="المنصب الوظيفي"
-            className="w-full"
+            className=""
           />
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="status" className="block text-sm font-medium mb-1">المرحلة</label>
+        
+        {/* Source */}
+        <div className="space-y-2">
+          <Label htmlFor="source">المصدر</Label>
           <Select
-            name="status"
-            value={formData.status || "جديد"}
-            onValueChange={(value) => handleSelectChange("status", value)}
+            value={formData.source || ''}
+            onValueChange={(value) => handleSelectChange('source', value)}
           >
-            <SelectTrigger>
-              <SelectValue placeholder="اختر المرحلة" />
-            </SelectTrigger>
-            <SelectContent>
-              {options.stages.map((stage) => (
-                <SelectItem key={stage} value={stage}>
-                  {stage}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <label htmlFor="source" className="block text-sm font-medium mb-1">المصدر</label>
-          <Select
-            name="source"
-            value={formData.source || ""}
-            onValueChange={(value) => handleSelectChange("source", value)}
-          >
-            <SelectTrigger>
+            <SelectTrigger id="source" className="">
               <SelectValue placeholder="اختر المصدر" />
             </SelectTrigger>
             <SelectContent>
-              {options.sources.map((source) => (
-                <SelectItem key={source} value={source}>
-                  {source}
+              {sourceOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="country" className="block text-sm font-medium mb-1">الدولة</label>
+        
+        {/* Stage/Status */}
+        <div className="space-y-2">
+          <Label htmlFor="status">المرحلة</Label>
           <Select
-            name="country"
-            value={formData.country || ""}
-            onValueChange={(value) => handleSelectChange("country", value)}
+            value={formData.status || ''}
+            onValueChange={(value) => handleSelectChange('status', value)}
           >
-            <SelectTrigger>
+            <SelectTrigger id="status" className="">
+              <SelectValue placeholder="اختر المرحلة" />
+            </SelectTrigger>
+            <SelectContent>
+              {stageOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {/* Country */}
+        <div className="space-y-2">
+          <Label htmlFor="country">الدولة</Label>
+          <Select
+            value={formData.country || ''}
+            onValueChange={(value) => handleSelectChange('country', value)}
+          >
+            <SelectTrigger id="country" className="">
               <SelectValue placeholder="اختر الدولة" />
             </SelectTrigger>
             <SelectContent>
-              {options.countries.map((country) => (
-                <SelectItem key={country} value={country}>
-                  {country}
+              {countryOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-
-        <div>
-          <label htmlFor="industry" className="block text-sm font-medium mb-1">القطاع</label>
+        
+        {/* Industry */}
+        <div className="space-y-2">
+          <Label htmlFor="industry">المجال</Label>
           <Select
-            name="industry"
-            value={formData.industry || ""}
-            onValueChange={(value) => handleSelectChange("industry", value)}
+            value={formData.industry || ''}
+            onValueChange={(value) => handleSelectChange('industry', value)}
           >
-            <SelectTrigger>
-              <SelectValue placeholder="اختر القطاع" />
+            <SelectTrigger id="industry" className="">
+              <SelectValue placeholder="اختر المجال" />
             </SelectTrigger>
             <SelectContent>
-              {options.industries.map((industry) => (
-                <SelectItem key={industry} value={industry}>
-                  {industry}
+              {industryOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        {/* Owner */}
+        <div className="space-y-2">
+          <Label htmlFor="assigned_to">المسؤول</Label>
+          <Select
+            value={formData.assigned_to || ''}
+            onValueChange={(value) => handleSelectChange('assigned_to', value)}
+          >
+            <SelectTrigger id="assigned_to" className="">
+              <SelectValue placeholder="اختر المسؤول" />
+            </SelectTrigger>
+            <SelectContent>
+              {ownerOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
       </div>
-
-      <div>
-        <label htmlFor="notes" className="block text-sm font-medium mb-1">ملاحظات</label>
+      
+      {/* Notes */}
+      <div className="space-y-2">
+        <Label htmlFor="notes">ملاحظات</Label>
         <Textarea
           id="notes"
           name="notes"
           value={formData.notes || ''}
           onChange={handleChange}
-          placeholder="اكتب ملاحظاتك هنا..."
-          rows={3}
-          className="w-full"
+          placeholder="أي ملاحظات إضافية..."
+          className="min-h-[100px]"
         />
       </div>
-
-      <div className="flex justify-end gap-2 pt-2">
+      
+      {/* Form Actions */}
+      <div className="flex justify-end gap-2 pt-4">
         <Button 
           type="button" 
           variant="outline" 
-          onClick={onClose}
-          disabled={submitting}
+          onClick={handleCancel}
+          disabled={isLoading}
         >
           إلغاء
         </Button>
-        
-        <Button 
-          type="submit" 
-          disabled={submitting || isLoading}
-        >
-          {submitting ? (
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               جاري الحفظ...
             </>
-          ) : lead?.id ? 'تحديث' : 'إضافة'}
+          ) : lead ? 'تحديث' : 'إضافة' }
         </Button>
       </div>
     </form>

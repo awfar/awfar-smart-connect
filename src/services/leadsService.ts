@@ -1,30 +1,16 @@
 
-// Export all functions from leads services
-export {
-  // Query functions
-  getLeads,
-  getLead,
-  
-  // Mutation functions
-  updateLead,
-  createLead,
-  deleteLead,
-  addLeadActivity,
-  completeLeadActivity,
-  getLeadActivities,
-} from './leads';
+// This is a convenience service that re-exports all leads-related functionality
 
-// Export utility functions from the proper location
-export {
-  getLeadSources,
-  getLeadStages,
-  getSalesOwners,
-  getCountries,
-  getIndustries,
-  getLeadCountByStatus,
-  getTotalLeadCount,
-  getStageColorClass,
-} from './leads/utils';
+// Re-export all from the sub-modules
+export * from './leads/api';
+export * from './leads/types';
+export * from './leads/utils';
 
-// Export types
-export type { Lead, LeadActivity } from '@/types/leads';
+// Add any additional convenience methods if needed
+export const isLeadQualified = (lead: any) => {
+  return lead?.status === 'qualified' || lead?.stage === 'qualified';
+};
+
+export const formatLeadName = (firstName: string, lastName: string) => {
+  return `${firstName} ${lastName}`;
+};
