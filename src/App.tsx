@@ -1,22 +1,20 @@
-
 import React, { useEffect } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/components/theme-provider';
-import { Toaster } from '@/components/ui/toaster';
 import { supabase } from '@/integrations/supabase/client';
 
 // Pages
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
-import Dashboard from './pages/Dashboard';
-import Leads from './pages/leads/Leads';
-import LeadProfilePage from './pages/leads/LeadProfilePage';
-import Companies from './pages/Companies';
-import Tasks from './pages/Tasks';
-import Calendar from './pages/Calendar';
-import UserManagement from './pages/UserManagement';
-import { Toaster as SonnerToaster } from "sonner";
+import Login from '@/pages/LoginPage';
+import Register from '@/pages/auth/Register';
+import Dashboard from '@/pages/Dashboard';
+import Leads from '@/pages/leads/Leads';
+import LeadProfilePage from '@/pages/leads/LeadProfilePage';
+import Companies from '@/pages/Companies';
+import Tasks from '@/pages/Tasks';
+import Calendar from '@/pages/Calendar';
+import UserManagement from '@/pages/UserManagement';
+import { Toaster } from '@/components/ui/toaster';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -55,7 +53,7 @@ function App() {
             <Route path="/dashboard/users" element={<UserManagement />} />
           </Routes>
         </BrowserRouter>
-        <SonnerToaster position="top-right" />
+        <Toaster />
       </QueryClientProvider>
     </ThemeProvider>
   );
