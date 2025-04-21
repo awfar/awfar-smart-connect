@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,22 +11,30 @@ import { LeadActivityType } from '@/services/leads/types';
 
 interface ActivityFormProps {
   leadId: string;
+  activityType?: LeadActivityType;
   onSuccess?: () => void;
   onClose?: () => void;
   title?: string;
 }
 
-const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, onSuccess, onClose, title }) => {
+const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, activityType = 'note', onSuccess, onClose, title }) => {
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm({
     defaultValues: {
-      type: 'note' as LeadActivityType,
+      type: activityType,
       description: '',
       scheduled_at: ''
     }
   });
   
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const activityType = watch('type');
+  const formActivityType = watch('type');
+
+  // Set the activity type when the activityType prop changes
+  useEffect(() => {
+    if (activityType) {
+      setValue('type', activityType);
+    }
+  }, [activityType, setValue]);
 
   const onSubmit = async (data: any) => {
     try {
@@ -57,7 +65,7 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, onSuccess, onClose,
       <div>
         <label className="text-sm font-medium">نوع النشاط</label>
         <Select 
-          defaultValue="note"
+          defaultValue={activityType}
           onValueChange={(value) => setValue('type', value as LeadActivityType)}
         >
           <SelectTrigger>
@@ -85,7 +93,7 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, onSuccess, onClose,
         )}
       </div>
       
-      {activityType !== 'note' && (
+      {formActivityType !== 'note' && (
         <div>
           <label className="text-sm font-medium">الموعد المجدول</label>
           <Input 

@@ -11,7 +11,7 @@ import LeadProfileInfo from '@/components/leads/profile/LeadProfileInfo';
 import LeadProfileSidebar from '@/components/leads/profile/LeadProfileSidebar';
 import LeadActivityTimeline from '@/components/leads/profile/LeadActivityTimeline';
 import LeadRelatedRecords from '@/components/leads/profile/LeadRelatedRecords';
-import { Lead } from '@/services/leads/types';
+import { Lead } from '@/types/leads';
 import { LeadActivity } from '@/types/leads';
 import { Separator } from '@/components/ui/separator';
 import DeleteLeadDialog from '@/components/leads/dialogs/DeleteLeadDialog';
@@ -33,7 +33,7 @@ const LeadProfilePage: React.FC = () => {
   const [showAddActivityDialog, setShowAddActivityDialog] = useState(false);
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
   const [showAddAppointmentDialog, setShowAddAppointmentDialog] = useState(false);
-  const [activityType, setActivityType] = useState<'note' | 'call' | 'email' | 'meeting' | 'whatsapp'>('note');
+  const [activityType, setActivityType] = useState<'note' | 'call' | 'email' | 'meeting' | 'task' | 'whatsapp'>('note');
 
   const {
     lead,
@@ -59,7 +59,7 @@ const LeadProfilePage: React.FC = () => {
       fetchTasks();
       fetchAppointments();
     }
-  }, [id]);
+  }, [id, fetchLead, fetchActivities, fetchTasks, fetchAppointments]);
 
   if (isLoading) {
     return (
@@ -200,7 +200,7 @@ const LeadProfilePage: React.FC = () => {
                 leadId={lead.id}
                 tasks={tasks}
                 appointments={appointments}
-                deals={deals}
+                deals={deals || []}
               />
             </TabsContent>
           </Tabs>
@@ -214,8 +214,8 @@ const LeadProfilePage: React.FC = () => {
 
       {/* Dialogs */}
       <DeleteLeadDialog 
-        open={showDeleteDialog} 
-        onClose={() => setShowDeleteDialog(false)}
+        isOpen={showDeleteDialog} 
+        onOpenChange={setShowDeleteDialog}
         onConfirm={handleDelete}
         leadName={`${lead.first_name} ${lead.last_name}`}
       />
