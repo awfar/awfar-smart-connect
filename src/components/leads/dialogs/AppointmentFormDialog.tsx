@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
 import { Loader2 } from 'lucide-react';
-import DatePicker from "@/components/ui/date-picker";
+import { DatePicker } from "@/components/ui/date-picker"; // Fixed import
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { format, addHours } from 'date-fns';

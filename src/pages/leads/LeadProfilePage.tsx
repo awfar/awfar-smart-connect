@@ -145,7 +145,9 @@ const LeadProfilePage: React.FC = () => {
         leadId={lead.id}
         activityType={activityType}
         onSuccess={(activity) => {
-          handleAddActivity(activity as any);
+          if (activity) {
+            handleAddActivity(activity as any);
+          }
           refetchAllData();
         }}
       />

@@ -9,12 +9,12 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import Dashboard from './pages/Dashboard';
 import Leads from './pages/leads/Leads';
-import LeadProfilePage from './pages/leads/LeadProfilePage'; // Import the new page
+import LeadProfilePage from './pages/leads/LeadProfilePage';
 import Companies from './pages/CompaniesManagement';
 import Tasks from './pages/TasksManagement';
 import Calendar from './pages/Calendar';
 import UserManagement from './pages/UserManagement';
-import { Sonner } from 'sonner';
+import { Toaster } from 'sonner';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -53,7 +53,7 @@ function App() {
             <Route path="/dashboard/users" element={<UserManagement />} />
           </Routes>
         </BrowserRouter>
-        <Sonner position="top-right" />
+        <Toaster position="top-right" />
       </QueryClientProvider>
     </ThemeProvider>
   );

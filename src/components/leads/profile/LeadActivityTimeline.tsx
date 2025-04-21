@@ -107,6 +107,29 @@ const LeadActivityTimeline: React.FC<LeadActivityTimelineProps> = ({
     return '؟';
   };
 
+  // Get display name for the creator
+  const getCreatorDisplayName = (created_by: any): string => {
+    if (!created_by) return 'مستخدم النظام';
+    
+    if (typeof created_by === 'string') {
+      return 'مستخدم النظام';
+    }
+    
+    if (created_by.profiles) {
+      const firstName = created_by.profiles.first_name || '';
+      const lastName = created_by.profiles.last_name || '';
+      return `${firstName} ${lastName}`.trim() || 'مستخدم النظام';
+    }
+    
+    if (created_by.first_name) {
+      const firstName = created_by.first_name || '';
+      const lastName = created_by.last_name || '';
+      return `${firstName} ${lastName}`.trim() || 'مستخدم النظام';
+    }
+    
+    return 'مستخدم النظام';
+  };
+
   if (isLoading) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
@@ -160,11 +183,7 @@ const LeadActivityTimeline: React.FC<LeadActivityTimelineProps> = ({
                       </Avatar>
                       
                       <span className="font-medium">
-                        {typeof activity.created_by === 'object' && 'first_name' in activity.created_by 
-                          ? `${activity.created_by.first_name || ''} ${activity.created_by.last_name || ''}`
-                          : (typeof activity.created_by === 'object' && 'profiles' in activity.created_by && activity.created_by.profiles
-                            ? `${activity.created_by.profiles.first_name || ''} ${activity.created_by.profiles.last_name || ''}`
-                            : 'مستخدم النظام')}
+                        {getCreatorDisplayName(activity.created_by)}
                       </span>
                       
                       <Badge variant="outline">

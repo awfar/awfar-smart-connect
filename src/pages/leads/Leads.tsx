@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
@@ -23,7 +22,7 @@ import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getStageColorClass } from '@/services/leads/utils';
 import { format } from 'date-fns';
-import { LeadForm } from '@/components/leads/LeadForm';
+import LeadForm from '@/components/leads/LeadForm';
 
 const Leads: React.FC = () => {
   const navigate = useNavigate();
@@ -102,7 +101,6 @@ const Leads: React.FC = () => {
         <div className="bg-muted/40 p-4 rounded-lg mb-6">
           <h2 className="font-medium mb-2">خيارات التصفية</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Filter options will go here */}
             <div className="text-center text-muted-foreground">
               سيتم إضافة خيارات تصفية قريباً
             </div>

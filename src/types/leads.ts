@@ -10,19 +10,19 @@ export interface Lead {
   position?: string;
   country?: string;
   industry?: string;
-  status: string; // Changed from optional to required to match services/leads/types.ts
-  stage?: string; // Added to match references in code
+  status: string;
+  stage?: string;
   source?: string;
   notes?: string;
-  created_at: string; // Changed from required to required
-  updated_at: string; // Changed from required to required
+  created_at: string;
+  updated_at: string;
   assigned_to?: string;
   owner?: Owner;
-  avatar_url?: string; // Added to match references in code
+  avatar_url?: string;
 }
 
 export interface Owner {
-  id?: string;
+  id: string; // Make id required to match with services/leads/types.ts
   name?: string;
   avatar?: string;
   initials?: string;
