@@ -1,41 +1,73 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DashboardStats } from '@/services/dashboardService';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Users, Target, CreditCard, CheckCircle, Clock, Calendar, MessageSquare, TrendingUp
-} from 'lucide-react';
+
+import { Card, CardContent } from "@/components/ui/card";
+import { BarChart, Contact, DollarSign, Users } from "lucide-react";
+import { DashboardStats } from "@/services/dashboardService";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface StatsCardsProps {
-  data: DashboardStats | null;
   isLoading: boolean;
+  stats?: DashboardStats;
 }
 
-const StatsCards: React.FC<StatsCardsProps> = ({ data, isLoading }) => {
-  const formatNumber = (num: number): string => {
-    return num.toLocaleString('ar-SA');
-  };
+const StatsCards = ({ isLoading, stats }: StatsCardsProps) => {
+  const items = [
+    {
+      title: "إجمالي المبيعات",
+      icon: DollarSign,
+      value: stats?.totalSales || "0",
+      description: "مقارنة بالشهر السابق",
+      change: stats?.salesChange || "+0%",
+      trend: "up",
+      color: "bg-gradient-to-br from-blue-100 via-blue-50 to-white",
+      iconColor: "bg-blue-600 text-white",
+      borderColor: "border-blue-200"
+    },
+    {
+      title: "العملاء المحتملين الجدد",
+      icon: Users,
+      value: stats?.newLeads || "0",
+      description: "في هذا الشهر",
+      change: stats?.leadsChange || "+0%",
+      trend: "up",
+      color: "bg-gradient-to-br from-green-100 via-green-50 to-white",
+      iconColor: "bg-green-600 text-white",
+      borderColor: "border-green-200"
+    },
+    {
+      title: "معدل التحويل",
+      icon: BarChart,
+      value: stats?.conversionRate || "0%",
+      description: "العملاء المحولين من العملاء المحتملين",
+      change: stats?.conversionChange || "+0%",
+      trend: "up",
+      color: "bg-gradient-to-br from-purple-100 via-purple-50 to-white",
+      iconColor: "bg-purple-600 text-white",
+      borderColor: "border-purple-200"
+    },
+    {
+      title: "التذاكر النشطة",
+      icon: Contact,
+      value: stats?.activeTickets || "0",
+      description: "تذاكر تحتاج إلى معالجة",
+      change: stats?.ticketsChange || "+0%",
+      trend: "down",
+      color: "bg-gradient-to-br from-amber-100 via-amber-50 to-white",
+      iconColor: "bg-amber-600 text-white",
+      borderColor: "border-amber-200"
+    },
+  ];
 
-  const formatCurrency = (num: number): string => {
-    return `${formatNumber(num)} ريال`;
-  };
-
-  const formatPercentage = (value: number): string => {
-    return `${value.toFixed(1)}%`;
-  };
-
-  // If loading, show skeleton cards
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        {[...Array(8)].map((_, i) => (
-          <Card key={i}>
-            <CardHeader className="pb-2">
-              <Skeleton className="h-4 w-20" />
-            </CardHeader>
-            <CardContent>
-              <Skeleton className="h-7 w-24 mb-2" />
-              <Skeleton className="h-4 w-16" />
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i} className="overflow-hidden shadow-md border-0">
+            <CardContent className="p-0">
+              <div className="p-6 flex flex-col gap-2">
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-8 w-1/3" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -43,144 +75,32 @@ const StatsCards: React.FC<StatsCardsProps> = ({ data, isLoading }) => {
     );
   }
 
-  // If data is null, show empty state
-  if (!data) {
-    return (
-      <Card className="p-6 text-center">
-        <p className="text-muted-foreground">فشل في تحميل بيانات الإحصائيات</p>
-      </Card>
-    );
-  }
-
-  // Calculate derived stats
-  const leadConversionRate = data.totalLeads > 0 ? (data.qualifiedLeads / data.totalLeads) * 100 : 0;
-  const taskCompletionRate = data.totalTasks > 0 ? (data.completedTasks / data.totalTasks) * 100 : 0;
-
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-      {/* Lead Stats */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            العملاء المحتملين
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-bold">{formatNumber(data.totalLeads)}</p>
-          <p className="text-sm text-muted-foreground">
-            {data.newLeadsThisMonth} جديد هذا الشهر
-          </p>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <Target className="h-4 w-4" />
-            نسبة التحويل
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-bold">{formatPercentage(leadConversionRate)}</p>
-          <p className="text-sm text-muted-foreground">
-            {formatNumber(data.qualifiedLeads)} عميل مؤهل
-          </p>
-        </CardContent>
-      </Card>
-      
-      {/* Deal Stats */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <CreditCard className="h-4 w-4" />
-            الصفقات
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-bold">{formatNumber(data.totalDeals)}</p>
-          <p className="text-sm text-muted-foreground">
-            متوسط القيمة: {formatCurrency(data.avgDealValue)}
-          </p>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            معدل الإغلاق
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-bold">27%</p>
-          <p className="text-sm text-muted-foreground">
-            ارتفاع 5% عن الشهر السابق
-          </p>
-        </CardContent>
-      </Card>
-      
-      {/* Task Stats */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <CheckCircle className="h-4 w-4" />
-            المهام المكتملة
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-bold">{formatNumber(data.completedTasks)}</p>
-          <p className="text-sm text-muted-foreground">
-            من أصل {formatNumber(data.totalTasks)} مهمة
-          </p>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            معدل إنجاز المهام
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-bold">{formatPercentage(taskCompletionRate)}</p>
-          <p className="text-sm text-muted-foreground">
-            {formatNumber(data.pendingTasks)} مهمة قيد التنفيذ
-          </p>
-        </CardContent>
-      </Card>
-      
-      {/* Other Stats */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            المواعيد القادمة
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-bold">{formatNumber(data.upcomingAppointments)}</p>
-          <p className="text-sm text-muted-foreground">
-            في الأسبوع القادم
-          </p>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-            <MessageSquare className="h-4 w-4" />
-            التذاكر المفتوحة
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-2xl font-bold">{formatNumber(data.openTickets)}</p>
-          <p className="text-sm text-muted-foreground">
-            تحتاج إلى معالجة
-          </p>
-        </CardContent>
-      </Card>
+    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      {items.map((item, index) => (
+        <Card 
+          key={index} 
+          className={`overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ${item.color} border ${item.borderColor}`}
+        >
+          <CardContent className="p-6">
+            <div className="flex justify-between items-start">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-gray-700">{item.title}</p>
+                <h3 className="text-2xl font-bold text-gray-900">{item.value}</h3>
+                <div className="flex items-center text-xs">
+                  <span className="opacity-70">{item.description}</span>
+                  <span className={`mr-2 font-medium ${item.trend === "up" ? "text-green-600" : "text-red-600"}`}>
+                    {item.change}
+                  </span>
+                </div>
+              </div>
+              <div className={`p-3 rounded-full ${item.iconColor} shadow-md`}>
+                <item.icon className="h-5 w-5" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 };

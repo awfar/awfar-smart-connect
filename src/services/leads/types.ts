@@ -7,49 +7,48 @@ export interface Lead {
   phone?: string;
   company?: string;
   position?: string;
-  country?: string;
   industry?: string;
+  country?: string;
+  status: string;
+  stage?: string; // Add stage property to match other references
   source?: string;
-  status: string; // Changed from optional to required to match types/leads.ts
-  stage?: string;
   notes?: string;
-  created_at: string; // Changed to required to match types/leads.ts
-  updated_at: string; // Changed to required to match types/leads.ts
   assigned_to?: string;
+  created_at: string; // Make created_at required to match types/leads.ts
+  updated_at: string; // Make updated_at required to match types/leads.ts
+  avatar_url?: string; // Add avatar_url property to match references
   owner?: {
-    id?: string;
+    id: string;
+    first_name?: string;
+    last_name?: string;
     name?: string;
     avatar?: string;
     initials?: string;
-    first_name?: string;
-    last_name?: string;
   };
-  avatar_url?: string;
 }
 
-export interface LeadActivityInput {
-  lead_id: string;
-  type: 'call' | 'email' | 'meeting' | 'note' | 'task' | 'whatsapp';
-  description: string;
-  scheduled_at?: string;
-  created_by?: string;
-}
+export type LeadActivityType = "note" | "call" | "meeting" | "email" | "task" | "whatsapp" | "update" | "create" | "delete";
 
-// Modified to not extend LeadActivityInput to avoid type incompatibility
 export interface LeadActivity {
   id: string;
   lead_id: string;
-  type: 'note' | 'call' | 'meeting' | 'email' | 'task' | 'whatsapp' | 'update' | 'create' | 'delete';
+  type: LeadActivityType;
   description: string;
-  scheduled_at?: string | null;
-  completed_at?: string | null;
-  created_at: string;
-  created_by: string | {
+  created_at?: string;
+  scheduled_at?: string;
+  completed_at?: string;
+  created_by?: string | {
     first_name: string;
     last_name: string;
   };
-  profiles?: {
-    first_name?: string;
-    last_name?: string;
-  };
+}
+
+// Define LeadActivityInput interface to avoid type errors when creating activities
+export interface LeadActivityInput {
+  lead_id: string;
+  type: LeadActivityType;
+  description: string;
+  scheduled_at?: string;
+  completed_at?: string;
+  created_by?: string;
 }

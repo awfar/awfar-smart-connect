@@ -1,207 +1,119 @@
+import { supabase } from "@/integrations/supabase/client";
+import { Task, TaskCreateInput, castToTask } from "./types";
+import { toast } from "sonner";
 
-import { supabase } from '@/integrations/supabase/client';
-
-// Task entity type definition
-export interface Task {
-  id: string;
-  title: string;
-  description?: string;
-  status: 'pending' | 'in_progress' | 'completed' | 'canceled';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  due_date?: string | null;
-  created_at: string;
-  updated_at: string;
-  created_by?: string;
-  assigned_to?: string;
-  assigned_to_name?: string;
-  lead_id?: string | null;
-  related_to?: any;
-}
-
-// Task filtering options
-export interface TaskQueryOptions {
+export const getTasks = async (filterOptions?: {
   status?: string;
-  priority?: string;
-  lead_id?: string;
   assigned_to?: string;
-  due_date_from?: string;
-  due_date_to?: string;
-  search?: string;
-}
-
-// Get all tasks with optional filtering
-export const getTasks = async (options?: TaskQueryOptions): Promise<Task[]> => {
+  lead_id?: string;
+}): Promise<Task[]> => {
   try {
-    let query = supabase.from('tasks').select('*');
+    let query = supabase
+      .from('tasks')
+      .select('*')
+      .order('due_date', { ascending: true });
     
-    // Apply filters if provided
-    if (options) {
-      if (options.status) query = query.eq('status', options.status);
-      if (options.priority) query = query.eq('priority', options.priority);
-      if (options.lead_id) query = query.eq('lead_id', options.lead_id);
-      if (options.assigned_to) query = query.eq('assigned_to', options.assigned_to);
-      
-      if (options.due_date_from) {
-        query = query.gte('due_date', options.due_date_from);
+    if (filterOptions) {
+      if (filterOptions.status) {
+        query = query.eq('status', filterOptions.status);
       }
-      
-      if (options.due_date_to) {
-        query = query.lte('due_date', options.due_date_to);
+      if (filterOptions.assigned_to) {
+        query = query.eq('assigned_to', filterOptions.assigned_to);
       }
-      
-      if (options.search) {
-        query = query.or(`title.ilike.%${options.search}%,description.ilike.%${options.search}%`);
+      if (filterOptions.lead_id) {
+        query = query.eq('lead_id', filterOptions.lead_id);
       }
     }
-    
-    // Order by due date
-    query = query.order('due_date', { ascending: true, nullsLast: true });
-    
+
     const { data, error } = await query;
-    
     if (error) throw error;
     
-    return data || [];
+    return Array.isArray(data) ? data.map(castToTask) : [];
   } catch (error) {
-    console.error('Error fetching tasks:', error);
+    console.error("Error fetching tasks:", error);
+    toast.error("حدث خطأ أثناء تحميل المهام");
     return [];
   }
 };
 
-// Get a single task by ID
-export const getTask = async (id: string): Promise<Task | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('tasks')
-      .select('*')
-      .eq('id', id)
-      .single();
-    
-    if (error) throw error;
-    
-    return data;
-  } catch (error) {
-    console.error(`Error fetching task ${id}:`, error);
-    return null;
-  }
+export const getTasksByLeadId = async (leadId: string): Promise<Task[]> => {
+  return getTasks({ lead_id: leadId });
 };
 
-// Create a new task
-export const createTask = async (task: Partial<Task>): Promise<Task | null> => {
+export const createTask = async (taskData: TaskCreateInput): Promise<Task> => {
   try {
     const { data, error } = await supabase
       .from('tasks')
-      .insert([task])
+      .insert({
+        ...taskData,
+        status: taskData.status || 'pending'
+      })
       .select()
       .single();
-    
+
     if (error) throw error;
-    
-    return data;
+
+    toast.success("تم إنشاء المهمة بنجاح");
+    return castToTask(data);
   } catch (error) {
-    console.error('Error creating task:', error);
-    return null;
+    console.error("Error creating task:", error);
+    toast.error("حدث خطأ أثناء إنشاء المهمة");
+    throw error;
   }
 };
 
-// Update an existing task
-export const updateTask = async (task: Partial<Task> & { id: string }): Promise<Task | null> => {
+export const updateTask = async (taskId: string, taskData: Partial<Task>): Promise<Task> => {
   try {
     const { data, error } = await supabase
       .from('tasks')
-      .update(task)
-      .eq('id', task.id)
+      .update(taskData)
+      .eq('id', taskId)
       .select()
       .single();
-    
+
     if (error) throw error;
-    
-    return data;
+
+    toast.success("تم تحديث المهمة بنجاح");
+    return castToTask(data);
   } catch (error) {
-    console.error(`Error updating task ${task.id}:`, error);
-    return null;
+    console.error("Error updating task:", error);
+    toast.error("حدث خطأ أثناء تحديث المهمة");
+    throw error;
   }
 };
 
-// Delete a task
-export const deleteTask = async (id: string): Promise<boolean> => {
+export const deleteTask = async (taskId: string): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('tasks')
       .delete()
-      .eq('id', id);
-    
+      .eq('id', taskId);
+
     if (error) throw error;
-    
+
+    toast.success("تم حذف المهمة بنجاح");
     return true;
   } catch (error) {
-    console.error(`Error deleting task ${id}:`, error);
+    console.error("Error deleting task:", error);
+    toast.error("حدث خطأ أثناء حذف المهمة");
     return false;
   }
 };
 
-// Mark a task as completed
-export const completeTask = async (id: string): Promise<boolean> => {
+export const completeTask = async (taskId: string): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('tasks')
-      .update({
-        status: 'completed',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', id);
-    
+      .update({ status: 'completed' })
+      .eq('id', taskId);
+
     if (error) throw error;
-    
+
+    toast.success("تم إكمال المهمة بنجاح");
     return true;
   } catch (error) {
-    console.error(`Error completing task ${id}:`, error);
+    console.error("Error completing task:", error);
+    toast.error("حدث خطأ أثناء إكمال المهمة");
     return false;
-  }
-};
-
-// Get counts for dashboard stats
-export const getTaskCounts = async (): Promise<{
-  total: number;
-  completed: number;
-  pending: number;
-  overdue: number;
-}> => {
-  try {
-    // Get total and status counts
-    const { data: statusData, error: statusError } = await supabase
-      .from('tasks')
-      .select('status', { count: 'exact', head: false })
-      .eq('status', 'completed');
-    
-    const { data: totalData, error: totalError } = await supabase
-      .from('tasks')
-      .select('status', { count: 'exact', head: true });
-    
-    const { data: pendingData, error: pendingError } = await supabase
-      .from('tasks')
-      .select('status', { count: 'exact', head: false })
-      .in('status', ['pending', 'in_progress']);
-    
-    // Get overdue tasks (due date in the past and not completed)
-    const { data: overdueData, error: overdueError } = await supabase
-      .from('tasks')
-      .select('status', { count: 'exact', head: false })
-      .lt('due_date', new Date().toISOString())
-      .neq('status', 'completed');
-    
-    if (statusError || totalError || pendingError || overdueError) {
-      throw new Error('Error fetching task counts');
-    }
-    
-    return {
-      total: totalData?.length || 0,
-      completed: statusData?.length || 0,
-      pending: pendingData?.length || 0,
-      overdue: overdueData?.length || 0,
-    };
-  } catch (error) {
-    console.error('Error fetching task counts:', error);
-    return { total: 0, completed: 0, pending: 0, overdue: 0 };
   }
 };

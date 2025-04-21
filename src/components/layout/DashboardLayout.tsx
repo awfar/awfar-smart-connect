@@ -1,92 +1,82 @@
 
-import React, { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
+import AuthButton from './AuthButton';
 import { 
-  Users, Building2, ListTodo, Calendar, Settings, LayoutDashboard, 
-  FileSpreadsheet, PhoneCall 
-} from 'lucide-react';
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from '@/contexts/AuthContext';
+import { LogOut, User, Bell, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
-interface DashboardLayoutProps {
-  children: ReactNode;
-}
+const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
+  const { isLoggedIn, user, logout } = useAuth();
+  const navigate = useNavigate();
 
-const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col">
-      <header className="bg-white dark:bg-gray-800 shadow-sm border-b">
+    <div className="min-h-screen bg-gray-100 flex flex-col dark:bg-gray-900 rtl">
+      <div className="bg-white dark:bg-gray-800 shadow-sm border-b">
         <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <h1 className="text-xl font-bold">أوفر CRM</h1>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600 dark:text-gray-300">مرحباً، المستخدم</span>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">لوحة التحكم</h1>
+          <div className="flex items-center gap-4">
+            {!isLoggedIn ? (
+              <AuthButton />
+            ) : (
+              <>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full"></span>
+                </Button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative rounded-full h-8 w-8 p-0">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src="/placeholder.svg" />
+                        <AvatarFallback>
+                          {user?.email ? user.email.substring(0, 2).toUpperCase() : "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>
+                      {user?.email || "المستخدم"}
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate('/dashboard/settings')}>
+                      <Settings className="ml-2 h-4 w-4" />
+                      الإعدادات
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/dashboard/profile')}>
+                      <User className="ml-2 h-4 w-4" />
+                      الملف الشخصي
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-600">
+                      <LogOut className="ml-2 h-4 w-4" />
+                      تسجيل الخروج
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            )}
           </div>
         </div>
-      </header>
-      
-      <div className="flex flex-1">
-        <aside className="w-64 bg-white dark:bg-gray-800 shadow-sm border-r hidden md:block">
-          <nav className="py-4">
-            <ul className="space-y-1 px-2">
-              <li>
-                <Link
-                  to="/dashboard"
-                  className="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <LayoutDashboard size={18} />
-                  <span>لوحة التحكم</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/dashboard/leads"
-                  className="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <Users size={18} />
-                  <span>العملاء المحتملين</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/dashboard/companies"
-                  className="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <Building2 size={18} />
-                  <span>الشركات</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/dashboard/tasks"
-                  className="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <ListTodo size={18} />
-                  <span>المهام</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/dashboard/calendar"
-                  className="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <Calendar size={18} />
-                  <span>التقويم</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/dashboard/users"
-                  className="flex items-center gap-3 px-3 py-2 text-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-                >
-                  <Settings size={18} />
-                  <span>إدارة المستخدمين</span>
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </aside>
-
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
+      </div>
+      <div className="flex-1 container mx-auto px-4 py-6">
+        {children}
       </div>
     </div>
   );

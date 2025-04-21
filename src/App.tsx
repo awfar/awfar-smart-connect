@@ -1,20 +1,22 @@
+
 import React, { useEffect } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/toaster';
 import { supabase } from '@/integrations/supabase/client';
 
 // Pages
-import Login from '@/pages/LoginPage';
-import Register from '@/pages/auth/Register';
-import Dashboard from '@/pages/Dashboard';
-import Leads from '@/pages/leads/Leads';
-import LeadProfilePage from '@/pages/leads/LeadProfilePage';
-import Companies from '@/pages/Companies';
-import Tasks from '@/pages/Tasks';
-import Calendar from '@/pages/Calendar';
-import UserManagement from '@/pages/UserManagement';
-import { Toaster } from '@/components/ui/toaster';
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+import Dashboard from './pages/Dashboard';
+import Leads from './pages/leads/Leads';
+import LeadProfilePage from './pages/leads/LeadProfilePage'; // Import the new page
+import Companies from './pages/Companies';
+import Tasks from './pages/Tasks';
+import Calendar from './pages/Calendar';
+import UserManagement from './pages/UserManagement';
+import { Sonner } from 'sonner';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -46,14 +48,14 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/leads" element={<Leads />} />
-            <Route path="/dashboard/leads/:id" element={<LeadProfilePage />} />
+            <Route path="/dashboard/leads/:id" element={<LeadProfilePage />} /> {/* Add the new route */}
             <Route path="/dashboard/companies" element={<Companies />} />
             <Route path="/dashboard/tasks" element={<Tasks />} />
             <Route path="/dashboard/calendar" element={<Calendar />} />
             <Route path="/dashboard/users" element={<UserManagement />} />
           </Routes>
         </BrowserRouter>
-        <Toaster />
+        <Sonner position="top-right" />
       </QueryClientProvider>
     </ThemeProvider>
   );

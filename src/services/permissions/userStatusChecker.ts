@@ -2,106 +2,128 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Model for user status information
-export interface UserStatus {
-  userId: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  roleName: string;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-/**
- * Checks the current user's status from the database
- */
-export const checkUserStatus = async (userId: string): Promise<UserStatus | null> => {
+// التحقق من حالة المستخدم الحالي
+export const checkCurrentUserStatus = async (): Promise<{
+  isAuthenticated: boolean;
+  isSuperAdmin: boolean;
+  currentUserId: string | null;
+  email: string | null;
+  role: string | null;
+  permissions: string[];
+  error?: string;
+}> => {
   try {
-    const { data: userData, error } = await supabase
+    // التحقق من حالة المصادقة
+    const { data: authData, error: authError } = await supabase.auth.getSession();
+    
+    if (authError) {
+      console.error("خطأ في التحقق من جلسة المستخدم:", authError);
+      return {
+        isAuthenticated: false,
+        isSuperAdmin: false,
+        currentUserId: null,
+        email: null,
+        role: null,
+        permissions: [],
+        error: `خطأ في المصادقة: ${authError.message}`
+      };
+    }
+    
+    const isAuthenticated = !!authData.session;
+    
+    if (!isAuthenticated) {
+      return {
+        isAuthenticated: false,
+        isSuperAdmin: false,
+        currentUserId: null,
+        email: null,
+        role: null,
+        permissions: [],
+        error: "المستخدم غير مسجل الدخول"
+      };
+    }
+    
+    const currentUserId = authData.session?.user?.id || null;
+    const email = authData.session?.user?.email || null;
+    
+    // الحصول على معلومات الملف الشخصي للمستخدم
+    const { data: profileData, error: profileError } = await supabase
       .from('profiles')
-      .select(`
-        id,
-        email,
-        first_name,
-        last_name,
-        role (
-          name
-        ),
-        status,
-        created_at,
-        updated_at
-      `)
-      .eq('id', userId)
+      .select('role')
+      .eq('id', currentUserId)
       .single();
-
-    if (error) {
-      console.error("Error fetching user status:", error);
-      return null;
+      
+    if (profileError) {
+      console.error("خطأ في جلب معلومات الملف الشخصي:", profileError);
+      return {
+        isAuthenticated: true,
+        isSuperAdmin: false,
+        currentUserId,
+        email,
+        role: null,
+        permissions: [],
+        error: `خطأ في جلب الملف الشخصي: ${profileError.message}`
+      };
     }
-
-    if (!userData) {
-      console.log("User not found:", userId);
-      return null;
-    }
-
-    // Extract role name safely
-    let roleName = 'user'; // default role
-    if (userData.role) {
-      if (typeof userData.role === 'string') {
-        roleName = userData.role;
-      } else if (userData.role && typeof userData.role === 'object') {
-        // Handle both array and object formats safely
-        if (Array.isArray(userData.role) && userData.role[0]?.name) {
-          roleName = userData.role[0].name;
-        } else if (userData.role.name) {
-          roleName = userData.role.name;
-        }
+    
+    const role = profileData?.role || null;
+    const isSuperAdmin = role === 'super_admin';
+    
+    // الحصول على صلاحيات المستخدم
+    let permissions: string[] = [];
+    
+    try {
+      // استخدام دالة قاعدة البيانات للتحقق ما إذا كان المستخدم سوبر ادمن
+      const { data: isSuperAdminCheck, error: superAdminError } = await supabase
+        .rpc('is_super_admin', { user_id: currentUserId });
+        
+      if (superAdminError) throw superAdminError;
+      
+      // الحصول على صلاحيات المستخدم بناءً على دوره
+      const { data: permissionsData, error: permissionsError } = await supabase
+        .from('role_permissions')
+        .select(`
+          permissions (name)
+        `)
+        .eq('role', role);
+      
+      if (permissionsError) throw permissionsError;
+      
+      permissions = permissionsData?.map(item => item.permissions?.name).filter(Boolean) || [];
+      
+      if (isSuperAdminCheck) {
+        // إذا كان المستخدم سوبر ادمن، نضيف صلاحية خاصة
+        permissions.push('admin.access');
       }
+    } catch (permError) {
+      console.error("خطأ في جلب صلاحيات المستخدم:", permError);
     }
-
-    const transformedData: UserStatus = {
-      userId: userData.id,
-      email: userData.email || '',
-      firstName: userData.first_name || '',
-      lastName: userData.last_name || '',
-      roleName: roleName,
-      status: userData.status || 'inactive',
-      createdAt: userData.created_at || '',
-      updatedAt: userData.updated_at || '',
+    
+    return {
+      isAuthenticated,
+      isSuperAdmin,
+      currentUserId,
+      email,
+      role,
+      permissions,
+      error: undefined
     };
-
-    return transformedData;
+    
   } catch (error) {
-    console.error("Unexpected error checking user status:", error);
-    return null;
+    console.error("خطأ في التحقق من حالة المستخدم:", error);
+    return {
+      isAuthenticated: false,
+      isSuperAdmin: false,
+      currentUserId: null,
+      email: null,
+      role: null,
+      permissions: [],
+      error: `خطأ في التحقق: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`
+    };
   }
 };
 
-/**
- * Function to check the current authenticated user's status
- * Useful for UI components that need to know about the current user
- */
-export const checkCurrentUserStatus = async (): Promise<UserStatus | null> => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      console.log("No authenticated user found");
-      return null;
-    }
-    
-    return checkUserStatus(user.id);
-  } catch (error) {
-    console.error("Error checking current user status:", error);
-    return null;
-  }
-};
-
-/**
- * Grants super_admin role to a user (for development purposes)
- */
+// إضافة دور سوبر ادمن للمستخدم الحالي
 export const grantSuperAdminToUser = async (userId: string): Promise<boolean> => {
   try {
     const { error } = await supabase
@@ -109,17 +131,13 @@ export const grantSuperAdminToUser = async (userId: string): Promise<boolean> =>
       .update({ role: 'super_admin' })
       .eq('id', userId);
     
-    if (error) {
-      console.error("Error granting super admin role:", error);
-      toast.error("فشل في منح صلاحية المسؤول الأعلى");
-      return false;
-    }
+    if (error) throw error;
     
-    toast.success("تم منح صلاحية المسؤول الأعلى بنجاح");
+    toast.success("تم منح صلاحيات السوبر ادمن بنجاح");
     return true;
   } catch (error) {
-    console.error("Unexpected error granting super admin role:", error);
-    toast.error("حدث خطأ غير متوقع أثناء منح الصلاحية");
+    console.error("خطأ في منح صلاحيات السوبر ادمن:", error);
+    toast.error("فشل في منح صلاحيات السوبر ادمن");
     return false;
   }
 };

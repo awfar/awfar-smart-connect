@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -433,7 +434,7 @@ const LeadProfilePage: React.FC = () => {
           </DialogHeader>
           <LeadForm
             lead={lead}
-            onSuccess={handleLeadUpdate}
+            onSubmit={handleLeadUpdate}
             onCancel={() => setIsEditDialogOpen(false)}
           />
         </DialogContent>
