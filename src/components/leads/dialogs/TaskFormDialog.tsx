@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
 import { Loader2 } from 'lucide-react';
-import { DatePicker } from "@/components/ui/date-picker"; // Fixed import
+import { DatePicker } from "@/components/ui/date-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,6 +33,7 @@ const TaskFormDialog: React.FC<TaskFormDialogProps> = ({
   onSuccess
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dueDate, setDueDate] = useState<Date | undefined>(undefined);
   const { register, handleSubmit, reset, formState: { errors }, setValue } = useForm<TaskFormData>({
     defaultValues: {
       title: '',
@@ -48,7 +49,7 @@ const TaskFormDialog: React.FC<TaskFormDialogProps> = ({
       const taskData = {
         title: data.title,
         description: data.description || null,
-        due_date: data.due_date ? data.due_date.toISOString() : null,
+        due_date: dueDate ? dueDate.toISOString() : null,
         priority: data.priority,
         lead_id: leadId,
         status: 'pending',
@@ -105,8 +106,8 @@ const TaskFormDialog: React.FC<TaskFormDialogProps> = ({
           <div className="space-y-2">
             <Label htmlFor="due_date">تاريخ الاستحقاق</Label>
             <DatePicker 
-              value={null} 
-              onChange={(date) => setValue('due_date', date)} 
+              date={dueDate}
+              onSelect={setDueDate}
               placeholder="اختر تاريخ الاستحقاق"
             />
           </div>

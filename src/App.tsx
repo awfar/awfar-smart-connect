@@ -15,6 +15,7 @@ import Tasks from './pages/TasksManagement';
 import Calendar from './pages/Calendar';
 import UserManagement from './pages/UserManagement';
 import { Toaster } from 'sonner';
+import { AuthProvider } from './contexts/AuthContext';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -38,23 +39,25 @@ function App() {
 
   return (
     <ThemeProvider defaultTheme="light">
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dashboard/leads" element={<Leads />} />
-            <Route path="/dashboard/leads/:id" element={<LeadProfilePage />} />
-            <Route path="/dashboard/companies" element={<Companies />} />
-            <Route path="/dashboard/tasks" element={<Tasks />} />
-            <Route path="/dashboard/calendar" element={<Calendar />} />
-            <Route path="/dashboard/users" element={<UserManagement />} />
-          </Routes>
-        </BrowserRouter>
-        <Toaster position="top-right" />
-      </QueryClientProvider>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboard/leads" element={<Leads />} />
+              <Route path="/dashboard/leads/:id" element={<LeadProfilePage />} />
+              <Route path="/dashboard/companies" element={<Companies />} />
+              <Route path="/dashboard/tasks" element={<Tasks />} />
+              <Route path="/dashboard/calendar" element={<Calendar />} />
+              <Route path="/dashboard/users" element={<UserManagement />} />
+            </Routes>
+          </BrowserRouter>
+          <Toaster position="top-right" />
+        </QueryClientProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

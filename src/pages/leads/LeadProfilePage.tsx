@@ -136,7 +136,7 @@ const LeadProfilePage: React.FC = () => {
         isOpen={isEditDialogOpen}
         onOpenChange={setIsEditDialogOpen}
         lead={lead}
-        onSuccess={handleEditLead}
+        onSuccess={(updatedLead) => handleEditLead(updatedLead)}
       />
 
       <ActivityFormDialog 

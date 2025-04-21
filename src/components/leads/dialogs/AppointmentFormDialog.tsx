@@ -7,10 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
 import { Loader2 } from 'lucide-react';
-import { DatePicker } from "@/components/ui/date-picker"; // Fixed import
+import { DatePicker } from "@/components/ui/date-picker";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { format, addHours } from 'date-fns';
+import { format } from 'date-fns';
 
 interface AppointmentFormDialogProps {
   isOpen: boolean;
@@ -22,9 +23,10 @@ interface AppointmentFormDialogProps {
 interface AppointmentFormData {
   title: string;
   description?: string;
-  start_date?: Date;
-  start_time?: string;
-  end_time?: string;
+  date?: Date;
+  time?: string;
+  duration?: number;
+  type: string;
   location?: string;
 }
 
@@ -35,14 +37,14 @@ const AppointmentFormDialog: React.FC<AppointmentFormDialogProps> = ({
   onSuccess
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  
-  const { register, handleSubmit, reset, formState: { errors }, setValue } = useForm<AppointmentFormData>({
+  const [date, setDate] = useState<Date | undefined>(undefined);
+  const { register, handleSubmit, reset, setValue, watch } = useForm<AppointmentFormData>({
     defaultValues: {
       title: '',
       description: '',
-      start_time: '09:00',
-      end_time: '10:00',
+      type: 'meeting',
+      time: '09:00',
+      duration: 30,
       location: ''
     }
   });
@@ -51,38 +53,25 @@ const AppointmentFormDialog: React.FC<AppointmentFormDialogProps> = ({
     try {
       setIsSubmitting(true);
       
-      if (!selectedDate) {
-        toast.error('يجب تحديد تاريخ الموعد');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Parse start time
-      const [startHour, startMinute] = data.start_time?.split(':') || ['9', '0'];
-      const startDate = new Date(selectedDate);
-      startDate.setHours(parseInt(startHour, 10), parseInt(startMinute, 10));
-
-      // Parse end time
-      const [endHour, endMinute] = data.end_time?.split(':') || ['10', '0'];
-      const endDate = new Date(selectedDate);
-      endDate.setHours(parseInt(endHour, 10), parseInt(endMinute, 10));
-
-      // Ensure end time is after start time
-      if (endDate <= startDate) {
-        toast.error('وقت الانتهاء يجب أن يكون بعد وقت البدء');
-        setIsSubmitting(false);
-        return;
+      // Create a date string with the date and time
+      let appointmentDate: string | null = null;
+      if (date && data.time) {
+        const [hours, minutes] = data.time.split(':').map(Number);
+        const dateObj = new Date(date);
+        dateObj.setHours(hours, minutes);
+        appointmentDate = dateObj.toISOString();
       }
 
       const appointmentData = {
         title: data.title,
         description: data.description || null,
-        start_time: startDate.toISOString(),
-        end_time: endDate.toISOString(),
+        scheduled_at: appointmentDate,
+        duration_minutes: data.duration || 30,
+        type: data.type,
         location: data.location || null,
-        status: 'scheduled',
-        client_id: leadId,
-        created_by: (await supabase.auth.getUser()).data.user?.id
+        lead_id: leadId,
+        created_by: (await supabase.auth.getUser()).data.user?.id,
+        status: 'scheduled'
       };
 
       const { error } = await supabase.from('appointments').insert(appointmentData);
@@ -90,6 +79,16 @@ const AppointmentFormDialog: React.FC<AppointmentFormDialogProps> = ({
       if (error) {
         throw error;
       }
+
+      // Also add as an activity
+      const activityDescription = `${data.type} "${data.title}"${data.location ? ` at ${data.location}` : ''}`;
+      await supabase.from('lead_activities').insert({
+        lead_id: leadId,
+        type: 'meeting',
+        description: activityDescription,
+        scheduled_at: appointmentDate,
+        created_by: (await supabase.auth.getUser()).data.user?.id
+      });
 
       toast.success('تم إضافة الموعد بنجاح');
       reset();
@@ -105,9 +104,9 @@ const AppointmentFormDialog: React.FC<AppointmentFormDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
-          <DialogTitle>جدولة موعد جديد</DialogTitle>
+          <DialogTitle>إضافة موعد جديد</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -118,9 +117,6 @@ const AppointmentFormDialog: React.FC<AppointmentFormDialogProps> = ({
               placeholder="أدخل عنوان الموعد" 
               {...register('title', { required: true })} 
             />
-            {errors.title && (
-              <p className="text-red-500 text-sm">عنوان الموعد مطلوب</p>
-            )}
           </div>
 
           <div className="space-y-2">
@@ -132,34 +128,54 @@ const AppointmentFormDialog: React.FC<AppointmentFormDialogProps> = ({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="date">تاريخ الموعد<span className="text-red-500">*</span></Label>
-            <DatePicker 
-              value={selectedDate} 
-              onChange={(date) => setSelectedDate(date)} 
-              placeholder="اختر تاريخ الموعد"
-            />
-            {!selectedDate && errors.start_date && (
-              <p className="text-red-500 text-sm">تاريخ الموعد مطلوب</p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="start_time">وقت البدء<span className="text-red-500">*</span></Label>
-              <Input 
-                id="start_time" 
-                type="time"
-                {...register('start_time', { required: true })} 
+              <Label htmlFor="date">التاريخ<span className="text-red-500">*</span></Label>
+              <DatePicker 
+                date={date}
+                onSelect={setDate}
+                placeholder="اختر التاريخ"
               />
             </div>
+            
             <div className="space-y-2">
-              <Label htmlFor="end_time">وقت الانتهاء<span className="text-red-500">*</span></Label>
+              <Label htmlFor="time">الوقت<span className="text-red-500">*</span></Label>
               <Input 
-                id="end_time" 
-                type="time"
-                {...register('end_time', { required: true })} 
+                id="time" 
+                type="time" 
+                {...register('time', { required: true })} 
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="duration">المدة (بالدقائق)</Label>
+              <Input 
+                id="duration" 
+                type="number" 
+                min="15" 
+                step="15" 
+                {...register('duration', { valueAsNumber: true })} 
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="type">نوع الموعد</Label>
+              <Select 
+                onValueChange={(value) => setValue('type', value)} 
+                defaultValue="meeting"
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="اختر نوع الموعد" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="meeting">اجتماع</SelectItem>
+                  <SelectItem value="call">مكالمة هاتفية</SelectItem>
+                  <SelectItem value="video">مكالمة فيديو</SelectItem>
+                  <SelectItem value="visit">زيارة ميدانية</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -167,7 +183,7 @@ const AppointmentFormDialog: React.FC<AppointmentFormDialogProps> = ({
             <Label htmlFor="location">المكان</Label>
             <Input 
               id="location" 
-              placeholder="أدخل مكان الموعد" 
+              placeholder="أدخل مكان الموعد (اختياري)" 
               {...register('location')} 
             />
           </div>
@@ -176,7 +192,7 @@ const AppointmentFormDialog: React.FC<AppointmentFormDialogProps> = ({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
               إلغاء
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button type="submit" disabled={isSubmitting || !date}>
               {isSubmitting && <Loader2 className="ml-1 h-4 w-4 animate-spin" />}
               إضافة الموعد
             </Button>

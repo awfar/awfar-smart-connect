@@ -12,6 +12,7 @@ import {
 import { getAppointmentsByLeadId } from '@/services/appointments';
 import { getTasks } from '@/services/tasks';
 import { Lead, LeadActivity } from '@/types/leads';
+import { Lead as ServiceLead } from '@/services/leads/types';
 
 export const useLeadProfile = () => {
   const { id } = useParams<{ id: string }>();
@@ -84,7 +85,20 @@ export const useLeadProfile = () => {
   // Handle edit lead
   const handleEditLead = async (updatedLead: Lead) => {
     try {
-      await updateLead(updatedLead);
+      // Convert to the type expected by the service
+      const serviceLead: ServiceLead = {
+        ...updatedLead,
+        owner: updatedLead.owner ? {
+          id: updatedLead.owner.id || '',
+          name: updatedLead.owner.name,
+          avatar: updatedLead.owner.avatar,
+          initials: updatedLead.owner.initials,
+          first_name: updatedLead.owner.first_name,
+          last_name: updatedLead.owner.last_name
+        } : undefined
+      };
+      
+      await updateLead(serviceLead);
       await refetchLead();
       setIsEditDialogOpen(false);
       toast.success('تم تحديث بيانات العميل بنجاح');
