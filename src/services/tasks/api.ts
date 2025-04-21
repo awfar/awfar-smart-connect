@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Task, TaskCreateInput } from "./types";
+import { Task, TaskCreateInput, castToTask } from "./types";
 import { toast } from "sonner";
 
 export const getTasks = async (filterOptions?: {
@@ -27,21 +27,8 @@ export const getTasks = async (filterOptions?: {
 
     const { data, error } = await query;
     if (error) throw error;
-    return (data || []).map(item => ({
-      id: item.id,
-      title: item.title,
-      description: item.description || undefined,
-      status: item.status as Task['status'],
-      priority: item.priority as Task['priority'],
-      due_date: item.due_date || null,
-      lead_id: item.lead_id || null,
-      assigned_to: item.assigned_to || null,
-      created_by: item.created_by || null,
-      created_at: item.created_at,
-      updated_at: item.updated_at,
-      assigned_to_name: item.assigned_to_name || undefined,
-      related_to: item.related_to || undefined
-    }));
+    
+    return Array.isArray(data) ? data.map(castToTask) : [];
   } catch (error) {
     console.error("Error fetching tasks:", error);
     toast.error("حدث خطأ أثناء تحميل المهام");
@@ -55,40 +42,19 @@ export const getTasksByLeadId = async (leadId: string): Promise<Task[]> => {
 
 export const createTask = async (taskData: TaskCreateInput): Promise<Task> => {
   try {
-    // Ensure status is one of the allowed values
-    if (taskData.status && !['pending', 'in_progress', 'completed', 'cancelled'].includes(taskData.status)) {
-      taskData.status = 'pending';
-    }
-    
-    // Set default status if not provided
-    if (!taskData.status) {
-      taskData.status = 'pending';
-    }
-    
     const { data, error } = await supabase
       .from('tasks')
-      .insert(taskData)
+      .insert({
+        ...taskData,
+        status: taskData.status || 'pending'
+      })
       .select()
       .single();
 
     if (error) throw error;
 
     toast.success("تم إنشاء المهمة بنجاح");
-    return {
-      id: data.id,
-      title: data.title,
-      description: data.description || undefined,
-      status: data.status as Task['status'],
-      priority: data.priority as Task['priority'],
-      due_date: data.due_date || null,
-      lead_id: data.lead_id || null,
-      assigned_to: data.assigned_to || null,
-      created_by: data.created_by || null,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-      assigned_to_name: data.assigned_to_name || undefined,
-      related_to: data.related_to || undefined
-    };
+    return castToTask(data);
   } catch (error) {
     console.error("Error creating task:", error);
     toast.error("حدث خطأ أثناء إنشاء المهمة");
@@ -98,11 +64,6 @@ export const createTask = async (taskData: TaskCreateInput): Promise<Task> => {
 
 export const updateTask = async (taskId: string, taskData: Partial<Task>): Promise<Task> => {
   try {
-    // Ensure status is one of the allowed values
-    if (taskData.status && !['pending', 'in_progress', 'completed', 'cancelled'].includes(taskData.status)) {
-      taskData.status = 'pending';
-    }
-    
     const { data, error } = await supabase
       .from('tasks')
       .update(taskData)
@@ -113,21 +74,7 @@ export const updateTask = async (taskId: string, taskData: Partial<Task>): Promi
     if (error) throw error;
 
     toast.success("تم تحديث المهمة بنجاح");
-    return {
-      id: data.id,
-      title: data.title,
-      description: data.description || undefined,
-      status: data.status as Task['status'],
-      priority: data.priority as Task['priority'],
-      due_date: data.due_date || null,
-      lead_id: data.lead_id || null,
-      assigned_to: data.assigned_to || null,
-      created_by: data.created_by || null,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-      assigned_to_name: data.assigned_to_name || undefined,
-      related_to: data.related_to || undefined
-    };
+    return castToTask(data);
   } catch (error) {
     console.error("Error updating task:", error);
     toast.error("حدث خطأ أثناء تحديث المهمة");

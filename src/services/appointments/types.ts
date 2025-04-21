@@ -29,3 +29,4 @@ export interface AppointmentCreateInput {
   participants?: string[];
   created_by?: string;
 }
+

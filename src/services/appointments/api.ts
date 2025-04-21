@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Appointment, AppointmentCreateInput } from "./types";
+import { Appointment, AppointmentCreateInput, AppointmentStatus } from "./types";
 import { toast } from "sonner";
 
 export const getAppointmentsByLeadId = async (leadId: string): Promise<Appointment[]> => {
@@ -46,21 +46,7 @@ export const createAppointment = async (appointmentData: AppointmentCreateInput)
     if (error) throw error;
     
     toast.success("تم إنشاء الموعد بنجاح");
-    return {
-      id: data.id,
-      title: data.title,
-      description: data.description,
-      start_time: data.start_time,
-      end_time: data.end_time,
-      location: data.location,
-      status: data.status as AppointmentStatus,
-      lead_id: data.lead_id || null,
-      client_id: data.client_id,
-      participants: data.participants,
-      created_by: data.created_by,
-      created_at: data.created_at,
-      updated_at: data.updated_at
-    };
+    return data as Appointment;
   } catch (error) {
     console.error("Error creating appointment:", error);
     toast.error("حدث خطأ أثناء إنشاء الموعد");
