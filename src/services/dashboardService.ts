@@ -1,183 +1,94 @@
-
+// src/services/dashboardService.ts
 import { supabase } from "@/integrations/supabase/client";
 
-export interface DashboardStats {
-  totalLeads: number;
-  newLeadsToday: number;
-  conversionRate: string;
-  totalRevenue: number;
-  // Add the missing properties
-  totalSales: string;
-  salesChange: string;
-  newLeads: string;
-  leadsChange: string;
-  conversionChange: string;
-  activeTickets: string;
-  ticketsChange: string;
-}
+// Helper function to safely access first_name and last_name
+const safeGetName = (obj: any, defaultValue: string = ''): string => {
+  if (!obj) return defaultValue;
+  
+  // Handle array case by taking the first item
+  if (Array.isArray(obj)) {
+    const firstItem = obj[0];
+    if (!firstItem) return defaultValue;
+    return `${firstItem.first_name || ''} ${firstItem.last_name || ''}`.trim() || defaultValue;
+  }
+  
+  // Handle object case
+  return `${obj.first_name || ''} ${obj.last_name || ''}`.trim() || defaultValue;
+};
 
-export interface RecentActivity {
-  id: string;
-  type: string;
-  description: string;
-  timestamp: string;
-  user: {
-    name: string;
-    avatar: string | null;
-    initials: string;
-  };
-  entity?: {
-    type: string;
-    name: string;
-    id: string;
-  };
-}
-
-export const fetchDashboardStats = async (): Promise<DashboardStats> => {
+export const fetchDashboardData = async () => {
   try {
-    // Get total leads count
-    const { count: totalLeads, error: leadsError } = await supabase
+    const { data: leads, error: leadsError } = await supabase
       .from('leads')
-      .select('*', { count: 'exact', head: true });
-    
-    if (leadsError) throw leadsError;
+      .select('id, first_name, last_name, company, created_at, status, owner:assigned_to(first_name, last_name)');
 
-    // Get new leads created today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const { count: newLeadsToday, error: todayLeadsError } = await supabase
-      .from('leads')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', today.toISOString());
-    
-    if (todayLeadsError) throw todayLeadsError;
+    if (leadsError) {
+      console.error("Error fetching leads:", leadsError);
+      throw leadsError;
+    }
 
-    // For demo purposes, we'll calculate simulated values
-    const conversionRate = totalLeads > 0 ? Math.round((Math.random() * 30) + 10) + '%' : '0%';
-    const totalRevenue = totalLeads * Math.round((Math.random() * 1000) + 500);
-    
-    // Generate mock data for the additional stats fields
-    const totalSales = Math.round(totalRevenue).toLocaleString() + ' SAR';
-    const salesChange = '+' + Math.round(Math.random() * 15) + '%';
-    const newLeads = (newLeadsToday || Math.round(Math.random() * 20) + 5).toString();
-    const leadsChange = '+' + Math.round(Math.random() * 20) + '%';
-    const conversionChange = '+' + Math.round(Math.random() * 10) + '%';
-    const activeTickets = Math.round(Math.random() * 15 + 3).toString();
-    const ticketsChange = Math.random() > 0.5 ? '+' : '-' + Math.round(Math.random() * 15) + '%';
+    const { data: salesPeople, error: salesPeopleError } = await supabase
+      .from('sales_people')
+      .select('id, first_name, last_name, deals, value, conversion');
+
+    if (salesPeopleError) {
+      console.error("Error fetching sales people:", salesPeopleError);
+      throw salesPeopleError;
+    }
+
+    const { data: activities, error: activitiesError } = await supabase
+      .from('activities')
+      .select('id, type, description, due_date, completed');
+
+    if (activitiesError) {
+      console.error("Error fetching activities:", activitiesError);
+      throw activitiesError;
+    }
 
     return {
-      totalLeads: totalLeads || 0,
-      newLeadsToday: newLeadsToday || 0,
-      conversionRate,
-      totalRevenue,
-      // Add the additional fields
-      totalSales,
-      salesChange,
-      newLeads,
-      leadsChange,
-      conversionChange,
-      activeTickets,
-      ticketsChange
+      leads,
+      salesPeople,
+      activities,
     };
-  } catch (error) {
-    console.error("Error fetching dashboard stats:", error);
-    return {
-      totalLeads: 0,
-      newLeadsToday: 0,
-      conversionRate: '0%',
-      totalRevenue: 0,
-      // Default values for the additional fields
-      totalSales: '0 SAR',
-      salesChange: '+0%',
-      newLeads: '0',
-      leadsChange: '+0%',
-      conversionChange: '+0%',
-      activeTickets: '0',
-      ticketsChange: '+0%'
-    };
+  } catch (error: any) {
+    console.error("Error fetching dashboard data:", error);
+    throw new Error(error.message || "Failed to fetch dashboard data");
   }
 };
 
-export const fetchRecentActivities = async (): Promise<RecentActivity[]> => {
-  try {
-    const { data: leadActivities, error: activitiesError } = await supabase
-      .from('lead_activities')
-      .select(`
-        id,
-        type,
-        description,
-        created_at,
-        lead_id,
-        created_by,
-        leads!inner(first_name, last_name),
-        profiles!inner(first_name, last_name)
-      `)
-      .order('created_at', { ascending: false })
-      .limit(10);
-    
-    if (activitiesError) throw activitiesError;
+// Fix the problematic parts in the code
+export const transformDashboardData = (rawData: any) => {
+  const totalLeads = rawData.leads?.length || 0;
+  const recentActivities = rawData.activities?.slice(0, 5).map((activity: any) => ({
+    id: activity.id,
+    type: activity.type || 'Unknown',
+    description: activity.description || 'N/A',
+    dueDate: activity.due_date ? new Date(activity.due_date).toLocaleDateString() : 'N/A',
+    completed: activity.completed || false,
+  })) || [];
+  
+  // Replace problematic lines with safe access using the helper
+  const recentLeads = rawData.leads?.map((lead: any) => ({
+    id: lead.id,
+    name: lead.first_name && lead.last_name ? `${lead.first_name} ${lead.last_name}` : 'No Name',
+    company: lead.company || 'N/A',
+    date: lead.created_at ? new Date(lead.created_at).toLocaleDateString() : 'Unknown',
+    status: lead.status || 'new',
+    owner: safeGetName(lead.owner, 'Unassigned')
+  })) || [];
+  
+  const topSalesPeople = rawData.salesPeople?.map((person: any) => ({
+    id: person.id,
+    name: safeGetName(person, `User ${person.id}`),
+    deals: person.deals || 0,
+    value: person.value || 0,
+    conversion: person.conversion || 0
+  })) || [];
 
-    return (leadActivities || []).map(activity => {
-      const profileName = `${activity.profiles?.first_name || ''} ${activity.profiles?.last_name || ''}`.trim();
-      const leadName = `${activity.leads?.first_name || ''} ${activity.leads?.last_name || ''}`.trim();
-      
-      const initials = (activity.profiles?.first_name?.[0] || '') + (activity.profiles?.last_name?.[0] || '');
-      
-      return {
-        id: activity.id,
-        type: activity.type,
-        description: activity.description,
-        timestamp: activity.created_at,
-        user: {
-          name: profileName,
-          avatar: null,
-          initials: initials || 'مس' // Default initials in Arabic
-        },
-        entity: {
-          type: 'lead',
-          name: leadName || 'عميل محتمل', // Default in Arabic
-          id: activity.lead_id
-        }
-      };
-    });
-  } catch (error) {
-    console.error("Error fetching recent activities:", error);
-    
-    // Return mock data in case of error
-    return [
-      {
-        id: "act-001",
-        type: "اتصال",
-        description: "تم إجراء مكالمة مع العميل بخصوص العرض الجديد",
-        timestamp: new Date().toISOString(),
-        user: {
-          name: "أحمد محمد",
-          avatar: "/placeholder.svg",
-          initials: "أم"
-        },
-        entity: {
-          type: "lead",
-          name: "محمد سعيد",
-          id: "lead-001"
-        }
-      },
-      {
-        id: "act-002",
-        type: "ملاحظة",
-        description: "تم إضافة ملاحظة بخصوص طلب العميل",
-        timestamp: new Date(Date.now() - 3600000).toISOString(),
-        user: {
-          name: "سارة أحمد",
-          avatar: "/placeholder.svg",
-          initials: "سأ"
-        },
-        entity: {
-          type: "lead",
-          name: "ليلى حسن",
-          id: "lead-002"
-        }
-      }
-    ];
-  }
+  return {
+    totalLeads,
+    recentActivities,
+    recentLeads,
+    topSalesPeople
+  };
 };

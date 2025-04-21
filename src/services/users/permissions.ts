@@ -1,6 +1,19 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+// Helper function to safely access object properties
+const safeGetName = (obj: any): string => {
+  if (!obj) return '';
+  
+  // Handle array case
+  if (Array.isArray(obj)) {
+    const firstItem = obj[0];
+    return firstItem?.name || '';
+  }
+  
+  // Handle object case
+  return obj.name || '';
+};
 
 export const getUserPermissions = async (userId: string): Promise<string[]> => {
   try {
@@ -19,7 +32,7 @@ export const getUserPermissions = async (userId: string): Promise<string[]> => {
       .select(`
         permissions (name)
       `)
-      .eq('role', userData.role);
+      .eq('role', safeGetName(userData?.role));
     
     if (permissionsError) throw permissionsError;
     

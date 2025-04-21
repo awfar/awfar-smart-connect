@@ -23,13 +23,14 @@ import { cn } from '@/lib/utils';
 import { LeadActivityInput } from '@/services/leads';
 import { addLeadActivity } from '@/services/leads/api';
 
-interface ActivityFormProps {
+export interface ActivityFormProps {
   leadId: string;
   onSuccess: () => void;
   onClose: () => void;
+  title?: string; // Make title optional
 }
 
-const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, onSuccess, onClose }) => {
+const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, onSuccess, onClose, title }) => {
   const [activityType, setActivityType] = useState<'call' | 'email' | 'meeting' | 'note' | 'task' | 'whatsapp'>('note');
   const [description, setDescription] = useState('');
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
@@ -63,7 +64,7 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, onSuccess, onClose 
   
   return (
     <div className="p-4 border-t">
-      <h3 className="text-lg font-medium mb-4">إضافة نشاط جديد</h3>
+      <h3 className="text-lg font-medium mb-4">{title || 'إضافة نشاط جديد'}</h3>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="activityType">نوع النشاط</Label>

@@ -1,125 +1,164 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Lead, LeadActivity, LeadActivityInput } from './types';
-import { toast } from 'sonner';
+import { transformLeadFromSupabase } from './utils';
 
-export const getLead = async (id: string): Promise<Lead | null> => {
+// Get all leads
+export const getLeads = async (): Promise<Lead[]> => {
   try {
     const { data, error } = await supabase
       .from('leads')
-      .select('*')
-      .eq('id', id)
-      .single();
-
+      .select('*, profiles:assigned_to(first_name, last_name, avatar_url)');
+    
     if (error) throw error;
-
-    return {
-      ...data,
-      owner: {
-        name: 'مسؤول النظام',
-        initials: 'م.ن'
-      }
-    } as Lead;
+    
+    return data.map(transformLeadFromSupabase) || [];
   } catch (error) {
-    console.error('Error fetching lead:', error);
-    toast.error('حدث خطأ أثناء تحميل بيانات العميل المحتمل');
-    return null;
-  }
-};
-
-export const getLeadActivities = async (leadId: string): Promise<LeadActivity[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('lead_activities')
-      .select('*')
-      .eq('lead_id', leadId)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    return data as LeadActivity[];
-  } catch (error) {
-    console.error('Error fetching lead activities:', error);
-    toast.error('حدث خطأ أثناء تحميل أنشطة العميل المحتمل');
+    console.error('Error fetching leads:', error);
     return [];
   }
 };
 
-export const addLeadActivity = async (activity: LeadActivityInput): Promise<LeadActivity | null> => {
+// Get a single lead by ID
+export const getLead = async (id: string): Promise<Lead | null> => {
   try {
     const { data, error } = await supabase
-      .from('lead_activities')
-      .insert({
-        lead_id: activity.lead_id,
-        type: activity.type,
-        description: activity.description,
-        scheduled_at: activity.scheduled_at,
-        created_by: activity.created_by
-      })
-      .select()
+      .from('leads')
+      .select('*, profiles:assigned_to(first_name, last_name, avatar_url)')
+      .eq('id', id)
       .single();
-
+    
     if (error) throw error;
-
-    toast.success('تمت إضافة النشاط بنجاح');
-    return data as LeadActivity;
+    
+    return transformLeadFromSupabase(data);
   } catch (error) {
-    console.error('Error adding lead activity:', error);
-    toast.error('حدث خطأ أثناء إضافة النشاط');
+    console.error(`Error fetching lead ${id}:`, error);
     return null;
   }
 };
 
-export const completeLeadActivity = async (activityId: string): Promise<boolean> => {
+// Create a new lead
+export const createLead = async (lead: Partial<Lead>): Promise<Lead | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('leads')
+      .insert([lead])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    return transformLeadFromSupabase(data);
+  } catch (error) {
+    console.error('Error creating lead:', error);
+    return null;
+  }
+};
+
+// Update an existing lead
+export const updateLead = async (lead: Partial<Lead> & { id: string }): Promise<Lead | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('leads')
+      .update(lead)
+      .eq('id', lead.id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    return transformLeadFromSupabase(data);
+  } catch (error) {
+    console.error(`Error updating lead ${lead.id}:`, error);
+    return null;
+  }
+};
+
+// Delete a lead
+export const deleteLead = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from('lead_activities')
-      .update({ completed_at: new Date().toISOString() })
-      .eq('id', activityId);
-
+      .from('leads')
+      .delete()
+      .eq('id', id);
+    
     if (error) throw error;
-
-    toast.success('تم إكمال النشاط بنجاح');
+    
     return true;
   } catch (error) {
-    console.error('Error completing lead activity:', error);
-    toast.error('حدث خطأ أثناء إكمال النشاط');
+    console.error(`Error deleting lead ${id}:`, error);
     return false;
   }
 };
 
+// Get lead activities
+export const getLeadActivities = async (leadId: string): Promise<LeadActivity[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('lead_activities')
+      .select('*, profiles:created_by(first_name, last_name)')
+      .eq('lead_id', leadId)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    return data || [];
+  } catch (error) {
+    console.error(`Error fetching activities for lead ${leadId}:`, error);
+    return [];
+  }
+};
+
+// Add a new activity to a lead
+export const addLeadActivity = async (activity: LeadActivityInput): Promise<LeadActivity | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('lead_activities')
+      .insert([activity])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    
+    return data;
+  } catch (error) {
+    console.error('Error adding lead activity:', error);
+    return null;
+  }
+};
+
+// Mark an activity as completed
+export const completeLeadActivity = async (activityId: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('lead_activities')
+      .update({ 
+        completed_at: new Date().toISOString() 
+      })
+      .eq('id', activityId);
+    
+    if (error) throw error;
+    
+    return true;
+  } catch (error) {
+    console.error(`Error completing activity ${activityId}:`, error);
+    return false;
+  }
+};
+
+// Delete an activity
 export const deleteLeadActivity = async (activityId: string): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('lead_activities')
       .delete()
       .eq('id', activityId);
-
+    
     if (error) throw error;
-
-    toast.success('تم حذف النشاط بنجاح');
+    
     return true;
   } catch (error) {
-    console.error('Error deleting lead activity:', error);
-    toast.error('حدث خطأ أثناء حذف النشاط');
-    return false;
-  }
-};
-
-export const deleteLead = async (leadId: string): Promise<boolean> => {
-  try {
-    const { error } = await supabase
-      .from('leads')
-      .delete()
-      .eq('id', leadId);
-
-    if (error) throw error;
-
-    toast.success('تم حذف العميل المحتمل بنجاح');
-    return true;
-  } catch (error) {
-    console.error('Error deleting lead:', error);
-    toast.error('حدث خطأ أثناء حذف العميل المحتمل');
+    console.error(`Error deleting activity ${activityId}:`, error);
     return false;
   }
 };
