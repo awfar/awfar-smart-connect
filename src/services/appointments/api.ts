@@ -90,7 +90,7 @@ export const createAppointment = async (appointmentData: AppointmentCreateInput)
 // Update an appointment
 export const updateAppointment = async (appointmentId: string, appointmentData: Partial<Appointment>): Promise<Appointment> => {
   try {
-    const updateData: any = {
+    const updateData: Record<string, any> = {
       updated_at: new Date().toISOString()
     };
     

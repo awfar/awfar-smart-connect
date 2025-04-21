@@ -145,7 +145,7 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
 
 export const updateAppointment = async (id: string, updates: Partial<Appointment>): Promise<Appointment> => {
   try {
-    const updateData: any = {
+    const updateData: Record<string, any> = {
       updated_at: new Date().toISOString()
     };
     

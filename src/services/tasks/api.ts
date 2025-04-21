@@ -162,7 +162,7 @@ export const completeTask = async (taskId: string): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('tasks')
-      .update({ status: 'completed' as const })
+      .update({ status: 'completed' })
       .eq('id', taskId);
 
     if (error) throw error;
