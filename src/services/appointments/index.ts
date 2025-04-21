@@ -6,7 +6,7 @@ export {
   updateAppointment,
   deleteAppointment,
   fetchAppointments,
-  getAppointmentsByLeadId,
+  fetchAppointmentsByLeadId as getAppointmentsByLeadId,
 } from './appointmentsService';
 
 export type { Appointment, AppointmentCreateInput, AppointmentStatus } from './types';

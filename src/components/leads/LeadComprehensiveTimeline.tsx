@@ -1,37 +1,44 @@
 
 import React, { useState } from 'react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Filter, Plus, Loader2, Check } from 'lucide-react';
-import LeadTimelineItem, { TimelineItemType } from './LeadTimelineItem';
-import { LeadActivity } from '@/services/leads/types';
-import { Task } from '@/services/tasks/types';
-import { Appointment } from '@/services/appointments/types';
 import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle 
-} from '@/components/ui/dialog';
+  Calendar, Clock, MessageSquare, Phone, Mail, Plus, 
+  ArrowDownUp, CheckCircle, Trash2, Loader2, Filter 
+} from 'lucide-react';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { 
+  Card, 
+  CardContent, 
+  CardDescription, 
+  CardFooter, 
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { LeadActivity, LeadActivityInput } from '@/services/leads';
+import { Task } from '@/services/tasks/api';
+import { Appointment } from '@/services/appointments';
 import ActivityForm from './ActivityForm';
 
-export interface TimelineItem {
+interface TimelineItem {
   id: string;
-  type: TimelineItemType;
-  description: string;
-  created_at: string;
-  created_by?: any;
-  scheduled_at?: string;
-  completed_at?: string;
-  related_entity?: {
-    type: string;
-    id: string;
-    name: string;
-    status?: string;
-  };
-  module?: string;  // Helps identify the source module
-  original?: any;   // The original object for reference
+  type: string;
+  title: string;
+  description?: string;
+  timestamp: string;
+  status?: string;
+  canComplete?: boolean;
+  canDelete?: boolean;
+  isCompleted?: boolean;
+  sourceModule: 'activity' | 'task' | 'appointment';
+  raw: any; // The raw data object
 }
 
 interface LeadComprehensiveTimelineProps {
@@ -40,12 +47,10 @@ interface LeadComprehensiveTimelineProps {
   tasks: Task[];
   appointments: Appointment[];
   isLoading: boolean;
-  onAddActivity: (activity: LeadActivity) => Promise<void>;
-  onCompleteActivity?: (id: string) => Promise<void>;
-  onCompleteTask?: (id: string) => Promise<void>;
-  onDeleteActivity?: (id: string) => Promise<void>;
-  onEditTask?: (task: Task) => void;
-  onEditAppointment?: (appointment: Appointment) => void;
+  onAddActivity: (activity: LeadActivityInput) => Promise<void>;
+  onCompleteActivity: (activityId: string) => Promise<void>;
+  onCompleteTask: (taskId: string) => Promise<void>;
+  onDeleteActivity: (activityId: string) => Promise<void>;
   onRefresh: () => void;
 }
 
@@ -59,256 +64,316 @@ const LeadComprehensiveTimeline: React.FC<LeadComprehensiveTimelineProps> = ({
   onCompleteActivity,
   onCompleteTask,
   onDeleteActivity,
-  onEditTask,
-  onEditAppointment,
   onRefresh
 }) => {
-  const [activeTab, setActiveTab] = useState<string>("all");
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [showActivityDialog, setShowActivityDialog] = useState<boolean>(false);
-  const [processingItem, setProcessingItem] = useState<string | null>(null);
-  
-  // Convert all items to a common format for the timeline
-  const mapActivitiesToTimelineItems = (): TimelineItem[] => {
-    return activities.map(activity => ({
+  const [isAddingActivity, setIsAddingActivity] = useState(false);
+  const [filter, setFilter] = useState('all');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [processing, setProcessing] = useState<string | null>(null);
+
+  // Transform all items into a single timeline format
+  const transformToTimelineItems = (): TimelineItem[] => {
+    const activityItems: TimelineItem[] = activities.map(activity => ({
       id: activity.id,
-      type: activity.type as TimelineItemType,
+      type: activity.type,
+      title: getActivityTypeTitle(activity.type),
       description: activity.description,
-      created_at: activity.created_at,
-      created_by: activity.created_by,
-      scheduled_at: activity.scheduled_at || undefined,
-      completed_at: activity.completed_at || undefined,
-      module: 'activity',
-      original: activity
+      timestamp: activity.created_at,
+      status: activity.completed_at ? 'completed' : 'pending',
+      canComplete: !activity.completed_at,
+      canDelete: true,
+      isCompleted: !!activity.completed_at,
+      sourceModule: 'activity',
+      raw: activity
     }));
-  };
-  
-  const mapTasksToTimelineItems = (): TimelineItem[] => {
-    return tasks.map(task => ({
+
+    const taskItems: TimelineItem[] = tasks.map(task => ({
       id: task.id,
       type: 'task',
-      description: task.title + (task.description ? `: ${task.description}` : ''),
-      created_at: task.created_at,
-      created_by: {
-        name: task.assigned_to_name || 'غير معين',
-        id: task.assigned_to
-      },
-      scheduled_at: task.due_date || undefined,
-      completed_at: task.status === 'completed' ? task.updated_at : undefined,
-      related_entity: task.related_to,
-      module: 'task',
-      original: task
+      title: 'مهمة',
+      description: task.title,
+      timestamp: task.created_at,
+      status: task.status,
+      canComplete: task.status !== 'completed',
+      canDelete: false,
+      isCompleted: task.status === 'completed',
+      sourceModule: 'task',
+      raw: task
     }));
-  };
-  
-  const mapAppointmentsToTimelineItems = (): TimelineItem[] => {
-    return appointments.map(appointment => ({
+
+    const appointmentItems: TimelineItem[] = appointments.map(appointment => ({
       id: appointment.id,
       type: 'appointment',
-      description: appointment.title + (appointment.description ? `: ${appointment.description}` : ''),
-      created_at: appointment.created_at,
-      created_by: {
-        id: appointment.created_by
-      },
-      scheduled_at: appointment.start_time,
-      completed_at: appointment.status === 'completed' ? appointment.updated_at : undefined,
-      related_entity: {
-        type: 'appointment',
-        id: appointment.id,
-        name: appointment.title,
-        status: appointment.status
-      },
-      module: 'appointment',
-      original: appointment
+      title: 'موعد',
+      description: appointment.title,
+      timestamp: appointment.start_time,
+      status: appointment.status,
+      canComplete: false,
+      canDelete: false,
+      isCompleted: appointment.status === 'completed',
+      sourceModule: 'appointment',
+      raw: appointment
     }));
+
+    return [...activityItems, ...taskItems, ...appointmentItems];
   };
-  
-  // Combine and sort all timeline items
-  const getAllTimelineItems = (): TimelineItem[] => {
-    const allItems = [
-      ...mapActivitiesToTimelineItems(),
-      ...mapTasksToTimelineItems(),
-      ...mapAppointmentsToTimelineItems()
-    ];
+
+  const getActivityTypeTitle = (type: string): string => {
+    switch(type) {
+      case 'call': return 'مكالمة';
+      case 'email': return 'بريد إلكتروني';
+      case 'meeting': return 'اجتماع';
+      case 'note': return 'ملاحظة';
+      case 'task': return 'مهمة';
+      case 'whatsapp': return 'واتساب';
+      default: return type;
+    }
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch(type) {
+      case 'call': return <Phone className="h-4 w-4" />;
+      case 'email': return <Mail className="h-4 w-4" />;
+      case 'meeting': return <Calendar className="h-4 w-4" />;
+      case 'note': return <MessageSquare className="h-4 w-4" />;
+      case 'task': return <Clock className="h-4 w-4" />;
+      case 'appointment': return <Calendar className="h-4 w-4" />;
+      case 'whatsapp': return <MessageSquare className="h-4 w-4" />;
+      default: return <Plus className="h-4 w-4" />;
+    }
+  };
+
+  const handleAddActivityComplete = () => {
+    setIsAddingActivity(false);
+    onRefresh();
+  };
+
+  const handleCompleteItem = async (item: TimelineItem) => {
+    setProcessing(item.id);
+    try {
+      if (item.sourceModule === 'activity') {
+        await onCompleteActivity(item.id);
+      } else if (item.sourceModule === 'task') {
+        await onCompleteTask(item.id);
+      }
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  const handleDeleteItem = async (item: TimelineItem) => {
+    setProcessing(item.id);
+    try {
+      if (item.sourceModule === 'activity') {
+        await onDeleteActivity(item.id);
+      }
+    } finally {
+      setProcessing(null);
+    }
+  };
+
+  // Filter and sort timeline items
+  const filteredAndSortedItems = () => {
+    let items = transformToTimelineItems();
     
-    return allItems.sort((a, b) => {
-      const aDate = new Date(a.created_at).getTime();
-      const bDate = new Date(b.created_at).getTime();
-      return bDate - aDate; // Sort descending (newest first)
+    // Apply filtering
+    if (filter !== 'all') {
+      items = items.filter(item => item.type === filter);
+    }
+    
+    // Apply sorting
+    items.sort((a, b) => {
+      const dateA = new Date(a.timestamp).getTime();
+      const dateB = new Date(b.timestamp).getTime();
+      
+      return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
     });
-  };
-  
-  const getFilteredTimelineItems = (): TimelineItem[] => {
-    const allItems = getAllTimelineItems();
     
-    // Filter by tab
-    let filteredItems = allItems;
-    if (activeTab === "activities") {
-      filteredItems = allItems.filter(item => 
-        item.module === 'activity' && item.type !== 'task' && item.type !== 'note'
-      );
-    } else if (activeTab === "tasks") {
-      filteredItems = allItems.filter(item => 
-        item.module === 'task' || (item.module === 'activity' && item.type === 'task')
-      );
-    } else if (activeTab === "appointments") {
-      filteredItems = allItems.filter(item => 
-        item.module === 'appointment' || (item.module === 'activity' && item.type === 'meeting')
-      );
-    } else if (activeTab === "notes") {
-      filteredItems = allItems.filter(item => 
-        (item.module === 'activity' && item.type === 'note')
-      );
-    }
+    return items;
+  };
+
+  const timelineItems = filteredAndSortedItems();
+
+  // Get unique activity types for filter
+  const getActivityTypes = () => {
+    const types = new Set<string>();
     
-    // Filter by search term
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      filteredItems = filteredItems.filter(item => 
-        item.description.toLowerCase().includes(term) || 
-        (item.created_by?.name && item.created_by.name.toLowerCase().includes(term))
-      );
-    }
+    activities.forEach(activity => types.add(activity.type));
+    types.add('task');
+    types.add('appointment');
     
-    return filteredItems;
+    return Array.from(types);
   };
-  
-  const handleItemComplete = async (id: string, itemType: string) => {
-    setProcessingItem(id);
-    try {
-      if (itemType === 'activity' && onCompleteActivity) {
-        await onCompleteActivity(id);
-      } else if (itemType === 'task' && onCompleteTask) {
-        await onCompleteTask(id);
-      }
-    } finally {
-      setProcessingItem(null);
-    }
-  };
-  
-  const handleItemDelete = async (id: string, itemType: string) => {
-    setProcessingItem(id);
-    try {
-      if (itemType === 'activity' && onDeleteActivity) {
-        await onDeleteActivity(id);
-      }
-      // Implement delete for other item types
-    } finally {
-      setProcessingItem(null);
-    }
-  };
-  
-  const handleItemEdit = (id: string, itemType: string) => {
-    if (itemType === 'task' && onEditTask) {
-      const task = tasks.find(t => t.id === id);
-      if (task) onEditTask(task);
-    } else if (itemType === 'appointment' && onEditAppointment) {
-      const appointment = appointments.find(a => a.id === id);
-      if (appointment) onEditAppointment(appointment);
-    }
-  };
-  
-  const handleAddActivity = async (activity?: LeadActivity) => {
-    setShowActivityDialog(false);
-    if (activity && onAddActivity) {
-      await onAddActivity(activity);
-      onRefresh();
-    }
-  };
-  
-  const timelineItems = getFilteredTimelineItems();
-  
+
+  const activityTypes = getActivityTypes();
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mr-2" />
+        <span>جاري تحميل البيانات...</span>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row justify-between gap-2">
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="w-full sm:w-auto"
-        >
-          <TabsList className="grid grid-cols-5 w-full">
-            <TabsTrigger value="all">الكل</TabsTrigger>
-            <TabsTrigger value="activities">الأنشطة</TabsTrigger>
-            <TabsTrigger value="tasks">المهام</TabsTrigger>
-            <TabsTrigger value="appointments">المواعيد</TabsTrigger>
-            <TabsTrigger value="notes">الملاحظات</TabsTrigger>
-          </TabsList>
-        </Tabs>
-        
-        <div className="flex gap-2">
-          <Input
-            placeholder="بحث في الأنشطة..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full sm:w-auto"
-          />
-          <Button variant="outline" size="icon">
-            <Filter className="h-4 w-4" />
-          </Button>
-          <Button onClick={() => setShowActivityDialog(true)}>
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex justify-between items-center">
+          <div>
+            <CardTitle>الأنشطة والمتابعات</CardTitle>
+            <CardDescription>سجل التفاعلات مع العميل المحتمل</CardDescription>
+          </div>
+          <Button onClick={() => setIsAddingActivity(true)}>
             <Plus className="h-4 w-4 mr-2" />
             إضافة نشاط
           </Button>
         </div>
-      </div>
+      </CardHeader>
       
-      <div className="space-y-4">
-        {isLoading ? (
-          <div className="flex justify-center items-center py-6">
-            <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
-            <span>جاري تحميل البيانات...</span>
+      <CardContent>
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={filter} onValueChange={setFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="تصنيف حسب النوع" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">جميع الأنشطة</SelectItem>
+                {activityTypes.map(type => (
+                  <SelectItem key={type} value={type}>
+                    {getActivityTypeTitle(type)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        ) : timelineItems.length > 0 ? (
-          timelineItems.map((item) => (
-            <LeadTimelineItem
-              key={`${item.module}-${item.id}`}
-              id={item.id}
-              type={item.type}
-              description={item.description}
-              created_at={item.created_at}
-              created_by={item.created_by}
-              scheduled_at={item.scheduled_at}
-              completed_at={item.completed_at}
-              related_entity={item.related_entity}
-              onComplete={
-                ((item.type === 'task' && !item.completed_at) || 
-                (item.module === 'activity' && item.scheduled_at && !item.completed_at)) ?
-                (id) => handleItemComplete(id, item.module || '') : 
-                undefined
-              }
-              onDelete={
-                item.module === 'activity' ? 
-                (id) => handleItemDelete(id, item.module || '') : 
-                undefined
-              }
-              onEdit={
-                (item.module === 'task' || item.module === 'appointment') ?
-                (id) => handleItemEdit(id, item.module || '') :
-                undefined
-              }
-              isProcessing={processingItem === item.id}
-            />
-          ))
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+          >
+            <ArrowDownUp className="h-4 w-4 mr-2" />
+            {sortDirection === 'asc' ? 'الأقدم أولاً' : 'الأحدث أولاً'}
+          </Button>
+        </div>
+        
+        {timelineItems.length > 0 ? (
+          <div className="space-y-6 mt-6">
+            {timelineItems.map(item => (
+              <div key={`${item.sourceModule}-${item.id}`} className="relative pb-6 border-b last:border-b-0 last:pb-0">
+                <div className="flex justify-between items-start">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      {getActivityIcon(item.type)}
+                      {item.title}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(item.timestamp).toLocaleDateString('ar-SA', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    {item.canComplete && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleCompleteItem(item)}
+                        disabled={processing === item.id}
+                      >
+                        {processing === item.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <CheckCircle className="h-4 w-4" />
+                        )}
+                      </Button>
+                    )}
+                    
+                    {item.canDelete && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => handleDeleteItem(item)}
+                        disabled={processing === item.id}
+                      >
+                        {processing === item.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="mt-2 pr-1">
+                  <p className={`text-sm ${item.isCompleted ? 'line-through text-muted-foreground' : ''}`}>
+                    {item.description}
+                  </p>
+                  
+                  <div className="flex items-center gap-2 mt-2">
+                    {item.sourceModule === 'task' && (
+                      <Badge variant={item.status === 'completed' ? 'secondary' : 'outline'} className="text-xs">
+                        {item.status === 'completed' ? 'مكتملة' : 'قيد التنفيذ'}
+                      </Badge>
+                    )}
+                    
+                    {item.sourceModule === 'appointment' && (
+                      <Badge variant="outline" className="text-xs">
+                        {item.raw.start_time && new Date(item.raw.start_time).toLocaleDateString()} - 
+                        {item.raw.end_time && new Date(item.raw.end_time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                      </Badge>
+                    )}
+                    
+                    <div className="flex items-center gap-1 ml-auto">
+                      <Avatar className="h-5 w-5">
+                        <AvatarFallback className="text-[10px]">م.ن</AvatarFallback>
+                      </Avatar>
+                      <span className="text-xs text-muted-foreground">مسؤول النظام</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
-          <div className="text-center py-6 text-muted-foreground">
-            لا توجد أنشطة لعرضها
+          <div className="py-8 text-center border rounded-lg">
+            <p className="text-muted-foreground">لا توجد أنشطة مسجلة حتى الآن</p>
+            <Button variant="outline" className="mt-4" onClick={() => setIsAddingActivity(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              إضافة أول نشاط
+            </Button>
           </div>
         )}
-      </div>
+      </CardContent>
       
-      <Dialog open={showActivityDialog} onOpenChange={setShowActivityDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>إضافة نشاط جديد</DialogTitle>
-          </DialogHeader>
-          <ActivityForm 
-            leadId={leadId}
-            onSuccess={handleAddActivity}
-            onClose={() => setShowActivityDialog(false)}
-          />
-        </DialogContent>
-      </Dialog>
-    </div>
+      <CardFooter className="flex justify-between border-t pt-4">
+        <span className="text-sm text-muted-foreground">
+          إجمالي الأنشطة: {timelineItems.length}
+        </span>
+        <Button variant="outline" size="sm" onClick={onRefresh}>
+          تحديث
+        </Button>
+      </CardFooter>
+      
+      {isAddingActivity && (
+        <ActivityForm 
+          leadId={leadId}
+          onSuccess={handleAddActivityComplete}
+          onClose={() => setIsAddingActivity(false)}
+        />
+      )}
+    </Card>
   );
 };
 

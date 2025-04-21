@@ -1,6 +1,9 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskCreateInput, castToTask } from "./types";
 import { toast } from "sonner";
+
+export type { Task } from './types';
 
 export const getTasks = async (filterOptions?: {
   status?: string;

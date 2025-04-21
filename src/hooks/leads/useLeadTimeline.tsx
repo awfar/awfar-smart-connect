@@ -58,18 +58,13 @@ export const useLeadTimeline = (leadId: string) => {
   });
   
   // Handle adding a new activity
-  const handleAddActivity = async (activity: LeadActivityInput): Promise<LeadActivity | null> => {
+  const handleAddActivity = async (activity: LeadActivityInput): Promise<void> => {
     try {
-      const result = await addLeadActivity(activity);
-      if (result) {
-        refetchActivities();
-        return result;
-      }
-      return null;
+      await addLeadActivity(activity);
+      refetchActivities();
     } catch (error) {
       console.error('Error adding activity:', error);
       toast.error('حدث خطأ أثناء إضافة النشاط');
-      return null;
     }
   };
   
