@@ -50,6 +50,7 @@ export type Database = {
           description: string | null
           end_time: string
           id: string
+          lead_id: string | null
           location: string | null
           participants: string[] | null
           start_time: string
@@ -64,6 +65,7 @@ export type Database = {
           description?: string | null
           end_time: string
           id?: string
+          lead_id?: string | null
           location?: string | null
           participants?: string[] | null
           start_time: string
@@ -78,6 +80,7 @@ export type Database = {
           description?: string | null
           end_time?: string
           id?: string
+          lead_id?: string | null
           location?: string | null
           participants?: string[] | null
           start_time?: string
@@ -89,6 +92,13 @@ export type Database = {
           {
             foreignKeyName: "appointments_client_id_fkey"
             columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_lead_id_fkey"
+            columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
             referencedColumns: ["id"]
@@ -1048,41 +1058,58 @@ export type Database = {
       tasks: {
         Row: {
           assigned_to: string | null
+          assigned_to_name: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
           due_date: string | null
           id: string
+          lead_id: string | null
           priority: string
+          related_to: Json | null
           status: string
           title: string
           updated_at: string | null
         }
         Insert: {
           assigned_to?: string | null
+          assigned_to_name?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
+          lead_id?: string | null
           priority?: string
+          related_to?: Json | null
           status?: string
           title: string
           updated_at?: string | null
         }
         Update: {
           assigned_to?: string | null
+          assigned_to_name?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
+          lead_id?: string | null
           priority?: string
+          related_to?: Json | null
           status?: string
           title?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teams: {
         Row: {

@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskCreateInput } from "./types";
 import { toast } from "sonner";
@@ -14,7 +13,6 @@ export const getTasks = async (filterOptions?: {
       .select('*')
       .order('due_date', { ascending: true });
     
-    // Apply filters if provided
     if (filterOptions) {
       if (filterOptions.status) {
         query = query.eq('status', filterOptions.status);
@@ -28,10 +26,7 @@ export const getTasks = async (filterOptions?: {
     }
 
     const { data, error } = await query;
-    
     if (error) throw error;
-
-    // Map database response to Task interface
     return (data || []).map(item => ({
       id: item.id,
       title: item.title,

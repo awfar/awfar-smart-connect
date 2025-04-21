@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment, AppointmentCreateInput, AppointmentStatus } from "./types";
 import { toast } from "sonner";

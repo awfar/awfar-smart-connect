@@ -8,10 +8,10 @@ export interface Task {
   due_date?: string | null;
   lead_id?: string | null;
   assigned_to?: string | null;
+  assigned_to_name?: string;
   created_by?: string | null;
   created_at: string;
   updated_at: string;
-  assigned_to_name?: string;
   related_to?: {
     type: string;
     id: string;
@@ -27,8 +27,8 @@ export interface TaskCreateInput {
   due_date?: string | null;
   lead_id?: string | null;
   assigned_to?: string | null;
-  created_by?: string | null;
   assigned_to_name?: string;
+  created_by?: string | null;
   related_to?: {
     type: string;
     id: string;

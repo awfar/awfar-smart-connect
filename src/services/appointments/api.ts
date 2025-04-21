@@ -1,9 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import { Appointment, AppointmentCreateInput, AppointmentStatus } from "./types";
+import { Appointment, AppointmentCreateInput } from "./types";
 import { toast } from "sonner";
 
-// Get appointments for a specific lead
 export const getAppointmentsByLeadId = async (leadId: string): Promise<Appointment[]> => {
   try {
     const { data, error } = await supabase
@@ -14,22 +12,7 @@ export const getAppointmentsByLeadId = async (leadId: string): Promise<Appointme
       
     if (error) throw error;
     
-    // Map database response to Appointment interface
-    return (data || []).map(item => ({
-      id: item.id,
-      title: item.title,
-      description: item.description,
-      start_time: item.start_time,
-      end_time: item.end_time,
-      location: item.location,
-      status: item.status as AppointmentStatus,
-      lead_id: item.lead_id || null,
-      client_id: item.client_id,
-      participants: item.participants,
-      created_by: item.created_by,
-      created_at: item.created_at,
-      updated_at: item.updated_at
-    }));
+    return data as Appointment[];
   } catch (error) {
     console.error("Error fetching appointments:", error);
     toast.error("حدث خطأ أثناء تحميل المواعيد");
@@ -37,10 +20,8 @@ export const getAppointmentsByLeadId = async (leadId: string): Promise<Appointme
   }
 };
 
-// Create a new appointment
 export const createAppointment = async (appointmentData: AppointmentCreateInput): Promise<Appointment> => {
   try {
-    // Ensure all required fields are present
     if (!appointmentData.title || !appointmentData.start_time || !appointmentData.end_time) {
       throw new Error("Missing required appointment fields");
     }
@@ -87,14 +68,12 @@ export const createAppointment = async (appointmentData: AppointmentCreateInput)
   }
 };
 
-// Update an appointment
 export const updateAppointment = async (appointmentId: string, appointmentData: Partial<Appointment>): Promise<Appointment> => {
   try {
     const updateData: Record<string, any> = {
       updated_at: new Date().toISOString()
     };
     
-    // Only add fields that are present in the appointmentData
     if (appointmentData.title !== undefined) updateData.title = appointmentData.title;
     if (appointmentData.description !== undefined) updateData.description = appointmentData.description;
     if (appointmentData.start_time !== undefined) updateData.start_time = appointmentData.start_time;
@@ -137,7 +116,6 @@ export const updateAppointment = async (appointmentId: string, appointmentData: 
   }
 };
 
-// Delete an appointment
 export const deleteAppointment = async (appointmentId: string): Promise<boolean> => {
   try {
     const { error } = await supabase
