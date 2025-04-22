@@ -1,5 +1,5 @@
 
-import { Lead } from "../types/leadTypes";
+import { Lead } from "./types";
 import { v4 as uuidv4 } from 'uuid';
 
 // Create mock data for development and demo purposes
@@ -21,6 +21,7 @@ export const mockLeads: Lead[] = [
     updated_at: "2025-01-15T08:30:00.000Z",
     assigned_to: "user-1",
     owner: {
+      id: uuidv4(), // Added unique id
       name: "محمد علي",
       avatar: "",
       initials: "م ع"
@@ -43,6 +44,7 @@ export const mockLeads: Lead[] = [
     updated_at: "2025-01-22T14:30:00.000Z",
     assigned_to: "user-2",
     owner: {
+      id: uuidv4(), // Added unique id
       name: "سارة خالد",
       avatar: "",
       initials: "س خ"
@@ -65,6 +67,7 @@ export const mockLeads: Lead[] = [
     updated_at: "2025-02-01T13:45:00.000Z",
     assigned_to: "user-3",
     owner: {
+      id: uuidv4(), // Added unique id
       name: "أحمد محمد",
       avatar: "",
       initials: "أ م"
@@ -87,6 +90,7 @@ export const mockLeads: Lead[] = [
     updated_at: "2025-02-15T11:10:00.000Z",
     assigned_to: "user-2",
     owner: {
+      id: uuidv4(), // Added unique id
       name: "سارة خالد",
       avatar: "",
       initials: "س خ"
@@ -109,6 +113,7 @@ export const mockLeads: Lead[] = [
     updated_at: "2025-03-01T15:30:00.000Z",
     assigned_to: "user-1",
     owner: {
+      id: uuidv4(), // Added unique id
       name: "محمد علي",
       avatar: "",
       initials: "م ع"
