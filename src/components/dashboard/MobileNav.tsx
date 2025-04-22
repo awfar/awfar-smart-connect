@@ -1,5 +1,5 @@
 
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { Sheet, SheetContent, SheetClose } from '@/components/ui/sheet';
 import { Button } from '../ui/button';
@@ -13,6 +13,26 @@ interface MobileNavProps {
 
 const MobileNav = ({ isOpen, onClose }: MobileNavProps) => {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+
+  // Check if a path is active, considering both exact matches and subpaths
+  const isPathActive = (path: string) => {
+    if (!path) return false;
+    
+    // Home page (dashboard) special case
+    if (path === '/dashboard' && pathname === '/dashboard') {
+      return true;
+    }
+    
+    // For other paths, check if the current path starts with this path
+    // But only if it's not the dashboard path (to avoid matching all dashboard/* paths)
+    return path !== '/dashboard' && pathname.startsWith(path);
+  };
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    onClose();
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -46,11 +66,11 @@ const MobileNav = ({ isOpen, onClose }: MobileNavProps) => {
                   href={item.href}
                   label={item.label}
                   icon={item.icon}
-                  isActive={pathname === item.href}
+                  isActive={isPathActive(item.href)}
                   isMobile={true}
                   onClose={onClose}
                   subItems={item.subItems}
-                  expanded={item.expanded}
+                  expanded={item.subItems && item.subItems.some(subItem => isPathActive(subItem.href))}
                 />
               ))}
             </div>

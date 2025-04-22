@@ -1,20 +1,21 @@
 
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { LucideIcon, ChevronDown, ChevronLeft } from 'lucide-react';
-import { cn } from "@/lib/utils";
-import { Button } from '../ui/button';
-import { SheetClose } from '@/components/ui/sheet';
-import { NavItemConfig } from './navItemsConfig';
+import { ReactNode, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface NavItemProps {
   href: string;
   label: string;
-  icon: LucideIcon;
-  isActive: boolean;
+  icon: any;
+  isActive?: boolean;
   isMobile?: boolean;
   onClose?: () => void;
-  subItems?: NavItemConfig[];
+  subItems?: {
+    href: string;
+    label: string;
+    icon: any;
+  }[];
   expanded?: boolean;
 }
 
@@ -22,129 +23,86 @@ const NavItem = ({
   href, 
   label, 
   icon: Icon, 
-  isActive, 
-  isMobile, 
+  isActive = false,
+  isMobile = false,
   onClose,
   subItems,
-  expanded: defaultExpanded = false
+  expanded: defaultExpanded = false 
 }: NavItemProps) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
-  const location = useLocation();
 
-  const handleToggleExpand = (e: React.MouseEvent) => {
+  const handleClick = () => {
     if (subItems && subItems.length > 0) {
-      e.preventDefault();
       setExpanded(!expanded);
+    } else if (onClose) {
+      onClose();
     }
   };
 
-  // Check if current path or any subitem path is active
-  const isActiveItem = isActive || 
-    ((subItems || []).some(item => 
-      (item.href && location.pathname === item.href) || 
-      (item.href && location.pathname.startsWith(item.href))
-    ) ?? false);
-  
-  const renderContent = () => (
-    <Button
-      variant={isActiveItem ? "secondary" : "ghost"}
-      className={cn(
-        "w-full justify-between gap-2 text-right",
-        isActiveItem
-          ? "bg-awfar-accent text-awfar-primary hover:bg-awfar-accent/90"
-          : "text-white hover:bg-awfar-primary/50 hover:text-gray-200"
-      )}
-      onClick={subItems?.length ? handleToggleExpand : undefined}
-    >
-      <div className="flex items-center gap-2">
-        <Icon className="h-4 w-4" />
-        <span>{label}</span>
-      </div>
-      {subItems && subItems.length > 0 && (
-        expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />
-      )}
-    </Button>
-  );
-
-  // Check if a subitem path is active
-  const isSubItemActive = (subItemHref: string) => {
-    if (!subItemHref) return false;
-    return location.pathname === subItemHref || location.pathname.startsWith(subItemHref);
+  const handleSubItemClick = () => {
+    if (onClose) {
+      onClose();
+    }
   };
 
-  if (isMobile) {
-    return (
-      <>
-        {subItems && subItems.length > 0 ? (
-          <div className="space-y-1">
-            {renderContent()}
-            {expanded && (
-              <div className="mr-4 border-r border-gray-700 pr-2">
-                {(subItems || []).map((item) => (
-                  <SheetClose key={item.href} asChild>
-                    <Link to={item.href || '#'} onClick={onClose} className="block w-full">
-                      <Button
-                        variant={isSubItemActive(item.href) ? "secondary" : "ghost"}
-                        className={cn(
-                          "w-full justify-start gap-2 text-right mt-1",
-                          isSubItemActive(item.href)
-                            ? "bg-awfar-accent text-awfar-primary hover:bg-awfar-accent/90"
-                            : "text-white hover:bg-awfar-primary/50 hover:text-gray-200"
-                        )}
-                        size="sm"
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span className="text-sm">{item.label}</span>
-                      </Button>
-                    </Link>
-                  </SheetClose>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <SheetClose asChild>
-            <Link to={href || '#'} onClick={onClose} className="block w-full">
-              {renderContent()}
-            </Link>
-          </SheetClose>
-        )}
-      </>
-    );
-  }
-  
+  // Style for the main nav item
+  const navItemStyles = cn(
+    "flex items-center py-2 px-3 rounded-md transition-colors", 
+    {
+      "bg-white/10 text-white": isActive,
+      "hover:bg-white/5": !isActive
+    }
+  );
+
+  // Style for sub items
+  const subItemStyles = cn(
+    "flex items-center py-2 pr-9 pl-2 rounded-md transition-colors text-sm",
+    {
+      "hover:bg-white/5": true
+    }
+  );
+
   return (
-    <div className="space-y-1">
+    <div>
       {subItems && subItems.length > 0 ? (
+        // With submenu
         <>
-          <div onClick={handleToggleExpand} className="cursor-pointer">
-            {renderContent()}
-          </div>
+          <button onClick={handleClick} className={navItemStyles + " w-full justify-between"}>
+            <span className="flex items-center">
+              <Icon className="h-4 w-4 ml-2 opacity-75" />
+              {label}
+            </span>
+            <ChevronLeft className={`h-4 w-4 transition-transform ${expanded ? 'rotate-90' : ''}`} />
+          </button>
+          
           {expanded && (
-            <div className="mr-4 border-r border-gray-700 pr-2">
-              {(subItems || []).map((item) => (
-                <Link key={item.href} to={item.href || '#'} className="block w-full">
-                  <Button
-                    variant={isSubItemActive(item.href) ? "secondary" : "ghost"}
-                    className={cn(
-                      "w-full justify-start gap-2 text-right mt-1",
-                      isSubItemActive(item.href)
-                        ? "bg-awfar-accent text-awfar-primary hover:bg-awfar-accent/90"
-                        : "text-white hover:bg-awfar-primary/50 hover:text-gray-200"
-                    )}
-                    size="sm"
+            <div className="pt-1 pl-2">
+              {subItems.map((item) => {
+                const ItemIcon = item.icon;
+                const isSubItemActive = window.location.pathname === item.href;
+                
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={cn(subItemStyles, {
+                      "bg-white/10 text-white": isSubItemActive
+                    })}
+                    onClick={handleSubItemClick}
                   >
-                    <item.icon className="h-4 w-4" />
-                    <span className="text-sm">{item.label}</span>
-                  </Button>
-                </Link>
-              ))}
+                    <ItemIcon className="h-3.5 w-3.5 ml-2 opacity-75" />
+                    <span className="truncate">{item.label}</span>
+                  </Link>
+                );
+              })}
             </div>
           )}
         </>
       ) : (
-        <Link to={href || '#'}>
-          {renderContent()}
+        // No submenu
+        <Link to={href} onClick={handleClick} className={navItemStyles}>
+          <Icon className="h-4 w-4 ml-2 opacity-75" />
+          <span className="truncate">{label}</span>
         </Link>
       )}
     </div>

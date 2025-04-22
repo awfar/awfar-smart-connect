@@ -1,10 +1,11 @@
 
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { navItems } from './navItemsConfig';
 import NavItem from './NavItem';
 
 const DesktopNav = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Check if a path is active, considering both exact matches and subpaths
   const isPathActive = (path: string) => {
@@ -18,6 +19,10 @@ const DesktopNav = () => {
     // For other paths, check if the current path starts with this path
     // But only if it's not the dashboard path (to avoid matching all dashboard/* paths)
     return path !== '/dashboard' && location.pathname.startsWith(path);
+  };
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
   };
   
   return (
@@ -38,7 +43,7 @@ const DesktopNav = () => {
             icon={item.icon}
             isActive={isPathActive(item.href)}
             subItems={item.subItems}
-            expanded={item.expanded || isPathActive(item.href)}
+            expanded={item.subItems && (item.expanded || item.subItems.some(subItem => isPathActive(subItem.href)))}
           />
         ))}
       </div>

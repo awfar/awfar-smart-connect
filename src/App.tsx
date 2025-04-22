@@ -28,40 +28,44 @@ import CompanyProfile from './pages/companies/CompanyProfile';
 import DealsManagement from './pages/DealsManagement';
 import TicketsManagement from './pages/TicketsManagement';
 import LeadProfilePage from './pages/leads/LeadProfilePage';
+import DashboardLayoutWrapper from './components/layout/DashboardLayoutWrapper';
+import SystemTests from './pages/SystemTests';
+import CMS from './pages/CMS';
 
 function App() {
   return (
     <ThemeProvider defaultTheme="light" storageKey="theme">
       <Router>
         <Routes>
+          {/* Public Routes */}
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
 
-          {/* Dashboard Routes */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/dashboard/leads" element={<LeadManagement />} />
-          <Route path="/dashboard/leads/:id" element={<LeadProfilePage />} />
-          <Route path="/dashboard/tasks" element={<TasksManagement />} />
-          <Route path="/dashboard/appointments" element={<AppointmentsManagement />} />
-          <Route path="/dashboard/deals" element={<DealsManagement />} />
-          <Route path="/dashboard/deals/:id" element={<DealProfilePage />} />
-          <Route path="/dashboard/companies" element={<CompaniesManagement />} />
-          <Route path="/dashboard/companies/:id" element={<CompanyProfile />} />
-          <Route path="/dashboard/tickets" element={<TicketsManagement />} />
+          {/* Dashboard Routes with Layout Wrapper */}
+          <Route element={<DashboardLayoutWrapper />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/leads" element={<LeadManagement />} />
+            <Route path="/dashboard/leads/:id" element={<LeadProfilePage />} />
+            <Route path="/dashboard/tasks" element={<TasksManagement />} />
+            <Route path="/dashboard/appointments" element={<AppointmentsManagement />} />
+            <Route path="/dashboard/deals" element={<DealsManagement />} />
+            <Route path="/dashboard/deals/:id" element={<DealProfilePage />} />
+            <Route path="/dashboard/companies" element={<CompaniesManagement />} />
+            <Route path="/dashboard/companies/:id" element={<CompanyProfile />} />
+            <Route path="/dashboard/tickets" element={<TicketsManagement />} />
+            <Route path="/dashboard/users" element={<UserManagement />} />
+            <Route path="/dashboard/departments" element={<DepartmentsManagement />} />
+            <Route path="/dashboard/teams" element={<TeamsManagement />} />
+            <Route path="/dashboard/roles" element={<RolesManagement />} />
+            <Route path="/dashboard/permissions" element={<PermissionsManagement />} />
+            <Route path="/dashboard/settings" element={<Settings />} />
+            <Route path="/dashboard/cms" element={<CMS />} />
+            <Route path="/dashboard/system-tests" element={<SystemTests />} />
+          </Route>
           
-          {/* User Management Routes */}
-          <Route path="/dashboard/users" element={<UserManagement />} />
-          <Route path="/dashboard/departments" element={<DepartmentsManagement />} />
-          <Route path="/dashboard/teams" element={<TeamsManagement />} />
-          <Route path="/dashboard/roles" element={<RolesManagement />} />
-          <Route path="/dashboard/permissions" element={<PermissionsManagement />} />
-          
-          {/* Settings */}
-          <Route path="/dashboard/settings" element={<Settings />} />
-
           {/* Fallback routes */}
           <Route path="/dashboard/*" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<NotFound />} />

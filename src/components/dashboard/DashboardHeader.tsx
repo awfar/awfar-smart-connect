@@ -2,8 +2,15 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Bell, Menu, Search } from 'lucide-react';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { Bell, Menu, Search, Home, Users, DollarSign, Building2, Calendar } from 'lucide-react';
 import SystemStatus from '@/components/dashboard/SystemStatus';
 import { useBreakpoints } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
@@ -39,6 +46,15 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuToggle }) => {
     extendedUser.email.substring(0, 2).toUpperCase() : 
     'مس';
 
+  // Quick access links for desktop
+  const quickLinks = [
+    { path: '/dashboard', label: 'الرئيسية', icon: Home },
+    { path: '/dashboard/leads', label: 'العملاء المحتملين', icon: Users },
+    { path: '/dashboard/deals', label: 'الصفقات', icon: DollarSign },
+    { path: '/dashboard/companies', label: 'الشركات', icon: Building2 },
+    { path: '/dashboard/appointments', label: 'المواعيد', icon: Calendar },
+  ];
+
   return (
     <header className="h-16 md:h-20 border-b flex items-center fixed top-0 w-full z-50 bg-awfar-primary backdrop-blur supports-[backdrop-filter]:bg-awfar-primary/90">
       <div className="container mx-auto px-4 flex items-center justify-between">
@@ -72,6 +88,27 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ onMenuToggle }) => {
             </div>
           )}
         </div>
+
+        {/* Quick Access Navigation Links - Desktop Only */}
+        {!isMobile && (
+          <div className="hidden md:flex items-center space-x-1 rtl:space-x-reverse">
+            {quickLinks.map((link) => {
+              const Icon = link.icon;
+              return (
+                <Button 
+                  key={link.path}
+                  variant="ghost"
+                  size="sm"
+                  className="text-white hover:bg-white/10"
+                  onClick={() => navigate(link.path)}
+                >
+                  <Icon className="h-4 w-4 ml-1" />
+                  <span>{link.label}</span>
+                </Button>
+              );
+            })}
+          </div>
+        )}
 
         <div className="flex items-center gap-2 md:gap-3">
           {/* System Status - now visible on both mobile and desktop */}
