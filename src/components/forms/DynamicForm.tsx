@@ -273,7 +273,7 @@ function renderFormControl(property: Property, field: any) {
           </SelectTrigger>
           <SelectContent>
             {property.options?.map((option, i) => (
-              <SelectItem key={i} value={option.value}>
+              <SelectItem key={i} value={option.value || `option-${i}`}>
                 {option.label}
               </SelectItem>
             ))}
@@ -284,27 +284,28 @@ function renderFormControl(property: Property, field: any) {
     case 'checkbox':
       return (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          {property.options?.map((option) => (
+          {property.options?.map((option, i) => (
             <div 
-              key={option.value} 
+              key={option.value || `option-${i}`} 
               className="flex items-center space-x-2 rtl:space-x-reverse"
             >
               <Checkbox
-                id={`${property.name}-${option.value}`}
-                checked={field.value?.includes(option.value)}
+                id={`${property.name}-${option.value || `option-${i}`}`}
+                checked={field.value?.includes(option.value || `option-${i}`)}
                 onCheckedChange={(checked) => {
                   const currentValues = field.value || [];
+                  const optionValue = option.value || `option-${i}`;
                   if (checked) {
-                    field.onChange([...currentValues, option.value]);
+                    field.onChange([...currentValues, optionValue]);
                   } else {
                     field.onChange(
-                      currentValues.filter((value: string) => value !== option.value)
+                      currentValues.filter((value: string) => value !== optionValue)
                     );
                   }
                 }}
               />
               <label
-                htmlFor={`${property.name}-${option.value}`}
+                htmlFor={`${property.name}-${option.value || `option-${i}`}`}
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 {option.label}
@@ -321,11 +322,11 @@ function renderFormControl(property: Property, field: any) {
           onValueChange={field.onChange}
           className="grid grid-cols-1 md:grid-cols-2 gap-2"
         >
-          {property.options?.map((option) => (
-            <div key={option.value} className="flex items-center space-x-2 rtl:space-x-reverse">
-              <RadioGroupItem value={option.value} id={`${property.name}-${option.value}`} />
+          {property.options?.map((option, i) => (
+            <div key={option.value || `option-${i}`} className="flex items-center space-x-2 rtl:space-x-reverse">
+              <RadioGroupItem value={option.value || `option-${i}`} id={`${property.name}-${option.value || `option-${i}`}`} />
               <label
-                htmlFor={`${property.name}-${option.value}`}
+                htmlFor={`${property.name}-${option.value || `option-${i}`}`}
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 {option.label}

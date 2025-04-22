@@ -13,9 +13,9 @@ export interface AppointmentFormProps {
   leadId: string;
   onSuccess?: () => void;
   onClose?: () => void;
-  onCancel?: () => void; // Added this property
-  onSubmit?: (data: any) => Promise<void>; // Added this property
-  appointment?: Appointment; // Add the appointment prop for editing
+  onCancel?: () => void;
+  onSubmit?: (data: any) => Promise<void>;
+  appointment?: Appointment;
 }
 
 const AppointmentForm: React.FC<AppointmentFormProps> = ({ 
@@ -24,7 +24,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
   onClose,
   onCancel,
   onSubmit,
-  appointment // The appointment to edit, if provided
+  appointment
 }) => {
   // Initialize form with the appointment data if it exists
   const { register, handleSubmit, formState } = useForm({

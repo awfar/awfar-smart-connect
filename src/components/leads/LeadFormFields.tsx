@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -166,12 +167,12 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
             <SelectContent>
               {getCountries().length > 0 ? (
                 getCountries().map((country) => (
-                  <SelectItem key={country} value={country}>
+                  <SelectItem key={country} value={country || "unknown"}>
                     {country}
                   </SelectItem>
                 ))
               ) : (
-                <SelectItem value="no-options-available" disabled>
+                <SelectItem value="no-options-available">
                   لا توجد خيارات متاحة
                 </SelectItem>
               )}
@@ -190,12 +191,12 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
             <SelectContent>
               {getIndustries().length > 0 ? (
                 getIndustries().map((industry) => (
-                  <SelectItem key={industry} value={industry}>
+                  <SelectItem key={industry} value={industry || "unknown"}>
                     {industry}
                   </SelectItem>
                 ))
               ) : (
-                <SelectItem value="no-options-available" disabled>
+                <SelectItem value="no-options-available">
                   لا توجد خيارات متاحة
                 </SelectItem>
               )}
@@ -217,7 +218,7 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
             <SelectContent>
               {getStages().length > 0 ? (
                 getStages().map((stage) => (
-                  <SelectItem key={stage} value={stage}>
+                  <SelectItem key={stage} value={stage || "unknown"}>
                     {stage}
                   </SelectItem>
                 ))
@@ -239,12 +240,12 @@ const LeadFormFields: React.FC<LeadFormFieldsProps> = ({
             <SelectContent>
               {getSources().length > 0 ? (
                 getSources().map((source) => (
-                  <SelectItem key={source} value={source}>
+                  <SelectItem key={source} value={source || "unknown"}>
                     {source}
                   </SelectItem>
                 ))
               ) : (
-                <SelectItem value="no-source-available" disabled>
+                <SelectItem value="no-source-available">
                   لا توجد مصادر متاحة
                 </SelectItem>
               )}

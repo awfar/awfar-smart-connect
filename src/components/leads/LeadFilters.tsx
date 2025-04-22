@@ -122,7 +122,9 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({ onFilterChange }) => {
               <SelectContent>
                 <SelectItem value="all">جميع المراحل</SelectItem>
                 {options.stages.map(stage => (
-                  <SelectItem key={stage} value={stage}>{stage}</SelectItem>
+                  <SelectItem key={stage} value={stage || "unknown"}>
+                    {stage || "غير محدد"}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -140,7 +142,9 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({ onFilterChange }) => {
               <SelectContent>
                 <SelectItem value="all">جميع المصادر</SelectItem>
                 {options.sources.map(source => (
-                  <SelectItem key={source} value={source}>{source}</SelectItem>
+                  <SelectItem key={source} value={source || "unknown"}>
+                    {source || "غير محدد"}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -158,7 +162,9 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({ onFilterChange }) => {
               <SelectContent>
                 <SelectItem value="all">جميع الدول</SelectItem>
                 {options.countries.map(country => (
-                  <SelectItem key={country} value={country}>{country}</SelectItem>
+                  <SelectItem key={country} value={country || "unknown"}>
+                    {country || "غير محدد"}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -176,7 +182,9 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({ onFilterChange }) => {
               <SelectContent>
                 <SelectItem value="all">جميع القطاعات</SelectItem>
                 {options.industries.map(industry => (
-                  <SelectItem key={industry} value={industry}>{industry}</SelectItem>
+                  <SelectItem key={industry} value={industry || "unknown"}>
+                    {industry || "غير محدد"}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -194,7 +202,9 @@ const LeadFilters: React.FC<LeadFiltersProps> = ({ onFilterChange }) => {
               <SelectContent>
                 <SelectItem value="all">جميع المسؤولين</SelectItem>
                 {options.owners.map(owner => (
-                  <SelectItem key={owner.id} value={owner.id}>{owner.name}</SelectItem>
+                  <SelectItem key={owner.id} value={owner.id || "unknown"}>
+                    {owner.name || "غير محدد"}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
