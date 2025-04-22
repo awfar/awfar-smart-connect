@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { CompanyProfileTabs } from '@/components/companies/CompanyProfileTabs';
@@ -9,6 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getCompanyById } from '@/services/companies';
 import { toast } from 'sonner';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { CompanyActions } from '@/components/companies/CompanyActions';
 
 const CompanyProfile = () => {
   const { id } = useParams();
@@ -22,7 +22,6 @@ const CompanyProfile = () => {
     retry: 2, // Retry failed requests twice
   });
 
-  // Handle error with useEffect
   React.useEffect(() => {
     if (error) {
       console.error('Error fetching company data:', error);
@@ -96,6 +95,8 @@ const CompanyProfile = () => {
           </Button>
         </div>
       </div>
+
+      <CompanyActions companyId={company.id} />
 
       <CompanyProfileTabs company={company} />
     </div>
