@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ interface CompanyDealFormProps {
 }
 
 export const CompanyDealForm = ({ companyId, onSuccess, onCancel }: CompanyDealFormProps) => {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const form = useForm({
     defaultValues: {
       name: '',
@@ -25,6 +27,7 @@ export const CompanyDealForm = ({ companyId, onSuccess, onCancel }: CompanyDealF
 
   const onSubmit = async (data: any) => {
     try {
+      setIsSubmitting(true);
       const { error } = await supabase
         .from('deals')
         .insert({
@@ -35,7 +38,6 @@ export const CompanyDealForm = ({ companyId, onSuccess, onCancel }: CompanyDealF
 
       if (error) throw error;
 
-      // Log the action directly without using RPC
       const { error: logError } = await supabase
         .from('activity_logs')
         .insert({
@@ -48,10 +50,13 @@ export const CompanyDealForm = ({ companyId, onSuccess, onCancel }: CompanyDealF
 
       if (logError) console.error('Error logging activity:', logError);
       
+      toast.success('تم إضافة الصفقة بنجاح');
       onSuccess();
     } catch (error) {
       console.error('Error adding deal:', error);
       toast.error('حدث خطأ أثناء إضافة الصفقة');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -61,6 +66,7 @@ export const CompanyDealForm = ({ companyId, onSuccess, onCancel }: CompanyDealF
         <FormField
           control={form.control}
           name="name"
+          rules={{ required: "اسم الصفقة مطلوب" }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>اسم الصفقة</FormLabel>
@@ -109,11 +115,11 @@ export const CompanyDealForm = ({ companyId, onSuccess, onCancel }: CompanyDealF
         />
 
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
             إلغاء
           </Button>
-          <Button type="submit">
-            حفظ
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'جاري الحفظ...' : 'حفظ'}
           </Button>
         </div>
       </form>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ interface CompanyContactFormProps {
 }
 
 export const CompanyContactForm = ({ companyId, onSuccess, onCancel }: CompanyContactFormProps) => {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const form = useForm({
     defaultValues: {
       name: '',
@@ -24,6 +26,7 @@ export const CompanyContactForm = ({ companyId, onSuccess, onCancel }: CompanyCo
 
   const onSubmit = async (data: any) => {
     try {
+      setIsSubmitting(true);
       const { error } = await supabase
         .from('company_contacts')
         .insert({
@@ -33,7 +36,6 @@ export const CompanyContactForm = ({ companyId, onSuccess, onCancel }: CompanyCo
 
       if (error) throw error;
 
-      // Log the action directly without using RPC
       const { error: logError } = await supabase
         .from('activity_logs')
         .insert({
@@ -46,10 +48,13 @@ export const CompanyContactForm = ({ companyId, onSuccess, onCancel }: CompanyCo
 
       if (logError) console.error('Error logging activity:', logError);
 
+      toast.success('تم إضافة جهة الاتصال بنجاح');
       onSuccess();
     } catch (error) {
       console.error('Error adding contact:', error);
       toast.error('حدث خطأ أثناء إضافة جهة الاتصال');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -59,6 +64,7 @@ export const CompanyContactForm = ({ companyId, onSuccess, onCancel }: CompanyCo
         <FormField
           control={form.control}
           name="name"
+          rules={{ required: "الاسم مطلوب" }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>الاسم</FormLabel>
@@ -85,6 +91,12 @@ export const CompanyContactForm = ({ companyId, onSuccess, onCancel }: CompanyCo
         <FormField
           control={form.control}
           name="email"
+          rules={{
+            pattern: {
+              value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+              message: "البريد الإلكتروني غير صالح"
+            }
+          }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>البريد الإلكتروني</FormLabel>
@@ -109,11 +121,11 @@ export const CompanyContactForm = ({ companyId, onSuccess, onCancel }: CompanyCo
         />
 
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
             إلغاء
           </Button>
-          <Button type="submit">
-            حفظ
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'جاري الحفظ...' : 'حفظ'}
           </Button>
         </div>
       </form>

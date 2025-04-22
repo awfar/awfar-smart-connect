@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ interface CompanyActivityFormProps {
 }
 
 export const CompanyActivityForm = ({ companyId, onSuccess, onCancel }: CompanyActivityFormProps) => {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const form = useForm({
     defaultValues: {
       type: 'meeting',
@@ -25,6 +27,7 @@ export const CompanyActivityForm = ({ companyId, onSuccess, onCancel }: CompanyA
 
   const onSubmit = async (data: any) => {
     try {
+      setIsSubmitting(true);
       const { error } = await supabase
         .from('company_activities')
         .insert({
@@ -47,10 +50,13 @@ export const CompanyActivityForm = ({ companyId, onSuccess, onCancel }: CompanyA
 
       if (logError) console.error('Error logging activity:', logError);
 
+      toast.success('تم إضافة النشاط بنجاح');
       onSuccess();
     } catch (error) {
       console.error('Error adding activity:', error);
       toast.error('حدث خطأ أثناء إضافة النشاط');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -83,6 +89,7 @@ export const CompanyActivityForm = ({ companyId, onSuccess, onCancel }: CompanyA
         <FormField
           control={form.control}
           name="description"
+          rules={{ required: "الوصف مطلوب" }}
           render={({ field }) => (
             <FormItem>
               <FormLabel>الوصف</FormLabel>
@@ -107,11 +114,11 @@ export const CompanyActivityForm = ({ companyId, onSuccess, onCancel }: CompanyA
         />
 
         <div className="flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
             إلغاء
           </Button>
-          <Button type="submit">
-            حفظ
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? 'جاري الحفظ...' : 'حفظ'}
           </Button>
         </div>
       </form>
