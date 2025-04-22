@@ -33,6 +33,10 @@ import SystemTests from './pages/SystemTests';
 import CMS from './pages/CMS';
 import InvoiceManagement from './pages/InvoiceManagement';
 import CatalogManagement from './pages/CatalogManagement';
+import SubscriptionManagement from './pages/SubscriptionManagement';
+import PackageManagement from './pages/PackageManagement';
+import PropertiesManagement from './pages/PropertiesManagement';
+import FormBuilderManagement from './pages/FormBuilderManagement';
 
 function App() {
   return (
@@ -68,12 +72,12 @@ function App() {
             <Route path="/dashboard/cms" element={<CMS />} />
             <Route path="/dashboard/system-tests" element={<SystemTests />} />
             <Route path="/dashboard/catalog" element={<CatalogManagement />} />
+            <Route path="/dashboard/subscriptions" element={<SubscriptionManagement />} />
+            <Route path="/dashboard/packages" element={<PackageManagement />} />
+            <Route path="/dashboard/properties" element={<PropertiesManagement />} />
+            <Route path="/dashboard/forms" element={<FormBuilderManagement />} />
             
             {/* Add fallbacks for pages that haven't been created yet */}
-            <Route path="/dashboard/subscriptions" element={<Dashboard />} />
-            <Route path="/dashboard/packages" element={<Dashboard />} />
-            <Route path="/dashboard/properties" element={<Dashboard />} />
-            <Route path="/dashboard/forms" element={<Dashboard />} />
             <Route path="/dashboard/chats" element={<Dashboard />} />
           </Route>
           
