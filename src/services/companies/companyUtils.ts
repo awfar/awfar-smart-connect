@@ -15,9 +15,14 @@ export const transformCompanyData = (data: any): Company => ({
   created_at: data.created_at,
   size: data.size || "",
   contacts: data.contacts || [],
+  // Provide default account_manager when it's not available
   account_manager: data.account_manager ? {
     name: `${data.account_manager.first_name} ${data.account_manager.last_name}`,
     avatar: data.account_manager.avatar_url || "",
     initials: `${data.account_manager.first_name?.[0] || ""}${data.account_manager.last_name?.[0] || ""}`
-  } : undefined
+  } : {
+    name: "غير معين",
+    avatar: "",
+    initials: "غ م"
+  }
 });

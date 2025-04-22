@@ -23,17 +23,10 @@ export const getCompanyById = async (id: string): Promise<Company> => {
   }
 
   try {
+    // Modified query to remove the account_manager join which is causing errors
     const { data, error } = await supabase
       .from('companies')
-      .select(`
-        *,
-        account_manager:profiles!companies_account_manager_id_fkey(
-          id,
-          first_name,
-          last_name,
-          avatar_url
-        )
-      `)
+      .select('*')
       .eq('id', id)
       .maybeSingle();
 
