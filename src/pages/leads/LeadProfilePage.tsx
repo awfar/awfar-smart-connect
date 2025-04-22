@@ -1,17 +1,15 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Calendar, FileText, MessageCircle, Phone, Plus, User } from 'lucide-react';
+import { ArrowLeft, Calendar, FileText, MessageCircle, Phone, Plus } from 'lucide-react';
 import { useLeadProfile } from '@/hooks/useLeadProfile';
 import LeadProfileHeader from '@/components/leads/profile/LeadProfileHeader';
 import LeadProfileInfo from '@/components/leads/profile/LeadProfileInfo';
 import LeadProfileSidebar from '@/components/leads/profile/LeadProfileSidebar';
 import LeadActivityTimeline from '@/components/leads/profile/LeadActivityTimeline';
 import LeadRelatedRecords from '@/components/leads/profile/LeadRelatedRecords';
-import { Separator } from '@/components/ui/separator';
 import DeleteLeadDialog from '@/components/leads/dialogs/DeleteLeadDialog';
 import EditLeadDialog from '@/components/leads/dialogs/EditLeadDialog';
 import ActivityFormDialog from '@/components/leads/dialogs/ActivityFormDialog';
@@ -19,6 +17,7 @@ import TaskFormDialog from '@/components/leads/dialogs/TaskFormDialog';
 import AppointmentFormDialog from '@/components/leads/dialogs/AppointmentFormDialog';
 import { useToast } from '@/components/ui/use-toast';
 import { Lead as ServiceLead } from '@/services/leads/types';
+import { useBreakpoints } from '@/hooks/use-mobile';
 
 const LeadProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,13 +25,7 @@ const LeadProfilePage: React.FC = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('details');
   
-  // Dialogs state
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [showAddActivityDialog, setShowAddActivityDialog] = useState(false);
-  const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
-  const [showAddAppointmentDialog, setShowAddAppointmentDialog] = useState(false);
-  const [activityType, setActivityType] = useState<'note' | 'call' | 'email' | 'meeting' | 'task' | 'whatsapp'>('note');
+  const { isMobile } = useBreakpoints();
 
   const {
     lead,
@@ -62,7 +55,7 @@ const LeadProfilePage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="container mx-auto p-4">
         <div className="animate-pulse space-y-4">
           <div className="h-12 bg-muted rounded w-1/3"></div>
           <div className="h-32 bg-muted rounded w-full"></div>
@@ -74,8 +67,8 @@ const LeadProfilePage: React.FC = () => {
 
   if (error || !lead) {
     return (
-      <div className="container mx-auto py-8 text-center">
-        <h2 className="text-2xl font-bold mb-4">خطأ في تحميل بيانات العميل المحتمل</h2>
+      <div className="container mx-auto p-4 text-center">
+        <h2 className="text-xl font-semibold mb-4">خطأ في تحميل بيانات العميل المحتمل</h2>
         <p className="mb-4">{error || 'لم يتم العثور على العميل المحتمل'}</p>
         <Button onClick={() => navigate('/dashboard/leads')}>
           <ArrowLeft className="ml-2 h-4 w-4" /> العودة إلى قائمة العملاء المحتملين
@@ -102,7 +95,6 @@ const LeadProfilePage: React.FC = () => {
   };
 
   const handleUpdate = (updatedLead: ServiceLead) => {
-    // Ensure that when we call updateLead, we're passing a ServiceLead type
     updateLead(updatedLead as ServiceLead);
   };
 
@@ -123,34 +115,32 @@ const LeadProfilePage: React.FC = () => {
     setShowAddActivityDialog(true);
   };
 
-  // Make sure lead.owner.id is always defined
   const leadWithSafeOwner = {
     ...lead,
     owner: lead.owner ? {
       ...lead.owner,
-      id: lead.owner.id || ''  // Ensure id is never undefined
+      id: lead.owner.id || ''
     } : undefined
   };
 
   return (
-    <div className="container mx-auto py-4 md:py-8">
-      <LeadProfileHeader 
-        lead={leadWithSafeOwner}
-        onBack={() => navigate('/dashboard/leads')}
-        onEdit={() => setShowEditDialog(true)}
-        onDelete={() => setShowDeleteDialog(true)}
-      />
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-4">
+        <LeadProfileHeader 
+          lead={leadWithSafeOwner}
+          onBack={() => navigate('/dashboard/leads')}
+          onEdit={() => setShowEditDialog(true)}
+          onDelete={() => setShowDeleteDialog(true)}
+        />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Quick Action Buttons */}
-          <Card>
+        <div className={`mt-6 space-y-6 ${isMobile ? 'block' : 'grid grid-cols-3 gap-6'}`}>
+          <Card className={isMobile ? 'mb-6' : 'col-span-2'}>
             <CardContent className="p-4">
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2">
                 <Button 
                   variant="outline" 
                   size="sm"
+                  className="w-full sm:w-auto justify-center"
                   onClick={() => handleActivityClick('note')}
                 >
                   <MessageCircle className="ml-1.5 h-4 w-4" />
@@ -159,6 +149,7 @@ const LeadProfilePage: React.FC = () => {
                 <Button 
                   variant="outline" 
                   size="sm"
+                  className="w-full sm:w-auto justify-center"
                   onClick={() => handleActivityClick('call')}
                 >
                   <Phone className="ml-1.5 h-4 w-4" />
@@ -167,6 +158,7 @@ const LeadProfilePage: React.FC = () => {
                 <Button 
                   variant="outline" 
                   size="sm"
+                  className="w-full sm:w-auto justify-center"
                   onClick={() => setShowAddTaskDialog(true)}
                 >
                   <FileText className="ml-1.5 h-4 w-4" />
@@ -175,6 +167,7 @@ const LeadProfilePage: React.FC = () => {
                 <Button 
                   variant="outline" 
                   size="sm"
+                  className="w-full sm:w-auto justify-center"
                   onClick={() => setShowAddAppointmentDialog(true)}
                 >
                   <Calendar className="ml-1.5 h-4 w-4" />
@@ -184,44 +177,53 @@ const LeadProfilePage: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Tabs Navigation */}
-          <Tabs defaultValue="details" value={activeTab} onValueChange={setActiveTab} dir="rtl">
-            <TabsList className="grid grid-cols-3">
-              <TabsTrigger value="details">التفاصيل</TabsTrigger>
-              <TabsTrigger value="activity">النشاطات</TabsTrigger>
-              <TabsTrigger value="related">السجلات المرتبطة</TabsTrigger>
-            </TabsList>
+          <div className={isMobile ? 'space-y-6' : 'col-span-2 space-y-6'}>
+            <Tabs defaultValue="details" dir="rtl" className="w-full">
+              <TabsList className="w-full grid grid-cols-3">
+                <TabsTrigger value="details">التفاصيل</TabsTrigger>
+                <TabsTrigger value="activity">النشاطات</TabsTrigger>
+                <TabsTrigger value="related">السجلات المرتبطة</TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="details" className="mt-4">
-              <LeadProfileInfo lead={leadWithSafeOwner} />
-            </TabsContent>
+              <TabsContent value="details" className="mt-4">
+                <LeadProfileInfo lead={leadWithSafeOwner} />
+              </TabsContent>
 
-            <TabsContent value="activity" className="mt-4">
-              <LeadActivityTimeline 
-                activities={activities}
-                isLoading={isActivitiesLoading}
-                onAddActivity={() => setShowAddActivityDialog(true)}
-              />
-            </TabsContent>
+              <TabsContent value="activity" className="mt-4">
+                <LeadActivityTimeline 
+                  activities={activities}
+                  isLoading={isActivitiesLoading}
+                  onAddActivity={() => setShowAddActivityDialog(true)}
+                />
+              </TabsContent>
 
-            <TabsContent value="related" className="mt-4">
-              <LeadRelatedRecords
-                leadId={lead.id}
-                tasks={tasks}
-                appointments={appointments}
-                deals={deals || []}
-              />
-            </TabsContent>
-          </Tabs>
-        </div>
+              <TabsContent value="related" className="mt-4">
+                <LeadRelatedRecords
+                  leadId={lead.id}
+                  tasks={tasks}
+                  appointments={appointments}
+                  deals={deals || []}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
 
-        {/* Sidebar */}
-        <div className="lg:col-span-1">
-          <LeadProfileSidebar lead={leadWithSafeOwner} />
+          {!isMobile && (
+            <div className="col-span-1">
+              <LeadProfileSidebar lead={leadWithSafeOwner} />
+            </div>
+          )}
+
+          {isMobile && (
+            <Card>
+              <CardContent className="p-4">
+                <LeadProfileSidebar lead={leadWithSafeOwner} />
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
 
-      {/* Dialogs */}
       <DeleteLeadDialog 
         isOpen={showDeleteDialog} 
         onOpenChange={setShowDeleteDialog}

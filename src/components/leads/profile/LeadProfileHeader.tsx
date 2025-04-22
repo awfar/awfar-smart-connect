@@ -1,9 +1,11 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
-import { Lead } from '@/types/leads';
 import { Badge } from '@/components/ui/badge';
+import { Lead } from '@/types/leads';
+import { useBreakpoints } from '@/hooks/use-mobile';
 
 interface LeadProfileHeaderProps {
   lead: Lead;
@@ -16,67 +18,66 @@ const LeadProfileHeader: React.FC<LeadProfileHeaderProps> = ({
   lead,
   onBack,
   onEdit,
-  onDelete,
+  onDelete
 }) => {
-  // Function to get appropriate badge color based on lead status
-  const getStatusBadge = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'جديد':
-      case 'new':
-        return <Badge className="bg-blue-500">جديد</Badge>;
-      case 'مؤهل':
-      case 'qualified':
-        return <Badge className="bg-green-500">مؤهل</Badge>;
-      case 'اتصال أولي':
-      case 'contacted':
-        return <Badge className="bg-indigo-500">اتصال أولي</Badge>;
-      case 'تفاوض':
-      case 'negotiation':
-        return <Badge className="bg-amber-500">تفاوض</Badge>;
-      case 'عرض سعر':
-      case 'proposal':
-        return <Badge className="bg-purple-500">عرض سعر</Badge>;
-      case 'عميل':
-      case 'customer':
-        return <Badge className="bg-emerald-500">عميل</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
-    }
-  };
+  const { isMobile } = useBreakpoints();
 
   return (
-    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" onClick={onBack}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        
-        <div>
-          <h1 className="text-2xl font-bold">
-            {lead.first_name} {lead.last_name}
-          </h1>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-            <div>{lead.company || 'بدون شركة'}</div>
-            <div className="w-1 h-1 rounded-full bg-gray-400"></div>
-            <div>{lead.email}</div>
-            <div className="w-1 h-1 rounded-full bg-gray-400"></div>
-            <div>{lead.phone || 'بدون رقم هاتف'}</div>
+    <Card className="bg-white shadow-sm">
+      <CardContent className={`${isMobile ? 'p-4' : 'p-6'}`}>
+        <div className="flex flex-col space-y-4">
+          <div className="flex items-center justify-between">
+            <Button 
+              variant="ghost" 
+              size={isMobile ? "sm" : "default"}
+              onClick={onBack}
+              className="mr-auto"
+            >
+              <ArrowLeft className="h-4 w-4 ml-2" />
+              العودة
+            </Button>
+            
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size={isMobile ? "sm" : "default"}
+                onClick={onEdit}
+              >
+                <Edit className="h-4 w-4 ml-2" />
+                {!isMobile && "تعديل"}
+              </Button>
+              <Button
+                variant="destructive"
+                size={isMobile ? "sm" : "default"}
+                onClick={onDelete}
+              >
+                <Trash2 className="h-4 w-4 ml-2" />
+                {!isMobile && "حذف"}
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <h1 className="text-2xl font-bold">
+                {lead.first_name} {lead.last_name}
+              </h1>
+              <Badge variant="outline" className="w-fit">
+                {lead.stage || lead.status || "غير محدد"}
+              </Badge>
+            </div>
+            
+            {(lead.company || lead.position) && (
+              <p className="text-muted-foreground">
+                {lead.position}
+                {lead.position && lead.company && " - "}
+                {lead.company}
+              </p>
+            )}
           </div>
         </div>
-      </div>
-      
-      <div className="flex items-center gap-2 self-end md:self-auto">
-        {getStatusBadge(lead.status)}
-        <Button variant="outline" size="sm" onClick={onEdit}>
-          <Edit className="h-4 w-4 ml-1.5" />
-          تعديل
-        </Button>
-        <Button variant="outline" size="sm" className="text-destructive border-destructive hover:bg-destructive/10" onClick={onDelete}>
-          <Trash2 className="h-4 w-4 ml-1.5" />
-          حذف
-        </Button>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
