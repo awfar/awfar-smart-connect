@@ -217,7 +217,9 @@ const DealsList = ({ deals, onRefresh, onSort, isLoading = false }: DealsListPro
                       onClick={() => navigateToLead(deal.lead_id)}
                     >
                       <User className="h-3.5 w-3.5 ml-1.5 text-muted-foreground" />
-                      {deal.lead.name}
+                      {deal.lead.first_name && deal.lead.last_name 
+                        ? `${deal.lead.first_name} ${deal.lead.last_name}` 
+                        : deal.lead.email}
                     </button>
                   ) : deal.contact_name ? (
                     <span className="flex items-center text-sm">

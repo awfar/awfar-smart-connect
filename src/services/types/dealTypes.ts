@@ -47,10 +47,14 @@ export interface DealDBRow {
   companies?: {
     name: string;
   } | null;
+  company_contacts?: {
+    name: string;
+  } | null;
   leads?: {
     first_name: string;
     last_name: string;
     email: string;
+    name?: string;
   } | null;
 }
 
@@ -61,6 +65,8 @@ export interface DealActivity {
   description: string;
   created_at?: string;
   created_by?: string;
+  scheduled_at?: string;
+  completed_at?: string;
   creator?: {
     name: string;
     avatar?: string;

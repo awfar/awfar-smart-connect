@@ -212,6 +212,7 @@ const DealFilters = ({
                   onSelect={handleDateRangeChange}
                   numberOfMonths={2}
                   locale={ar}
+                  className="pointer-events-auto"
                 />
               </PopoverContent>
             </Popover>

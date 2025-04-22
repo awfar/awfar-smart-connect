@@ -1,40 +1,31 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { Deal } from "../types/dealTypes";
-import { transformDealFromSupabase } from "./utils";
 
-export const createDeal = async (dealData: Partial<Deal>): Promise<Deal | null> => {
+// Create a new deal
+export const createDeal = async (deal: Partial<Deal>): Promise<Deal | null> => {
   try {
+    // Get the current user
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) {
-      toast.error("يجب تسجيل الدخول لإنشاء صفقة");
-      return null;
+      throw new Error("User not authenticated");
     }
-
-    // Prepare data for insertion
-    const dealToInsert = {
-      name: dealData.name,
-      description: dealData.description,
-      value: dealData.value,
-      stage: dealData.stage,
-      status: dealData.status || 'active',
-      expected_close_date: dealData.expected_close_date,
-      owner_id: dealData.owner_id || userData.user.id,
-      company_id: dealData.company_id,
-      contact_id: dealData.contact_id,
-      lead_id: dealData.lead_id
-    };
 
     const { data, error } = await supabase
       .from('deals')
-      .insert([dealToInsert])
-      .select(`
-        *,
-        profiles:owner_id (first_name, last_name),
-        companies:company_id (name),
-        company_contacts:contact_id (name)
-      `)
+      .insert({
+        name: deal.name,
+        description: deal.description,
+        company_id: deal.company_id,
+        lead_id: deal.lead_id,
+        contact_id: deal.contact_id,
+        value: deal.value,
+        stage: deal.stage || 'discovery',
+        status: deal.status || 'active',
+        expected_close_date: deal.expected_close_date,
+        owner_id: deal.owner_id || userData.user.id
+      })
+      .select()
       .single();
 
     if (error) {
@@ -42,35 +33,52 @@ export const createDeal = async (dealData: Partial<Deal>): Promise<Deal | null> 
       throw error;
     }
 
-    toast.success("تم إنشاء الصفقة بنجاح");
-    
-    if (data) {
-      // Safe type casting to handle the response properly
-      return transformDealFromSupabase(data as any);
-    }
-    return null;
+    // Log activity for this deal creation
+    await supabase
+      .from('activity_logs')
+      .insert({
+        entity_type: 'deal',
+        entity_id: data.id,
+        action: 'create_deal',
+        details: `تم إنشاء صفقة جديدة: ${deal.name}`,
+        user_id: userData.user.id
+      });
+
+    return data;
   } catch (error) {
     console.error("Error in createDeal:", error);
-    toast.error("فشل في إنشاء الصفقة");
-    return null;
+    throw error;
   }
 };
 
-export const updateDeal = async (id: string, dealData: Partial<Deal>): Promise<Deal | null> => {
+// Update an existing deal
+export const updateDeal = async (id: string, deal: Partial<Deal>): Promise<Deal | null> => {
   try {
-    // Remove non-database fields from dealData
-    const { owner, activities, company_name, contact_name, ...dealToUpdate } = dealData;
+    // Get the current user
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      throw new Error("User not authenticated");
+    }
+
+    // Extract only the updatable fields
+    const updatableFields = {
+      name: deal.name,
+      description: deal.description,
+      company_id: deal.company_id,
+      lead_id: deal.lead_id,
+      contact_id: deal.contact_id,
+      value: deal.value,
+      stage: deal.stage,
+      status: deal.status,
+      expected_close_date: deal.expected_close_date,
+      owner_id: deal.owner_id
+    };
 
     const { data, error } = await supabase
       .from('deals')
-      .update(dealToUpdate)
+      .update(updatableFields)
       .eq('id', id)
-      .select(`
-        *,
-        profiles:owner_id (first_name, last_name),
-        companies:company_id (name),
-        company_contacts:contact_id (name)
-      `)
+      .select()
       .single();
 
     if (error) {
@@ -78,20 +86,25 @@ export const updateDeal = async (id: string, dealData: Partial<Deal>): Promise<D
       throw error;
     }
 
-    toast.success("تم تحديث الصفقة بنجاح");
-    
-    if (data) {
-      // Safe type casting to handle the response properly
-      return transformDealFromSupabase(data as any);
-    }
-    return null;
+    // Log activity for this deal update
+    await supabase
+      .from('activity_logs')
+      .insert({
+        entity_type: 'deal',
+        entity_id: id,
+        action: 'update_deal',
+        details: `تم تحديث بيانات الصفقة: ${deal.name}`,
+        user_id: userData.user.id
+      });
+
+    return data;
   } catch (error) {
     console.error("Error in updateDeal:", error);
-    toast.error("فشل في تحديث الصفقة");
-    return null;
+    throw error;
   }
 };
 
+// Delete a deal
 export const deleteDeal = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase
@@ -104,11 +117,9 @@ export const deleteDeal = async (id: string): Promise<boolean> => {
       throw error;
     }
 
-    toast.success("تم حذف الصفقة بنجاح");
     return true;
   } catch (error) {
     console.error("Error in deleteDeal:", error);
-    toast.error("فشل في حذف الصفقة");
-    return false;
+    throw error;
   }
 };

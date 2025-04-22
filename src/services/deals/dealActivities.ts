@@ -31,6 +31,9 @@ export const getDealActivities = async (dealId: string): Promise<DealActivity[]>
       description: activity.details || '',
       created_at: activity.created_at,
       created_by: activity.user_id,
+      scheduled_at: activity.action === 'meeting' || activity.action === 'call' ? 
+        (activity.details?.includes('scheduled:') ? activity.details.split('scheduled:')[1]?.split('|')[0]?.trim() : undefined) : undefined,
+      completed_at: activity.details?.includes('[COMPLETED]') ? activity.details.split('[COMPLETED]')[1]?.trim() : undefined,
       creator: {
         name: activity.profiles 
           ? `${activity.profiles.first_name || ''} ${activity.profiles.last_name || ''}`.trim()
@@ -52,13 +55,20 @@ export const addDealActivity = async (activity: Partial<DealActivity>): Promise<
       return null;
     }
     
+    let details = activity.description || '';
+    
+    // If it's a scheduled activity like meeting or call, add the scheduled time to details
+    if (activity.scheduled_at && (activity.type === 'meeting' || activity.type === 'call')) {
+      details = `${details} | scheduled: ${activity.scheduled_at}`;
+    }
+    
     const { data, error } = await supabase
       .from('activity_logs')
       .insert({
         entity_type: 'deal',
         entity_id: activity.deal_id,
         action: activity.type,
-        details: activity.description,
+        details: details,
         user_id: userData.user.id
       })
       .select()
@@ -76,6 +86,8 @@ export const addDealActivity = async (activity: Partial<DealActivity>): Promise<
       description: data.details || '',
       created_at: data.created_at,
       created_by: data.user_id,
+      scheduled_at: activity.scheduled_at,
+      completed_at: undefined,
       creator: {
         name: "أنت"
       }
@@ -89,10 +101,21 @@ export const addDealActivity = async (activity: Partial<DealActivity>): Promise<
 // Update activity status
 export const completeDealActivity = async (activityId: string): Promise<boolean> => {
   try {
+    // Get the current details
+    const { data: currentActivity } = await supabase
+      .from('activity_logs')
+      .select('details')
+      .eq('id', activityId)
+      .single();
+    
+    const currentDetails = currentActivity?.details || '';
+    const completedTimestamp = new Date().toISOString();
+    const updatedDetails = `${currentDetails} | [COMPLETED] ${completedTimestamp}`;
+    
     const { error } = await supabase
       .from('activity_logs')
       .update({
-        details: `[COMPLETED] ${new Date().toISOString()}`
+        details: updatedDetails
       })
       .eq('id', activityId);
     

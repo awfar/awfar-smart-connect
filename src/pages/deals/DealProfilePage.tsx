@@ -198,7 +198,9 @@ const DealProfilePage = () => {
                       onClick={() => navigate(`/dashboard/leads/${deal.lead_id}`)} 
                       className="p-0 h-auto mt-1 text-base font-medium"
                     >
-                      {deal.lead.name}
+                      {deal.lead.first_name && deal.lead.last_name ? 
+                        `${deal.lead.first_name} ${deal.lead.last_name}` : 
+                        deal.lead.email}
                     </Button>
                   ) : deal.contact_name ? (
                     <p className="mt-1 font-medium">{deal.contact_name}</p>

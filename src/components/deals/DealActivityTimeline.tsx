@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -95,7 +94,6 @@ const DealActivityTimeline = ({
     }
   };
   
-  // Filter activities based on selected tab
   const filteredActivities = activeTab === 'all' 
     ? activities 
     : activities.filter(activity => activity.type === activeTab);
@@ -186,20 +184,22 @@ const DealActivityTimeline = ({
                               {formatDate(activity.created_at)}
                             </span>
                           </div>
-                          {activity.scheduled_at && !activity.completed_at && (
-                            <Button 
-                              size="sm" 
-                              variant="ghost"
-                              className="h-8 px-2"
-                              onClick={() => handleComplete(activity.id)}
-                            >
-                              <Check className="h-4 w-4 ml-1" />
-                              تم
-                            </Button>
-                          )}
+                          {activity.type === 'call' || activity.type === 'meeting' ? (
+                            activity.scheduled_at && !activity.completed_at && (
+                              <Button 
+                                size="sm" 
+                                variant="ghost"
+                                className="h-8 px-2"
+                                onClick={() => handleComplete(activity.id)}
+                              >
+                                <Check className="h-4 w-4 ml-1" />
+                                تم
+                              </Button>
+                            )
+                          ) : null}
                         </div>
                         <p className="mt-1 whitespace-pre-wrap">{activity.description}</p>
-                        {activity.scheduled_at && (
+                        {(activity.type === 'call' || activity.type === 'meeting') && activity.scheduled_at && (
                           <div className="mt-2 text-sm text-muted-foreground flex items-center">
                             <Calendar className="h-3.5 w-3.5 ml-1" />
                             {activity.completed_at ? 

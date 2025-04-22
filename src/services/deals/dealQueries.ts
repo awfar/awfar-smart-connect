@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Deal, DealDBRow } from "../types/dealTypes";
 import { toast } from "sonner";
@@ -8,7 +9,7 @@ export const getDeals = async (filters?: Record<string, any>): Promise<Deal[]> =
   try {
     console.log("Fetching deals from Supabase with filters:", filters);
     
-    // Start building the query with explicit typing
+    // Start building the query
     let query = supabase
       .from('deals')
       .select(`
@@ -76,7 +77,10 @@ export const getDeals = async (filters?: Record<string, any>): Promise<Deal[]> =
     }
     
     // Transform data before returning
-    return (data || []).map((deal) => transformDealFromSupabase(deal as DealDBRow));
+    return (data || []).map((deal) => {
+      // Use type assertion to tell TypeScript about the expected structure
+      return transformDealFromSupabase(deal as unknown as DealDBRow);
+    });
   } catch (error) {
     console.error("Error fetching deals:", error);
     toast.error("تعذر جلب بيانات الصفقات");
@@ -104,7 +108,10 @@ export const getDealById = async (id: string): Promise<Deal | null> => {
       throw error;
     }
     
-    return data ? transformDealFromSupabase(data as DealDBRow) : null;
+    if (!data) return null;
+    
+    // Use type assertion to tell TypeScript about the expected structure
+    return transformDealFromSupabase(data as unknown as DealDBRow);
   } catch (error) {
     console.error("Error fetching deal by ID:", error);
     toast.error("تعذر جلب بيانات الصفقة");
@@ -133,7 +140,7 @@ export const getDealsByCompanyId = async (companyId: string): Promise<Deal[]> =>
     }
 
     if (data && data.length > 0) {
-      return data.map((deal: any) => transformDealFromSupabase(deal));
+      return data.map((deal) => transformDealFromSupabase(deal as unknown as DealDBRow));
     }
 
     return [];
@@ -165,7 +172,7 @@ export const getDealsByLeadId = async (leadId: string): Promise<Deal[]> => {
     }
 
     if (data && data.length > 0) {
-      return data.map((deal: any) => transformDealFromSupabase(deal));
+      return data.map((deal) => transformDealFromSupabase(deal as unknown as DealDBRow));
     }
 
     return [];
