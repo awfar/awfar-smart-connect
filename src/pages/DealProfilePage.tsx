@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { getDealById, getDealActivities } from "@/services/dealsService";
+import { getDealById } from "@/services/deals/dealQueries";
+import { getDealActivities } from "@/services/deals/dealActivities";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { ArrowLeft, Building, Calendar, Clock, DollarSign, Edit, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -111,6 +112,16 @@ const DealProfilePage = () => {
     return new Intl.NumberFormat('ar-SA', { style: 'currency', currency: 'SAR' }).format(value);
   };
   
+  const getLeadDisplayName = () => {
+    if (!deal.lead) return null;
+    
+    if (deal.lead.first_name && deal.lead.last_name) {
+      return `${deal.lead.first_name} ${deal.lead.last_name}`;
+    } 
+    
+    return deal.lead.email;
+  };
+  
   return (
     <DashboardLayout>
       <div className="space-y-6 p-6">
@@ -193,9 +204,7 @@ const DealProfilePage = () => {
                       onClick={() => navigate(`/dashboard/leads/${deal.lead_id}`)} 
                       className="p-0 h-auto mt-1 text-base font-medium"
                     >
-                      {deal.lead.first_name && deal.lead.last_name ? 
-                        `${deal.lead.first_name} ${deal.lead.last_name}` : 
-                        deal.lead.email}
+                      {getLeadDisplayName()}
                     </Button>
                   ) : deal.contact_name ? (
                     <p className="mt-1 font-medium">{deal.contact_name}</p>

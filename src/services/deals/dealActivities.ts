@@ -24,23 +24,36 @@ export const getDealActivities = async (dealId: string): Promise<DealActivity[]>
     if (!data) return [];
     
     // Transform data to match DealActivity type
-    return data.map((activity) => ({
-      id: activity.id,
-      deal_id: activity.entity_id,
-      type: activity.action.startsWith('add_') ? activity.action.substring(4) : activity.action,
-      description: activity.details || '',
-      created_at: activity.created_at,
-      created_by: activity.user_id,
-      // Safely handle profiles which might be null
-      creator: {
-        name: activity.profiles 
-          ? `${activity.profiles.first_name || ''} ${activity.profiles.last_name || ''}`.trim()
-          : 'مستخدم النظام'
-      },
-      scheduled_at: activity.action === 'meeting' || activity.action === 'call' ? 
-        (activity.details?.includes('scheduled:') ? activity.details.split('scheduled:')[1]?.split('|')[0]?.trim() : undefined) : undefined,
-      completed_at: activity.details?.includes('[COMPLETED]') ? activity.details.split('[COMPLETED]')[1]?.trim() : undefined
-    }));
+    return data.map((activity) => {
+      // Safely extract creator name from profiles, providing a default if not available
+      let creatorName = "مستخدم النظام";
+      
+      if (activity.profiles && 
+          typeof activity.profiles === 'object' && 
+          'first_name' in activity.profiles && 
+          'last_name' in activity.profiles) {
+        const firstName = activity.profiles.first_name || '';
+        const lastName = activity.profiles.last_name || '';
+        if (firstName || lastName) {
+          creatorName = `${firstName} ${lastName}`.trim();
+        }
+      }
+      
+      return {
+        id: activity.id,
+        deal_id: activity.entity_id,
+        type: activity.action.startsWith('add_') ? activity.action.substring(4) : activity.action,
+        description: activity.details || '',
+        created_at: activity.created_at,
+        created_by: activity.user_id,
+        creator: {
+          name: creatorName
+        },
+        scheduled_at: activity.action === 'meeting' || activity.action === 'call' ? 
+          (activity.details?.includes('scheduled:') ? activity.details.split('scheduled:')[1]?.split('|')[0]?.trim() : undefined) : undefined,
+        completed_at: activity.details?.includes('[COMPLETED]') ? activity.details.split('[COMPLETED]')[1]?.trim() : undefined
+      };
+    });
   } catch (error) {
     console.error("Error in getDealActivities:", error);
     return [];

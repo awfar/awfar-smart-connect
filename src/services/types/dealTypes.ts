@@ -41,20 +41,19 @@ export interface DealDBRow {
   created_at?: string;
   updated_at?: string;
   profiles?: {
-    first_name: string;
-    last_name: string;
+    first_name?: string | null;
+    last_name?: string | null;
   } | null;
   companies?: {
-    name: string;
+    name?: string | null;
   } | null;
   company_contacts?: {
-    name: string;
+    name?: string | null;
   } | null;
   leads?: {
-    first_name: string;
-    last_name: string;
-    email: string;
-    name?: string;
+    first_name?: string | null;
+    last_name?: string | null;
+    email?: string | null;
   } | null;
 }
 

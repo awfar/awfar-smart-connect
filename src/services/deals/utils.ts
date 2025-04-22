@@ -55,9 +55,9 @@ export const transformDealFromSupabase = (deal: DealDBRow): Deal => {
     lead_id: deal.lead_id,
     lead: deal.leads ? {
       id: deal.lead_id || '',
-      first_name: deal.leads.first_name,
-      last_name: deal.leads.last_name,
-      email: deal.leads.email,
+      first_name: deal.leads.first_name || '',
+      last_name: deal.leads.last_name || '',
+      email: deal.leads.email || '',
       status: 'active',  // Provide default values for required Lead properties
       created_at: deal.created_at || new Date().toISOString(),
       updated_at: deal.updated_at || new Date().toISOString()

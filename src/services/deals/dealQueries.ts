@@ -95,7 +95,11 @@ export const getDeals = async (filters?: DealFilters): Promise<Deal[]> => {
     }
     
     // Transform data before returning
-    return (data || []).map((deal) => transformDealFromSupabase(deal as DealDBRow));
+    return (data || []).map((deal) => {
+      // Cast to DealDBRow after ensuring it has the expected structure
+      const dealData = deal as unknown as DealDBRow;
+      return transformDealFromSupabase(dealData);
+    });
   } catch (error) {
     console.error("Error fetching deals:", error);
     toast.error("تعذر جلب بيانات الصفقات");
@@ -125,7 +129,8 @@ export const getDealById = async (id: string): Promise<Deal | null> => {
     
     if (!data) return null;
     
-    return transformDealFromSupabase(data as DealDBRow);
+    // Cast to DealDBRow after ensuring it has the expected structure
+    return transformDealFromSupabase(data as unknown as DealDBRow);
   } catch (error) {
     console.error("Error fetching deal by ID:", error);
     toast.error("تعذر جلب بيانات الصفقة");
@@ -154,7 +159,10 @@ export const getDealsByCompanyId = async (companyId: string): Promise<Deal[]> =>
     }
 
     if (data && data.length > 0) {
-      return data.map((deal) => transformDealFromSupabase(deal as DealDBRow));
+      return data.map((deal) => {
+        // Cast to DealDBRow after ensuring it has the expected structure
+        return transformDealFromSupabase(deal as unknown as DealDBRow);
+      });
     }
 
     return [];
@@ -186,7 +194,10 @@ export const getDealsByLeadId = async (leadId: string): Promise<Deal[]> => {
     }
 
     if (data && data.length > 0) {
-      return data.map((deal) => transformDealFromSupabase(deal as DealDBRow));
+      return data.map((deal) => {
+        // Cast to DealDBRow after ensuring it has the expected structure
+        return transformDealFromSupabase(deal as unknown as DealDBRow);
+      });
     }
 
     return [];

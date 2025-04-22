@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider } from '@/components/ui/theme-provider';
+import { ThemeProvider } from './components/ui/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 
 // Import pages
@@ -18,10 +18,6 @@ import LeadManagement from './pages/LeadManagement';
 import TasksManagement from './pages/TasksManagement';
 import AppointmentsManagement from './pages/AppointmentsManagement';
 import DealProfilePage from './pages/DealProfilePage';
-
-// Import the second DealProfilePage from deals folder
-import DealProfilePageFromDeals from './pages/deals/DealProfilePage';
-
 import DepartmentsManagement from './pages/DepartmentsManagement';
 import TeamsManagement from './pages/TeamsManagement';
 import RolesManagement from './pages/RolesManagement';
