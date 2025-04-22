@@ -6,20 +6,38 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useBreakpoints } from '@/hooks/use-mobile';
+import { useQuery } from '@tanstack/react-query';
+import { getCompanyById } from '@/services/companies';
 
 const CompanyProfile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isMobile } = useBreakpoints();
+  
+  const { data: company, isLoading, error } = useQuery({
+    queryKey: ['company', id],
+    queryFn: () => getCompanyById(id || ''),
+    enabled: !!id
+  });
 
-  // This is temporary mock data - will be replaced with real data fetch
-  const company = {
-    id: id || '',
-    name: 'شركة نموذجية',
-    website: 'www.example.com',
-    industry: 'التقنية',
-    type: 'customer'
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-6 min-h-[300px]">
+        <p className="text-muted-foreground">جاري تحميل بيانات الشركة...</p>
+      </div>
+    );
+  }
+  
+  if (error || !company) {
+    return (
+      <div className="flex flex-col items-center justify-center p-6 min-h-[300px]">
+        <p className="text-destructive mb-4">حدث خطأ في تحميل بيانات الشركة</p>
+        <Button onClick={() => navigate('/dashboard/companies')}>
+          العودة إلى قائمة الشركات
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6">

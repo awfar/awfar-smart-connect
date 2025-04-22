@@ -37,6 +37,7 @@ import InvoiceManagement from "./pages/InvoiceManagement";
 import PackageManagement from "./pages/PackageManagement";
 import ProductDetails from "./pages/ProductDetails";
 import CompaniesManagement from "./pages/CompaniesManagement";
+import CompanyProfile from "./pages/companies/CompanyProfile";
 import CompanyPropertiesManagement from "./pages/CompanyPropertiesManagement";
 import SystemTests from "./pages/SystemTests";
 import LoginPage from "./pages/LoginPage";
@@ -85,6 +86,7 @@ function App() {
               <Route path="/dashboard/packages" element={<PackageManagement />} />
               <Route path="/dashboard/catalog/:id" element={<ProductDetails />} />
               <Route path="/dashboard/companies" element={<CompaniesManagement />} />
+              <Route path="/dashboard/companies/:id" element={<CompanyProfile />} />
               <Route path="/dashboard/companies/properties" element={<CompanyPropertiesManagement />} />
               <Route path="/dashboard/system-tests" element={<SystemTests />} />
               <Route path="/dashboard/teams" element={<TeamsManagement />} />

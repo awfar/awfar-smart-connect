@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import type { Company } from '@/types/company';
+import type { Company } from '@/services/companies/companyTypes';
 import { CompanyDocuments } from './CompanyDocuments';
 import { CompanyTimeline } from './CompanyTimeline';
 import { CompanyDeals } from './CompanyDeals';
@@ -81,4 +80,3 @@ export const CompanyProfileTabs: React.FC<CompanyProfileTabsProps> = ({
     </Tabs>
   );
 };
-
