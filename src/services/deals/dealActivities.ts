@@ -24,25 +24,19 @@ export const getDealActivities = async (dealId: string): Promise<DealActivity[]>
     if (!data) return [];
     
     // Transform data to match DealActivity type
-    return data.map((activity: any) => {
-      const creatorName = activity.profiles 
-        ? `${activity.profiles.first_name || ''} ${activity.profiles.last_name || ''}`.trim()
-        : 'مستخدم النظام';
-      
-      return {
-        id: activity.id,
-        deal_id: activity.entity_id,
-        type: activity.action.startsWith('add_') ? activity.action.substring(4) : activity.action,
-        description: activity.details || '',
-        created_at: activity.created_at,
-        created_by: activity.user_id,
-        creator: {
-          name: creatorName
-        },
-        scheduled_at: null,
-        completed_at: null
-      };
-    });
+    return data.map((activity) => ({
+      id: activity.id,
+      deal_id: activity.entity_id,
+      type: activity.action.startsWith('add_') ? activity.action.substring(4) : activity.action,
+      description: activity.details || '',
+      created_at: activity.created_at,
+      created_by: activity.user_id,
+      creator: {
+        name: activity.profiles 
+          ? `${activity.profiles.first_name || ''} ${activity.profiles.last_name || ''}`.trim()
+          : 'مستخدم النظام'
+      }
+    }));
   } catch (error) {
     console.error("Error in getDealActivities:", error);
     return [];
@@ -58,14 +52,13 @@ export const addDealActivity = async (activity: Partial<DealActivity>): Promise<
       return null;
     }
     
-    // Log in activity_logs table instead of a missing deal_activities table
     const { data, error } = await supabase
       .from('activity_logs')
       .insert({
         entity_type: 'deal',
         entity_id: activity.deal_id,
-        action: `add_${activity.type}`,
-        details: activity.description?.substring(0, 500),
+        action: activity.type,
+        details: activity.description,
         user_id: userData.user.id
       })
       .select()
@@ -76,33 +69,26 @@ export const addDealActivity = async (activity: Partial<DealActivity>): Promise<
       throw error;
     }
     
-    if (data) {
-      return {
-        id: data.id,
-        deal_id: data.entity_id,
-        type: data.action.startsWith('add_') ? data.action.substring(4) : data.action,
-        description: data.details || '',
-        created_at: data.created_at,
-        created_by: data.user_id,
-        scheduled_at: null,
-        completed_at: null,
-        creator: {
-          name: "أنت"
-        }
-      };
-    }
-    
-    return null;
+    return data ? {
+      id: data.id,
+      deal_id: data.entity_id,
+      type: data.action,
+      description: data.details || '',
+      created_at: data.created_at,
+      created_by: data.user_id,
+      creator: {
+        name: "أنت"
+      }
+    } : null;
   } catch (error) {
     console.error("Error in addDealActivity:", error);
     throw error;
   }
 };
 
-// Mark activity as completed
+// Update activity status
 export const completeDealActivity = async (activityId: string): Promise<boolean> => {
   try {
-    // Update the activity_logs table instead
     const { error } = await supabase
       .from('activity_logs')
       .update({

@@ -19,16 +19,11 @@ export interface Deal {
   company_id?: string;
   company_name?: string;
   lead_id?: string;
-  lead?: {
-    id: string;
-    name: string;
-    email?: string;
-  };
+  lead?: Lead;
   contact_id?: string;
   contact_name?: string;
   created_at?: string;
   updated_at?: string;
-  activities?: DealActivity[];
 }
 
 export interface DealDBRow {
@@ -45,22 +40,18 @@ export interface DealDBRow {
   contact_id?: string;
   created_at?: string;
   updated_at?: string;
-  // Updated to handle SelectQueryError
   profiles?: {
     first_name: string;
     last_name: string;
-  } | null | { error: boolean; [key: string]: any };
+  } | null;
   companies?: {
     name: string;
-  } | null | { error: boolean; [key: string]: any };
-  company_contacts?: {
-    name: string;
-  } | null | { error: boolean; [key: string]: any };
+  } | null;
   leads?: {
     first_name: string;
     last_name: string;
     email: string;
-  } | null | { error: boolean; [key: string]: any };
+  } | null;
 }
 
 export interface DealActivity {
@@ -74,6 +65,4 @@ export interface DealActivity {
     name: string;
     avatar?: string;
   };
-  scheduled_at?: string | null;
-  completed_at?: string | null;
 }

@@ -1,15 +1,14 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Deal, DealDBRow } from "../types/dealTypes";
 import { toast } from "sonner";
 import { transformDealFromSupabase } from "./utils";
 
-// Get all deals with filter options
+// Get all deals with filter options - simplified type handling
 export const getDeals = async (filters?: Record<string, any>): Promise<Deal[]> => {
   try {
     console.log("Fetching deals from Supabase with filters:", filters);
     
-    // Start building the query
+    // Start building the query with explicit typing
     let query = supabase
       .from('deals')
       .select(`
@@ -77,13 +76,7 @@ export const getDeals = async (filters?: Record<string, any>): Promise<Deal[]> =
     }
     
     // Transform data before returning
-    if (data && data.length > 0) {
-      // Use a type safe approach with explicit transformations
-      return data.map((deal: any) => transformDealFromSupabase(deal));
-    }
-    
-    console.log("No deals found in Supabase, returning empty array");
-    return [];
+    return (data || []).map((deal) => transformDealFromSupabase(deal as DealDBRow));
   } catch (error) {
     console.error("Error fetching deals:", error);
     toast.error("تعذر جلب بيانات الصفقات");
@@ -91,7 +84,7 @@ export const getDeals = async (filters?: Record<string, any>): Promise<Deal[]> =
   }
 };
 
-// Get deal by ID from Supabase
+// Get deal by ID from Supabase with explicit typing
 export const getDealById = async (id: string): Promise<Deal | null> => {
   try {
     const { data, error } = await supabase
@@ -111,12 +104,7 @@ export const getDealById = async (id: string): Promise<Deal | null> => {
       throw error;
     }
     
-    if (data) {
-      // Safe type casting to handle the response properly
-      return transformDealFromSupabase(data as any);
-    }
-    
-    return null;
+    return data ? transformDealFromSupabase(data as DealDBRow) : null;
   } catch (error) {
     console.error("Error fetching deal by ID:", error);
     toast.error("تعذر جلب بيانات الصفقة");
