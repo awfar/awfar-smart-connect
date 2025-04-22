@@ -18,30 +18,39 @@ export const getCompanies = async (): Promise<Company[]> => {
 };
 
 export const getCompanyById = async (id: string): Promise<Company> => {
-  const { data, error } = await supabase
-    .from('companies')
-    .select(`
-      *,
-      account_manager:profiles!companies_account_manager_id_fkey(
-        id,
-        first_name,
-        last_name,
-        avatar_url
-      )
-    `)
-    .eq('id', id)
-    .maybeSingle();
+  if (!id) {
+    throw new Error('Company ID is required');
+  }
 
-  if (error) {
-    console.error(`Error fetching company with id ${id}:`, error);
+  try {
+    const { data, error } = await supabase
+      .from('companies')
+      .select(`
+        *,
+        account_manager:profiles!companies_account_manager_id_fkey(
+          id,
+          first_name,
+          last_name,
+          avatar_url
+        )
+      `)
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) {
+      console.error(`Error fetching company with id ${id}:`, error);
+      throw error;
+    }
+
+    if (!data) {
+      throw new Error(`Company with id ${id} not found`);
+    }
+
+    return transformCompanyData(data);
+  } catch (error) {
+    console.error(`Failed to fetch company with id ${id}:`, error);
     throw error;
   }
-
-  if (!data) {
-    throw new Error(`Company with id ${id} not found`);
-  }
-
-  return transformCompanyData(data);
 };
 
 export const searchCompanies = async (query: string): Promise<Company[]> => {
