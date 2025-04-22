@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import type { Company } from '@/types/company';
+import { CompanyDocuments } from './CompanyDocuments';
 
 interface CompanyProfileTabsProps {
   company: Company;
@@ -19,6 +19,7 @@ export const CompanyProfileTabs: React.FC<CompanyProfileTabsProps> = ({
         <TabsTrigger value="deals">الفرص</TabsTrigger>
         <TabsTrigger value="invoices">الفواتير</TabsTrigger>
         <TabsTrigger value="activities">الأنشطة</TabsTrigger>
+        <TabsTrigger value="documents">المستندات</TabsTrigger>
         <TabsTrigger value="timeline">التسلسل الزمني</TabsTrigger>
       </TabsList>
 
@@ -44,6 +45,10 @@ export const CompanyProfileTabs: React.FC<CompanyProfileTabsProps> = ({
             </div>
           </div>
         </Card>
+      </TabsContent>
+
+      <TabsContent value="documents">
+        <CompanyDocuments companyId={company.id} />
       </TabsContent>
 
       <TabsContent value="contacts">

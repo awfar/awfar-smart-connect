@@ -1,4 +1,3 @@
-
 export interface Company {
   id: string;
   name: string;
@@ -28,4 +27,17 @@ export interface CompanyActivity {
   created_at: string;
   scheduled_at?: string;
   completed_at?: string;
+}
+
+export interface CompanyDocument {
+  id: string;
+  company_id: string;
+  name: string;
+  file_url: string;
+  category: 'quotations' | 'contracts' | 'invoices' | 'company_files';
+  subcategory?: string;
+  description?: string;
+  created_by?: string;
+  created_at?: string;
+  updated_at?: string;
 }
