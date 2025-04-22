@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/popover";
 import { format, parseISO } from "date-fns";
 import { ar } from "date-fns/locale";
-import { CalendarIcon, Loader2, Plus } from "lucide-react";
+import { CalendarIcon, Loader2, Plus, AlertCircle } from "lucide-react";
 import { createDeal, updateDeal } from "@/services/deals/dealMutations";
 import { getSalesTeamMembers } from "@/services/deals/dealQueries";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +38,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Combobox } from "@/components/ui/combobox";
 import { toast } from "sonner";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 interface DealFormProps {
   onCancel: () => void;
@@ -72,6 +74,9 @@ const DealForm = ({ onCancel, onSave, dealId, initialData, companyId, leadId }: 
   const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
   const [isLoadingLeads, setIsLoadingLeads] = useState(false);
   const [isLoadingContacts, setIsLoadingContacts] = useState(false);
+  const [showCompanyDialog, setShowCompanyDialog] = useState(false);
+  const [showLeadDialog, setShowLeadDialog] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
   
   // Create form with validation
   const form = useForm<DealFormValues>({
@@ -92,11 +97,16 @@ const DealForm = ({ onCancel, onSave, dealId, initialData, companyId, leadId }: 
   // Fetch sales team members
   useEffect(() => {
     const fetchSalesTeam = async () => {
-      const members = await getSalesTeamMembers();
-      setSalesTeam(members.map((member: any) => ({
-        id: member.id,
-        name: `${member.first_name || ''} ${member.last_name || ''}`.trim() || member.id
-      })));
+      try {
+        const members = await getSalesTeamMembers();
+        setSalesTeam(members.map((member: any) => ({
+          id: member.id,
+          name: `${member.first_name || ''} ${member.last_name || ''}`.trim() || member.email || member.id
+        })));
+      } catch (error) {
+        console.error("Error fetching sales team members:", error);
+        toast.error("حدث خطأ أثناء جلب بيانات فريق المبيعات");
+      }
     };
     
     fetchSalesTeam();
@@ -120,13 +130,14 @@ const DealForm = ({ onCancel, onSave, dealId, initialData, companyId, leadId }: 
         })));
       } catch (error) {
         console.error("Error fetching companies:", error);
+        toast.error("حدث خطأ أثناء جلب بيانات الشركات");
       } finally {
         setIsLoadingCompanies(false);
       }
     };
     
     fetchCompanies();
-  }, []);
+  }, [showCompanyDialog]); // Refetch when company dialog is closed
   
   // Fetch leads based on company selection or all leads if no company selected
   const fetchLeadsForCompany = async (companyId: string | null) => {
@@ -134,7 +145,7 @@ const DealForm = ({ onCancel, onSave, dealId, initialData, companyId, leadId }: 
     try {
       let query = supabase
         .from('leads')
-        .select('id, first_name, last_name');
+        .select('id, first_name, last_name, email');
         
       if (companyId) {
         query = query.eq('company_id', companyId);
@@ -146,10 +157,11 @@ const DealForm = ({ onCancel, onSave, dealId, initialData, companyId, leadId }: 
       
       setLeads(data.map(lead => ({
         id: lead.id,
-        name: `${lead.first_name || ''} ${lead.last_name || ''}`.trim()
+        name: `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || lead.email || lead.id
       })));
     } catch (error) {
       console.error("Error fetching leads:", error);
+      toast.error("حدث خطأ أثناء جلب بيانات العملاء المحتملين");
     } finally {
       setIsLoadingLeads(false);
     }
@@ -166,7 +178,7 @@ const DealForm = ({ onCancel, onSave, dealId, initialData, companyId, leadId }: 
     try {
       const { data, error } = await supabase
         .from('company_contacts')
-        .select('id, name')
+        .select('id, name, email')
         .eq('company_id', companyId)
         .order('name');
         
@@ -174,10 +186,11 @@ const DealForm = ({ onCancel, onSave, dealId, initialData, companyId, leadId }: 
       
       setContacts(data.map(contact => ({
         id: contact.id,
-        name: contact.name
+        name: contact.name || contact.email || contact.id
       })));
     } catch (error) {
       console.error("Error fetching contacts:", error);
+      toast.error("حدث خطأ أثناء جلب بيانات جهات الاتصال");
     } finally {
       setIsLoadingContacts(false);
     }
@@ -188,7 +201,7 @@ const DealForm = ({ onCancel, onSave, dealId, initialData, companyId, leadId }: 
   useEffect(() => {
     fetchLeadsForCompany(selectedCompanyId);
     fetchContactsForCompany(selectedCompanyId);
-  }, [selectedCompanyId]);
+  }, [selectedCompanyId, showLeadDialog]); // Refetch when lead dialog is closed
   
   // If initial data contains company_id and we're editing, load leads and contacts
   useEffect(() => {
@@ -203,8 +216,9 @@ const DealForm = ({ onCancel, onSave, dealId, initialData, companyId, leadId }: 
     if (companyId) {
       fetchLeadsForCompany(companyId);
       fetchContactsForCompany(companyId);
+      form.setValue("company_id", companyId);
     }
-  }, [companyId]);
+  }, [companyId, form]);
   
   // If leadId is provided, set it
   useEffect(() => {
@@ -215,6 +229,7 @@ const DealForm = ({ onCancel, onSave, dealId, initialData, companyId, leadId }: 
 
   const onSubmit = async (data: DealFormValues) => {
     setIsSubmitting(true);
+    setFormError(null);
     
     try {
       // Parse the value to a number if provided
@@ -226,23 +241,42 @@ const DealForm = ({ onCancel, onSave, dealId, initialData, companyId, leadId }: 
       if (dealId) {
         // Update existing deal
         await updateDeal(dealId, parsedData as any);
+        toast.success("تم تحديث الصفقة بنجاح");
       } else {
         // Create new deal
         await createDeal(parsedData as any);
+        toast.success("تم إنشاء الصفقة بنجاح");
       }
       
       onSave();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving deal:", error);
+      setFormError(error.message || "حدث خطأ أثناء حفظ الصفقة");
       toast.error("حدث خطأ أثناء حفظ الصفقة");
     } finally {
       setIsSubmitting(false);
     }
   };
+  
+  const handleAddCompany = () => {
+    setShowCompanyDialog(true);
+  };
+  
+  const handleAddLead = () => {
+    setShowLeadDialog(true);
+  };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {formError && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>خطأ</AlertTitle>
+            <AlertDescription>{formError}</AlertDescription>
+          </Alert>
+        )}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -298,14 +332,27 @@ const DealForm = ({ onCancel, onSave, dealId, initialData, companyId, leadId }: 
                       }))}
                       value={field.value || ''}
                       placeholder={isLoadingCompanies ? "جاري التحميل..." : "اختر الشركة"}
-                      onChange={field.onChange}
+                      onChange={(value) => {
+                        field.onChange(value);
+                        // Clear lead_id and contact_id when company changes
+                        if (field.value !== value) {
+                          form.setValue("lead_id", null);
+                          form.setValue("contact_id", null);
+                        }
+                      }}
                       disabled={isLoadingCompanies}
                       emptyMessage="لا توجد شركات مطابقة"
                     />
                   </div>
                 </FormControl>
                 <FormDescription>
-                  <Button variant="link" size="sm" className="p-0 h-auto">
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    className="p-0 h-auto" 
+                    type="button"
+                    onClick={handleAddCompany}
+                  >
                     <Plus className="h-3 w-3 ml-1" /> إضافة شركة جديدة
                   </Button>
                 </FormDescription>
@@ -330,12 +377,22 @@ const DealForm = ({ onCancel, onSave, dealId, initialData, companyId, leadId }: 
                       placeholder={isLoadingLeads ? "جاري التحميل..." : "اختر العميل"}
                       onChange={field.onChange}
                       disabled={isLoadingLeads}
-                      emptyMessage={selectedCompanyId ? "لا يوجد عملاء محتملون لهذه الشركة" : "اختر شركة أولاً أو أضف عميل محتمل جديد"}
+                      emptyMessage={selectedCompanyId ? 
+                        "لا يوجد عملاء محتملون لهذه الشركة" : 
+                        "اختر شركة أولاً أو أضف عميل محتمل جديد"
+                      }
                     />
                   </div>
                 </FormControl>
                 <FormDescription>
-                  <Button variant="link" size="sm" className="p-0 h-auto">
+                  <Button 
+                    variant="link" 
+                    size="sm" 
+                    className="p-0 h-auto"
+                    type="button"
+                    onClick={handleAddLead}
+                    disabled={!selectedCompanyId}
+                  >
                     <Plus className="h-3 w-3 ml-1" /> إضافة عميل جديد
                   </Button>
                 </FormDescription>
@@ -490,6 +547,38 @@ const DealForm = ({ onCancel, onSave, dealId, initialData, companyId, leadId }: 
           </Button>
         </div>
       </form>
+      
+      {/* Company Creation Dialog (placeholder) */}
+      <Dialog open={showCompanyDialog} onOpenChange={setShowCompanyDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>إضافة شركة جديدة</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {/* Company form would go here */}
+            <p className="text-center">هذه النافذة مخصصة لإضافة شركة جديدة<br />يمكنك تنفيذ هذا الجزء بشكل منفصل</p>
+            <div className="flex justify-end mt-4">
+              <Button onClick={() => setShowCompanyDialog(false)}>إغلاق</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Lead Creation Dialog (placeholder) */}
+      <Dialog open={showLeadDialog} onOpenChange={setShowLeadDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>إضافة عميل محتمل جديد</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {/* Lead form would go here */}
+            <p className="text-center">هذه النافذة مخصصة لإضافة عميل محتمل جديد<br />يمكنك تنفيذ هذا الجزء بشكل منفصل</p>
+            <div className="flex justify-end mt-4">
+              <Button onClick={() => setShowLeadDialog(false)}>إغلاق</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Form>
   );
 };

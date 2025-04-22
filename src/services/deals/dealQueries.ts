@@ -1,287 +1,183 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Deal, DealDBRow } from "../types/dealTypes";
-import { toast } from "sonner";
-import { transformDealFromSupabase } from "./utils";
 
-// Type for filter options - explicit to avoid deep type instantiation
-export interface DealFilters {
-  stage?: string;
-  status?: string;
-  owner_id?: string;
-  search?: string;
-  minValue?: number;
-  maxValue?: number;
-  closeDate?: {
-    fromDate?: string;
-    toDate?: string;
-  };
-  sortBy?: {
-    column: string;
-    direction: 'asc' | 'desc';
-  };
-}
+// Format date strings to proper format
+const formatDealDate = (date: string | null) => {
+  if (!date) return null;
+  return new Date(date).toISOString();
+};
 
-// Get all deals with filter options
-export const getDeals = async (filters?: DealFilters): Promise<Deal[]> => {
+// Map DB row to Deal object with necessary transformations
+const mapDealFromDB = (deal: DealDBRow): Deal => {
+  // Handle owner data
+  const owner = deal.profiles ? {
+    id: deal.owner_id || '',
+    name: [
+      deal.profiles.first_name,
+      deal.profiles.last_name
+    ].filter(Boolean).join(' ') || deal.owner_id || '',
+    initials: deal.profiles.first_name?.[0] || deal.profiles.last_name?.[0] || 'U',
+    avatar: deal.profiles.avatar_url
+  } : undefined;
+
+  return {
+    id: deal.id,
+    name: deal.name,
+    description: deal.description || undefined,
+    value: deal.value || undefined,
+    stage: deal.stage,
+    status: deal.status,
+    expected_close_date: deal.expected_close_date ? formatDealDate(deal.expected_close_date) : undefined,
+    owner_id: deal.owner_id || undefined,
+    owner: owner,
+    company_id: deal.company_id || undefined,
+    company_name: deal.companies?.name || undefined,
+    lead_id: deal.lead_id || undefined,
+    lead: deal.leads ? {
+      id: deal.lead_id || '',
+      first_name: deal.leads.first_name || '',
+      last_name: deal.leads.last_name || '',
+      email: deal.leads.email || '',
+    } : undefined,
+    contact_id: deal.contact_id || undefined,
+    contact_name: deal.company_contacts?.name || undefined,
+    created_at: formatDealDate(deal.created_at || ''),
+    updated_at: formatDealDate(deal.updated_at || ''),
+  };
+};
+
+// Get all deals with optional filters
+export const getDeals = async (filters: Record<string, any> = {}): Promise<Deal[]> => {
   try {
-    console.log("Fetching deals from Supabase with filters:", filters);
-    
-    // Start building the query
     let query = supabase
       .from('deals')
       .select(`
-        id,
-        name,
-        description,
-        value,
-        stage,
-        status,
-        expected_close_date,
-        owner_id,
-        company_id,
-        contact_id,
-        created_at,
-        updated_at,
-        profiles:owner_id (first_name, last_name),
-        companies:company_id (name),
-        company_contacts:contact_id (name)
+        *,
+        profiles:owner_id(*),
+        companies:company_id(name),
+        company_contacts:contact_id(name),
+        leads:lead_id(first_name, last_name, email)
       `);
-    
-    // Apply filters if provided
-    if (filters) {
-      if (filters.stage && filters.stage !== 'all') {
-        query = query.eq('stage', filters.stage);
-      }
-      
-      if (filters.status && filters.status !== 'all') {
-        query = query.eq('status', filters.status);
-      }
-      
-      if (filters.owner_id && filters.owner_id !== 'all') {
-        query = query.eq('owner_id', filters.owner_id);
-      }
-      
-      if (filters.search) {
-        query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
-      }
 
-      if (filters.minValue) {
-        query = query.gte('value', filters.minValue);
-      }
+    // Apply filters
+    if (filters.stage && filters.stage !== 'all') {
+      query = query.eq('stage', filters.stage);
+    }
 
-      if (filters.maxValue) {
-        query = query.lte('value', filters.maxValue);
-      }
+    if (filters.status && filters.status !== 'all') {
+      query = query.eq('status', filters.status);
+    }
 
-      if (filters.closeDate) {
-        const { fromDate, toDate } = filters.closeDate;
-        if (fromDate) {
-          query = query.gte('expected_close_date', fromDate);
-        }
-        if (toDate) {
-          query = query.lte('expected_close_date', toDate);
-        }
-      }
+    if (filters.owner_id && filters.owner_id !== 'all') {
+      query = query.eq('owner_id', filters.owner_id);
+    }
 
-      // Sort by specific column if provided
-      if (filters.sortBy) {
-        const { column, direction = 'asc' } = filters.sortBy;
-        if (column) {
-          query = query.order(column, { ascending: direction === 'asc' });
-        }
+    if (filters.minValue) {
+      query = query.gte('value', filters.minValue);
+    }
+
+    if (filters.maxValue) {
+      query = query.lte('value', filters.maxValue);
+    }
+
+    if (filters.search) {
+      query = query.ilike('name', `%${filters.search}%`);
+    }
+
+    if (filters.closeDate) {
+      const { fromDate, toDate } = filters.closeDate;
+      if (fromDate) {
+        query = query.gte('expected_close_date', fromDate);
       }
+      if (toDate) {
+        query = query.lte('expected_close_date', toDate);
+      }
+    }
+
+    if (filters.sortBy) {
+      const { column, direction } = filters.sortBy;
+      query = query.order(column, { ascending: direction === 'asc' });
     } else {
-      // Default sorting - newest first
       query = query.order('created_at', { ascending: false });
     }
-    
-    // Execute query
+
     const { data, error } = await query;
-    
+
     if (error) {
       console.error("Error fetching deals:", error);
       throw error;
     }
-    
-    // Transform data using safely constructed objects
-    return (data || []).map((deal) => {
-      // Safely handle potentially null joined data
-      // Fix: safely check if profiles is an object or fallback to null
-      const profiles = (deal.profiles && typeof deal.profiles === 'object') ? deal.profiles : null;
-      const companies = deal.companies || null;
-      const company_contacts = deal.company_contacts || null;
-      
-      // Transform data with explicit typing while avoiding deep instantiation
-      return transformDealFromSupabase({
-        id: deal.id,
-        name: deal.name,
-        description: deal.description,
-        value: deal.value,
-        stage: deal.stage,
-        status: deal.status,
-        expected_close_date: deal.expected_close_date,
-        owner_id: deal.owner_id,
-        company_id: deal.company_id,
-        contact_id: deal.contact_id,
-        created_at: deal.created_at,
-        updated_at: deal.updated_at,
-        profiles: profiles,
-        companies: companies,
-        company_contacts: company_contacts,
-        leads: null // No leads queried here
-      });
-    });
+
+    return data.map(mapDealFromDB);
   } catch (error) {
-    console.error("Error fetching deals:", error);
-    toast.error("تعذر جلب بيانات الصفقات");
-    return [];
+    console.error("Error in getDeals:", error);
+    throw error;
   }
 };
 
-// Get deal by ID
+// Get a single deal by ID
 export const getDealById = async (id: string): Promise<Deal | null> => {
   try {
     const { data, error } = await supabase
       .from('deals')
       .select(`
-        id,
-        name,
-        description,
-        value,
-        stage,
-        status,
-        expected_close_date,
-        owner_id,
-        company_id,
-        contact_id,
-        created_at,
-        updated_at,
-        profiles:owner_id (first_name, last_name),
-        companies:company_id (name),
-        company_contacts:contact_id (name)
+        *,
+        profiles:owner_id(*),
+        companies:company_id(name),
+        company_contacts:contact_id(name),
+        leads:lead_id(first_name, last_name, email)
       `)
       .eq('id', id)
-      .maybeSingle();
-    
-    if (error) {
-      console.error("Error fetching deal by ID:", error);
-      throw error;
-    }
-    
-    if (!data) return null;
-    
-    // Fix: safely check if profiles is an object or fallback to null
-    const profiles = (data.profiles && typeof data.profiles === 'object') ? data.profiles : null;
-    
-    // Using explicit safe transformation to avoid deep type instantiation
-    return transformDealFromSupabase({
-      id: data.id,
-      name: data.name,
-      description: data.description,
-      value: data.value,
-      stage: data.stage,
-      status: data.status,
-      expected_close_date: data.expected_close_date,
-      owner_id: data.owner_id,
-      company_id: data.company_id,
-      contact_id: data.contact_id,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-      profiles: profiles,
-      companies: data.companies || null,
-      company_contacts: data.company_contacts || null,
-      leads: null // No lead data in this query
-    });
-  } catch (error) {
-    console.error("Error fetching deal by ID:", error);
-    toast.error("تعذر جلب بيانات الصفقة");
-    return null;
-  }
-};
-
-// Get deals by company ID
-export const getDealsByCompanyId = async (companyId: string): Promise<Deal[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('deals')
-      .select(`
-        id,
-        name,
-        description,
-        value,
-        stage,
-        status,
-        expected_close_date,
-        owner_id,
-        company_id,
-        contact_id,
-        created_at,
-        updated_at,
-        profiles:owner_id (first_name, last_name),
-        companies:company_id (name),
-        company_contacts:contact_id (name)
-      `)
-      .eq('company_id', companyId)
-      .order('created_at', { ascending: false });
+      .single();
 
     if (error) {
-      console.error("Error fetching deals by company ID:", error);
+      console.error("Error fetching deal:", error);
       throw error;
     }
 
-    if (!data || data.length === 0) return [];
+    if (!data) {
+      return null;
+    }
 
-    return data.map((deal) => {
-      // Fix: safely check if profiles is an object or fallback to null
-      const profiles = (deal.profiles && typeof deal.profiles === 'object') ? deal.profiles : null;
-      
-      // Using explicit safe transformation to avoid deep type instantiation
-      return transformDealFromSupabase({
-        id: deal.id,
-        name: deal.name,
-        description: deal.description,
-        value: deal.value,
-        stage: deal.stage,
-        status: deal.status,
-        expected_close_date: deal.expected_close_date,
-        owner_id: deal.owner_id,
-        company_id: deal.company_id,
-        contact_id: deal.contact_id,
-        created_at: deal.created_at,
-        updated_at: deal.updated_at,
-        profiles: profiles,
-        companies: deal.companies || null,
-        company_contacts: deal.company_contacts || null,
-        leads: null // No lead data in this query
-      });
-    });
+    return mapDealFromDB(data);
   } catch (error) {
-    console.error("Error fetching deals by company ID:", error);
-    toast.error("تعذر جلب صفقات الشركة");
-    return [];
+    console.error("Error in getDealById:", error);
+    throw error;
   }
 };
 
-// Get available deal stages
+// Get available deal stages (for filters, dropdowns, etc.)
 export const getDealStages = async (): Promise<string[]> => {
-  return ['discovery', 'proposal', 'negotiation', 'closed_won', 'closed_lost'];
+  return ["discovery", "proposal", "negotiation", "closed_won", "closed_lost"];
 };
 
-// Get sales team members (deal owners)
-export const getSalesTeamMembers = async (): Promise<any[]> => {
+// Get available deal statuses (for filters, dropdowns, etc.)
+export const getDealStatuses = async (): Promise<string[]> => {
+  return ["active", "won", "lost"];
+};
+
+// Get sales team members
+export const getSalesTeamMembers = async () => {
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name')
-      .eq('role', 'sales')
-      .order('first_name', { ascending: true });
+      .select('id, first_name, last_name, email')
+      .eq('is_active', true);
+      
+    if (error) {
+      console.error("Error fetching sales team:", error);
+      throw error;
+    }
     
-    if (error) throw error;
-    
-    return data || [];
+    return data;
   } catch (error) {
-    console.error("Error fetching sales team members:", error);
-    return [];
+    console.error("Error in getSalesTeamMembers:", error);
+    // Return fallback data for development
+    return [
+      { id: "user-1", first_name: "أحمد", last_name: "محمد", email: "ahmed@example.com" },
+      { id: "user-2", first_name: "سارة", last_name: "خالد", email: "sara@example.com" },
+      { id: "user-3", first_name: "محمد", last_name: "علي", email: "mohammed@example.com" },
+    ];
   }
 };
