@@ -29,11 +29,6 @@ const MobileNav = ({ isOpen, onClose }: MobileNavProps) => {
     return path !== '/dashboard' && pathname.startsWith(path);
   };
 
-  const handleNavigation = (path: string) => {
-    navigate(path);
-    onClose();
-  };
-
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent 

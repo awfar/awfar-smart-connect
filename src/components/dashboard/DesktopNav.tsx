@@ -20,10 +20,6 @@ const DesktopNav = () => {
     // But only if it's not the dashboard path (to avoid matching all dashboard/* paths)
     return path !== '/dashboard' && location.pathname.startsWith(path);
   };
-
-  const handleNavigation = (path: string) => {
-    navigate(path);
-  };
   
   return (
     <div className="h-full w-64 border-l p-4 bg-awfar-primary text-white overflow-y-auto">
