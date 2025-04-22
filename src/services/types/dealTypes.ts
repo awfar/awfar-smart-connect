@@ -34,16 +34,16 @@ export interface DealDBRow {
   stage: string;
   status: string;
   expected_close_date?: string;
-  owner_id?: string;
-  company_id?: string;
-  lead_id?: string;
-  contact_id?: string;
+  owner_id?: string | null;
+  company_id?: string | null;
+  lead_id?: string | null;
+  contact_id?: string | null;
   created_at?: string;
   updated_at?: string;
   profiles?: {
     first_name?: string | null;
     last_name?: string | null;
-  } | null;
+  } | null | Record<string, any>;  // Update to handle potential Supabase query error types
   companies?: {
     name?: string | null;
   } | null;

@@ -107,11 +107,12 @@ export const getDeals = async (filters?: DealFilters): Promise<Deal[]> => {
     // Transform data using safely constructed objects
     return (data || []).map((deal) => {
       // Safely handle potentially null joined data
-      const profiles = deal.profiles || null;
+      // Fix: safely check if profiles is an object or fallback to null
+      const profiles = (deal.profiles && typeof deal.profiles === 'object') ? deal.profiles : null;
       const companies = deal.companies || null;
       const company_contacts = deal.company_contacts || null;
       
-      // Transform data with explicit typing
+      // Transform data with explicit typing while avoiding deep instantiation
       return transformDealFromSupabase({
         id: deal.id,
         name: deal.name,
@@ -170,6 +171,9 @@ export const getDealById = async (id: string): Promise<Deal | null> => {
     
     if (!data) return null;
     
+    // Fix: safely check if profiles is an object or fallback to null
+    const profiles = (data.profiles && typeof data.profiles === 'object') ? data.profiles : null;
+    
     // Using explicit safe transformation to avoid deep type instantiation
     return transformDealFromSupabase({
       id: data.id,
@@ -184,7 +188,7 @@ export const getDealById = async (id: string): Promise<Deal | null> => {
       contact_id: data.contact_id,
       created_at: data.created_at,
       updated_at: data.updated_at,
-      profiles: data.profiles || null,
+      profiles: profiles,
       companies: data.companies || null,
       company_contacts: data.company_contacts || null,
       leads: null // No lead data in this query
@@ -229,6 +233,9 @@ export const getDealsByCompanyId = async (companyId: string): Promise<Deal[]> =>
     if (!data || data.length === 0) return [];
 
     return data.map((deal) => {
+      // Fix: safely check if profiles is an object or fallback to null
+      const profiles = (deal.profiles && typeof deal.profiles === 'object') ? deal.profiles : null;
+      
       // Using explicit safe transformation to avoid deep type instantiation
       return transformDealFromSupabase({
         id: deal.id,
@@ -243,7 +250,7 @@ export const getDealsByCompanyId = async (companyId: string): Promise<Deal[]> =>
         contact_id: deal.contact_id,
         created_at: deal.created_at,
         updated_at: deal.updated_at,
-        profiles: deal.profiles || null,
+        profiles: profiles,
         companies: deal.companies || null,
         company_contacts: deal.company_contacts || null,
         leads: null // No lead data in this query

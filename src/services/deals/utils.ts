@@ -27,12 +27,13 @@ export const getDealStageBadgeColor = (stage: string): string => {
   return stageColors[stage] || "";
 };
 
-// Transform deal data from Supabase to frontend format
+// Transform deal data from Supabase to frontend format with improved type safety
 export const transformDealFromSupabase = (deal: DealDBRow): Deal => {
+  // Safely handle contact name
   let contactName = deal.contact_id && deal.company_contacts ? deal.company_contacts.name : undefined;
   
-  // Format owner initials
-  const ownerInitials = deal.profiles ? 
+  // Improved handling of owner initials with null safety
+  const ownerInitials = deal.profiles && typeof deal.profiles === 'object' ? 
     `${(deal.profiles.first_name || '')[0] || ''}${(deal.profiles.last_name || '')[0] || ''}`.toUpperCase() 
     : '';
     
@@ -45,7 +46,7 @@ export const transformDealFromSupabase = (deal: DealDBRow): Deal => {
     status: deal.status,
     expected_close_date: deal.expected_close_date,
     owner_id: deal.owner_id,
-    owner: deal.owner_id && deal.profiles ? {
+    owner: deal.owner_id && deal.profiles && typeof deal.profiles === 'object' ? {
       id: deal.owner_id,
       name: `${deal.profiles.first_name || ''} ${deal.profiles.last_name || ''}`.trim(),
       initials: ownerInitials || '??',
