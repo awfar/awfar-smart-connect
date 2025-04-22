@@ -9,9 +9,8 @@ import {
   X, Mail, Phone, Globe, MapPin, Building, Users, 
   Calendar, MessageCircle, FileText, PieChart, PlusCircle, Edit
 } from "lucide-react";
-import type { Company } from "@/services/companiesService";
+import { Company } from "@/services/companies";
 import { toast } from "sonner";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 // Define a more complete Company type that includes all needed properties
 interface EnhancedCompany extends Company {

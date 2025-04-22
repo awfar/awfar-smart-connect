@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { createCompany } from "@/services/companiesService";
+import { createCompany } from "@/services/companies";
+import { Company } from "@/services/companies";
 
 interface CompanyQuickAddDialogProps {
   isOpen: boolean;
@@ -32,7 +32,6 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  // Reset form when dialog opens
   useEffect(() => {
     if (isOpen) {
       setFormData({ name: "" });
@@ -47,7 +46,6 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
       [name]: value,
     }));
     
-    // Clear validation error when field is changed
     if (formErrors[name]) {
       setFormErrors(prev => ({ ...prev, [name]: "" }));
     }
@@ -75,14 +73,13 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
     setIsSubmitting(true);
 
     try {
-      // Use the service to create a company in the database
       const newCompany = await createCompany({
         name: formData.name,
         industry: formData.industry || "",
         website: formData.website || "",
         country: formData.country || "",
-        phone: "", // Add required fields to fix the type error
-        address: "", // Add required fields to fix the type error
+        phone: "",
+        address: "",
         type: "customer",
         contacts: [],
         status: "active"
@@ -90,20 +87,14 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
       
       console.log("Company created:", newCompany);
       
-      // Return the company name back to parent component
       if (newCompany?.name) {
-        // Show success toast BEFORE closing dialog
         toast.success(`تم إضافة الشركة "${newCompany.name}" بنجاح`);
-        
-        // Wait slightly before continuing to ensure toast is shown
         setTimeout(() => {
           onSuccess(newCompany.name);
           onOpenChange(false);
         }, 100);
       } else if (formData.name) {
-        // Fallback if company object doesn't have a name for some reason
         toast.success(`تم إضافة الشركة "${formData.name}" بنجاح`);
-        
         setTimeout(() => {
           onSuccess(formData.name);
           onOpenChange(false);
@@ -120,7 +111,6 @@ const CompanyQuickAddDialog: React.FC<CompanyQuickAddDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
-      // Only allow closing if not submitting
       if (!isSubmitting) {
         onOpenChange(open);
       }
