@@ -94,16 +94,29 @@ export const getDeals = async (filters?: DealFilters): Promise<Deal[]> => {
       throw error;
     }
     
-    // Transform data before returning
-    // Using explicit type casting to avoid deep type instantiation
+    // Transform data before returning - Create a simplified approach to avoid deep type instantiation
     return (data || []).map((deal) => {
-      return transformDealFromSupabase({
-        ...deal,
+      const transformed: DealDBRow = {
+        id: deal.id,
+        name: deal.name,
+        description: deal.description,
+        value: deal.value,
+        stage: deal.stage,
+        status: deal.status,
+        expected_close_date: deal.expected_close_date,
+        owner_id: deal.owner_id,
+        company_id: deal.company_id,
+        lead_id: deal.lead_id,
+        contact_id: deal.contact_id,
+        created_at: deal.created_at,
+        updated_at: deal.updated_at,
         profiles: deal.profiles,
         companies: deal.companies,
         company_contacts: deal.company_contacts,
         leads: deal.leads
-      } as DealDBRow);
+      };
+      
+      return transformDealFromSupabase(transformed);
     });
   } catch (error) {
     console.error("Error fetching deals:", error);
@@ -134,14 +147,28 @@ export const getDealById = async (id: string): Promise<Deal | null> => {
     
     if (!data) return null;
     
-    // Using explicit type casting to avoid deep type instantiation
-    return transformDealFromSupabase({
-      ...data,
+    // Using explicit transformation to avoid deep type instantiation
+    const transformed: DealDBRow = {
+      id: data.id,
+      name: data.name,
+      description: data.description,
+      value: data.value,
+      stage: data.stage,
+      status: data.status,
+      expected_close_date: data.expected_close_date,
+      owner_id: data.owner_id,
+      company_id: data.company_id,
+      lead_id: data.lead_id,
+      contact_id: data.contact_id,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
       profiles: data.profiles,
       companies: data.companies,
       company_contacts: data.company_contacts,
       leads: data.leads
-    } as DealDBRow);
+    };
+    
+    return transformDealFromSupabase(transformed);
   } catch (error) {
     console.error("Error fetching deal by ID:", error);
     toast.error("تعذر جلب بيانات الصفقة");
@@ -171,9 +198,28 @@ export const getDealsByCompanyId = async (companyId: string): Promise<Deal[]> =>
 
     if (data && data.length > 0) {
       return data.map((deal) => {
-        // Using type assertion to avoid deep type instantiation
-        const dealData = deal as Record<string, any>;
-        return transformDealFromSupabase(dealData as unknown as DealDBRow);
+        // Using explicit mapping to avoid deep type instantiation
+        const transformed: DealDBRow = {
+          id: deal.id,
+          name: deal.name,
+          description: deal.description,
+          value: deal.value,
+          stage: deal.stage,
+          status: deal.status,
+          expected_close_date: deal.expected_close_date,
+          owner_id: deal.owner_id,
+          company_id: deal.company_id,
+          lead_id: deal.lead_id,
+          contact_id: deal.contact_id,
+          created_at: deal.created_at,
+          updated_at: deal.updated_at,
+          profiles: deal.profiles,
+          companies: deal.companies,
+          company_contacts: deal.company_contacts,
+          leads: deal.leads
+        };
+        
+        return transformDealFromSupabase(transformed);
       });
     }
 
@@ -207,9 +253,28 @@ export const getDealsByLeadId = async (leadId: string): Promise<Deal[]> => {
 
     if (data && data.length > 0) {
       return data.map((deal) => {
-        // Using type assertion to avoid deep type instantiation
-        const dealData = deal as Record<string, any>;
-        return transformDealFromSupabase(dealData as unknown as DealDBRow);
+        // Using explicit mapping to avoid deep type instantiation
+        const transformed: DealDBRow = {
+          id: deal.id,
+          name: deal.name,
+          description: deal.description,
+          value: deal.value,
+          stage: deal.stage,
+          status: deal.status,
+          expected_close_date: deal.expected_close_date,
+          owner_id: deal.owner_id,
+          company_id: deal.company_id,
+          lead_id: deal.lead_id,
+          contact_id: deal.contact_id,
+          created_at: deal.created_at,
+          updated_at: deal.updated_at,
+          profiles: deal.profiles,
+          companies: deal.companies,
+          company_contacts: deal.company_contacts,
+          leads: deal.leads
+        };
+        
+        return transformDealFromSupabase(transformed);
       });
     }
 

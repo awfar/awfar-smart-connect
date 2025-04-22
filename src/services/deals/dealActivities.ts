@@ -31,9 +31,9 @@ export const getDealActivities = async (dealId: string): Promise<DealActivity[]>
       if (activity.profiles && 
           typeof activity.profiles === 'object') {
         // Safely extract first and last name, with null checks
-        const profilesObj = activity.profiles;
-        const firstName = profilesObj && 'first_name' in profilesObj ? profilesObj.first_name || '' : '';
-        const lastName = profilesObj && 'last_name' in profilesObj ? profilesObj.last_name || '' : '';
+        const profilesObj = activity.profiles as { first_name?: string | null; last_name?: string | null };
+        const firstName = profilesObj.first_name || '';
+        const lastName = profilesObj.last_name || '';
         
         if (firstName || lastName) {
           creatorName = `${firstName} ${lastName}`.trim();
