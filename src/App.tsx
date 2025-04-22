@@ -31,6 +31,7 @@ import LeadProfilePage from './pages/leads/LeadProfilePage';
 import DashboardLayoutWrapper from './components/layout/DashboardLayoutWrapper';
 import SystemTests from './pages/SystemTests';
 import CMS from './pages/CMS';
+import InvoiceManagement from './pages/InvoiceManagement';
 
 function App() {
   return (
@@ -56,6 +57,7 @@ function App() {
             <Route path="/dashboard/companies" element={<CompaniesManagement />} />
             <Route path="/dashboard/companies/:id" element={<CompanyProfile />} />
             <Route path="/dashboard/tickets" element={<TicketsManagement />} />
+            <Route path="/dashboard/invoices" element={<InvoiceManagement />} />
             <Route path="/dashboard/users" element={<UserManagement />} />
             <Route path="/dashboard/departments" element={<DepartmentsManagement />} />
             <Route path="/dashboard/teams" element={<TeamsManagement />} />

@@ -70,7 +70,7 @@ const MobileNav = ({ isOpen, onClose }: MobileNavProps) => {
                   isMobile={true}
                   onClose={onClose}
                   subItems={item.subItems}
-                  expanded={item.subItems && item.subItems.some(subItem => isPathActive(subItem.href))}
+                  expanded={item.subItems && (item.expanded || item.subItems.some(subItem => isPathActive(subItem.href)))}
                 />
               ))}
             </div>

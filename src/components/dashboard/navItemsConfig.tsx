@@ -76,6 +76,11 @@ export const navItems: NavItemConfig[] = [
     icon: MessageSquare,
   },
   {
+    href: '/dashboard/invoices',
+    label: 'الفواتير',
+    icon: Receipt,
+  },
+  {
     href: '/dashboard/reports',
     label: 'التقارير',
     icon: BarChart,
@@ -84,7 +89,7 @@ export const navItems: NavItemConfig[] = [
     href: '/dashboard/users-management',
     label: 'إدارة المستخدمين',
     icon: UsersRound,
-    expanded: true,
+    expanded: false,
     subItems: [
       {
         href: '/dashboard/users',
@@ -129,11 +134,6 @@ export const navItems: NavItemConfig[] = [
     icon: Package,
   },
   {
-    href: '/dashboard/invoices',
-    label: 'الفواتير',
-    icon: Receipt,
-  },
-  {
     href: '/dashboard/properties',
     label: 'إدارة الخصائص',
     icon: DatabaseZap,
@@ -147,6 +147,11 @@ export const navItems: NavItemConfig[] = [
     href: '/dashboard/cms',
     label: 'إدارة المحتوى',
     icon: FileEdit,
+  },
+  {
+    href: '/dashboard/system-tests',
+    label: 'اختبار النظام',
+    icon: Shield,
   },
   {
     href: '/dashboard/settings',
