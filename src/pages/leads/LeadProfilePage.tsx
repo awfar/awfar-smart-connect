@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -24,6 +25,14 @@ const LeadProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('details');
+  
+  // Add missing state variables
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showAddActivityDialog, setShowAddActivityDialog] = useState(false);
+  const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
+  const [showAddAppointmentDialog, setShowAddAppointmentDialog] = useState(false);
+  const [activityType, setActivityType] = useState<'note' | 'call' | 'email' | 'meeting' | 'whatsapp'>('note');
   
   const { isMobile } = useBreakpoints();
 
