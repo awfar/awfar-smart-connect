@@ -18,8 +18,10 @@ const CompanyProfile = () => {
     queryKey: ['company', id],
     queryFn: () => getCompanyById(id || ''),
     enabled: !!id,
-    onError: () => {
-      toast.error('حدث خطأ في تحميل بيانات الشركة');
+    onSettled: (_, error) => {
+      if (error) {
+        toast.error('حدث خطأ في تحميل بيانات الشركة');
+      }
     }
   });
 
