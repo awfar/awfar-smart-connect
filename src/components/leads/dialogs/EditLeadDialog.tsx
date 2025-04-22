@@ -6,15 +6,15 @@ import { toast } from "sonner";
 import { useForm } from 'react-hook-form';
 
 interface EditLeadDialogProps {
-  open: boolean;
-  onClose: () => void;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
   lead: Lead;
   onSuccess: (updatedLead: Lead) => void;
 }
 
 const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
-  open,
-  onClose,
+  isOpen,
+  onOpenChange,
   lead,
   onSuccess
 }) => {
@@ -51,7 +51,7 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
       
       onSuccess(updatedLead);
       toast.success("تم تحديث بيانات العميل المحتمل بنجاح");
-      onClose();
+      onOpenChange(false);
     } catch (error) {
       console.error('Error updating lead:', error);
       toast.error("حدث خطأ أثناء تحديث بيانات العميل المحتمل");
@@ -61,7 +61,7 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-xl">تعديل بيانات العميل المحتمل</DialogTitle>
@@ -177,7 +177,7 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
           <div className="flex justify-end gap-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => onOpenChange(false)}
               className="px-4 py-2 border rounded-md text-gray-700"
             >
               إلغاء

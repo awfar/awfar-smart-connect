@@ -22,7 +22,7 @@ export interface Lead {
 }
 
 export interface Owner {
-  id?: string;
+  id: string; // Changed from optional to required
   name?: string;
   avatar?: string;
   initials?: string;

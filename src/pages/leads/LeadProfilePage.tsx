@@ -11,8 +11,6 @@ import LeadProfileInfo from '@/components/leads/profile/LeadProfileInfo';
 import LeadProfileSidebar from '@/components/leads/profile/LeadProfileSidebar';
 import LeadActivityTimeline from '@/components/leads/profile/LeadActivityTimeline';
 import LeadRelatedRecords from '@/components/leads/profile/LeadRelatedRecords';
-import { Lead } from '@/types/leads';
-import { LeadActivity } from '@/types/leads';
 import { Separator } from '@/components/ui/separator';
 import DeleteLeadDialog from '@/components/leads/dialogs/DeleteLeadDialog';
 import EditLeadDialog from '@/components/leads/dialogs/EditLeadDialog';
@@ -20,6 +18,7 @@ import ActivityFormDialog from '@/components/leads/dialogs/ActivityFormDialog';
 import TaskFormDialog from '@/components/leads/dialogs/TaskFormDialog';
 import AppointmentFormDialog from '@/components/leads/dialogs/AppointmentFormDialog';
 import { useToast } from '@/components/ui/use-toast';
+import { Lead as ServiceLead } from '@/services/leads/types';
 
 const LeadProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -102,8 +101,9 @@ const LeadProfilePage: React.FC = () => {
     }
   };
 
-  const handleUpdate = (updatedLead: Lead) => {
-    updateLead(updatedLead);
+  const handleUpdate = (updatedLead: ServiceLead) => {
+    // Ensure that when we call updateLead, we're passing a ServiceLead type
+    updateLead(updatedLead as ServiceLead);
   };
 
   const handleAddActivitySuccess = () => {
@@ -123,10 +123,19 @@ const LeadProfilePage: React.FC = () => {
     setShowAddActivityDialog(true);
   };
 
+  // Make sure lead.owner.id is always defined
+  const leadWithSafeOwner = {
+    ...lead,
+    owner: lead.owner ? {
+      ...lead.owner,
+      id: lead.owner.id || ''  // Ensure id is never undefined
+    } : undefined
+  };
+
   return (
     <div className="container mx-auto py-4 md:py-8">
       <LeadProfileHeader 
-        lead={lead}
+        lead={leadWithSafeOwner}
         onBack={() => navigate('/dashboard/leads')}
         onEdit={() => setShowEditDialog(true)}
         onDelete={() => setShowDeleteDialog(true)}
@@ -184,7 +193,7 @@ const LeadProfilePage: React.FC = () => {
             </TabsList>
 
             <TabsContent value="details" className="mt-4">
-              <LeadProfileInfo lead={lead} />
+              <LeadProfileInfo lead={leadWithSafeOwner} />
             </TabsContent>
 
             <TabsContent value="activity" className="mt-4">
@@ -208,7 +217,7 @@ const LeadProfilePage: React.FC = () => {
 
         {/* Sidebar */}
         <div className="lg:col-span-1">
-          <LeadProfileSidebar lead={lead} />
+          <LeadProfileSidebar lead={leadWithSafeOwner} />
         </div>
       </div>
 
@@ -221,9 +230,9 @@ const LeadProfilePage: React.FC = () => {
       />
 
       <EditLeadDialog
-        open={showEditDialog}
-        onClose={() => setShowEditDialog(false)}
-        lead={lead}
+        isOpen={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        lead={leadWithSafeOwner as ServiceLead}
         onSuccess={handleUpdate}
       />
 

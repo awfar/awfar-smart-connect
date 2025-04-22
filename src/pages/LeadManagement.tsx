@@ -89,7 +89,7 @@ const LeadManagement = () => {
     assigned_to: lead.assigned_to,
     avatar_url: lead.avatar_url,
     owner: lead.owner ? {
-      id: lead.owner.id,
+      id: lead.owner.id || '',  // Ensure id is never undefined
       name: lead.owner.name || (lead.owner.first_name && lead.owner.last_name ? `${lead.owner.first_name} ${lead.owner.last_name}`.trim() : ''),
       avatar: lead.owner.avatar || '',
       initials: lead.owner.initials || (lead.owner.first_name?.charAt(0) || '') + (lead.owner.last_name?.charAt(0) || ''),
@@ -99,6 +99,9 @@ const LeadManagement = () => {
   }));
 
   const selectedLeadObject = getSelectedLeadObject();
+  // Get the name of the lead to be deleted
+  const leadToDeleteName = serviceLeads.find(lead => lead.id === leadToDelete)?.first_name + ' ' + 
+                           serviceLeads.find(lead => lead.id === leadToDelete)?.last_name || 'العميل المحتمل';
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
@@ -164,6 +167,7 @@ const LeadManagement = () => {
         isOpen={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         onConfirm={confirmDeleteLead}
+        leadName={leadToDeleteName}
       />
     </div>
   );
