@@ -30,9 +30,9 @@ export const getDealActivities = async (dealId: string): Promise<DealActivity[]>
       
       // Only try to access profiles properties if profiles exists and is an object
       if (activity.profiles && 
-          activity.profiles !== null && 
-          typeof activity.profiles === 'object') {
-        // Safely extract first and last name, with null checks
+          typeof activity.profiles === 'object' && 
+          activity.profiles !== null) {
+        // Safely extract first and last name, with additional null checks
         const firstName = activity.profiles.first_name || '';
         const lastName = activity.profiles.last_name || '';
         
