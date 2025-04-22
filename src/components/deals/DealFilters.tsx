@@ -20,6 +20,7 @@ import { CalendarIcon, Search, Filter, X } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { getSalesTeamMembers } from "@/services/deals/dealQueries";
+import { DateRange } from "react-day-picker";
 
 interface DealFiltersProps {
   onStageChange: (stage: string) => void;
@@ -42,7 +43,7 @@ const DealFilters = ({
 }: DealFiltersProps) => {
   const [search, setSearch] = useState('');
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [owners, setOwners] = useState<{id: string; name: string}[]>([]);
   
   // Fetch sales team members to use as owners filter
@@ -64,19 +65,19 @@ const DealFilters = ({
     onSearchChange(value);
   };
   
-  const handleDateRangeChange = (range: { from?: Date; to?: Date }) => {
+  const handleDateRangeChange = (range: DateRange | undefined) => {
     setDateRange(range);
     
     // Format dates for API request
-    const fromDate = range.from ? format(range.from, 'yyyy-MM-dd') : undefined;
-    const toDate = range.to ? format(range.to, 'yyyy-MM-dd') : undefined;
+    const fromDate = range?.from ? format(range.from, 'yyyy-MM-dd') : undefined;
+    const toDate = range?.to ? format(range.to, 'yyyy-MM-dd') : undefined;
     
     onDateRangeChange({ fromDate, toDate });
   };
   
   const handleResetFilters = () => {
     setSearch('');
-    setDateRange({});
+    setDateRange(undefined);
     onResetFilters();
   };
 
@@ -102,7 +103,7 @@ const DealFilters = ({
             <Filter className="h-4 w-4" />
           </Button>
           
-          {(search || isFilterExpanded || dateRange.from) && (
+          {(search || isFilterExpanded || dateRange?.from) && (
             <Button 
               variant="outline" 
               size="icon"
@@ -190,7 +191,7 @@ const DealFilters = ({
                   className="w-full justify-start text-right"
                 >
                   <CalendarIcon className="ml-2 h-4 w-4" />
-                  {dateRange.from ? (
+                  {dateRange?.from ? (
                     dateRange.to ? (
                       <>
                         {format(dateRange.from, "d MMM", { locale: ar })} - {format(dateRange.to, "d MMM", { locale: ar })}

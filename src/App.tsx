@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import "./App.css";
 import Index from "./pages/Index";
@@ -46,6 +47,7 @@ import DepartmentsManagement from "./pages/DepartmentsManagement";
 import PropertiesManagement from "./pages/PropertiesManagement";
 import ReportsManagement from "./pages/ReportsManagement";
 import SubscriptionManagement from "./pages/SubscriptionManagement";
+import DealProfilePage from "./pages/deals/DealProfilePage";
 
 import { Toaster } from "sonner";
 import { AuthProvider } from "./contexts/AuthContext";

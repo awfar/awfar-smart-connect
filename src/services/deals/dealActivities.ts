@@ -7,12 +7,13 @@ import { DealActivity } from "../types/dealTypes";
 export const getDealActivities = async (dealId: string): Promise<DealActivity[]> => {
   try {
     const { data, error } = await supabase
-      .from('deal_activities')
+      .from('activity_logs')
       .select(`
         *,
-        profiles:created_by (first_name, last_name)
+        profiles:user_id (first_name, last_name)
       `)
-      .eq('deal_id', dealId)
+      .eq('entity_id', dealId)
+      .eq('entity_type', 'deal')
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -30,16 +31,16 @@ export const getDealActivities = async (dealId: string): Promise<DealActivity[]>
       
       return {
         id: activity.id,
-        deal_id: activity.deal_id,
-        type: activity.type,
-        description: activity.description,
+        deal_id: activity.entity_id,
+        type: activity.action.startsWith('add_') ? activity.action.substring(4) : activity.action,
+        description: activity.details || '',
         created_at: activity.created_at,
-        created_by: activity.created_by,
+        created_by: activity.user_id,
         creator: {
           name: creatorName
         },
-        scheduled_at: activity.scheduled_at,
-        completed_at: activity.completed_at
+        scheduled_at: null,
+        completed_at: null
       };
     });
   } catch (error) {
@@ -57,14 +58,15 @@ export const addDealActivity = async (activity: Partial<DealActivity>): Promise<
       return null;
     }
     
+    // Log in activity_logs table instead of a missing deal_activities table
     const { data, error } = await supabase
-      .from('deal_activities')
+      .from('activity_logs')
       .insert({
-        deal_id: activity.deal_id,
-        type: activity.type,
-        description: activity.description,
-        created_by: userData.user.id,
-        scheduled_at: activity.scheduled_at,
+        entity_type: 'deal',
+        entity_id: activity.deal_id,
+        action: `add_${activity.type}`,
+        details: activity.description?.substring(0, 500),
+        user_id: userData.user.id
       })
       .select()
       .single();
@@ -74,31 +76,16 @@ export const addDealActivity = async (activity: Partial<DealActivity>): Promise<
       throw error;
     }
     
-    // Also log in activity_logs table for global timeline
-    const { error: logError } = await supabase
-      .from('activity_logs')
-      .insert({
-        entity_type: 'deal',
-        entity_id: activity.deal_id,
-        action: `add_${activity.type}`,
-        details: activity.description?.substring(0, 100),
-        user_id: userData.user.id
-      });
-      
-    if (logError) {
-      console.error("Error logging activity:", logError);
-    }
-    
     if (data) {
       return {
         id: data.id,
-        deal_id: data.deal_id,
-        type: data.type,
-        description: data.description,
+        deal_id: data.entity_id,
+        type: data.action.startsWith('add_') ? data.action.substring(4) : data.action,
+        description: data.details || '',
         created_at: data.created_at,
-        created_by: data.created_by,
-        scheduled_at: data.scheduled_at,
-        completed_at: data.completed_at,
+        created_by: data.user_id,
+        scheduled_at: null,
+        completed_at: null,
         creator: {
           name: "أنت"
         }
@@ -115,10 +102,11 @@ export const addDealActivity = async (activity: Partial<DealActivity>): Promise<
 // Mark activity as completed
 export const completeDealActivity = async (activityId: string): Promise<boolean> => {
   try {
+    // Update the activity_logs table instead
     const { error } = await supabase
-      .from('deal_activities')
+      .from('activity_logs')
       .update({
-        completed_at: new Date().toISOString()
+        details: `[COMPLETED] ${new Date().toISOString()}`
       })
       .eq('id', activityId);
     
