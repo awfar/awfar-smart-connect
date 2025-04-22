@@ -15,6 +15,7 @@ import { ar } from "date-fns/locale";
 import { useBreakpoints } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { Lead } from "@/types/leads";
+import { useNavigate } from 'react-router-dom';
 
 interface LeadTableProps {
   leads: Lead[];
@@ -32,6 +33,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
   onDelete 
 }) => {
   const { isMobile, isSmallMobile } = useBreakpoints();
+  const navigate = useNavigate();
 
   // Helper to format dates
   const formatDate = (dateString?: string) => {
@@ -59,6 +61,15 @@ const LeadTable: React.FC<LeadTableProps> = ({
     }
   };
 
+  // Function to handle lead click on mobile, redirect to profile page
+  const handleLeadClick = (lead: Lead) => {
+    if (isMobile) {
+      navigate(`/dashboard/leads/${lead.id}`);
+    } else {
+      onLeadSelect(lead.id);
+    }
+  };
+
   if (isMobile) {
     // Enhanced mobile card view with better spacing and readability
     return (
@@ -70,7 +81,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
               "relative border rounded-lg overflow-hidden shadow-sm",
               selectedLead === lead.id ? "border-primary bg-primary/5" : "border-gray-200 bg-white"
             )}
-            onClick={() => onLeadSelect(lead.id)}
+            onClick={() => handleLeadClick(lead)}
           >
             <div className="p-4 pb-3 flex flex-col gap-2">
               {/* Name and Stage/Status in header row with improved spacing */}
@@ -181,6 +192,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
                 "hover:bg-muted/50",
                 selectedLead === lead.id ? "bg-primary/5" : ""
               )}
+              onClick={() => onLeadSelect(lead.id)}
             >
               <td className="py-2 px-3 text-right font-medium">
                 {lead.first_name} {lead.last_name}

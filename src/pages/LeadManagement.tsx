@@ -14,11 +14,13 @@ import LeadPermissionAlert from "@/components/leads/LeadPermissionAlert";
 import { useAuth } from '@/contexts/AuthContext';
 import { useBreakpoints } from '@/hooks/use-mobile';
 import { Lead } from "@/types/leads"; // Using the centralized Lead type
+import { useNavigate } from 'react-router-dom';
 
 const LeadManagement = () => {
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
   const { isLoggedIn, user } = useAuth();
   const { isMobile } = useBreakpoints();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -98,6 +100,15 @@ const LeadManagement = () => {
     } : undefined
   }));
 
+  // Enhanced lead click handler for mobile view
+  const handleMobileLeadClick = (leadId: string) => {
+    if (isMobile) {
+      navigate(`/dashboard/leads/${leadId}`);
+    } else {
+      handleLeadClick(leadId);
+    }
+  };
+
   const selectedLeadObject = getSelectedLeadObject();
   // Get the name of the lead to be deleted
   const leadToDeleteName = serviceLeads.find(lead => lead.id === leadToDelete)?.first_name + ' ' + 
@@ -134,7 +145,7 @@ const LeadManagement = () => {
           isError={isError}
           onViewChange={setSelectedView}
           onSearch={handleSearch}
-          onLeadSelect={handleLeadClick}
+          onLeadSelect={handleMobileLeadClick}
           onFilterChange={handleFilterChange}
           onRefresh={handleRefresh}
         />
