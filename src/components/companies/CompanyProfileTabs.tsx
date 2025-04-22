@@ -1,8 +1,17 @@
+
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import type { Company } from '@/types/company';
 import { CompanyDocuments } from './CompanyDocuments';
+import { CompanyTimeline } from './CompanyTimeline';
+import { CompanyLeads } from './CompanyLeads';
+import { CompanyDeals } from './CompanyDeals';
+import { CompanyInvoices } from './CompanyInvoices';
+import { CompanyActivities } from './CompanyActivities';
+import { CompanyContacts } from './CompanyContacts';
 
 interface CompanyProfileTabsProps {
   company: Company;
@@ -47,43 +56,28 @@ export const CompanyProfileTabs: React.FC<CompanyProfileTabsProps> = ({
         </Card>
       </TabsContent>
 
+      <TabsContent value="contacts">
+        <CompanyContacts companyId={company.id} />
+      </TabsContent>
+
+      <TabsContent value="deals">
+        <CompanyDeals companyId={company.id} />
+      </TabsContent>
+
+      <TabsContent value="invoices">
+        <CompanyInvoices companyId={company.id} />
+      </TabsContent>
+
+      <TabsContent value="activities">
+        <CompanyActivities companyId={company.id} />
+      </TabsContent>
+
       <TabsContent value="documents">
         <CompanyDocuments companyId={company.id} />
       </TabsContent>
 
-      <TabsContent value="contacts">
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">جهات الاتصال</h3>
-          {/* Contact list will be implemented here */}
-        </Card>
-      </TabsContent>
-
-      <TabsContent value="deals">
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">الفرص</h3>
-          {/* Deals list will be implemented here */}
-        </Card>
-      </TabsContent>
-
-      <TabsContent value="invoices">
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">الفواتير</h3>
-          {/* Invoices list will be implemented here */}
-        </Card>
-      </TabsContent>
-
-      <TabsContent value="activities">
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">الأنشطة</h3>
-          {/* Activities list will be implemented here */}
-        </Card>
-      </TabsContent>
-
       <TabsContent value="timeline">
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4">التسلسل الزمني</h3>
-          {/* Timeline will be implemented here */}
-        </Card>
+        <CompanyTimeline companyId={company.id} />
       </TabsContent>
     </Tabs>
   );
