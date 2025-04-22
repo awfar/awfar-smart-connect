@@ -95,10 +95,15 @@ export const getDeals = async (filters?: DealFilters): Promise<Deal[]> => {
     }
     
     // Transform data before returning
-    // Using type assertion as Record<string, any> to avoid deep type instantiation
+    // Using explicit type casting to avoid deep type instantiation
     return (data || []).map((deal) => {
-      const dealData = deal as Record<string, any>;
-      return transformDealFromSupabase(dealData as unknown as DealDBRow);
+      return transformDealFromSupabase({
+        ...deal,
+        profiles: deal.profiles,
+        companies: deal.companies,
+        company_contacts: deal.company_contacts,
+        leads: deal.leads
+      } as DealDBRow);
     });
   } catch (error) {
     console.error("Error fetching deals:", error);
@@ -129,8 +134,14 @@ export const getDealById = async (id: string): Promise<Deal | null> => {
     
     if (!data) return null;
     
-    // Using type assertion to avoid type nesting issues
-    return transformDealFromSupabase(data as Record<string, any> as unknown as DealDBRow);
+    // Using explicit type casting to avoid deep type instantiation
+    return transformDealFromSupabase({
+      ...data,
+      profiles: data.profiles,
+      companies: data.companies,
+      company_contacts: data.company_contacts,
+      leads: data.leads
+    } as DealDBRow);
   } catch (error) {
     console.error("Error fetching deal by ID:", error);
     toast.error("تعذر جلب بيانات الصفقة");
