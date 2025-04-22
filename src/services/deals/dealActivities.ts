@@ -28,12 +28,13 @@ export const getDealActivities = async (dealId: string): Promise<DealActivity[]>
       // Safely extract creator name from profiles, providing a default if not available
       let creatorName = "مستخدم النظام";
       
+      // Only try to access profiles properties if profiles exists and is an object
       if (activity.profiles && 
+          activity.profiles !== null && 
           typeof activity.profiles === 'object') {
         // Safely extract first and last name, with null checks
-        const profilesObj = activity.profiles as { first_name?: string | null; last_name?: string | null };
-        const firstName = profilesObj.first_name || '';
-        const lastName = profilesObj.last_name || '';
+        const firstName = activity.profiles.first_name || '';
+        const lastName = activity.profiles.last_name || '';
         
         if (firstName || lastName) {
           creatorName = `${firstName} ${lastName}`.trim();
