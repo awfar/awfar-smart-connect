@@ -18,12 +18,14 @@ const CompanyProfile = () => {
     queryKey: ['company', id],
     queryFn: () => getCompanyById(id || ''),
     enabled: !!id,
-    onSettled: (_, error) => {
-      if (error) {
-        toast.error('حدث خطأ في تحميل بيانات الشركة');
-      }
-    }
   });
+
+  // Handle error with useEffect instead of in the useQuery options
+  React.useEffect(() => {
+    if (error) {
+      toast.error('حدث خطأ في تحميل بيانات الشركة');
+    }
+  }, [error]);
 
   if (isLoading) {
     return (
