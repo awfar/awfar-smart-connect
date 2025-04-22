@@ -5,7 +5,7 @@ import { Plus, Phone, FileText, Calendar, MessageCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from 'sonner';
+import { toast } from 'sonner';
 import { CompanyContactForm } from './forms/CompanyContactForm';
 import { CompanyDealForm } from './forms/CompanyDealForm';
 import { CompanyActivityForm } from './forms/CompanyActivityForm';
@@ -17,14 +17,14 @@ interface CompanyActionsProps {
 export const CompanyActions = ({ companyId }: CompanyActionsProps) => {
   const [actionType, setActionType] = React.useState<'contact' | 'deal' | 'activity' | null>(null);
   const queryClient = useQueryClient();
-  const toast = useToast();
 
   const handleClose = () => {
     setActionType(null);
   };
 
   const handleSuccess = async (type: string) => {
-    await queryClient.invalidateQueries(['company', companyId]);
+    // Fix the invalidation query format
+    await queryClient.invalidateQueries({ queryKey: ['company', companyId] });
     toast.success(`تم إضافة ${type} بنجاح`);
     handleClose();
   };

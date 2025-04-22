@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
@@ -34,13 +33,18 @@ export const CompanyContactForm = ({ companyId, onSuccess, onCancel }: CompanyCo
 
       if (error) throw error;
 
-      // Log the action
-      await supabase.rpc('log_company_action', {
-        p_company_id: companyId,
-        p_action: 'add_contact',
-        p_details: `تمت إضافة جهة اتصال: ${data.name}`,
-        p_user_id: (await supabase.auth.getUser()).data.user?.id
-      });
+      // Log the action directly without using RPC
+      const { error: logError } = await supabase
+        .from('activity_logs')
+        .insert({
+          entity_type: 'company',
+          entity_id: companyId,
+          action: 'add_contact',
+          details: `تمت إضافة جهة اتصال: ${data.name}`,
+          user_id: (await supabase.auth.getUser()).data.user?.id || 'anonymous'
+        });
+
+      if (logError) console.error('Error logging activity:', logError);
 
       onSuccess();
     } catch (error) {
