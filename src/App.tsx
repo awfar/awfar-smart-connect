@@ -79,6 +79,7 @@ function App() {
             
             {/* Add fallbacks for pages that haven't been created yet */}
             <Route path="/dashboard/chats" element={<Dashboard />} />
+            <Route path="/dashboard/reports" element={<Dashboard />} />
           </Route>
           
           {/* Fallback routes */}

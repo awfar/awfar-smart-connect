@@ -35,7 +35,7 @@ const DesktopNav = () => {
         />
       </div>
       <div className="space-y-1">
-        {(navItems || []).map((item) => (
+        {navItems.map((item) => (
           <NavItem
             key={item.href}
             href={item.href}
