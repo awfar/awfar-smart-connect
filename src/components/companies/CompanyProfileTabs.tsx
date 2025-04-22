@@ -7,7 +7,6 @@ import { Plus } from "lucide-react";
 import type { Company } from '@/types/company';
 import { CompanyDocuments } from './CompanyDocuments';
 import { CompanyTimeline } from './CompanyTimeline';
-import { CompanyLeads } from './CompanyLeads';
 import { CompanyDeals } from './CompanyDeals';
 import { CompanyInvoices } from './CompanyInvoices';
 import { CompanyActivities } from './CompanyActivities';
@@ -82,3 +81,4 @@ export const CompanyProfileTabs: React.FC<CompanyProfileTabsProps> = ({
     </Tabs>
   );
 };
+
