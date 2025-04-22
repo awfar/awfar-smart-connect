@@ -32,6 +32,7 @@ import DashboardLayoutWrapper from './components/layout/DashboardLayoutWrapper';
 import SystemTests from './pages/SystemTests';
 import CMS from './pages/CMS';
 import InvoiceManagement from './pages/InvoiceManagement';
+import CatalogManagement from './pages/CatalogManagement';
 
 function App() {
   return (
@@ -66,6 +67,14 @@ function App() {
             <Route path="/dashboard/settings" element={<Settings />} />
             <Route path="/dashboard/cms" element={<CMS />} />
             <Route path="/dashboard/system-tests" element={<SystemTests />} />
+            <Route path="/dashboard/catalog" element={<CatalogManagement />} />
+            
+            {/* Add fallbacks for pages that haven't been created yet */}
+            <Route path="/dashboard/subscriptions" element={<Dashboard />} />
+            <Route path="/dashboard/packages" element={<Dashboard />} />
+            <Route path="/dashboard/properties" element={<Dashboard />} />
+            <Route path="/dashboard/forms" element={<Dashboard />} />
+            <Route path="/dashboard/chats" element={<Dashboard />} />
           </Route>
           
           {/* Fallback routes */}
