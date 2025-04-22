@@ -29,11 +29,10 @@ export const getDealActivities = async (dealId: string): Promise<DealActivity[]>
       let creatorName = "مستخدم النظام";
       
       if (activity.profiles && 
-          typeof activity.profiles === 'object' && 
-          'first_name' in activity.profiles && 
-          'last_name' in activity.profiles) {
-        const firstName = activity.profiles.first_name || '';
-        const lastName = activity.profiles.last_name || '';
+          typeof activity.profiles === 'object') {
+        // Use optional chaining to safely access properties that might be null/undefined
+        const firstName = activity.profiles?.first_name || '';
+        const lastName = activity.profiles?.last_name || '';
         if (firstName || lastName) {
           creatorName = `${firstName} ${lastName}`.trim();
         }

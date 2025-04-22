@@ -95,10 +95,10 @@ export const getDeals = async (filters?: DealFilters): Promise<Deal[]> => {
     }
     
     // Transform data before returning
+    // Using type assertion as Record<string, any> to avoid deep type instantiation
     return (data || []).map((deal) => {
-      // Cast to DealDBRow after ensuring it has the expected structure
-      const dealData = deal as unknown as DealDBRow;
-      return transformDealFromSupabase(dealData);
+      const dealData = deal as Record<string, any>;
+      return transformDealFromSupabase(dealData as unknown as DealDBRow);
     });
   } catch (error) {
     console.error("Error fetching deals:", error);
@@ -129,8 +129,8 @@ export const getDealById = async (id: string): Promise<Deal | null> => {
     
     if (!data) return null;
     
-    // Cast to DealDBRow after ensuring it has the expected structure
-    return transformDealFromSupabase(data as unknown as DealDBRow);
+    // Using type assertion to avoid type nesting issues
+    return transformDealFromSupabase(data as Record<string, any> as unknown as DealDBRow);
   } catch (error) {
     console.error("Error fetching deal by ID:", error);
     toast.error("تعذر جلب بيانات الصفقة");
@@ -160,8 +160,9 @@ export const getDealsByCompanyId = async (companyId: string): Promise<Deal[]> =>
 
     if (data && data.length > 0) {
       return data.map((deal) => {
-        // Cast to DealDBRow after ensuring it has the expected structure
-        return transformDealFromSupabase(deal as unknown as DealDBRow);
+        // Using type assertion to avoid deep type instantiation
+        const dealData = deal as Record<string, any>;
+        return transformDealFromSupabase(dealData as unknown as DealDBRow);
       });
     }
 
@@ -195,8 +196,9 @@ export const getDealsByLeadId = async (leadId: string): Promise<Deal[]> => {
 
     if (data && data.length > 0) {
       return data.map((deal) => {
-        // Cast to DealDBRow after ensuring it has the expected structure
-        return transformDealFromSupabase(deal as unknown as DealDBRow);
+        // Using type assertion to avoid deep type instantiation
+        const dealData = deal as Record<string, any>;
+        return transformDealFromSupabase(dealData as unknown as DealDBRow);
       });
     }
 
