@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import DealsList from "@/components/deals/DealsList";
@@ -9,68 +9,57 @@ import DealFilters from "@/components/deals/DealFilters";
 import { getDeals, Deal } from "@/services/dealsService";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const DealsManagement = () => {
   const [view, setView] = useState<"all" | "active" | "won" | "lost">("all");
   const [isCreating, setIsCreating] = useState(false);
   const [filterStage, setFilterStage] = useState<string>("all");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterOwner, setFilterOwner] = useState<string>("all");
   const [filterValue, setFilterValue] = useState<string>("all");
-  const [filteredDeals, setFilteredDeals] = useState<Deal[]>([]);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [dateRange, setDateRange] = useState<{fromDate?: string; toDate?: string}>({});
+  const [sortConfig, setSortConfig] = useState<{column: string; direction: 'asc' | 'desc'} | null>(null);
   
-  const { data: allDeals, isLoading, refetch } = useQuery({
-    queryKey: ['deals'],
-    queryFn: () => getDeals(),
-  });
-
-  useEffect(() => {
-    if (allDeals) {
-      // فلترة بناءً على العرض (الكل، النشطة، المربوحة، المفقودة)
-      let dealsToShow = [...allDeals];
-      
-      if (view === "active") {
-        dealsToShow = allDeals.filter(deal => deal.status === "active");
-      } else if (view === "won") {
-        dealsToShow = allDeals.filter(deal => deal.status === "won");
-      } else if (view === "lost") {
-        dealsToShow = allDeals.filter(deal => deal.status === "lost");
-      }
-
-      // تطبيق فلترة المرحلة والقيمة إن وجدت
-      if (filterStage !== "all" || filterValue !== "all") {
-        applyFilters(dealsToShow);
-      } else {
-        setFilteredDeals(dealsToShow);
-      }
-    }
-  }, [allDeals, view, filterStage, filterValue]);
-
-  const applyFilters = async (deals: Deal[]) => {
-    let filtered = [...deals];
+  const queryClient = useQueryClient();
+  
+  // Build filters object based on all filter settings
+  const buildFilters = () => {
+    const filters: Record<string, any> = {};
     
-    // فلترة حسب المرحلة
-    if (filterStage !== "all") {
-      filtered = filtered.filter(deal => deal.stage === filterStage);
-    }
+    if (filterStage !== "all") filters.stage = filterStage;
+    if (filterStatus !== "all") filters.status = filterStatus;
+    if (filterOwner !== "all") filters.owner_id = filterOwner;
     
-    // فلترة حسب القيمة
     if (filterValue !== "all") {
-      const value = filterValue === "low" 
-        ? { maxValue: 10000 }
-        : filterValue === "medium"
-        ? { minValue: 10000, maxValue: 50000 }
-        : { minValue: 50000 };
-        
-      if (filterValue === "low") {
-        filtered = filtered.filter(deal => (deal.value || 0) < 10000);
-      } else if (filterValue === "medium") {
-        filtered = filtered.filter(deal => (deal.value || 0) >= 10000 && (deal.value || 0) <= 50000);
-      } else if (filterValue === "high") {
-        filtered = filtered.filter(deal => (deal.value || 0) > 50000);
+      switch (filterValue) {
+        case "low":
+          filters.maxValue = 10000;
+          break;
+        case "medium":
+          filters.minValue = 10000;
+          filters.maxValue = 50000;
+          break;
+        case "high":
+          filters.minValue = 50000;
+          break;
       }
     }
     
-    setFilteredDeals(filtered);
+    if (searchTerm) filters.search = searchTerm;
+    if (dateRange.fromDate || dateRange.toDate) filters.closeDate = dateRange;
+    if (sortConfig) filters.sortBy = sortConfig;
+    
+    return filters;
   };
+  
+  const { data: deals, isLoading, refetch } = useQuery({
+    queryKey: ['deals', view, filterStage, filterStatus, filterOwner, filterValue, searchTerm, dateRange, sortConfig],
+    queryFn: () => getDeals(buildFilters()),
+  });
 
   const handleCreateDeal = () => {
     setIsCreating(true);
@@ -81,91 +70,117 @@ const DealsManagement = () => {
   };
 
   const handleSaveDeal = () => {
-    refetch(); // إعادة تحميل البيانات بعد الحفظ
     setIsCreating(false);
+    // Invalidate and refetch deals after save
+    queryClient.invalidateQueries({ queryKey: ['deals'] });
+    toast.success("تم حفظ الصفقة بنجاح");
   };
 
   const handleViewChange = (newView: "all" | "active" | "won" | "lost") => {
     setView(newView);
+    if (newView !== "all") {
+      setFilterStatus(newView);
+    } else {
+      setFilterStatus("all");
+    }
   };
 
   const handleStageChange = (value: string) => {
     setFilterStage(value);
   };
 
+  const handleStatusChange = (value: string) => {
+    setFilterStatus(value);
+  };
+
+  const handleOwnerChange = (value: string) => {
+    setFilterOwner(value);
+  };
+
   const handleValueChange = (value: string) => {
     setFilterValue(value);
+  };
+  
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+  };
+  
+  const handleDateRangeChange = (range: {fromDate?: string; toDate?: string}) => {
+    setDateRange(range);
+  };
+  
+  const handleResetFilters = () => {
+    setFilterStage("all");
+    setFilterStatus(view !== "all" ? view : "all");
+    setFilterOwner("all");
+    setFilterValue("all");
+    setSearchTerm("");
+    setDateRange({});
+    setSortConfig(null);
+  };
+  
+  const handleSort = (column: string, direction: 'asc' | 'desc') => {
+    setSortConfig({ column, direction });
   };
 
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">إدارة الصفقات</h1>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">إدارة الصفقات</h1>
+            <p className="text-muted-foreground mt-1">إدارة ومتابعة صفقات المبيعات والفرص</p>
+          </div>
           
-          {!isCreating && (
-            <button 
-              onClick={handleCreateDeal}
-              className="px-4 py-2 bg-primary text-white rounded-md text-sm font-medium"
-            >
-              إضافة صفقة جديدة
-            </button>
-          )}
+          <Button onClick={handleCreateDeal}>
+            <Plus className="ml-2 h-4 w-4" />
+            إضافة صفقة جديدة
+          </Button>
         </div>
 
-        {isCreating ? (
+        <Tabs defaultValue="all" value={view} onValueChange={(v) => handleViewChange(v as any)}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="all">جميع الصفقات</TabsTrigger>
+            <TabsTrigger value="active">الصفقات النشطة</TabsTrigger>
+            <TabsTrigger value="won">الصفقات المربوحة</TabsTrigger>
+            <TabsTrigger value="lost">الصفقات المفقودة</TabsTrigger>
+          </TabsList>
+          
           <Card>
-            <CardHeader>
-              <CardTitle>صفقة جديدة</CardTitle>
-              <CardDescription>أدخل تفاصيل الصفقة الجديدة</CardDescription>
+            <CardHeader className="pb-3">
+              <DealFilters 
+                onStageChange={handleStageChange}
+                onStatusChange={handleStatusChange}
+                onOwnerChange={handleOwnerChange}
+                onValueChange={handleValueChange}
+                onSearchChange={handleSearchChange}
+                onDateRangeChange={handleDateRangeChange}
+                onResetFilters={handleResetFilters}
+              />
             </CardHeader>
             <CardContent>
-              <DealForm 
-                onCancel={handleCancelCreate}
-                onSave={handleSaveDeal}
+              <DealsList 
+                deals={deals || []}
+                onRefresh={refetch}
+                onSort={handleSort}
+                isLoading={isLoading}
               />
             </CardContent>
           </Card>
-        ) : (
-          <>
-            <Tabs defaultValue="all" value={view} onValueChange={(v) => handleViewChange(v as any)}>
-              <TabsList className="mb-4">
-                <TabsTrigger value="all">جميع الصفقات</TabsTrigger>
-                <TabsTrigger value="active">الصفقات النشطة</TabsTrigger>
-                <TabsTrigger value="won">الصفقات المربوحة</TabsTrigger>
-                <TabsTrigger value="lost">الصفقات المفقودة</TabsTrigger>
-              </TabsList>
-              
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                      <CardTitle>قائمة الصفقات</CardTitle>
-                      <CardDescription>إدارة ومتابعة صفقات المبيعات</CardDescription>
-                    </div>
-                    <DealFilters 
-                      onStageChange={handleStageChange}
-                      onValueChange={handleValueChange}
-                    />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {isLoading ? (
-                    <div className="text-center py-10">جاري تحميل البيانات...</div>
-                  ) : (
-                    <DealsList 
-                      view={view} 
-                      filterStage={filterStage}
-                      filterValue={filterValue}
-                      deals={filteredDeals}
-                      onRefresh={refetch}
-                    />
-                  )}
-                </CardContent>
-              </Card>
-            </Tabs>
-          </>
-        )}
+        </Tabs>
+
+        {/* Deal Creation Modal */}
+        <Dialog open={isCreating} onOpenChange={setIsCreating}>
+          <DialogContent className="sm:max-w-[800px]">
+            <DialogHeader>
+              <DialogTitle>صفقة جديدة</DialogTitle>
+            </DialogHeader>
+            <DealForm 
+              onCancel={handleCancelCreate}
+              onSave={handleSaveDeal}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

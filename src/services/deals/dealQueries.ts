@@ -16,7 +16,8 @@ export const getDeals = async (filters?: Record<string, any>): Promise<Deal[]> =
         *,
         profiles:owner_id (first_name, last_name),
         companies:company_id (name),
-        company_contacts:contact_id (name)
+        company_contacts:contact_id (name),
+        leads:lead_id (first_name, last_name, email)
       `);
     
     // Apply filters if provided
@@ -36,10 +37,36 @@ export const getDeals = async (filters?: Record<string, any>): Promise<Deal[]> =
       if (filters.search) {
         query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
       }
+
+      if (filters.minValue) {
+        query = query.gte('value', filters.minValue);
+      }
+
+      if (filters.maxValue) {
+        query = query.lte('value', filters.maxValue);
+      }
+
+      if (filters.closeDate) {
+        const { fromDate, toDate } = filters.closeDate;
+        if (fromDate) {
+          query = query.gte('expected_close_date', fromDate);
+        }
+        if (toDate) {
+          query = query.lte('expected_close_date', toDate);
+        }
+      }
+
+      // Sort by specific column if provided
+      if (filters.sortBy) {
+        const { column, direction = 'asc' } = filters.sortBy;
+        if (column) {
+          query = query.order(column, { ascending: direction === 'asc' });
+        }
+      }
+    } else {
+      // Default sorting - newest first
+      query = query.order('created_at', { ascending: false });
     }
-    
-    // Add sorting - newest first
-    query = query.order('created_at', { ascending: false });
     
     // Execute query
     const { data, error } = await query;
@@ -73,7 +100,8 @@ export const getDealById = async (id: string): Promise<Deal | null> => {
         *,
         profiles:owner_id (first_name, last_name),
         companies:company_id (name),
-        company_contacts:contact_id (name)
+        company_contacts:contact_id (name),
+        leads:lead_id (first_name, last_name, email)
       `)
       .eq('id', id)
       .maybeSingle();
@@ -96,40 +124,89 @@ export const getDealById = async (id: string): Promise<Deal | null> => {
   }
 };
 
-// Get available deal stages
-export const getDealStages = async (): Promise<string[]> => {
+// Get deals by company ID
+export const getDealsByCompanyId = async (companyId: string): Promise<Deal[]> => {
   try {
     const { data, error } = await supabase
       .from('deals')
-      .select('stage')
-      .not('stage', 'is', null)
-      .not('stage', 'eq', '');
-    
-    if (error) throw error;
-    
-    // Extract unique stages
-    const stages = data
-      .map(item => item.stage as string)
-      .filter(Boolean)
-      .filter((value, index, self) => self.indexOf(value) === index)
-      .sort();
-    
-    return stages.length > 0 ? stages : getDefaultStages();
+      .select(`
+        *,
+        profiles:owner_id (first_name, last_name),
+        companies:company_id (name),
+        company_contacts:contact_id (name),
+        leads:lead_id (first_name, last_name, email)
+      `)
+      .eq('company_id', companyId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching deals by company ID:", error);
+      throw error;
+    }
+
+    if (data && data.length > 0) {
+      return data.map((deal: any) => transformDealFromSupabase(deal));
+    }
+
+    return [];
   } catch (error) {
-    console.error("Error fetching deal stages:", error);
-    return getDefaultStages();
+    console.error("Error fetching deals by company ID:", error);
+    toast.error("تعذر جلب صفقات الشركة");
+    return [];
   }
 };
 
-// Helper function for default deal stages
-const getDefaultStages = (): string[] => {
-  return [
-    "تأهيل",
-    "اجتماع أولي",
-    "تحليل احتياجات",
-    "تقديم عرض",
-    "تفاوض",
-    "مغلق مكسب",
-    "مغلق خسارة"
-  ];
+// Get deals by lead ID
+export const getDealsByLeadId = async (leadId: string): Promise<Deal[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('deals')
+      .select(`
+        *,
+        profiles:owner_id (first_name, last_name),
+        companies:company_id (name),
+        company_contacts:contact_id (name),
+        leads:lead_id (first_name, last_name, email)
+      `)
+      .eq('lead_id', leadId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching deals by lead ID:", error);
+      throw error;
+    }
+
+    if (data && data.length > 0) {
+      return data.map((deal: any) => transformDealFromSupabase(deal));
+    }
+
+    return [];
+  } catch (error) {
+    console.error("Error fetching deals by lead ID:", error);
+    toast.error("تعذر جلب صفقات العميل المحتمل");
+    return [];
+  }
+};
+
+// Get available deal stages
+export const getDealStages = async (): Promise<string[]> => {
+  return ['discovery', 'proposal', 'negotiation', 'closed_won', 'closed_lost'];
+};
+
+// Get sales team members (deal owners)
+export const getSalesTeamMembers = async (): Promise<any[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, first_name, last_name')
+      .eq('role', 'sales')
+      .order('first_name', { ascending: true });
+    
+    if (error) throw error;
+    
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching sales team members:", error);
+    return [];
+  }
 };

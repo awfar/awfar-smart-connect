@@ -3,114 +3,133 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DealActivity } from "../types/dealTypes";
 
+// Get activities for a deal
 export const getDealActivities = async (dealId: string): Promise<DealActivity[]> => {
   try {
     const { data, error } = await supabase
-      .from('activity_logs')
+      .from('deal_activities')
       .select(`
         *,
-        profiles:user_id (first_name, last_name)
+        profiles:created_by (first_name, last_name)
       `)
-      .eq('entity_type', 'deal')
-      .eq('entity_id', dealId)
+      .eq('deal_id', dealId)
       .order('created_at', { ascending: false });
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error fetching deal activities:", error);
+      throw error;
+    }
     
-    return data.map(activity => {
-      let creatorName = '';
-      
-      // Null-safe check for profiles with explicit null check
-      if (activity.profiles !== null) {
-        // Type assertion for the profile data
-        const profileData = activity.profiles as { first_name?: string; last_name?: string };
-        
-        // We know profiles is not null here, so we can safely access its properties
-        creatorName = `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim();
-      }
+    if (!data) return [];
+    
+    // Transform data to match DealActivity type
+    return data.map((activity: any) => {
+      const creatorName = activity.profiles 
+        ? `${activity.profiles.first_name || ''} ${activity.profiles.last_name || ''}`.trim()
+        : 'مستخدم النظام';
       
       return {
         id: activity.id,
-        deal_id: activity.entity_id,
-        type: activity.action,
-        description: activity.details || '',
+        deal_id: activity.deal_id,
+        type: activity.type,
+        description: activity.description,
         created_at: activity.created_at,
-        created_by: activity.user_id,
-        creator: creatorName ? { name: creatorName } : undefined,
-        scheduled_at: null,
-        completed_at: null
+        created_by: activity.created_by,
+        creator: {
+          name: creatorName
+        },
+        scheduled_at: activity.scheduled_at,
+        completed_at: activity.completed_at
       };
-    }) || [];
+    });
   } catch (error) {
-    console.error("Error fetching deal activities:", error);
-    toast.error("فشل في جلب أنشطة الصفقة");
+    console.error("Error in getDealActivities:", error);
     return [];
   }
 };
 
+// Add activity to a deal
 export const addDealActivity = async (activity: Partial<DealActivity>): Promise<DealActivity | null> => {
   try {
     const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      toast.error("يجب تسجيل الدخول لإضافة نشاط");
+      return null;
+    }
     
     const { data, error } = await supabase
-      .from('activity_logs')
-      .insert([{
-        entity_type: 'deal',
-        entity_id: activity.deal_id,
-        action: activity.type,
-        details: activity.description,
-        user_id: userData.user?.id
-      }])
+      .from('deal_activities')
+      .insert({
+        deal_id: activity.deal_id,
+        type: activity.type,
+        description: activity.description,
+        created_by: userData.user.id,
+        scheduled_at: activity.scheduled_at,
+      })
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error adding deal activity:", error);
+      throw error;
+    }
     
-    toast.success("تم إضافة النشاط بنجاح");
-    return {
-      id: data.id,
-      deal_id: data.entity_id,
-      type: data.action,
-      description: data.details || '',
-      created_at: data.created_at,
-      created_by: data.user_id,
-      scheduled_at: null,
-      completed_at: null
-    };
-  } catch (error) {
-    console.error("Error creating deal activity:", error);
-    toast.error("فشل في إضافة النشاط");
+    // Also log in activity_logs table for global timeline
+    const { error: logError } = await supabase
+      .from('activity_logs')
+      .insert({
+        entity_type: 'deal',
+        entity_id: activity.deal_id,
+        action: `add_${activity.type}`,
+        details: activity.description?.substring(0, 100),
+        user_id: userData.user.id
+      });
+      
+    if (logError) {
+      console.error("Error logging activity:", logError);
+    }
+    
+    if (data) {
+      return {
+        id: data.id,
+        deal_id: data.deal_id,
+        type: data.type,
+        description: data.description,
+        created_at: data.created_at,
+        created_by: data.created_by,
+        scheduled_at: data.scheduled_at,
+        completed_at: data.completed_at,
+        creator: {
+          name: "أنت"
+        }
+      };
+    }
+    
     return null;
+  } catch (error) {
+    console.error("Error in addDealActivity:", error);
+    throw error;
   }
 };
 
-export const completeDealActivity = async (activityId: string): Promise<DealActivity | null> => {
+// Mark activity as completed
+export const completeDealActivity = async (activityId: string): Promise<boolean> => {
   try {
-    const { data, error } = await supabase
-      .from('activity_logs')
+    const { error } = await supabase
+      .from('deal_activities')
       .update({
-        details: `Completed at ${new Date().toISOString()}`
+        completed_at: new Date().toISOString()
       })
-      .eq('id', activityId)
-      .select()
-      .single();
+      .eq('id', activityId);
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error completing deal activity:", error);
+      throw error;
+    }
     
-    toast.success("تم إكمال النشاط بنجاح");
-    return {
-      id: data.id,
-      deal_id: data.entity_id,
-      type: data.action,
-      description: data.details || '',
-      created_at: data.created_at,
-      created_by: data.user_id,
-      scheduled_at: null,
-      completed_at: new Date().toISOString() // Set for the front-end
-    };
+    return true;
   } catch (error) {
-    console.error("Error completing deal activity:", error);
-    toast.error("فشل في إكمال النشاط");
-    return null;
+    console.error("Error in completeDealActivity:", error);
+    return false;
   }
 };

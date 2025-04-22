@@ -1,4 +1,6 @@
 
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -9,61 +11,68 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, ExternalLink, RefreshCw } from "lucide-react";
+import { 
+  Edit, 
+  Trash2, 
+  ExternalLink, 
+  RefreshCw, 
+  ChevronUp, 
+  ChevronDown,
+  Calendar,
+  DollarSign,
+  User,
+  Building
+} from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ar } from "date-fns/locale";
 import { Deal, deleteDeal } from "@/services/dealsService";
-import { useState } from "react";
 import { toast } from "sonner";
+import { Avatar } from "@/components/ui/avatar";
+import { 
+  getDealStageName, 
+  getDealStageBadgeColor,
+  getDealStatusName
+} from "@/services/deals/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface DealsListProps {
-  view: "all" | "active" | "won" | "lost";
-  filterStage: string;
-  filterValue: string;
   deals: Deal[];
   onRefresh: () => void;
+  onSort?: (column: string, direction: 'asc' | 'desc') => void;
+  isLoading?: boolean;
 }
 
-const DealsList = ({ view, filterStage, filterValue, deals, onRefresh }: DealsListProps) => {
+const DealsList = ({ deals, onRefresh, onSort, isLoading = false }: DealsListProps) => {
+  const navigate = useNavigate();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [sortConfig, setSortConfig] = useState<{
+    column: string;
+    direction: 'asc' | 'desc';
+  } | null>(null);
   
-  // فلترة الصفقات بناءً على العرض والفلاتر
-  const filteredDeals = deals.filter(deal => {
-    // فلترة حسب العرض (الكل، النشطة، المربوحة، المفقودة)
-    if (view !== "all" && deal.status !== view) return false;
+  const handleSort = (column: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
     
-    // فلترة حسب المرحلة
-    if (filterStage !== "all" && deal.stage !== filterStage) return false;
-    
-    // فلترة حسب القيمة
-    if (filterValue !== "all") {
-      const value = deal.value || 0;
-      if (filterValue === "low" && value >= 10000) return false;
-      if (filterValue === "medium" && (value < 10000 || value > 50000)) return false;
-      if (filterValue === "high" && value <= 50000) return false;
+    if (sortConfig?.column === column && sortConfig.direction === 'asc') {
+      direction = 'desc';
     }
     
-    return true;
-  });
-
-  const getStageBadge = (stage: string) => {
-    switch (stage) {
-      case "qualified": 
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">مؤهل</Badge>;
-      case "proposal": 
-        return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">تم تقديم عرض</Badge>;
-      case "negotiation": 
-        return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">تفاوض</Badge>;
-      case "closed_won": 
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">مربوح</Badge>;
-      case "closed_lost": 
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">خسارة</Badge>;
-      default: 
-        return <Badge variant="outline">غير محدد</Badge>;
+    setSortConfig({ column, direction });
+    
+    if (onSort) {
+      onSort(column, direction);
     }
   };
+  
+  const getSortIcon = (column: string) => {
+    if (sortConfig?.column !== column) {
+      return null;
+    }
+    
+    return sortConfig.direction === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />;
+  };
 
-  const formatDate = (dateStr: string | null) => {
+  const formatDate = (dateStr: string | undefined | null) => {
     if (!dateStr) return "-";
     try {
       return format(parseISO(dateStr), "d MMMM yyyy", { locale: ar });
@@ -72,22 +81,18 @@ const DealsList = ({ view, filterStage, filterValue, deals, onRefresh }: DealsLi
     }
   };
 
-  const formatCurrency = (value: number | null) => {
+  const formatCurrency = (value: number | undefined | null) => {
     if (value === null || value === undefined) return "-";
     return new Intl.NumberFormat('ar-SA', { style: 'currency', currency: 'SAR' }).format(value);
   };
 
-  const handleEdit = (dealId: string) => {
-    console.log("تعديل الصفقة", dealId);
-    // هنا سيتم تنفيذ منطق تعديل الصفقة
-  };
-
-  const handleDelete = async (dealId: string) => {
+  const handleDeleteDeal = async (dealId: string) => {
     setDeletingId(dealId);
     
     try {
       const isDeleted = await deleteDeal(dealId);
       if (isDeleted) {
+        toast.success("تم حذف الصفقة بنجاح");
         onRefresh(); // إعادة تحميل البيانات بعد الحذف
       }
     } catch (error) {
@@ -98,90 +103,205 @@ const DealsList = ({ view, filterStage, filterValue, deals, onRefresh }: DealsLi
     }
   };
 
-  const handleRefresh = () => {
-    onRefresh();
+  const navigateToDeal = (dealId: string) => {
+    navigate(`/dashboard/deals/${dealId}`);
   };
+
+  const navigateToCompany = (companyId: string | undefined) => {
+    if (companyId) {
+      navigate(`/dashboard/companies/${companyId}`);
+    }
+  };
+
+  const navigateToLead = (leadId: string | undefined) => {
+    if (leadId) {
+      navigate(`/dashboard/leads/${leadId}`);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <span className="mr-3">جاري تحميل البيانات...</span>
+      </div>
+    );
+  }
+
+  if (deals.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-muted-foreground mb-4">لا توجد صفقات متاحة</p>
+        <Button onClick={onRefresh} variant="outline" size="sm">
+          <RefreshCw className="h-4 w-4 ml-2" />
+          تحديث
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
-      <div className="flex justify-end mb-4">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleRefresh}
-          className="flex items-center gap-1"
-        >
-          <RefreshCw className="h-4 w-4" /> تحديث
-        </Button>
-      </div>
-      
-      <div className="overflow-auto">
+      <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>الصفقة</TableHead>
+              <TableHead 
+                className="cursor-pointer"
+                onClick={() => handleSort('name')}
+              >
+                <div className="flex items-center">
+                  الصفقة {getSortIcon('name')}
+                </div>
+              </TableHead>
               <TableHead>الشركة</TableHead>
+              <TableHead>جهة الاتصال</TableHead>
+              <TableHead 
+                className="cursor-pointer"
+                onClick={() => handleSort('value')}
+              >
+                <div className="flex items-center">
+                  <DollarSign className="h-4 w-4 ml-1" /> القيمة {getSortIcon('value')}
+                </div>
+              </TableHead>
               <TableHead>المرحلة</TableHead>
-              <TableHead>القيمة</TableHead>
-              <TableHead>تاريخ الإغلاق المتوقع</TableHead>
-              <TableHead className="text-left">الإجراءات</TableHead>
+              <TableHead 
+                className="cursor-pointer"
+                onClick={() => handleSort('expected_close_date')}
+              >
+                <div className="flex items-center">
+                  <Calendar className="h-4 w-4 ml-1" /> تاريخ الإغلاق {getSortIcon('expected_close_date')}
+                </div>
+              </TableHead>
+              <TableHead>المسؤول</TableHead>
+              <TableHead 
+                className="cursor-pointer"
+                onClick={() => handleSort('created_at')}
+              >
+                <div className="flex items-center">
+                  تاريخ الإنشاء {getSortIcon('created_at')}
+                </div>
+              </TableHead>
+              <TableHead>الحالة</TableHead>
+              <TableHead>الإجراءات</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredDeals.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-10">
-                  لا توجد صفقات تطابق المعايير المحددة
+            {deals.map((deal) => (
+              <TableRow key={deal.id}>
+                <TableCell>
+                  <button 
+                    className="font-medium text-primary hover:underline"
+                    onClick={() => navigateToDeal(deal.id)}
+                  >
+                    {deal.name}
+                  </button>
+                </TableCell>
+                <TableCell>
+                  {deal.company_id ? (
+                    <button
+                      className="flex items-center text-sm hover:underline"
+                      onClick={() => navigateToCompany(deal.company_id)}
+                    >
+                      <Building className="h-3.5 w-3.5 ml-1.5 text-muted-foreground" />
+                      {deal.company_name || "-"}
+                    </button>
+                  ) : (
+                    "-"
+                  )}
+                </TableCell>
+                <TableCell>
+                  {deal.lead_id && deal.lead ? (
+                    <button
+                      className="flex items-center text-sm hover:underline"
+                      onClick={() => navigateToLead(deal.lead_id)}
+                    >
+                      <User className="h-3.5 w-3.5 ml-1.5 text-muted-foreground" />
+                      {deal.lead.name}
+                    </button>
+                  ) : deal.contact_name ? (
+                    <span className="flex items-center text-sm">
+                      <User className="h-3.5 w-3.5 ml-1.5 text-muted-foreground" />
+                      {deal.contact_name}
+                    </span>
+                  ) : (
+                    "-"
+                  )}
+                </TableCell>
+                <TableCell dir="ltr" className="text-right">
+                  {formatCurrency(deal.value)}
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className={`${getDealStageBadgeColor(deal.stage)}`}>
+                    {getDealStageName(deal.stage)}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {formatDate(deal.expected_close_date)}
+                </TableCell>
+                <TableCell>
+                  {deal.owner ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <div className="flex items-center">
+                            <Avatar className="h-6 w-6 text-xs">
+                              {deal.owner.initials}
+                            </Avatar>
+                            <span className="mr-2 text-sm hidden sm:inline-block">
+                              {deal.owner.name}
+                            </span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>{deal.owner.name}</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <span className="text-muted-foreground text-sm">غير معين</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {formatDate(deal.created_at)}
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant={
+                      deal.status === 'active' ? 'default' :
+                      deal.status === 'won' ? 'success' : 'destructive'
+                    }
+                    className="text-xs"
+                  >
+                    {getDealStatusName(deal.status)}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <div className="flex space-x-2 rtl:space-x-reverse">
+                    <Button variant="ghost" size="icon" onClick={() => navigateToDeal(deal.id)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => handleDeleteDeal(deal.id)}
+                      disabled={deletingId === deal.id}
+                    >
+                      {deletingId === deal.id ? (
+                        <span className="h-4 w-4 border-2 border-t-transparent border-primary rounded-full animate-spin block"></span>
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => navigateToDeal(deal.id)}
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
-            ) : (
-              filteredDeals.map((deal) => (
-                <TableRow key={deal.id} className={deal.stage === "closed_lost" ? "bg-muted/40" : ""}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center">
-                      {deal.name}
-                      {deal.stage === "closed_won" && (
-                        <span className="mr-2 bg-green-500 h-2 w-2 rounded-full" title="مربوح"></span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>{deal.company_name || "-"}</TableCell>
-                  <TableCell>
-                    {getStageBadge(deal.stage)}
-                  </TableCell>
-                  <TableCell dir="ltr" className="text-right">
-                    {formatCurrency(deal.value)}
-                  </TableCell>
-                  <TableCell>
-                    {formatDate(deal.expected_close_date)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2 rtl:space-x-reverse">
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(deal.id)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => handleDelete(deal.id)}
-                        disabled={deletingId === deal.id}
-                      >
-                        {deletingId === deal.id ? (
-                          <span className="h-4 w-4 border-2 border-t-transparent border-primary rounded-full animate-spin block"></span>
-                        ) : (
-                          <Trash2 className="h-4 w-4" />
-                        )}
-                      </Button>
-                      <Button variant="ghost" size="icon" asChild>
-                        <a href={`/dashboard/deals/${deal.id}`}>
-                          <ExternalLink className="h-4 w-4" />
-                        </a>
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
+            ))}
           </TableBody>
         </Table>
       </div>

@@ -1,66 +1,119 @@
 
 import { Deal, DealDBRow } from "../types/dealTypes";
 
-export const transformDealFromSupabase = (deal: DealDBRow): Deal => {
-  // Handle profiles safely
-  let fullName = '';
+export const transformDealFromSupabase = (dealData: DealDBRow): Deal => {
+  // Safely extract owner info - Handle multiple potential formats
+  let ownerName = "غير محدد";
+  let ownerInitials = "";
   
-  if (deal.profiles && 
-      !('error' in deal.profiles) && 
-      typeof deal.profiles === 'object' && 
-      'first_name' in deal.profiles) {
-    fullName = `${deal.profiles.first_name || ''} ${deal.profiles.last_name || ''}`.trim();
+  if (dealData.profiles) {
+    if ('first_name' in dealData.profiles && dealData.profiles.first_name) {
+      const firstName = dealData.profiles.first_name || "";
+      const lastName = dealData.profiles.last_name || "";
+      ownerName = `${firstName} ${lastName}`.trim() || "غير محدد";
+      ownerInitials = `${firstName.substring(0, 1)}${lastName.substring(0, 1)}`.toUpperCase();
+    }
   }
-  
+
+  // Extract company name
+  let companyName = undefined;
+  if (dealData.companies && 'name' in dealData.companies && dealData.companies.name) {
+    companyName = dealData.companies.name;
+  }
+
+  // Extract contact name
+  let contactName = undefined;
+  if (dealData.company_contacts && 'name' in dealData.company_contacts && dealData.company_contacts.name) {
+    contactName = dealData.company_contacts.name;
+  }
+
+  // Extract lead info
+  let lead = undefined;
+  if (dealData.leads && 'first_name' in dealData.leads) {
+    const firstName = dealData.leads.first_name || "";
+    const lastName = dealData.leads.last_name || "";
+    const name = `${firstName} ${lastName}`.trim();
+    if (name) {
+      lead = {
+        id: dealData.lead_id || "",
+        name,
+        email: dealData.leads.email
+      };
+    }
+  }
+
   return {
-    id: deal.id,
-    name: deal.name,
-    description: deal.description,
-    value: deal.value,
-    stage: deal.stage,
-    status: deal.status,
-    expected_close_date: deal.expected_close_date,
-    owner_id: deal.owner_id,
-    owner: deal.owner_id ? {
-      id: deal.owner_id,
-      name: fullName || 'غير معين',
-      initials: getInitials(fullName || 'غير معين'),
+    id: dealData.id,
+    name: dealData.name,
+    description: dealData.description,
+    value: dealData.value,
+    stage: dealData.stage,
+    status: dealData.status,
+    expected_close_date: dealData.expected_close_date,
+    owner_id: dealData.owner_id,
+    owner: dealData.owner_id ? {
+      id: dealData.owner_id,
+      name: ownerName,
+      initials: ownerInitials || "NA",
     } : undefined,
-    company_id: deal.company_id,
-    company_name: deal.companies && !('error' in deal.companies) ? deal.companies.name : undefined,
-    contact_id: deal.contact_id,
-    contact_name: deal.company_contacts && !('error' in deal.company_contacts) ? deal.company_contacts.name : undefined,
-    created_at: deal.created_at,
-    updated_at: deal.updated_at,
-    lead_id: deal.lead_id
+    company_id: dealData.company_id,
+    company_name: companyName,
+    lead_id: dealData.lead_id,
+    lead,
+    contact_id: dealData.contact_id,
+    contact_name: contactName,
+    created_at: dealData.created_at,
+    updated_at: dealData.updated_at,
   };
 };
 
-export const getInitials = (name: string): string => {
-  return name
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase())
-    .slice(0, 2)
-    .join('');
+export const getDealStageName = (stage: string): string => {
+  const stageMap: Record<string, string> = {
+    'discovery': 'مرحلة الاكتشاف',
+    'proposal': 'تقديم العرض',
+    'negotiation': 'مرحلة التفاوض',
+    'closed_won': 'صفقة مربوحة',
+    'closed_lost': 'صفقة خاسرة'
+  };
+  
+  return stageMap[stage] || stage;
 };
 
-export const getStageColorClass = (stage: string): string => {
-  switch (stage.toLowerCase()) {
-    case 'جديد':
-      return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
-    case 'مؤهل':
-      return 'bg-purple-100 text-purple-800 hover:bg-purple-200';
-    case 'عرض سعر':
-      return 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200';
-    case 'تفاوض':
-      return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
-    case 'مغلق مكسب':
-      return 'bg-green-100 text-green-800 hover:bg-green-200';
-    case 'مغلق خسارة':
-      return 'bg-red-100 text-red-800 hover:bg-red-200';
-    case 'مؤجل':
-      return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
-    default:
-      return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
+export const getDealStageBadgeColor = (stage: string): string => {
+  switch (stage) {
+    case 'discovery': 
+      return 'bg-blue-50 text-blue-700 border-blue-200';
+    case 'proposal': 
+      return 'bg-amber-50 text-amber-700 border-amber-200';
+    case 'negotiation': 
+      return 'bg-purple-50 text-purple-700 border-purple-200';
+    case 'closed_won': 
+      return 'bg-green-50 text-green-700 border-green-200';
+    case 'closed_lost': 
+      return 'bg-red-50 text-red-700 border-red-200';
+    default: 
+      return 'bg-gray-50 text-gray-700 border-gray-200';
   }
+};
+
+export const getDealStatusName = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    'active': 'نشط',
+    'won': 'مربوح',
+    'lost': 'خسارة'
+  };
+  
+  return statusMap[status] || status;
+};
+
+export const calculateDealProgress = (stage: string): number => {
+  const stageProgressMap: Record<string, number> = {
+    'discovery': 20,
+    'proposal': 40,
+    'negotiation': 70,
+    'closed_won': 100,
+    'closed_lost': 0
+  };
+  
+  return stageProgressMap[stage] || 0;
 };

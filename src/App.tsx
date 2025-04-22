@@ -1,5 +1,4 @@
-
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import "./App.css";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
@@ -60,7 +59,6 @@ function App() {
           <Routes>
             <Route path="/" element={<Index />} />
             
-            {/* Dashboard routes with consistent layout */}
             <Route element={<DashboardLayoutWrapper />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/dashboard/enhanced" element={<EnhancedDashboard />} />
@@ -75,6 +73,7 @@ function App() {
               <Route path="/dashboard/appointments" element={<AppointmentsManagement />} />
               <Route path="/dashboard/tickets" element={<TicketsManagement />} />
               <Route path="/dashboard/deals" element={<DealsManagement />} />
+              <Route path="/dashboard/deals/:id" element={<DealProfilePage />} />
               <Route path="/dashboard/catalog" element={<CatalogManagement />} />
               <Route path="/dashboard/cms" element={<CMS />} />
               <Route path="/dashboard/settings" element={<Settings />} />
@@ -96,7 +95,6 @@ function App() {
               <Route path="/dashboard/subscriptions" element={<SubscriptionManagement />} />
             </Route>
             
-            {/* Auth and public routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/try-ai-agent" element={<TryAIAgent />} />

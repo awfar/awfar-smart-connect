@@ -18,11 +18,16 @@ export interface Deal {
   };
   company_id?: string;
   company_name?: string;
+  lead_id?: string;
+  lead?: {
+    id: string;
+    name: string;
+    email?: string;
+  };
   contact_id?: string;
   contact_name?: string;
   created_at?: string;
   updated_at?: string;
-  lead_id?: string;
   activities?: DealActivity[];
 }
 
@@ -36,10 +41,10 @@ export interface DealDBRow {
   expected_close_date?: string;
   owner_id?: string;
   company_id?: string;
+  lead_id?: string;
   contact_id?: string;
   created_at?: string;
   updated_at?: string;
-  lead_id?: string;
   // Updated to handle SelectQueryError
   profiles?: {
     first_name: string;
@@ -50,6 +55,11 @@ export interface DealDBRow {
   } | null | { error: boolean; [key: string]: any };
   company_contacts?: {
     name: string;
+  } | null | { error: boolean; [key: string]: any };
+  leads?: {
+    first_name: string;
+    last_name: string;
+    email: string;
   } | null | { error: boolean; [key: string]: any };
 }
 
