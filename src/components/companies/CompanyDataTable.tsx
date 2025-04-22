@@ -17,12 +17,52 @@ import type { Company } from '@/types/company';
 interface CompanyDataTableProps {
   companies: Company[];
   onCompanySelect: (companyId: string) => void;
+  isLoading?: boolean;
 }
 
 export const CompanyDataTable: React.FC<CompanyDataTableProps> = ({
   companies,
   onCompanySelect,
+  isLoading = false
 }) => {
+  if (isLoading) {
+    return (
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>اسم الشركة</TableHead>
+              <TableHead>القطاع</TableHead>
+              <TableHead>البلد</TableHead>
+              <TableHead>تاريخ الإنشاء</TableHead>
+              <TableHead>العملاء المحتملين</TableHead>
+              <TableHead>الفرص</TableHead>
+              <TableHead>الفواتير</TableHead>
+              <TableHead>المسؤول</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {[...Array(5)].map((_, index) => (
+              <TableRow key={index}>
+                <TableCell colSpan={8}>
+                  <div className="h-8 bg-muted/10 rounded animate-pulse"></div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  }
+
+  if (companies.length === 0) {
+    return (
+      <div className="rounded-md border p-8 text-center">
+        <p className="text-muted-foreground">لم يتم العثور على شركات</p>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-md border">
       <Table>
