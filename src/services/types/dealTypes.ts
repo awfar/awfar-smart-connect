@@ -43,7 +43,8 @@ export interface DealDBRow {
   profiles?: {
     first_name?: string | null;
     last_name?: string | null;
-  } | null | Record<string, any>;  // Update to handle potential Supabase query error types
+    avatar_url?: string | null;
+  } | null;
   companies?: {
     name?: string | null;
   } | null;

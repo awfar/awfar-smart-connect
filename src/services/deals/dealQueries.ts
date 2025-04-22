@@ -18,7 +18,18 @@ const mapDealFromDB = (deal: DealDBRow): Deal => {
       deal.profiles.last_name
     ].filter(Boolean).join(' ') || deal.owner_id || '',
     initials: deal.profiles.first_name?.[0] || deal.profiles.last_name?.[0] || 'U',
-    avatar: deal.profiles.avatar_url
+    avatar: deal.profiles.avatar_url || undefined
+  } : undefined;
+
+  // Create a lead object that matches the Lead type from leadTypes
+  const lead = deal.leads ? {
+    id: deal.lead_id || '',
+    first_name: deal.leads.first_name || '',
+    last_name: deal.leads.last_name || '',
+    email: deal.leads.email || '',
+    status: 'active', // Required field for Lead type
+    created_at: formatDealDate(deal.created_at || '') || '',
+    updated_at: formatDealDate(deal.updated_at || '') || ''
   } : undefined;
 
   return {
@@ -34,12 +45,7 @@ const mapDealFromDB = (deal: DealDBRow): Deal => {
     company_id: deal.company_id || undefined,
     company_name: deal.companies?.name || undefined,
     lead_id: deal.lead_id || undefined,
-    lead: deal.leads ? {
-      id: deal.lead_id || '',
-      first_name: deal.leads.first_name || '',
-      last_name: deal.leads.last_name || '',
-      email: deal.leads.email || '',
-    } : undefined,
+    lead: lead,
     contact_id: deal.contact_id || undefined,
     contact_name: deal.company_contacts?.name || undefined,
     created_at: formatDealDate(deal.created_at || ''),
@@ -109,7 +115,8 @@ export const getDeals = async (filters: Record<string, any> = {}): Promise<Deal[
       throw error;
     }
 
-    return data.map(mapDealFromDB);
+    // Add type safety for data
+    return (data as DealDBRow[]).map(mapDealFromDB);
   } catch (error) {
     console.error("Error in getDeals:", error);
     throw error;
@@ -140,7 +147,7 @@ export const getDealById = async (id: string): Promise<Deal | null> => {
       return null;
     }
 
-    return mapDealFromDB(data);
+    return mapDealFromDB(data as DealDBRow);
   } catch (error) {
     console.error("Error in getDealById:", error);
     throw error;
