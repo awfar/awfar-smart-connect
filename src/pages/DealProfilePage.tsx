@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -94,7 +93,6 @@ const DealProfilePage = () => {
   
   const handleSaveChanges = () => {
     setIsEditing(false);
-    // Invalidate and refetch deal data
     queryClient.invalidateQueries({ queryKey: ['deal', id] });
     toast.success("تم حفظ التغييرات بنجاح");
   };
@@ -116,7 +114,6 @@ const DealProfilePage = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6 p-6">
-        {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between gap-4">
           <div>
             <Button variant="outline" onClick={() => navigate('/dashboard/deals')}>
@@ -130,7 +127,6 @@ const DealProfilePage = () => {
           </Button>
         </div>
         
-        {/* Deal Overview Card */}
         <Card>
           <CardHeader className="pb-2">
             <div className="flex flex-col md:flex-row justify-between gap-4">
@@ -168,7 +164,6 @@ const DealProfilePage = () => {
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-                {/* Connected Company */}
                 <div>
                   <div className="flex items-center gap-2">
                     <Building className="h-5 w-5 text-muted-foreground" />
@@ -187,7 +182,6 @@ const DealProfilePage = () => {
                   )}
                 </div>
                 
-                {/* Connected Lead/Contact */}
                 <div>
                   <div className="flex items-center gap-2">
                     <User className="h-5 w-5 text-muted-foreground" />
@@ -199,7 +193,9 @@ const DealProfilePage = () => {
                       onClick={() => navigate(`/dashboard/leads/${deal.lead_id}`)} 
                       className="p-0 h-auto mt-1 text-base font-medium"
                     >
-                      {deal.lead.name}
+                      {deal.lead.first_name && deal.lead.last_name ? 
+                        `${deal.lead.first_name} ${deal.lead.last_name}` : 
+                        deal.lead.email}
                     </Button>
                   ) : deal.contact_name ? (
                     <p className="mt-1 font-medium">{deal.contact_name}</p>
@@ -208,7 +204,6 @@ const DealProfilePage = () => {
                   )}
                 </div>
                 
-                {/* Expected Close Date */}
                 <div>
                   <div className="flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-muted-foreground" />
@@ -219,7 +214,6 @@ const DealProfilePage = () => {
                   </p>
                 </div>
                 
-                {/* Owner */}
                 <div>
                   <div className="flex items-center gap-2">
                     <User className="h-5 w-5 text-muted-foreground" />
@@ -237,7 +231,6 @@ const DealProfilePage = () => {
                   )}
                 </div>
                 
-                {/* Creation Time */}
                 <div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-5 w-5 text-muted-foreground" />
@@ -259,7 +252,6 @@ const DealProfilePage = () => {
           </CardContent>
         </Card>
         
-        {/* Tabs Section */}
         <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
           <TabsList>
             <TabsTrigger value="overview">نظرة عامة</TabsTrigger>
@@ -278,7 +270,6 @@ const DealProfilePage = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
-                    {/* We will add more analytics widgets here in phase 2 */}
                     <p className="text-muted-foreground text-center py-10">
                       سيتم إضافة المزيد من التحليلات والإحصائيات هنا قريباً.
                     </p>
@@ -312,7 +303,6 @@ const DealProfilePage = () => {
           </div>
         </Tabs>
         
-        {/* Edit Deal Modal */}
         <Dialog open={isEditing} onOpenChange={setIsEditing}>
           <DialogContent className="sm:max-w-[800px]">
             <DialogHeader>

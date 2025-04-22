@@ -31,14 +31,15 @@ export const getDealActivities = async (dealId: string): Promise<DealActivity[]>
       description: activity.details || '',
       created_at: activity.created_at,
       created_by: activity.user_id,
-      scheduled_at: activity.action === 'meeting' || activity.action === 'call' ? 
-        (activity.details?.includes('scheduled:') ? activity.details.split('scheduled:')[1]?.split('|')[0]?.trim() : undefined) : undefined,
-      completed_at: activity.details?.includes('[COMPLETED]') ? activity.details.split('[COMPLETED]')[1]?.trim() : undefined,
+      // Safely handle profiles which might be null
       creator: {
         name: activity.profiles 
           ? `${activity.profiles.first_name || ''} ${activity.profiles.last_name || ''}`.trim()
           : 'مستخدم النظام'
-      }
+      },
+      scheduled_at: activity.action === 'meeting' || activity.action === 'call' ? 
+        (activity.details?.includes('scheduled:') ? activity.details.split('scheduled:')[1]?.split('|')[0]?.trim() : undefined) : undefined,
+      completed_at: activity.details?.includes('[COMPLETED]') ? activity.details.split('[COMPLETED]')[1]?.trim() : undefined
     }));
   } catch (error) {
     console.error("Error in getDealActivities:", error);
@@ -79,7 +80,7 @@ export const addDealActivity = async (activity: Partial<DealActivity>): Promise<
       throw error;
     }
     
-    return data ? {
+    return {
       id: data.id,
       deal_id: data.entity_id,
       type: data.action,
@@ -91,7 +92,7 @@ export const addDealActivity = async (activity: Partial<DealActivity>): Promise<
       creator: {
         name: "أنت"
       }
-    } : null;
+    };
   } catch (error) {
     console.error("Error in addDealActivity:", error);
     throw error;

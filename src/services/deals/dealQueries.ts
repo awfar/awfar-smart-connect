@@ -4,8 +4,26 @@ import { Deal, DealDBRow } from "../types/dealTypes";
 import { toast } from "sonner";
 import { transformDealFromSupabase } from "./utils";
 
-// Get all deals with filter options - simplified type handling
-export const getDeals = async (filters?: Record<string, any>): Promise<Deal[]> => {
+// Type for filter options - explicit to avoid deep type instantiation
+export interface DealFilters {
+  stage?: string;
+  status?: string;
+  owner_id?: string;
+  search?: string;
+  minValue?: number;
+  maxValue?: number;
+  closeDate?: {
+    fromDate?: string;
+    toDate?: string;
+  };
+  sortBy?: {
+    column: string;
+    direction: 'asc' | 'desc';
+  };
+}
+
+// Get all deals with filter options
+export const getDeals = async (filters?: DealFilters): Promise<Deal[]> => {
   try {
     console.log("Fetching deals from Supabase with filters:", filters);
     
@@ -77,10 +95,7 @@ export const getDeals = async (filters?: Record<string, any>): Promise<Deal[]> =
     }
     
     // Transform data before returning
-    return (data || []).map((deal) => {
-      // Use type assertion to tell TypeScript about the expected structure
-      return transformDealFromSupabase(deal as unknown as DealDBRow);
-    });
+    return (data || []).map((deal) => transformDealFromSupabase(deal as DealDBRow));
   } catch (error) {
     console.error("Error fetching deals:", error);
     toast.error("تعذر جلب بيانات الصفقات");
@@ -88,7 +103,7 @@ export const getDeals = async (filters?: Record<string, any>): Promise<Deal[]> =
   }
 };
 
-// Get deal by ID from Supabase with explicit typing
+// Get deal by ID
 export const getDealById = async (id: string): Promise<Deal | null> => {
   try {
     const { data, error } = await supabase
@@ -110,8 +125,7 @@ export const getDealById = async (id: string): Promise<Deal | null> => {
     
     if (!data) return null;
     
-    // Use type assertion to tell TypeScript about the expected structure
-    return transformDealFromSupabase(data as unknown as DealDBRow);
+    return transformDealFromSupabase(data as DealDBRow);
   } catch (error) {
     console.error("Error fetching deal by ID:", error);
     toast.error("تعذر جلب بيانات الصفقة");
@@ -140,7 +154,7 @@ export const getDealsByCompanyId = async (companyId: string): Promise<Deal[]> =>
     }
 
     if (data && data.length > 0) {
-      return data.map((deal) => transformDealFromSupabase(deal as unknown as DealDBRow));
+      return data.map((deal) => transformDealFromSupabase(deal as DealDBRow));
     }
 
     return [];
@@ -172,7 +186,7 @@ export const getDealsByLeadId = async (leadId: string): Promise<Deal[]> => {
     }
 
     if (data && data.length > 0) {
-      return data.map((deal) => transformDealFromSupabase(deal as unknown as DealDBRow));
+      return data.map((deal) => transformDealFromSupabase(deal as DealDBRow));
     }
 
     return [];

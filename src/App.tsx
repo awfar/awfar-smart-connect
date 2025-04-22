@@ -1,125 +1,91 @@
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import "./App.css";
-import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import EnhancedDashboard from "./pages/EnhancedDashboard";
-import LeadManagement from "./pages/LeadManagement";
-import UserManagement from "./pages/UserManagement";
-import RolesManagement from "./pages/RolesManagement";
-import PermissionsManagement from "./pages/PermissionsManagement";
-import FormBuilderManagement from "./pages/FormBuilderManagement";
-import CreateSuperAdmin from "./pages/CreateSuperAdmin";
-import TasksManagement from "./pages/TasksManagement";
-import AppointmentsManagement from "./pages/AppointmentsManagement";
-import TicketsManagement from "./pages/TicketsManagement";
-import DealsManagement from "./pages/DealsManagement";
-import CatalogManagement from "./pages/CatalogManagement";
-import CMS from "./pages/CMS";
-import Settings from "./pages/Settings";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import NotFound from "./pages/NotFound";
-import LeadDetails from "./pages/LeadDetails";
-import LeadDetailsPage from "./pages/LeadDetailsPage";
-import AIAgent from "./pages/AIAgent";
-import ChatsManagement from "./pages/ChatsManagement";
-import Channels from "./pages/Channels";
-import TryAIAgent from "./pages/TryAIAgent";
-import AboutUs from "./pages/AboutUs";
-import Solutions from "./pages/Solutions";
-import Pricing from "./pages/Pricing";
-import Contact from "./pages/Contact";
-import Demo from "./pages/Demo";
-import Integration from "./pages/Integration";
-import FormEmbed from "./pages/FormEmbed";
-import InvoiceManagement from "./pages/InvoiceManagement";
-import PackageManagement from "./pages/PackageManagement";
-import ProductDetails from "./pages/ProductDetails";
-import CompaniesManagement from "./pages/CompaniesManagement";
-import CompanyProfile from "./pages/companies/CompanyProfile";
-import CompanyPropertiesManagement from "./pages/CompanyPropertiesManagement";
-import SystemTests from "./pages/SystemTests";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import TeamsManagement from "./pages/TeamsManagement";
-import DepartmentsManagement from "./pages/DepartmentsManagement";
-import PropertiesManagement from "./pages/PropertiesManagement";
-import ReportsManagement from "./pages/ReportsManagement";
-import SubscriptionManagement from "./pages/SubscriptionManagement";
-import DealProfilePage from "./pages/deals/DealProfilePage";
+import { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ThemeProvider } from '@/components/ui/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
 
-import { Toaster } from "sonner";
-import { AuthProvider } from "./contexts/AuthContext";
-import DashboardLayoutWrapper from "./components/layout/DashboardLayoutWrapper";
+// Import pages
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import Dashboard from './pages/Dashboard';
+import NotFound from './pages/NotFound';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Index from './pages/Index';
+import Settings from './pages/Settings';
+import LeadManagement from './pages/LeadManagement';
+import TasksManagement from './pages/TasksManagement';
+import AppointmentsManagement from './pages/AppointmentsManagement';
+import DealProfilePage from './pages/DealProfilePage';
+
+// Import the second DealProfilePage from deals folder
+import DealProfilePageFromDeals from './pages/deals/DealProfilePage';
+
+import DepartmentsManagement from './pages/DepartmentsManagement';
+import TeamsManagement from './pages/TeamsManagement';
+import RolesManagement from './pages/RolesManagement';
+import PermissionsManagement from './pages/PermissionsManagement';
+import UserManagement from './pages/UserManagement';
+import LeadDetailsPage from './pages/LeadDetailsPage';
+import CompaniesManagement from './pages/CompaniesManagement';
+import CompanyProfile from './pages/companies/CompanyProfile';
+import DealsManagement from './pages/DealsManagement';
+import TicketsManagement from './pages/TicketsManagement';
+import LeadProfilePage from './pages/leads/LeadProfilePage';
+
+// Create query client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
   return (
-    <AuthProvider>
-      <>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="light" storageKey="theme">
         <Router>
           <Routes>
             <Route path="/" element={<Index />} />
-            
-            <Route element={<DashboardLayoutWrapper />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/dashboard/enhanced" element={<EnhancedDashboard />} />
-              <Route path="/dashboard/leads" element={<LeadManagement />} />
-              <Route path="/dashboard/leads/:id" element={<LeadDetailsPage />} />
-              <Route path="/dashboard/users" element={<UserManagement />} />
-              <Route path="/dashboard/roles" element={<RolesManagement />} />
-              <Route path="/dashboard/permissions" element={<PermissionsManagement />} />
-              <Route path="/dashboard/forms" element={<FormBuilderManagement />} />
-              <Route path="/dashboard/super-admin" element={<CreateSuperAdmin />} />
-              <Route path="/dashboard/tasks" element={<TasksManagement />} />
-              <Route path="/dashboard/appointments" element={<AppointmentsManagement />} />
-              <Route path="/dashboard/tickets" element={<TicketsManagement />} />
-              <Route path="/dashboard/deals" element={<DealsManagement />} />
-              <Route path="/dashboard/deals/:id" element={<DealProfilePage />} />
-              <Route path="/dashboard/catalog" element={<CatalogManagement />} />
-              <Route path="/dashboard/cms" element={<CMS />} />
-              <Route path="/dashboard/settings" element={<Settings />} />
-              <Route path="/dashboard/lead/:id" element={<LeadDetails />} />
-              <Route path="/dashboard/ai-agent" element={<AIAgent />} />
-              <Route path="/dashboard/chats" element={<ChatsManagement />} />
-              <Route path="/dashboard/channels" element={<Channels />} />
-              <Route path="/dashboard/invoices" element={<InvoiceManagement />} />
-              <Route path="/dashboard/packages" element={<PackageManagement />} />
-              <Route path="/dashboard/catalog/:id" element={<ProductDetails />} />
-              <Route path="/dashboard/companies" element={<CompaniesManagement />} />
-              <Route path="/dashboard/companies/:id" element={<CompanyProfile />} />
-              <Route path="/dashboard/companies/properties" element={<CompanyPropertiesManagement />} />
-              <Route path="/dashboard/system-tests" element={<SystemTests />} />
-              <Route path="/dashboard/teams" element={<TeamsManagement />} />
-              <Route path="/dashboard/departments" element={<DepartmentsManagement />} />
-              <Route path="/dashboard/properties" element={<PropertiesManagement />} />
-              <Route path="/dashboard/reports" element={<ReportsManagement />} />
-              <Route path="/dashboard/subscriptions" element={<SubscriptionManagement />} />
-            </Route>
-            
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/try-ai-agent" element={<TryAIAgent />} />
-            <Route path="/about" element={<AboutUs />} />
-            <Route path="/solutions" element={<Solutions />} />
-            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
-            <Route path="/demo" element={<Demo />} />
-            <Route path="/integration" element={<Integration />} />
-            <Route path="/form/:id" element={<FormEmbed />} />
+
+            {/* Dashboard Routes */}
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard/leads" element={<LeadManagement />} />
+            <Route path="/dashboard/leads/:id" element={<LeadProfilePage />} />
+            <Route path="/dashboard/tasks" element={<TasksManagement />} />
+            <Route path="/dashboard/appointments" element={<AppointmentsManagement />} />
+            <Route path="/dashboard/deals" element={<DealsManagement />} />
+            <Route path="/dashboard/deals/:id" element={<DealProfilePage />} />
+            <Route path="/dashboard/companies" element={<CompaniesManagement />} />
+            <Route path="/dashboard/companies/:id" element={<CompanyProfile />} />
+            <Route path="/dashboard/tickets" element={<TicketsManagement />} />
+            
+            {/* User Management Routes */}
+            <Route path="/dashboard/users" element={<UserManagement />} />
+            <Route path="/dashboard/departments" element={<DepartmentsManagement />} />
+            <Route path="/dashboard/teams" element={<TeamsManagement />} />
+            <Route path="/dashboard/roles" element={<RolesManagement />} />
+            <Route path="/dashboard/permissions" element={<PermissionsManagement />} />
+            
+            {/* Settings */}
+            <Route path="/dashboard/settings" element={<Settings />} />
+
+            {/* Fallback routes */}
+            <Route path="/dashboard/*" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Router>
-      
-        <Toaster 
-          position="top-center"
-          richColors
-          expand
-          closeButton
-          dir="rtl"
-        />
-      </>
-    </AuthProvider>
+        <Toaster richColors />
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 
