@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { CompanyDataTable } from '@/components/companies/CompanyDataTable';
@@ -7,7 +6,7 @@ import { Plus, Search, Filter } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import type { Company } from '@/types/company';
 import AddCompanyDialog from '@/components/companies/AddCompanyDialog';
-import { getCompanies } from '@/services/companiesService';
+import { getCompanies } from '@/services/companies';
 import { toast } from "sonner";
 
 const CompaniesManagement = () => {

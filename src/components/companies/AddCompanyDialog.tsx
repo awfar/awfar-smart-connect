@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import CompanyForm from './CompanyForm';
 import { toast } from "sonner";
 import { useNavigate } from 'react-router-dom';
-import { createCompany } from '@/services/companiesService';
+import { createCompany } from '@/services/companies';
 
 interface AddCompanyDialogProps {
   isOpen: boolean;
