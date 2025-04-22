@@ -1,13 +1,13 @@
 
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { CompanyProfileTabs } from '@/components/companies/CompanyProfileTabs';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useBreakpoints } from '@/hooks/use-mobile';
 import { useQuery } from '@tanstack/react-query';
 import { getCompanyById } from '@/services/companies';
+import { toast } from 'sonner';
 
 const CompanyProfile = () => {
   const { id } = useParams();
@@ -17,7 +17,10 @@ const CompanyProfile = () => {
   const { data: company, isLoading, error } = useQuery({
     queryKey: ['company', id],
     queryFn: () => getCompanyById(id || ''),
-    enabled: !!id
+    enabled: !!id,
+    onError: () => {
+      toast.error('حدث خطأ في تحميل بيانات الشركة');
+    }
   });
 
   if (isLoading) {
@@ -39,6 +42,14 @@ const CompanyProfile = () => {
     );
   }
 
+  const handleDelete = () => {
+    toast.info('سيتم إضافة وظيفة الحذف قريباً');
+  };
+
+  const handleEdit = () => {
+    toast.info('سيتم إضافة وظيفة التعديل قريباً');
+  };
+
   return (
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
@@ -54,11 +65,11 @@ const CompanyProfile = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleEdit}>
             <Edit className="h-4 w-4 ml-2" />
             {!isMobile && "تعديل"}
           </Button>
-          <Button variant="destructive" size="sm">
+          <Button variant="destructive" size="sm" onClick={handleDelete}>
             <Trash2 className="h-4 w-4 ml-2" />
             {!isMobile && "حذف"}
           </Button>
