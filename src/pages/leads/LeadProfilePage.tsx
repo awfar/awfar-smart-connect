@@ -1,10 +1,8 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Calendar, FileText, MessageCircle, Phone, Plus } from 'lucide-react';
+import { MessageCircle, Phone, FileText, Calendar } from 'lucide-react';
 import { useLeadProfile } from '@/hooks/useLeadProfile';
 import LeadProfileHeader from '@/components/leads/profile/LeadProfileHeader';
 import LeadProfileInfo from '@/components/leads/profile/LeadProfileInfo';
@@ -19,20 +17,21 @@ import AppointmentFormDialog from '@/components/leads/dialogs/AppointmentFormDia
 import { useToast } from '@/components/ui/use-toast';
 import { Lead as ServiceLead } from '@/services/leads/types';
 import { useBreakpoints } from '@/hooks/use-mobile';
+import { ArrowLeft } from 'lucide-react';
 
 const LeadProfilePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('details');
   
-  // Add missing state variables
+  // State variables
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showAddActivityDialog, setShowAddActivityDialog] = useState(false);
   const [showAddTaskDialog, setShowAddTaskDialog] = useState(false);
   const [showAddAppointmentDialog, setShowAddAppointmentDialog] = useState(false);
   const [activityType, setActivityType] = useState<'note' | 'call' | 'email' | 'meeting' | 'whatsapp'>('note');
+  const [activeTab, setActiveTab] = useState('details');
   
   const { isMobile } = useBreakpoints();
 
@@ -64,11 +63,10 @@ const LeadProfilePage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-4">
+      <div className="p-4">
         <div className="animate-pulse space-y-4">
           <div className="h-12 bg-muted rounded w-1/3"></div>
           <div className="h-32 bg-muted rounded w-full"></div>
-          <div className="h-64 bg-muted rounded w-full"></div>
         </div>
       </div>
     );
@@ -76,11 +74,11 @@ const LeadProfilePage: React.FC = () => {
 
   if (error || !lead) {
     return (
-      <div className="container mx-auto p-4 text-center">
+      <div className="p-4 text-center">
         <h2 className="text-xl font-semibold mb-4">خطأ في تحميل بيانات العميل المحتمل</h2>
         <p className="mb-4">{error || 'لم يتم العثور على العميل المحتمل'}</p>
         <Button onClick={() => navigate('/dashboard/leads')}>
-          <ArrowLeft className="ml-2 h-4 w-4" /> العودة إلى قائمة العملاء المحتملين
+          <ArrowLeft className="ml-2 h-4 w-4" /> العودة
         </Button>
       </div>
     );
@@ -133,8 +131,8 @@ const LeadProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-4">
+    <div className="min-h-screen bg-gray-50">
+      <div className="p-4 space-y-4 max-w-7xl mx-auto">
         <LeadProfileHeader 
           lead={leadWithSafeOwner}
           onBack={() => navigate('/dashboard/leads')}
@@ -142,63 +140,75 @@ const LeadProfilePage: React.FC = () => {
           onDelete={() => setShowDeleteDialog(true)}
         />
 
-        <div className={`mt-6 space-y-6 ${isMobile ? 'block' : 'grid grid-cols-3 gap-6'}`}>
-          <Card className={isMobile ? 'mb-6' : 'col-span-2'}>
-            <CardContent className="p-4">
-              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="w-full sm:w-auto justify-center"
-                  onClick={() => handleActivityClick('note')}
-                >
-                  <MessageCircle className="ml-1.5 h-4 w-4" />
-                  إضافة ملاحظة
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="w-full sm:w-auto justify-center"
-                  onClick={() => handleActivityClick('call')}
-                >
-                  <Phone className="ml-1.5 h-4 w-4" />
-                  تسجيل مكالمة
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="w-full sm:w-auto justify-center"
-                  onClick={() => setShowAddTaskDialog(true)}
-                >
-                  <FileText className="ml-1.5 h-4 w-4" />
-                  إضافة مهمة
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="w-full sm:w-auto justify-center"
-                  onClick={() => setShowAddAppointmentDialog(true)}
-                >
-                  <Calendar className="ml-1.5 h-4 w-4" />
-                  جدولة موعد
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Quick Actions Grid */}
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="w-full sm:w-auto justify-center h-9"
+            onClick={() => {
+              setActivityType('note');
+              setShowAddActivityDialog(true);
+            }}
+          >
+            <MessageCircle className="h-4 w-4 ml-1.5" />
+            <span className="text-sm">إضافة ملاحظة</span>
+          </Button>
+          
+          <Button 
+            variant="outline"
+            size="sm" 
+            className="w-full sm:w-auto justify-center h-9"
+            onClick={() => setShowAddTaskDialog(true)}
+          >
+            <FileText className="h-4 w-4 ml-1.5" />
+            <span className="text-sm">مهمة جديدة</span>
+          </Button>
+          
+          <Button 
+            variant="outline"
+            size="sm"
+            className="w-full sm:w-auto justify-center h-9"
+            onClick={() => {
+              setActivityType('call');
+              setShowAddActivityDialog(true);
+            }}
+          >
+            <Phone className="h-4 w-4 ml-1.5" />
+            <span className="text-sm">تسجيل مكالمة</span>
+          </Button>
+          
+          <Button 
+            variant="outline"
+            size="sm"
+            className="w-full sm:w-auto justify-center h-9"
+            onClick={() => setShowAddAppointmentDialog(true)}
+          >
+            <Calendar className="h-4 w-4 ml-1.5" />
+            <span className="text-sm">جدولة موعد</span>
+          </Button>
+        </div>
 
-          <div className={isMobile ? 'space-y-6' : 'col-span-2 space-y-6'}>
-            <Tabs defaultValue="details" dir="rtl" className="w-full">
-              <TabsList className="w-full grid grid-cols-3">
-                <TabsTrigger value="details">التفاصيل</TabsTrigger>
-                <TabsTrigger value="activity">النشاطات</TabsTrigger>
-                <TabsTrigger value="related">السجلات المرتبطة</TabsTrigger>
-              </TabsList>
+        {/* Main Content */}
+        <div className="space-y-4">
+          <Tabs
+            defaultValue="details"
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <TabsList className="w-full grid grid-cols-3 h-12">
+              <TabsTrigger value="details" className="text-sm">التفاصيل</TabsTrigger>
+              <TabsTrigger value="activity" className="text-sm">الأنشطة</TabsTrigger>
+              <TabsTrigger value="related" className="text-sm">السجلات</TabsTrigger>
+            </TabsList>
 
-              <TabsContent value="details" className="mt-4">
+            <div className="mt-4">
+              <TabsContent value="details" className="m-0">
                 <LeadProfileInfo lead={leadWithSafeOwner} />
               </TabsContent>
 
-              <TabsContent value="activity" className="mt-4">
+              <TabsContent value="activity" className="m-0">
                 <LeadActivityTimeline 
                   activities={activities}
                   isLoading={isActivitiesLoading}
@@ -206,7 +216,7 @@ const LeadProfilePage: React.FC = () => {
                 />
               </TabsContent>
 
-              <TabsContent value="related" className="mt-4">
+              <TabsContent value="related" className="m-0">
                 <LeadRelatedRecords
                   leadId={lead.id}
                   tasks={tasks}
@@ -214,25 +224,16 @@ const LeadProfilePage: React.FC = () => {
                   deals={deals || []}
                 />
               </TabsContent>
-            </Tabs>
-          </div>
-
-          {!isMobile && (
-            <div className="col-span-1">
-              <LeadProfileSidebar lead={leadWithSafeOwner} />
             </div>
-          )}
+          </Tabs>
 
           {isMobile && (
-            <Card>
-              <CardContent className="p-4">
-                <LeadProfileSidebar lead={leadWithSafeOwner} />
-              </CardContent>
-            </Card>
+            <LeadProfileSidebar lead={leadWithSafeOwner} />
           )}
         </div>
       </div>
 
+      {/* Dialogs */}
       <DeleteLeadDialog 
         isOpen={showDeleteDialog} 
         onOpenChange={setShowDeleteDialog}
