@@ -437,14 +437,14 @@ const DealForm = ({ onCancel, onSave, dealId, initialData, companyId, leadId }: 
           render={({ field }) => (
             <FormItem>
               <FormLabel>مسؤول الصفقة</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
+              <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="اختر المسؤول" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">بدون تعيين</SelectItem>
+                  <SelectItem value="unassigned">بدون تعيين</SelectItem>
                   {salesTeam.map(member => (
                     <SelectItem key={member.id} value={member.id}>
                       {member.name}
