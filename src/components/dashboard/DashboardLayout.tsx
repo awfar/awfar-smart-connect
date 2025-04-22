@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import DashboardHeader from './DashboardHeader';
 import DashboardNav from './DashboardNav';
 import { useBreakpoints } from '@/hooks/use-mobile';
@@ -8,34 +8,16 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
+// NOTE: This component is no longer in use as we've migrated to DashboardLayoutWrapper
+// This is kept for reference but should be deprecated in favor of DashboardLayoutWrapper
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const { isMobile } = useBreakpoints();
+  // This logs a deprecation warning to help us track down any remaining usages
+  console.warn("DashboardLayout is deprecated. Please use DashboardLayoutWrapper instead.");
   
-  const toggleMobileSidebar = () => {
-    setMobileSidebarOpen(!mobileSidebarOpen);
-  };
-  
-  const closeMobileSidebar = () => {
-    setMobileSidebarOpen(false);
-  };
-
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
-      <DashboardHeader onMenuToggle={toggleMobileSidebar} />
-      
-      <div className="flex flex-1 pt-16 md:pt-20">
-        {/* For desktop, sidebar is always visible */}
-        {!isMobile && <DashboardNav />}
-        
-        {/* For mobile, sidebar is shown conditionally */}
-        {isMobile && <DashboardNav mobileOpen={mobileSidebarOpen} onClose={closeMobileSidebar} />}
-        
-        <main className="flex-1 overflow-auto px-4 py-6 md:px-6">
-          <div className="container mx-auto max-w-7xl">
-            {children}
-          </div>
-        </main>
+      <div className="flex-1 container mx-auto px-4 py-6">
+        {children}
       </div>
     </div>
   );

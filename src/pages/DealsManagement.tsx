@@ -1,14 +1,13 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import DealsList from "@/components/deals/DealsList";
 import DealForm from "@/components/deals/DealForm";
 import DealFilters from "@/components/deals/DealFilters";
-import { getDeals, Deal } from "@/services/dealsService";
+import { getDeals } from "@/services/dealsService";
 import { toast } from "sonner";
-import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -124,65 +123,63 @@ const DealsManagement = () => {
   };
 
   return (
-    <DashboardLayout>
-      <div className="flex flex-col gap-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight">إدارة الصفقات</h1>
-            <p className="text-muted-foreground mt-1">إدارة ومتابعة صفقات المبيعات والفرص</p>
-          </div>
-          
-          <Button onClick={handleCreateDeal}>
-            <Plus className="ml-2 h-4 w-4" />
-            إضافة صفقة جديدة
-          </Button>
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">إدارة الصفقات</h1>
+          <p className="text-muted-foreground mt-1">إدارة ومتابعة صفقات المبيعات والفرص</p>
         </div>
-
-        <Tabs defaultValue="all" value={view} onValueChange={(v) => handleViewChange(v as any)}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="all">جميع الصفقات</TabsTrigger>
-            <TabsTrigger value="active">الصفقات النشطة</TabsTrigger>
-            <TabsTrigger value="won">الصفقات المربوحة</TabsTrigger>
-            <TabsTrigger value="lost">الصفقات المفقودة</TabsTrigger>
-          </TabsList>
-          
-          <Card>
-            <CardHeader className="pb-3">
-              <DealFilters 
-                onStageChange={handleStageChange}
-                onStatusChange={handleStatusChange}
-                onOwnerChange={handleOwnerChange}
-                onValueChange={handleValueChange}
-                onSearchChange={handleSearchChange}
-                onDateRangeChange={handleDateRangeChange}
-                onResetFilters={handleResetFilters}
-              />
-            </CardHeader>
-            <CardContent>
-              <DealsList 
-                deals={deals || []}
-                onRefresh={refetch}
-                onSort={handleSort}
-                isLoading={isLoading}
-              />
-            </CardContent>
-          </Card>
-        </Tabs>
-
-        {/* Deal Creation Modal */}
-        <Dialog open={isCreating} onOpenChange={setIsCreating}>
-          <DialogContent className="sm:max-w-[800px]">
-            <DialogHeader>
-              <DialogTitle>صفقة جديدة</DialogTitle>
-            </DialogHeader>
-            <DealForm 
-              onCancel={handleCancelCreate}
-              onSave={handleSaveDeal}
-            />
-          </DialogContent>
-        </Dialog>
+        
+        <Button onClick={handleCreateDeal}>
+          <Plus className="ml-2 h-4 w-4" />
+          إضافة صفقة جديدة
+        </Button>
       </div>
-    </DashboardLayout>
+
+      <Tabs defaultValue="all" value={view} onValueChange={(v) => handleViewChange(v as any)}>
+        <TabsList className="mb-4">
+          <TabsTrigger value="all">جميع الصفقات</TabsTrigger>
+          <TabsTrigger value="active">الصفقات النشطة</TabsTrigger>
+          <TabsTrigger value="won">الصفقات المربوحة</TabsTrigger>
+          <TabsTrigger value="lost">الصفقات المفقودة</TabsTrigger>
+        </TabsList>
+        
+        <Card>
+          <CardHeader className="pb-3">
+            <DealFilters 
+              onStageChange={handleStageChange}
+              onStatusChange={handleStatusChange}
+              onOwnerChange={handleOwnerChange}
+              onValueChange={handleValueChange}
+              onSearchChange={handleSearchChange}
+              onDateRangeChange={handleDateRangeChange}
+              onResetFilters={handleResetFilters}
+            />
+          </CardHeader>
+          <CardContent>
+            <DealsList 
+              deals={deals || []}
+              onRefresh={refetch}
+              onSort={handleSort}
+              isLoading={isLoading}
+            />
+          </CardContent>
+        </Card>
+      </Tabs>
+
+      {/* Deal Creation Modal */}
+      <Dialog open={isCreating} onOpenChange={setIsCreating}>
+        <DialogContent className="sm:max-w-[800px]">
+          <DialogHeader>
+            <DialogTitle>صفقة جديدة</DialogTitle>
+          </DialogHeader>
+          <DealForm 
+            onCancel={handleCancelCreate}
+            onSave={handleSaveDeal}
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 
