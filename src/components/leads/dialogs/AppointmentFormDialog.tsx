@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +13,7 @@ import { useForm } from 'react-hook-form';
 import { DatePicker } from '@/components/ui/date-picker';
 import { createAppointment } from '@/services/appointments/appointmentsService';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AppointmentFormDialogProps {
   open: boolean;
@@ -35,10 +36,33 @@ const AppointmentFormDialog: React.FC<AppointmentFormDialogProps> = ({
     }
   });
   
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
-  const [startDate, setStartDate] = React.useState<Date | undefined>(undefined);
-  const [startTime, setStartTime] = React.useState('10:00');
-  const [endTime, setEndTime] = React.useState('11:00');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [startDate, setStartDate] = useState<Date | undefined>(undefined);
+  const [startTime, setStartTime] = useState('10:00');
+  const [endTime, setEndTime] = useState('11:00');
+  const [leadInfo, setLeadInfo] = useState<{first_name: string, last_name: string, email: string} | null>(null);
+  
+  // Fetch lead information when dialog opens
+  React.useEffect(() => {
+    const fetchLeadInfo = async () => {
+      if (open && leadId) {
+        try {
+          const { data, error } = await supabase
+            .from('leads')
+            .select('first_name, last_name, email')
+            .eq('id', leadId)
+            .single();
+          
+          if (error) throw error;
+          setLeadInfo(data);
+        } catch (err) {
+          console.error('Error fetching lead info:', err);
+        }
+      }
+    };
+
+    fetchLeadInfo();
+  }, [open, leadId]);
   
   const onSubmit = async (data: any) => {
     try {
@@ -59,6 +83,9 @@ const AppointmentFormDialog: React.FC<AppointmentFormDialogProps> = ({
       const [endHours, endMinutes] = endTime.split(':').map(Number);
       endDateTime.setHours(endHours, endMinutes, 0, 0);
       
+      // Get current user ID
+      const { data: { user } } = await supabase.auth.getUser();
+      
       // Create appointment in Supabase
       await createAppointment({
         lead_id: leadId,
@@ -67,8 +94,11 @@ const AppointmentFormDialog: React.FC<AppointmentFormDialogProps> = ({
         location: data.location,
         start_time: startDateTime.toISOString(),
         end_time: endDateTime.toISOString(),
+        created_by: user?.id,
+        owner_id: user?.id
       });
       
+      toast.success('تم إنشاء الموعد بنجاح');
       onSuccess?.();
       onClose();
     } catch (error) {
@@ -85,6 +115,13 @@ const AppointmentFormDialog: React.FC<AppointmentFormDialogProps> = ({
         <DialogHeader>
           <DialogTitle>جدولة موعد</DialogTitle>
         </DialogHeader>
+        
+        {leadInfo && (
+          <div className="bg-muted p-3 rounded-md mb-4">
+            <h4 className="font-medium">معلومات العميل:</h4>
+            <p className="text-sm">{leadInfo.first_name} {leadInfo.last_name} - {leadInfo.email}</p>
+          </div>
+        )}
         
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>

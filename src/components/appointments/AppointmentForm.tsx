@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Appointment, AppointmentLocation, AppointmentStatus, AppointmentType } from '@/services/appointments/types';
 import { Button } from '@/components/ui/button';
@@ -27,10 +27,12 @@ import {
   PopoverTrigger
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Timer } from "lucide-react";
+import { CalendarIcon, Timer, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Checkbox } from '@/components/ui/checkbox';
+import { supabase } from '@/integrations/supabase/client';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 
 export interface AppointmentFormProps {
   onSubmit: (data: any) => Promise<void>;
@@ -39,6 +41,18 @@ export interface AppointmentFormProps {
   appointment?: Appointment;
   leadId?: string;
   isSubmitting?: boolean;
+}
+
+interface Lead {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+}
+
+interface Company {
+  id: string;
+  name: string;
 }
 
 const AppointmentForm: React.FC<AppointmentFormProps> = ({ 
@@ -50,6 +64,12 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
   isSubmitting = false 
 }) => {
   const [isAllDay, setIsAllDay] = useState(appointment?.is_all_day || false);
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [leadSearchOpen, setLeadSearchOpen] = useState(false);
+  const [companySearchOpen, setCompanySearchOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   
   // Parse start and end dates for initialization
   const startDate = appointment?.start_time ? new Date(appointment.start_time) : new Date();
@@ -59,6 +79,49 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
   const formatTimeForInput = (date: Date) => {
     return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
   };
+
+  // Fetch leads and companies
+  useEffect(() => {
+    const fetchLeadsAndCompanies = async () => {
+      try {
+        // Fetch leads
+        const { data: leadsData, error: leadsError } = await supabase
+          .from('leads')
+          .select('id, first_name, last_name, email')
+          .order('created_at', { ascending: false });
+        
+        if (leadsError) throw leadsError;
+        setLeads(leadsData || []);
+        
+        // If there's a leadId passed in props or from the appointment, find and set the selected lead
+        if (leadId || appointment?.lead_id) {
+          const id = leadId || appointment?.lead_id;
+          const foundLead = leadsData?.find(lead => lead.id === id);
+          if (foundLead) setSelectedLead(foundLead);
+        }
+
+        // Fetch companies
+        const { data: companiesData, error: companiesError } = await supabase
+          .from('companies')
+          .select('id, name')
+          .order('name');
+        
+        if (companiesError) throw companiesError;
+        setCompanies(companiesData || []);
+        
+        // If there's a company_id from the appointment, find and set the selected company
+        if (appointment?.company_id) {
+          const foundCompany = companiesData?.find(company => company.id === appointment.company_id);
+          if (foundCompany) setSelectedCompany(foundCompany);
+        }
+      } catch (error) {
+        console.error("Error fetching leads or companies:", error);
+        toast.error("فشل في تحميل بيانات العملاء أو الشركات");
+      }
+    };
+
+    fetchLeadsAndCompanies();
+  }, [leadId, appointment]);
 
   const form = useForm({
     defaultValues: {
@@ -331,6 +394,108 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
               )}
             />
           )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Lead Selection */}
+          <FormField
+            control={form.control}
+            name="lead_id"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>العميل</FormLabel>
+                <Popover open={leadSearchOpen} onOpenChange={setLeadSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={leadSearchOpen}
+                        className="w-full justify-between"
+                      >
+                        {field.value && selectedLead
+                          ? `${selectedLead.first_name} ${selectedLead.last_name}`
+                          : "اختر العميل"}
+                        <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0">
+                    <Command>
+                      <CommandInput placeholder="ابحث عن عميل..." />
+                      <CommandEmpty>لم يتم العثور على عميل</CommandEmpty>
+                      <CommandGroup className="max-h-60 overflow-y-auto">
+                        {leads.map((lead) => (
+                          <CommandItem
+                            key={lead.id}
+                            value={`${lead.first_name} ${lead.last_name}`}
+                            onSelect={() => {
+                              form.setValue('lead_id', lead.id);
+                              setSelectedLead(lead);
+                              setLeadSearchOpen(false);
+                            }}
+                          >
+                            {lead.first_name} {lead.last_name} - {lead.email}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Company Selection */}
+          <FormField
+            control={form.control}
+            name="company_id"
+            render={({ field }) => (
+              <FormItem className="flex flex-col">
+                <FormLabel>الشركة</FormLabel>
+                <Popover open={companySearchOpen} onOpenChange={setCompanySearchOpen}>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={companySearchOpen}
+                        className="w-full justify-between"
+                      >
+                        {field.value && selectedCompany
+                          ? selectedCompany.name
+                          : "اختر الشركة"}
+                        <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0">
+                    <Command>
+                      <CommandInput placeholder="ابحث عن شركة..." />
+                      <CommandEmpty>لم يتم العثور على شركة</CommandEmpty>
+                      <CommandGroup className="max-h-60 overflow-y-auto">
+                        {companies.map((company) => (
+                          <CommandItem
+                            key={company.id}
+                            value={company.name}
+                            onSelect={() => {
+                              form.setValue('company_id', company.id);
+                              setSelectedCompany(company);
+                              setCompanySearchOpen(false);
+                            }}
+                          >
+                            {company.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

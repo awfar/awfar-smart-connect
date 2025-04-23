@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Appointment } from '@/services/appointments/types';
 import { createAppointment, updateAppointment } from '@/services/appointments';
@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface AppointmentFormProps {
   leadId: string;
@@ -26,6 +27,9 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
   onSubmit,
   appointment
 }) => {
+  const [leadInfo, setLeadInfo] = useState<{first_name: string, last_name: string, email: string} | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  
   // Initialize form with the appointment data if it exists
   const { register, handleSubmit, formState } = useForm({
     defaultValues: {
@@ -37,18 +41,41 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
     }
   });
   
-  const onFormSubmit = async (data: any) => {
-    const startTime = new Date(data.start_time).toISOString();
-    const endTime = new Date(data.end_time).toISOString();
-    
-    const appointmentData = {
-      ...data,
-      start_time: startTime,
-      end_time: endTime,
-      client_id: leadId,
+  // Fetch lead information
+  useEffect(() => {
+    const fetchLeadInfo = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('leads')
+          .select('first_name, last_name, email')
+          .eq('id', leadId)
+          .single();
+        
+        if (error) throw error;
+        setLeadInfo(data);
+      } catch (err) {
+        console.error('Error fetching lead info:', err);
+      }
     };
-    
+
+    if (leadId) {
+      fetchLeadInfo();
+    }
+  }, [leadId]);
+  
+  const onFormSubmit = async (data: any) => {
+    setIsLoading(true);
     try {
+      const startTime = new Date(data.start_time).toISOString();
+      const endTime = new Date(data.end_time).toISOString();
+      
+      const appointmentData = {
+        ...data,
+        start_time: startTime,
+        end_time: endTime,
+        lead_id: leadId,
+      };
+      
       if (onSubmit) {
         // Use provided onSubmit function if available
         await onSubmit(appointmentData);
@@ -67,6 +94,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
     } catch (error) {
       console.error("Error creating/updating appointment:", error);
     } finally {
+      setIsLoading(false);
       onClose?.();
     }
   };
@@ -82,6 +110,13 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
 
   return (
     <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
+      {leadInfo && (
+        <div className="bg-muted p-3 rounded-md mb-4">
+          <h4 className="font-medium">معلومات العميل:</h4>
+          <p className="text-sm">{leadInfo.first_name} {leadInfo.last_name} - {leadInfo.email}</p>
+        </div>
+      )}
+      
       <div>
         <Label htmlFor="title">عنوان الموعد</Label>
         <Input 
@@ -141,8 +176,8 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
         <Button type="button" variant="secondary" onClick={handleCancel}>
           إلغاء
         </Button>
-        <Button type="submit" disabled={formState.isSubmitting}>
-          {formState.isSubmitting ? 'جاري الحفظ...' : 'حفظ الموعد'}
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? 'جاري الحفظ...' : 'حفظ الموعد'}
         </Button>
       </div>
     </form>

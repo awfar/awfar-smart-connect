@@ -45,50 +45,83 @@ export type Database = {
       appointments: {
         Row: {
           client_id: string | null
+          color: string | null
           company_id: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
           end_time: string
           id: string
+          is_all_day: boolean | null
           lead_id: string | null
           location: string | null
+          location_details: string | null
+          notes: string | null
+          notification_sent: boolean | null
+          owner_id: string | null
           participants: string[] | null
+          related_deal_id: string | null
+          related_ticket_id: string | null
+          reminder_time: number | null
           start_time: string
           status: string
+          team_id: string | null
           title: string
+          type: string | null
           updated_at: string | null
         }
         Insert: {
           client_id?: string | null
+          color?: string | null
           company_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           end_time: string
           id?: string
+          is_all_day?: boolean | null
           lead_id?: string | null
           location?: string | null
+          location_details?: string | null
+          notes?: string | null
+          notification_sent?: boolean | null
+          owner_id?: string | null
           participants?: string[] | null
+          related_deal_id?: string | null
+          related_ticket_id?: string | null
+          reminder_time?: number | null
           start_time: string
           status?: string
+          team_id?: string | null
           title: string
+          type?: string | null
           updated_at?: string | null
         }
         Update: {
           client_id?: string | null
+          color?: string | null
           company_id?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           end_time?: string
           id?: string
+          is_all_day?: boolean | null
           lead_id?: string | null
           location?: string | null
+          location_details?: string | null
+          notes?: string | null
+          notification_sent?: boolean | null
+          owner_id?: string | null
           participants?: string[] | null
+          related_deal_id?: string | null
+          related_ticket_id?: string | null
+          reminder_time?: number | null
           start_time?: string
           status?: string
+          team_id?: string | null
           title?: string
+          type?: string | null
           updated_at?: string | null
         }
         Relationships: [
