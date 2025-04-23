@@ -2,7 +2,7 @@
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Edit, Trash2, Calendar } from "lucide-react";
+import { MoreHorizontal, Edit, Trash2, Calendar, Clock, User } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -46,7 +46,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
     }
   };
 
-  // Get stage badge variant - Updated to use only valid badge variants
+  // Get stage badge variant
   const getStageBadgeVariant = (stage?: string) => {
     if (!stage) return "outline";
     
@@ -96,8 +96,8 @@ const LeadTable: React.FC<LeadTableProps> = ({
                 <div className="font-medium text-base">
                   {lead.first_name} {lead.last_name}
                 </div>
-                <Badge variant={getStageBadgeVariant(lead.stage)} className="px-2 py-1">
-                  {lead.stage || 'غير محدد'}
+                <Badge variant={getStageBadgeVariant(lead.stage || lead.status)} className="px-2 py-1">
+                  {lead.stage || lead.status || 'غير محدد'}
                 </Badge>
               </div>
               
@@ -128,7 +128,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
               {/* Bottom row with date, owner and actions */}
               <div className="flex justify-between items-center pt-1.5 mt-1">
                 <div className="flex items-center text-xs text-muted-foreground">
-                  <Calendar className="h-3 w-3 ml-1.5" />
+                  <Clock className="h-3 w-3 ml-1.5" />
                   {lead.created_at ? formatDate(lead.created_at) : 'غير محدد'}
                 </div>
                 
@@ -218,8 +218,8 @@ const LeadTable: React.FC<LeadTableProps> = ({
               <td className="py-2 px-3 text-right hidden md:table-cell">{lead.email}</td>
               <td className="py-2 px-3 text-right hidden lg:table-cell">{lead.phone || "غير محدد"}</td>
               <td className="py-2 px-3 text-right">
-                <Badge variant={getStageBadgeVariant(lead.stage)}>
-                  {lead.stage || "غير محدد"}
+                <Badge variant={getStageBadgeVariant(lead.stage || lead.status)}>
+                  {lead.stage || lead.status || "غير محدد"}
                 </Badge>
               </td>
               <td className="py-2 px-3 text-right hidden lg:table-cell">

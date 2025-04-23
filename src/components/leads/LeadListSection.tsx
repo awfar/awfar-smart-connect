@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Loader2 } from 'lucide-react';
 import { Lead } from "@/types/leads";
 import LeadCardHeader from "@/components/leads/LeadCardHeader";
 import LeadSearchBar from "@/components/leads/LeadSearchBar";
@@ -22,6 +21,9 @@ interface LeadListSectionProps {
   onLeadSelect: (leadId: string) => void;
   onFilterChange: (filters: Record<string, any>) => void;
   onRefresh: () => void;
+  onEdit: (lead: Lead) => void;
+  onDelete: (leadId: string) => void;
+  onAddLead: () => void;
 }
 
 const LeadListSection: React.FC<LeadListSectionProps> = ({
@@ -35,26 +37,22 @@ const LeadListSection: React.FC<LeadListSectionProps> = ({
   onSearch,
   onLeadSelect,
   onFilterChange,
-  onRefresh
+  onRefresh,
+  onEdit,
+  onDelete,
+  onAddLead
 }) => {
   const { isMobile } = useBreakpoints();
 
-  // وظيفة لتحرير العميل المحتمل
-  const handleEdit = (lead: Lead) => {
-    // يمكن تنفيذ منطق التحرير هنا
-    console.log("تحرير العميل المحتمل:", lead.id);
-  };
-
-  // وظيفة لحذف العميل المحتمل
-  const handleDelete = (leadId: string) => {
-    // يمكن تنفيذ منطق الحذف هنا
-    console.log("حذف العميل المحتمل:", leadId);
-  };
-
   return (
-    <Card className="flex-1 overflow-hidden">
+    <Card className="flex-1 overflow-hidden border rounded-lg shadow-sm">
       <CardHeader className={`pb-3 ${isMobile ? 'px-3' : ''}`}>
-        <LeadCardHeader />
+        <LeadCardHeader 
+          onToggleFilters={() => onFilterChange({})} 
+          onRefresh={onRefresh}
+          onAddLead={onAddLead}
+          onSearch={onSearch}
+        />
         <div className="mt-4">
           <LeadSearchBar 
             selectedView={selectedView}
@@ -91,8 +89,8 @@ const LeadListSection: React.FC<LeadListSectionProps> = ({
             leads={leads} 
             selectedLead={selectedLead}
             onLeadSelect={onLeadSelect}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
+            onEdit={onEdit}
+            onDelete={onDelete}
           />
         )}
       </CardContent>
