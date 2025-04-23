@@ -30,7 +30,7 @@ const LeadDetailSidebar: React.FC<LeadDetailSidebarProps> = ({
   };
 
   return (
-    <div className="w-full lg:w-[400px] relative">
+    <div className="w-full h-full lg:w-[400px] flex flex-col">
       <div className="mb-4 px-4 pt-4">
         <Button 
           onClick={handleViewFullProfile}
@@ -42,13 +42,15 @@ const LeadDetailSidebar: React.FC<LeadDetailSidebarProps> = ({
           عرض الصفحة الكاملة
         </Button>
       </div>
-      <LeadDetails 
-        lead={lead} 
-        onClose={onClose}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onRefresh={onRefresh}
-      />
+      <div className="flex-1 overflow-auto">
+        <LeadDetails 
+          lead={lead} 
+          onClose={onClose}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onRefresh={onRefresh}
+        />
+      </div>
     </div>
   );
 };

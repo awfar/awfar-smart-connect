@@ -61,12 +61,12 @@ const LeadTable: React.FC<LeadTableProps> = ({
     }
   };
 
-  // Function to handle lead click on mobile, redirect to profile page
+  // Function to handle lead click - on mobile navigate directly, on desktop open in sidebar
   const handleLeadClick = (lead: Lead) => {
     if (isMobile) {
       navigate(`/dashboard/leads/${lead.id}`);
     } else {
-      // On desktop first select the lead in sidebar, then user can click to navigate
+      // On desktop select the lead to show in sidebar
       onLeadSelect(lead.id);
     }
   };
@@ -147,7 +147,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
                   
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
-                      <Button variant="ghost" size="icon" className="h-7 w-7">
+                      <Button variant="ghost" size="icon" className="h-7 w-7 p-0">
                         <MoreHorizontal className="h-4 w-4" />
                         <span className="sr-only">خيارات</span>
                       </Button>
@@ -203,7 +203,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
                 "hover:bg-muted/50 cursor-pointer", 
                 selectedLead === lead.id ? "bg-primary/5" : ""
               )}
-              onClick={() => onLeadSelect(lead.id)}
+              onClick={() => handleLeadClick(lead)}
             >
               <td className="py-2 px-3 text-right font-medium">
                 <Button
@@ -240,7 +240,7 @@ const LeadTable: React.FC<LeadTableProps> = ({
               </td>
               <td className="py-2 px-3 text-center">
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                  <DropdownMenuTrigger asChild onClick={e => e.stopPropagation()}>
                     <Button variant="ghost" size="icon">
                       <MoreHorizontal className="h-4 w-4" />
                       <span className="sr-only">خيارات</span>

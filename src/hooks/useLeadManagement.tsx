@@ -94,8 +94,19 @@ export const useLeadManagement = () => {
         throw error;
       }
       
-      // Transform the data if needed
-      return data || [];
+      // Transform the data to match the expected Lead format
+      const transformedLeads = data?.map(lead => {
+        return {
+          ...lead,
+          owner: lead.profiles ? {
+            id: lead.assigned_to || '',
+            name: `${lead.profiles.first_name || ''} ${lead.profiles.last_name || ''}`.trim() || 'Unassigned',
+            initials: `${(lead.profiles.first_name || '')[0] || ''}${(lead.profiles.last_name || '')[0] || ''}`,
+          } : undefined
+        };
+      }) || [];
+      
+      return transformedLeads;
     } catch (error) {
       console.error("Error in fetchFilteredLeads:", error);
       return [];
@@ -163,6 +174,11 @@ export const useLeadManagement = () => {
     // Force immediate refresh to ensure data is up-to-date
     setForceRefresh(prev => prev + 1);
     refetch();
+    
+    // If a lead was just added or edited, select it
+    if (lead && lead.id) {
+      setSelectedLead(lead.id);
+    }
   }, [refetch]);
   
   const handleEditLead = (lead: Lead) => {
