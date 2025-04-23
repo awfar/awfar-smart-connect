@@ -7,14 +7,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import ActivityForm from '@/components/leads/ActivityForm';
-import { LeadActivity } from '@/types/leads';
-import { LeadActivityType } from '@/services/leads/types';
+import { LeadActivity, LeadActivityType } from '@/services/leads/types';
 
 interface ActivityFormDialogProps {
   open: boolean;
   onClose: () => void;
   leadId: string;
-  activityType: LeadActivityType;
+  activityType?: LeadActivityType;
   onSuccess?: (activity?: LeadActivity) => void;
 }
 
@@ -22,7 +21,7 @@ const ActivityFormDialog: React.FC<ActivityFormDialogProps> = ({
   open,
   onClose,
   leadId,
-  activityType,
+  activityType = 'note',
   onSuccess
 }) => {
   return (

@@ -1,3 +1,4 @@
+
 import { Task, TaskCreateInput, RelatedEntity } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -129,6 +130,8 @@ export const createTask = async (task: TaskCreateInput): Promise<Task | null> =>
       throw new Error('Task title is required');
     }
     
+    console.log("Creating task with data:", task);
+    
     // Get current user for created_by field if not provided
     if (!task.created_by) {
       const { data: authData } = await supabase.auth.getSession();
@@ -137,14 +140,34 @@ export const createTask = async (task: TaskCreateInput): Promise<Task | null> =>
       }
     }
     
-    // Prepare the task data for insertion
-    const taskData = {
-      ...task,
+    // Ensure all fields have the correct types before insertion
+    const taskData: Record<string, any> = {
+      title: task.title,
+      description: task.description,
       status: validateTaskStatus(task.status || 'pending'),
       priority: validateTaskPriority(task.priority || 'medium'),
-      // Ensure related_to is properly serialized if it exists
-      related_to: task.related_to ? JSON.stringify(task.related_to) : null
+      created_by: task.created_by
     };
+    
+    // Add optional fields only if they exist
+    if (task.due_date) taskData.due_date = task.due_date;
+    if (task.start_time) taskData.start_time = task.start_time;
+    if (task.assigned_to) taskData.assigned_to = task.assigned_to;
+    if (task.type) taskData.type = task.type;
+    
+    // Handle relationship fields
+    if (task.lead_id) taskData.lead_id = task.lead_id;
+    if (task.deal_id) taskData.deal_id = task.deal_id;
+    if (task.company_id) taskData.company_id = task.company_id;
+    if (task.contact_id) taskData.contact_id = task.contact_id;
+    if (task.appointment_id) taskData.appointment_id = task.appointment_id;
+    
+    // Ensure related_to is properly serialized if it exists
+    if (task.related_to) {
+      taskData.related_to = JSON.stringify(task.related_to);
+    }
+    
+    console.log("Inserting task with processed data:", taskData);
     
     const { data, error } = await supabase
       .from('tasks')
@@ -154,8 +177,11 @@ export const createTask = async (task: TaskCreateInput): Promise<Task | null> =>
     
     if (error) {
       console.error('Error creating task:', error);
+      toast.error("فشل في إنشاء المهمة");
       throw error;
     }
+    
+    console.log("Task created successfully:", data);
     
     // Log activity if lead_id is provided
     if (task.lead_id) {
@@ -165,6 +191,8 @@ export const createTask = async (task: TaskCreateInput): Promise<Task | null> =>
         console.error('Error logging task activity:', logError);
       }
     }
+    
+    toast.success("تم إنشاء المهمة بنجاح");
     
     // Convert the response to our Task type
     const result: Task = {
@@ -177,7 +205,8 @@ export const createTask = async (task: TaskCreateInput): Promise<Task | null> =>
     return result;
   } catch (error) {
     console.error('Error in createTask:', error);
-    throw error;
+    toast.error("لم يتم حفظ المهمة");
+    return null;
   }
 };
 

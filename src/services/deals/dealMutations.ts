@@ -27,12 +27,15 @@ export const createDeal = async (deal: Partial<Deal>): Promise<Deal | null> => {
       description: cleanedDeal.description ? String(cleanedDeal.description) : undefined,
       company_id: cleanedDeal.company_id ? String(cleanedDeal.company_id) : undefined,
       contact_id: cleanedDeal.contact_id ? String(cleanedDeal.contact_id) : undefined,
+      lead_id: cleanedDeal.lead_id ? String(cleanedDeal.lead_id) : undefined, // Added lead_id handling
       value: typeof cleanedDeal.value === 'number' ? cleanedDeal.value : undefined,
       stage: String(cleanedDeal.stage || 'discovery'),
       status: String(cleanedDeal.status || 'active'),
       expected_close_date: cleanedDeal.expected_close_date ? String(cleanedDeal.expected_close_date) : undefined,
       owner_id: cleanedDeal.owner_id ? String(cleanedDeal.owner_id) : userData.user.id
     };
+
+    console.log("Inserting deal with processed data:", dealToInsert);
 
     const { data, error } = await supabase
       .from('deals')
@@ -97,11 +100,14 @@ export const updateDeal = async (id: string, deal: Partial<Deal>): Promise<Deal 
     if ('description' in cleanedDeal) dealToUpdate.description = cleanedDeal.description ? String(cleanedDeal.description) : null;
     if ('company_id' in cleanedDeal) dealToUpdate.company_id = cleanedDeal.company_id ? String(cleanedDeal.company_id) : null;
     if ('contact_id' in cleanedDeal) dealToUpdate.contact_id = cleanedDeal.contact_id ? String(cleanedDeal.contact_id) : null;
+    if ('lead_id' in cleanedDeal) dealToUpdate.lead_id = cleanedDeal.lead_id ? String(cleanedDeal.lead_id) : null; // Added lead_id handling
     if ('value' in cleanedDeal && cleanedDeal.value !== undefined) dealToUpdate.value = Number(cleanedDeal.value);
     if ('stage' in cleanedDeal) dealToUpdate.stage = String(cleanedDeal.stage);
     if ('status' in cleanedDeal) dealToUpdate.status = String(cleanedDeal.status);
     if ('expected_close_date' in cleanedDeal) dealToUpdate.expected_close_date = cleanedDeal.expected_close_date ? String(cleanedDeal.expected_close_date) : null;
     if ('owner_id' in cleanedDeal) dealToUpdate.owner_id = cleanedDeal.owner_id ? String(cleanedDeal.owner_id) : null;
+
+    console.log("Updating deal with processed data:", dealToUpdate);
     
     const { data, error } = await supabase
       .from('deals')

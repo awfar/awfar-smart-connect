@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LeadActivity, LeadActivityType } from "@/services/leads/types"; // Ensure correct import path
@@ -25,7 +26,15 @@ export const getLeadActivities = async (leadId: string): Promise<LeadActivity[]>
     }
     
     console.log("Retrieved lead activities:", data);
-    return data as LeadActivity[] || [];
+    
+    // Ensure each activity has the required fields for the LeadActivity type
+    const activities = (data || []).map(item => ({
+      ...item,
+      created_at: item.created_at || new Date().toISOString(), // Ensure created_at is always set
+      type: item.type as LeadActivityType // Ensure type is properly cast to LeadActivityType
+    }));
+    
+    return activities as LeadActivity[];
   } catch (error) {
     console.error("Error fetching lead activities:", error);
     toast.error("فشل في جلب أنشطة العميل المحتمل");
@@ -50,8 +59,11 @@ export const addLeadActivity = async (activity: Partial<LeadActivity>): Promise<
       type: activity.type || 'note',
       description: activity.description || '',
       scheduled_at: activity.scheduled_at || null,
-      created_by: userData.user?.id || null
+      created_by: userData.user?.id || null,
+      created_at: new Date().toISOString() // Explicitly set created_at
     };
+    
+    console.log("Inserting activity with processed data:", newActivity);
     
     const { data, error } = await supabase
       .from('lead_activities')
@@ -72,7 +84,14 @@ export const addLeadActivity = async (activity: Partial<LeadActivity>): Promise<
     
     console.log("Activity created successfully:", data);
     toast.success("تم إضافة النشاط بنجاح");
-    return data as LeadActivity;
+    
+    // Ensure the returned data has the required fields for the LeadActivity type
+    const result = {
+      ...data,
+      created_at: data.created_at || new Date().toISOString() // Ensure created_at is set
+    } as LeadActivity;
+    
+    return result;
   } catch (error) {
     console.error("Error creating lead activity:", error);
     toast.error("فشل في إضافة النشاط");

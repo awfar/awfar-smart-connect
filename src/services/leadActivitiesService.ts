@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { LeadActivity, LeadActivityType } from "@/services/leads/types"; // Corrected import
@@ -18,7 +19,8 @@ export const fetchLeadActivities = async (leadId: string): Promise<LeadActivity[
     // Transform the data to match the required format with created_at as required
     const transformedData = (data || []).map(activity => ({
       ...activity,
-      created_at: activity.created_at || new Date().toISOString()
+      created_at: activity.created_at || new Date().toISOString(),
+      type: activity.type as LeadActivityType // Ensure type is properly cast to LeadActivityType
     }));
     
     return transformedData as LeadActivity[];
@@ -45,7 +47,8 @@ export const createLeadActivity = async (activity: LeadActivityInput): Promise<L
         type: activity.type || 'note',
         description: activity.description,
         scheduled_at: activity.scheduled_at,
-        created_by: (await supabase.auth.getUser()).data.user?.id || null
+        created_by: (await supabase.auth.getUser()).data.user?.id || null,
+        created_at: new Date().toISOString() // Explicitly set created_at
       }])
       .select()
       .single();
