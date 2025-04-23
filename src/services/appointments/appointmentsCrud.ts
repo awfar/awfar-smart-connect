@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment, AppointmentCreateInput, AppointmentStatus, AppointmentDB } from "./types";
 import { toast } from "sonner";
@@ -41,10 +40,22 @@ export const fetchAppointments = async (filters?: {
   try {
     let query = supabase.from('appointments').select('*');
     if (filters) {
-      if (filters.lead_id) query = query.eq('lead_id', filters.lead_id);
-      if (filters.status) query = query.eq('status', filters.status);
-      if (filters.user_id) query = query.eq('owner_id', filters.user_id);
-      if (filters.team_id) query = query.eq('team_id', filters.team_id);
+      if (filters.lead_id) {
+        query = query.eq('lead_id', filters.lead_id);
+      }
+      
+      if (filters.status) {
+        query = query.eq('status', filters.status);
+      }
+      
+      if (filters.user_id) {
+        query = query.eq('owner_id', filters.user_id);
+      }
+      
+      if (filters.team_id) {
+        query = query.eq('team_id', filters.team_id);
+      }
+      
       if (filters.upcoming) {
         const now = new Date().toISOString();
         query = query.gte('start_time', now);
