@@ -33,7 +33,7 @@ const ActivityFormDialog: React.FC<ActivityFormDialogProps> = ({
         </DialogHeader>
         <ActivityForm 
           leadId={leadId} 
-          activityType={activityType}
+          initialType={activityType}
           onSuccess={onSuccess}
           onClose={onClose}
         />

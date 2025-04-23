@@ -35,7 +35,6 @@ import LeadTimeline from "@/components/leads/LeadTimeline";
 import { Task, createTask, updateTask, deleteTask, completeTask, getTasksByLeadId } from "@/services/tasks";
 import { Appointment, createAppointment, updateAppointment, deleteAppointment, getAppointmentsByLeadId } from "@/services/appointments";
 
-// Interface for edit modal types
 interface EditModalState {
   type: 'task' | 'appointment' | null;
   item: Task | Appointment | null;
@@ -53,7 +52,6 @@ const LeadDetailsPage = () => {
   const [newNote, setNewNote] = useState<string>("");
   const [editModal, setEditModal] = useState<EditModalState>({ type: null, item: null });
   
-  // Query for lead data
   const { 
     data: lead,
     isLoading: isLoadingLead,
@@ -65,7 +63,6 @@ const LeadDetailsPage = () => {
     enabled: !!id
   });
   
-  // Query for activities
   const { 
     data: activities = [],
     isLoading: isLoadingActivities,
@@ -76,7 +73,6 @@ const LeadDetailsPage = () => {
     enabled: !!id
   });
   
-  // Query for tasks
   const {
     data: tasks = [],
     isLoading: isLoadingTasks,
@@ -87,7 +83,6 @@ const LeadDetailsPage = () => {
     enabled: !!id
   });
   
-  // Query for appointments
   const {
     data: appointments = [],
     isLoading: isLoadingAppointments,
@@ -98,7 +93,6 @@ const LeadDetailsPage = () => {
     enabled: !!id
   });
   
-  // Mutations
   const completeMutation = useMutation({
     mutationFn: completeLeadActivity,
     onSuccess: () => {
@@ -151,7 +145,6 @@ const LeadDetailsPage = () => {
     }
   });
   
-  // Task and Appointment mutations
   const completeTaskMutation = useMutation({
     mutationFn: completeTask,
     onSuccess: () => {
@@ -206,7 +199,6 @@ const LeadDetailsPage = () => {
     }
   });
   
-  // Event handlers
   const handleAddActivity = () => {
     setShowActivityForm(true);
   };
@@ -264,7 +256,6 @@ const LeadDetailsPage = () => {
     }
   };
   
-  // Task and appointment handlers
   const handleEditItem = (type: 'task' | 'appointment', item: Task | Appointment) => {
     setEditModal({ type, item });
   };
@@ -285,7 +276,6 @@ const LeadDetailsPage = () => {
   
   const handleTaskSubmit = async (data: any) => {
     if (editModal.type === 'task' && editModal.item) {
-      // Update existing task
       const task = editModal.item as Task;
       taskMutation.mutate({
         type: 'update',
@@ -293,7 +283,6 @@ const LeadDetailsPage = () => {
         task: { ...data, lead_id: id }
       });
     } else {
-      // Create new task
       taskMutation.mutate({
         type: 'create',
         task: { ...data, lead_id: id }
@@ -303,7 +292,6 @@ const LeadDetailsPage = () => {
   
   const handleAppointmentSubmit = async (data: any) => {
     if (editModal.type === 'appointment' && editModal.item) {
-      // Update existing appointment
       const appointment = editModal.item as Appointment;
       appointmentMutation.mutate({
         type: 'update',
@@ -311,7 +299,6 @@ const LeadDetailsPage = () => {
         appointment: data
       });
     } else {
-      // Create new appointment
       appointmentMutation.mutate({
         type: 'create',
         appointment: { ...data, lead_id: id }
@@ -324,7 +311,6 @@ const LeadDetailsPage = () => {
     return `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || "بدون اسم";
   };
 
-  // Combine all loading states
   const isLoadingTimeline = isLoadingActivities || isLoadingTasks || isLoadingAppointments;
 
   return (
@@ -446,7 +432,7 @@ const LeadDetailsPage = () => {
                                     <div className="relative group">
                                       <div className="text-sm font-medium">{getLeadName()}</div>
                                       <Button 
-                                        className="absolute opacity-0 group-hover:opacity-100 right-0 top-0 h-6 w-6 p-1" 
+                                        className="absolute opacity-0 group-hover:opacity-100 right-0 top-0 h-6 w-6 p-0" 
                                         variant="ghost" 
                                         size="sm"
                                         onClick={() => startEditingField('name', `${lead.first_name} ${lead.last_name}`)}
@@ -754,7 +740,6 @@ const LeadDetailsPage = () => {
                               onClose={() => setShowActivityForm(false)} 
                               onSuccess={handleActivitySuccess} 
                               leadId={id || ""}
-                              title="إضافة نشاط جديد"
                             />
                           </Card>
                         )}
@@ -973,7 +958,6 @@ const LeadDetailsPage = () => {
         )}
       </div>
 
-      {/* Edit Lead Dialog */}
       <Dialog open={isEditLeadOpen} onOpenChange={setIsEditLeadOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -991,7 +975,6 @@ const LeadDetailsPage = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -1015,7 +998,6 @@ const LeadDetailsPage = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Task Edit Dialog */}
       <Dialog 
         open={editModal.type === 'task'} 
         onOpenChange={(open) => !open && setEditModal({ type: null, item: null })}
@@ -1023,7 +1005,7 @@ const LeadDetailsPage = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {editModal.item ? "تحرير المهمة" : "إضافة مهمة جديدة"}
+              {editModal.item ? "تحرير المهمة" : "إضافة م��مة جديدة"}
             </DialogTitle>
           </DialogHeader>
           <TaskForm 
@@ -1037,7 +1019,6 @@ const LeadDetailsPage = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Appointment Edit Dialog */}
       <Dialog 
         open={editModal.type === 'appointment'} 
         onOpenChange={(open) => !open && setEditModal({ type: null, item: null })}

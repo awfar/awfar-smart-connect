@@ -295,7 +295,7 @@ const LeadDetails = () => {
                                     <div className="relative group">
                                       <div className="text-sm font-medium">{getLeadName()}</div>
                                       <Button 
-                                        className="absolute opacity-0 group-hover:opacity-100 right-0 top-0 h-6 w-6 p-1" 
+                                        className="absolute opacity-0 group-hover:opacity-100 right-0 top-0 h-6 w-6 p-0" 
                                         variant="ghost" 
                                         size="sm"
                                         onClick={() => startEditingField('name', `${lead.first_name} ${lead.last_name}`)}
@@ -603,7 +603,6 @@ const LeadDetails = () => {
                               onClose={() => setShowActivityForm(false)} 
                               onSuccess={handleActivitySuccess} 
                               leadId={id || ""}
-                              title="إضافة نشاط جديد"
                             />
                           </Card>
                         )}

@@ -1,7 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LeadActivity } from "@/types/leads";
+import { LeadActivity, LeadActivityType } from "@/types/leads";
+import { LeadActivityInput } from "@/services/leads/types";
 
 export const fetchLeadActivities = async (leadId: string): Promise<LeadActivity[]> => {
   try {
@@ -14,7 +15,13 @@ export const fetchLeadActivities = async (leadId: string): Promise<LeadActivity[
     
     if (error) throw error;
     
-    return (data || []) as LeadActivity[];
+    // Transform the data to match the required format with created_at as required
+    const transformedData = (data || []).map(activity => ({
+      ...activity,
+      created_at: activity.created_at || new Date().toISOString()
+    }));
+    
+    return transformedData as LeadActivity[];
   } catch (error) {
     console.error("Error fetching lead activities:", error);
     toast.error("فشل في جلب أنشطة العميل المحتمل");
@@ -22,7 +29,7 @@ export const fetchLeadActivities = async (leadId: string): Promise<LeadActivity[
   }
 };
 
-export const createLeadActivity = async (activity: Partial<LeadActivity>): Promise<LeadActivity | null> => {
+export const createLeadActivity = async (activity: LeadActivityInput): Promise<LeadActivity | null> => {
   try {
     if (!activity.lead_id) {
       console.error("Cannot add activity without lead_id");
@@ -45,8 +52,14 @@ export const createLeadActivity = async (activity: Partial<LeadActivity>): Promi
     
     if (error) throw error;
     
+    // Add the created_at field to satisfy the type requirement
+    const result = {
+      ...data,
+      created_at: data.created_at || new Date().toISOString()
+    } as LeadActivity;
+    
     toast.success("تم إضافة النشاط بنجاح");
-    return data as LeadActivity;
+    return result;
   } catch (error) {
     console.error("Error creating lead activity:", error);
     toast.error("فشل في إضافة النشاط");
@@ -67,8 +80,14 @@ export const completeLeadActivity = async (activityId: string): Promise<LeadActi
     
     if (error) throw error;
     
+    // Add the created_at field to satisfy the type requirement
+    const result = {
+      ...data,
+      created_at: data.created_at || new Date().toISOString()
+    } as LeadActivity;
+    
     toast.success("تم إكمال النشاط بنجاح");
-    return data as LeadActivity;
+    return result;
   } catch (error) {
     console.error("Error completing lead activity:", error);
     toast.error("فشل في إكمال النشاط");

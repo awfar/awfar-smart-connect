@@ -11,24 +11,27 @@ import {
 } from "@/components/ui/select";
 import { useForm } from 'react-hook-form';
 import { addLeadActivity } from "@/services/leads";
-import { LeadActivity } from "@/types/leads";
+import { LeadActivityType } from "@/services/leads/types";
 import { toast } from "sonner";
 
 interface ActivityFormProps {
   leadId: string;
-  onSuccess?: (activity?: LeadActivity) => void;
+  onSuccess?: (activity?: any) => void;
   onClose?: () => void;
-  initialType?: 'note' | 'call' | 'meeting' | 'email' | 'whatsapp';
+  initialType?: LeadActivityType;
+  title?: string;
+  activityType?: LeadActivityType;
 }
 
 const ActivityForm: React.FC<ActivityFormProps> = ({
   leadId,
   onSuccess,
   onClose,
-  initialType = 'note'
+  initialType = 'note',
+  activityType,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activityType, setActivityType] = useState<string>(initialType);
+  const [selectedActivityType, setSelectedActivityType] = useState<LeadActivityType>(activityType || initialType);
   const { register, handleSubmit, formState: { errors } } = useForm();
   const [scheduledDate, setScheduledDate] = useState<string>('');
 
@@ -39,7 +42,7 @@ const ActivityForm: React.FC<ActivityFormProps> = ({
       // Prepare the activity data
       const activityData = {
         lead_id: leadId,
-        type: activityType,
+        type: selectedActivityType,
         description: data.description,
         scheduled_at: scheduledDate ? new Date(scheduledDate).toISOString() : undefined
       };
@@ -68,7 +71,7 @@ const ActivityForm: React.FC<ActivityFormProps> = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
         <label className="block text-sm font-medium mb-1">نوع النشاط</label>
-        <Select value={activityType} onValueChange={setActivityType}>
+        <Select value={selectedActivityType} onValueChange={(value) => setSelectedActivityType(value as LeadActivityType)}>
           <SelectTrigger>
             <SelectValue placeholder="اختر نوع النشاط" />
           </SelectTrigger>
@@ -95,7 +98,7 @@ const ActivityForm: React.FC<ActivityFormProps> = ({
         )}
       </div>
 
-      {(activityType === 'call' || activityType === 'meeting') && (
+      {(selectedActivityType === 'call' || selectedActivityType === 'meeting') && (
         <div>
           <label className="block text-sm font-medium mb-1">موعد مجدول</label>
           <input
