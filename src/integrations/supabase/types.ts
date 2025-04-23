@@ -1222,61 +1222,132 @@ export type Database = {
         }
         Relationships: []
       }
+      task_logs: {
+        Row: {
+          action: string
+          created_at: string
+          details: Json | null
+          id: string
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_logs_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
+          appointment_id: string | null
           assigned_to: string | null
           assigned_to_name: string | null
           company_id: string | null
+          contact_id: string | null
           created_at: string | null
           created_by: string | null
+          deal_id: string | null
           description: string | null
           due_date: string | null
           id: string
           lead_id: string | null
           priority: string
           related_to: Json | null
+          start_time: string | null
           status: string
           title: string
+          type: string | null
           updated_at: string | null
         }
         Insert: {
+          appointment_id?: string | null
           assigned_to?: string | null
           assigned_to_name?: string | null
           company_id?: string | null
+          contact_id?: string | null
           created_at?: string | null
           created_by?: string | null
+          deal_id?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
           lead_id?: string | null
           priority?: string
           related_to?: Json | null
+          start_time?: string | null
           status?: string
           title: string
+          type?: string | null
           updated_at?: string | null
         }
         Update: {
+          appointment_id?: string | null
           assigned_to?: string | null
           assigned_to_name?: string | null
           company_id?: string | null
+          contact_id?: string | null
           created_at?: string | null
           created_by?: string | null
+          deal_id?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
           lead_id?: string | null
           priority?: string
           related_to?: Json | null
+          start_time?: string | null
           status?: string
           title?: string
+          type?: string | null
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "tasks_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tasks_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "company_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
             referencedColumns: ["id"]
           },
           {

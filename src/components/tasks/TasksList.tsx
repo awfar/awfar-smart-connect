@@ -1,4 +1,7 @@
 
+// LIVE TasksList: Always fetch from Supabase, support filter/sort/status/type
+
+import React, { useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -10,191 +13,182 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Edit, Trash2, CalendarClock, AlertCircle } from "lucide-react";
+import { Edit, Trash2, Calendar, User, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
+import { Task } from "@/services/tasks/types";
+import { toast } from "sonner";
 
-// Define task status types and their badge styles
-type TaskStatus = "مكتمل" | "قيد التنفيذ" | "معلق" | "ملغي";
-type TaskPriority = "منخفض" | "متوسط" | "عالي" | "عاجل";
-
-// Mock data for tasks
-const MOCK_TASKS = [
-  { 
-    id: 1, 
-    title: "إكمال تقرير المبيعات الشهري", 
-    status: "قيد التنفيذ" as TaskStatus, 
-    priority: "عالي" as TaskPriority,
-    assignedTo: "أحمد محمد",
-    createdBy: "محمد خالد",
-    dueDate: new Date(2025, 3, 20),
-    description: "يجب إعداد تقرير المبيعات الشهري وتقديمه إلى الإدارة"
-  },
-  { 
-    id: 2, 
-    title: "متابعة العميل المحتمل", 
-    status: "معلق" as TaskStatus, 
-    priority: "متوسط" as TaskPriority,
-    assignedTo: "سارة علي",
-    createdBy: "محمد خالد",
-    dueDate: new Date(2025, 3, 22),
-    description: "متابعة العميل المحتمل للحصول على رد بشأن العرض المقدم"
-  },
-  { 
-    id: 3, 
-    title: "تحديث قاعدة بيانات العملاء", 
-    status: "مكتمل" as TaskStatus, 
-    priority: "منخفض" as TaskPriority,
-    assignedTo: "خالد أحمد",
-    createdBy: "أحمد محمد",
-    dueDate: new Date(2025, 3, 15),
-    description: "تحديث معلومات الاتصال وتفاصيل العملاء في قاعدة البيانات"
-  },
-  { 
-    id: 4, 
-    title: "إعداد عرض تقديمي للمنتج الجديد", 
-    status: "قيد التنفيذ" as TaskStatus, 
-    priority: "عاجل" as TaskPriority,
-    assignedTo: "أحمد محمد",
-    createdBy: "محمد خالد",
-    dueDate: new Date(2025, 3, 18),
-    description: "إعداد عرض تقديمي شامل للمنتج الجديد لاجتماع المبيعات القادم"
-  },
-  { 
-    id: 5, 
-    title: "مراجعة خطة التسويق", 
-    status: "معلق" as TaskStatus, 
-    priority: "عالي" as TaskPriority,
-    assignedTo: "فاطمة محمد",
-    createdBy: "سارة علي",
-    dueDate: new Date(2025, 3, 25),
-    description: "مراجعة وتحديث خطة التسويق للربع القادم"
-  },
-];
+const STATUS_LOOKUP: { [key: string]: string } = {
+  pending: "قيد الانتظار",
+  in_progress: "قيد التنفيذ",
+  completed: "مكتملة",
+  cancelled: "ملغاة",
+};
+const PRIORITY_LOOKUP: { [key: string]: string } = {
+  low: "منخفضة",
+  medium: "متوسطة",
+  high: "عالية",
+};
 
 interface TasksListProps {
   view: "all" | "myTasks" | "team";
-  filterStatus: string;
-  filterPriority: string;
+  filterStatus?: string;
+  filterPriority?: string;
+  filterType?: string;
+  onEdit?: (task: Task) => void;
+  onDelete?: (taskId: string) => void;
+  onShowDetails?: (task: Task) => void;
 }
 
-const TasksList = ({ view, filterStatus, filterPriority }: TasksListProps) => {
-  // Filter tasks based on view and filters
-  const filteredTasks = MOCK_TASKS.filter(task => {
-    // Filter by view (all, myTasks, team)
-    if (view === "myTasks" && task.assignedTo !== "أحمد محمد") return false;
-    if (view === "team" && task.createdBy !== "محمد خالد") return false;
-    
-    // Filter by status
-    if (filterStatus !== "all" && task.status !== filterStatus) return false;
-    
-    // Filter by priority
-    if (filterPriority !== "all" && task.priority !== filterPriority) return false;
-    
-    return true;
-  });
+const TasksList = ({
+  view,
+  filterStatus = "all",
+  filterPriority = "all",
+  filterType = "all",
+  onEdit,
+  onDelete,
+  onShowDetails,
+}: TasksListProps) => {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const getStatusBadgeVariant = (status: TaskStatus) => {
-    switch (status) {
-      case "مكتمل": return "success";
-      case "قيد التنفيذ": return "default";
-      case "معلق": return "outline";
-      case "ملغي": return "destructive";
-      default: return "outline";
+  // Get my user id from Supabase
+  const [userId, setUserId] = useState<string | null>(null);
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user?.id) setUserId(data.user.id);
+    });
+  }, []);
+
+  useEffect(() => {
+    const loadTasks = async () => {
+      setLoading(true);
+      let query = supabase.from("tasks").select("*").order("due_date", { ascending: true });
+
+      if (view === "myTasks" && userId) {
+        query = query.eq("assigned_to", userId);
+      }
+      if (view === "team" && userId) {
+        // Can be refined to team ID in profile
+        query = query.neq("assigned_to", userId);
+      }
+      if (filterStatus !== "all") {
+        query = query.eq("status", filterStatus);
+      }
+      if (filterPriority !== "all") {
+        query = query.eq("priority", filterPriority);
+      }
+      if (filterType !== "all") {
+        query = query.eq("type", filterType);
+      }
+      const { data, error } = await query;
+      if (error) {
+        toast.error("فشل في تحميل المهام");
+        setTasks([]);
+        setLoading(false);
+        return;
+      }
+      setTasks(data ?? []);
+      setLoading(false);
+    };
+    if (userId) loadTasks();
+  }, [view, userId, filterStatus, filterPriority, filterType]);
+
+  const handleCheck = (task: Task, checked: boolean) => {
+    // Mark complete/incomplete
+    supabase.from('tasks').update({ status: checked ? "completed" : "pending" }).eq('id', task.id).then(({ error }) => {
+      if (error) toast.error("فشل في تحديث المهمة");
+      else toast.success('تم تحديث حالة المهمة');
+      // Reload after update
+      setTasks(tasks =>
+        tasks.map(t => (t.id === task.id ? { ...t, status: checked ? "completed" : "pending" } : t))
+      );
+    });
+  };
+
+  const formatDate = (s: string | null) => {
+    if (!s) return "-";
+    try {
+      return format(new Date(s), "d MMMM yyyy, HH:mm", { locale: ar });
+    } catch {
+      return s;
     }
-  };
-
-  const getPriorityBadge = (priority: TaskPriority) => {
-    switch (priority) {
-      case "منخفض": 
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">منخفض</Badge>;
-      case "متوسط": 
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">متوسط</Badge>;
-      case "عالي": 
-        return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">عالي</Badge>;
-      case "عاجل": 
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">عاجل</Badge>;
-      default: 
-        return <Badge variant="outline">غير محدد</Badge>;
-    }
-  };
-
-  const formatDate = (date: Date) => {
-    return format(date, "d MMMM yyyy", { locale: ar });
-  };
-
-  const handleTaskToggle = (taskId: number, checked: boolean) => {
-    console.log(`Task ${taskId} toggled to ${checked ? 'completed' : 'not completed'}`);
-  };
-
-  const handleEdit = (taskId: number) => {
-    console.log("Edit task", taskId);
-  };
-
-  const handleDelete = (taskId: number) => {
-    console.log("Delete task", taskId);
   };
 
   return (
-    <div className="w-full overflow-auto">
+    <div className='w-full overflow-auto min-h-[180px]'>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[50px]"></TableHead>
+            <TableHead></TableHead>
             <TableHead>المهمة</TableHead>
+            <TableHead>النوع</TableHead>
             <TableHead>الحالة</TableHead>
             <TableHead>الأولوية</TableHead>
-            <TableHead>المكلف</TableHead>
+            <TableHead>مكلف بها</TableHead>
             <TableHead>تاريخ الاستحقاق</TableHead>
-            <TableHead className="text-left">الإجراءات</TableHead>
+            <TableHead className="text-center">الإجراءات</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredTasks.length === 0 ? (
+          {loading ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-10">
-                لا توجد مهام تطابق المعايير المحددة
+              <TableCell colSpan={8} className="text-center py-10">
+                جاري التحميل...
+              </TableCell>
+            </TableRow>
+          ) : tasks.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={8} className="text-center py-10">
+                لا توجد مهام لعرضها
               </TableCell>
             </TableRow>
           ) : (
-            filteredTasks.map((task) => (
-              <TableRow key={task.id} className={task.status === "مكتمل" ? "bg-muted/40" : ""}>
+            tasks.map((task) => (
+              <TableRow
+                key={task.id}
+                className={task.status === "completed" ? "bg-muted/40" : ""}
+                onClick={() => onShowDetails?.(task)}
+                style={{ cursor: "pointer" }}
+              >
                 <TableCell>
-                  <Checkbox 
-                    checked={task.status === "مكتمل"} 
-                    onCheckedChange={(checked) => handleTaskToggle(task.id, checked as boolean)}
+                  <Checkbox
+                    checked={task.status === "completed"}
+                    onCheckedChange={(checked) => handleCheck(task, checked as boolean)}
                   />
                 </TableCell>
-                <TableCell className="font-medium">
-                  <div>
-                    <p className={task.status === "مكتمل" ? "line-through text-muted-foreground" : ""}>{task.title}</p>
-                    <p className="text-sm text-muted-foreground mt-1 line-clamp-1">{task.description}</p>
-                  </div>
+                <TableCell>
+                  <span className={task.status === "completed" ? "line-through text-muted-foreground" : ""}>
+                    {task.title}
+                  </span>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={getStatusBadgeVariant(task.status)}>
-                    {task.status}
-                  </Badge>
+                  <Badge>{task.type}</Badge>
                 </TableCell>
                 <TableCell>
-                  {getPriorityBadge(task.priority)}
-                </TableCell>
-                <TableCell>{task.assignedTo}</TableCell>
-                <TableCell>
-                  <div className="flex items-center">
-                    <CalendarClock className="ml-2 h-4 w-4 text-muted-foreground" />
-                    <span>{formatDate(task.dueDate)}</span>
-                    {task.priority === "عاجل" && (
-                      <AlertCircle className="mr-2 h-4 w-4 text-red-500" />
-                    )}
-                  </div>
+                  <Badge>{STATUS_LOOKUP[task.status] ?? task.status}</Badge>
                 </TableCell>
                 <TableCell>
-                  <div className="flex space-x-2 rtl:space-x-reverse">
-                    <Button variant="ghost" size="icon" onClick={() => handleEdit(task.id)}>
+                  <Badge>{PRIORITY_LOOKUP[task.priority] ?? task.priority}</Badge>
+                </TableCell>
+                <TableCell>
+                  <span className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    {task.assigned_to_name || '-'}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  <Calendar className="h-4 w-4 mr-1" />
+                  {formatDate(task.due_date || null)}
+                </TableCell>
+                <TableCell>
+                  <div className="flex gap-2 justify-center">
+                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onEdit?.(task); }}>
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(task.id)}>
+                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete?.(task.id); }}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -209,3 +203,4 @@ const TasksList = ({ view, filterStatus, filterPriority }: TasksListProps) => {
 };
 
 export default TasksList;
+
