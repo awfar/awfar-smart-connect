@@ -8,6 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Task, TaskCreateInput } from '@/services/tasks/types';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import TaskPriorityStatusSection from './TaskPriorityStatusSection';
+import AssigneeSelect from './AssigneeSelect';
+import TaskAssociationSection from './TaskAssociationSection';
 
 interface TaskFormProps {
   onSubmit: (data: any) => Promise<void>;
@@ -30,19 +33,6 @@ const TASK_TYPES = [
   { value: 'contact_list_task', label: 'مهمة قائمة جهات اتصال' },
 ];
 
-const PRIORITIES = [
-  { value: 'low', label: 'منخفضة' },
-  { value: 'medium', label: 'متوسطة' },
-  { value: 'high', label: 'عالية' }
-];
-
-const STATUSES = [
-  { value: 'pending', label: 'قيد الانتظار' },
-  { value: 'in_progress', label: 'قيد التنفيذ' },
-  { value: 'completed', label: 'مكتملة' },
-  { value: 'cancelled', label: 'ملغاة' },
-];
-
 const TaskForm: React.FC<TaskFormProps> = ({
   onSubmit,
   onCancel,
@@ -59,13 +49,13 @@ const TaskForm: React.FC<TaskFormProps> = ({
       status: (task?.status || 'pending') as 'pending' | 'in_progress' | 'completed' | 'cancelled',
       due_date: task?.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
       start_time: task?.start_time ? new Date(task.start_time).toISOString().slice(0, 16) : '',
-      assigned_to: task?.assigned_to || '',
+      assigned_to: task?.assigned_to || 'none',
       type: task?.type || 'task',
-      lead_id: leadId || task?.lead_id || '',
+      lead_id: leadId || task?.lead_id || 'none',
       contact_id: task?.contact_id || '',
-      company_id: task?.company_id || '',
-      deal_id: task?.deal_id || '',
-      appointment_id: task?.appointment_id || '',
+      company_id: task?.company_id || 'none',
+      deal_id: task?.deal_id || 'none',
+      appointment_id: task?.appointment_id || 'none',
     }
   });
 
@@ -117,17 +107,31 @@ const TaskForm: React.FC<TaskFormProps> = ({
   const handleCancel = () => onCancel ? onCancel() : onClose?.();
 
   const handleFormSubmit = async (data: any) => {
-    // Create a type-safe version of the submitted data
+    // Normalize 'none' values to empty string or null for backend
     const safeData: TaskCreateInput = {
       ...data,
       priority: data.priority as 'low' | 'medium' | 'high',
       status: data.status as 'pending' | 'in_progress' | 'completed' | 'cancelled',
+      assigned_to: data.assigned_to === "none" ? null : data.assigned_to,
+      lead_id: data.lead_id === "none" ? null : data.lead_id,
+      company_id: data.company_id === "none" ? null : data.company_id,
+      deal_id: data.deal_id === "none" ? null : data.deal_id,
+      appointment_id: data.appointment_id === "none" ? null : data.appointment_id,
       due_date: data.due_date ? new Date(data.due_date).toISOString() : null,
       start_time: data.start_time ? new Date(data.start_time).toISOString() : null,
     };
 
     await onSubmit(safeData);
   };
+
+  // Get watched values for controlled components
+  const priority = watch('priority');
+  const status = watch('status');
+  const assigned_to = watch('assigned_to');
+  const lead_id = watch('lead_id');
+  const company_id = watch('company_id');
+  const deal_id = watch('deal_id');
+  const appointment_id = watch('appointment_id');
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
@@ -157,42 +161,12 @@ const TaskForm: React.FC<TaskFormProps> = ({
         <Textarea className="resize-none" {...register('description')} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="text-sm font-medium">الأولوية</label>
-          <Select 
-            value={watch('priority')} 
-            onValueChange={(value: string) => {
-              // Explicitly cast the value to the specific string literal type
-              setValue('priority', value as 'low' | 'medium' | 'high');
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="اختر الأولوية" />
-            </SelectTrigger>
-            <SelectContent>
-              {PRIORITIES.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <label className="text-sm font-medium">الحالة</label>
-          <Select 
-            value={watch('status')} 
-            onValueChange={(value: string) => {
-              // Explicitly cast the value to the specific string literal type
-              setValue('status', value as 'pending' | 'in_progress' | 'completed' | 'cancelled');
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="اختر الحالة" />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <TaskPriorityStatusSection
+        priority={priority}
+        status={status}
+        setPriority={v => setValue('priority', v)}
+        setStatus={v => setValue('status', v)}
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -204,73 +178,27 @@ const TaskForm: React.FC<TaskFormProps> = ({
           <Input type="datetime-local" {...register('start_time')} />
         </div>
       </div>
-      <div>
-        <label className="text-sm font-medium">تعيين إلى مستخدم</label>
-        <Select
-          value={watch('assigned_to')}
-          onValueChange={v => setValue('assigned_to', v)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="اختر مستخدم..." />
-          </SelectTrigger>
-          <SelectContent>
-            {users.map(u => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <label className="text-sm font-medium">الجهة المرتبطة (اختياري)</label>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          <Select
-            value={watch('lead_id')}
-            onValueChange={v => setValue('lead_id', v)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="ربط عميل" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem key="no-lead" value="none">بدون</SelectItem>
-              {leads.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select
-            value={watch('company_id')}
-            onValueChange={v => setValue('company_id', v)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="ربط شركة" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem key="no-company" value="none">بدون</SelectItem>
-              {companies.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select
-            value={watch('deal_id')}
-            onValueChange={v => setValue('deal_id', v)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="ربط صفقة" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem key="no-deal" value="none">بدون</SelectItem>
-              {deals.map(d => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select
-            value={watch('appointment_id')}
-            onValueChange={v => setValue('appointment_id', v)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="ربط موعد" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem key="no-appointment" value="none">بدون</SelectItem>
-              {appointments.map(a => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+
+      <AssigneeSelect
+        users={users}
+        value={assigned_to}
+        onChange={v => setValue('assigned_to', v)}
+      />
+
+      <TaskAssociationSection
+        leadId={lead_id}
+        companyId={company_id}
+        dealId={deal_id}
+        appointmentId={appointment_id}
+        leads={leads}
+        companies={companies}
+        deals={deals}
+        appointments={appointments}
+        setLeadId={v => setValue('lead_id', v)}
+        setCompanyId={v => setValue('company_id', v)}
+        setDealId={v => setValue('deal_id', v)}
+        setAppointmentId={v => setValue('appointment_id', v)}
+      />
 
       <div className="flex justify-end">
         <Button type="button" variant="outline" className="mr-2" onClick={handleCancel}>
