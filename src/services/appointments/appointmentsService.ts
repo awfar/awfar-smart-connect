@@ -47,10 +47,8 @@ export const fetchAppointments = async (filters?: {
   upcoming?: boolean 
 }): Promise<Appointment[]> => {
   try {
-    let query = supabase.from('appointments');
+    let query = supabase.from('appointments').select('*');
     
-    query = query.select('*').order('start_time', { ascending: true });
-
     if (filters) {
       if (filters.lead_id) {
         query = query.eq('lead_id', filters.lead_id);
@@ -70,7 +68,7 @@ export const fetchAppointments = async (filters?: {
       }
     }
 
-    const { data, error } = await query;
+    const { data, error } = await query.order('start_time', { ascending: true });
 
     if (error) {
       console.error("Error fetching appointments:", error);
