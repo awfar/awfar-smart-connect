@@ -70,6 +70,8 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
   const [companySearchOpen, setCompanySearchOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  const [isLoadingLeads, setIsLoadingLeads] = useState(false);
+  const [isLoadingCompanies, setIsLoadingCompanies] = useState(false);
   
   // Parse start and end dates for initialization
   const startDate = appointment?.start_time ? new Date(appointment.start_time) : new Date();
@@ -84,6 +86,9 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
   useEffect(() => {
     const fetchLeadsAndCompanies = async () => {
       try {
+        setIsLoadingLeads(true);
+        setIsLoadingCompanies(true);
+        
         // Fetch leads
         const { data: leadsData, error: leadsError } = await supabase
           .from('leads')
@@ -92,6 +97,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
         
         if (leadsError) throw leadsError;
         setLeads(leadsData || []);
+        setIsLoadingLeads(false);
         
         // If there's a leadId passed in props or from the appointment, find and set the selected lead
         if (leadId || appointment?.lead_id) {
@@ -108,6 +114,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
         
         if (companiesError) throw companiesError;
         setCompanies(companiesData || []);
+        setIsLoadingCompanies(false);
         
         // If there's a company_id from the appointment, find and set the selected company
         if (appointment?.company_id) {
@@ -117,6 +124,8 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
       } catch (error) {
         console.error("Error fetching leads or companies:", error);
         toast.error("فشل في تحميل بيانات العملاء أو الشركات");
+        setIsLoadingLeads(false);
+        setIsLoadingCompanies(false);
       }
     };
 
@@ -304,6 +313,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
                       selected={field.value}
                       onSelect={field.onChange}
                       initialFocus
+                      className={cn("p-3 pointer-events-auto")}
                     />
                   </PopoverContent>
                 </Popover>
@@ -365,6 +375,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
                       selected={field.value}
                       onSelect={field.onChange}
                       initialFocus
+                      className={cn("p-3 pointer-events-auto")}
                     />
                   </PopoverContent>
                 </Popover>
@@ -423,22 +434,26 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
                   <PopoverContent className="w-full p-0">
                     <Command>
                       <CommandInput placeholder="ابحث عن عميل..." />
-                      <CommandEmpty>لم يتم العثور على عميل</CommandEmpty>
-                      <CommandGroup className="max-h-60 overflow-y-auto">
-                        {leads.map((lead) => (
-                          <CommandItem
-                            key={lead.id}
-                            value={`${lead.first_name} ${lead.last_name}`}
-                            onSelect={() => {
-                              form.setValue('lead_id', lead.id);
-                              setSelectedLead(lead);
-                              setLeadSearchOpen(false);
-                            }}
-                          >
-                            {lead.first_name} {lead.last_name} - {lead.email}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
+                      <CommandEmpty>
+                        {isLoadingLeads ? "جاري التحميل..." : "لم يتم العثور على عميل"}
+                      </CommandEmpty>
+                      {leads && leads.length > 0 && (
+                        <CommandGroup data-cmdk-safe="true" className="max-h-60 overflow-y-auto">
+                          {leads.map((lead) => (
+                            <CommandItem
+                              key={lead.id}
+                              value={`${lead.first_name} ${lead.last_name}`}
+                              onSelect={() => {
+                                form.setValue('lead_id', lead.id);
+                                setSelectedLead(lead);
+                                setLeadSearchOpen(false);
+                              }}
+                            >
+                              {lead.first_name} {lead.last_name} - {lead.email}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      )}
                     </Command>
                   </PopoverContent>
                 </Popover>
@@ -473,22 +488,26 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
                   <PopoverContent className="w-full p-0">
                     <Command>
                       <CommandInput placeholder="ابحث عن شركة..." />
-                      <CommandEmpty>لم يتم العثور على شركة</CommandEmpty>
-                      <CommandGroup className="max-h-60 overflow-y-auto">
-                        {companies.map((company) => (
-                          <CommandItem
-                            key={company.id}
-                            value={company.name}
-                            onSelect={() => {
-                              form.setValue('company_id', company.id);
-                              setSelectedCompany(company);
-                              setCompanySearchOpen(false);
-                            }}
-                          >
-                            {company.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
+                      <CommandEmpty>
+                        {isLoadingCompanies ? "جاري التحميل..." : "لم يتم العثور على شركة"}
+                      </CommandEmpty>
+                      {companies && companies.length > 0 && (
+                        <CommandGroup data-cmdk-safe="true" className="max-h-60 overflow-y-auto">
+                          {companies.map((company) => (
+                            <CommandItem
+                              key={company.id}
+                              value={company.name}
+                              onSelect={() => {
+                                form.setValue('company_id', company.id);
+                                setSelectedCompany(company);
+                                setCompanySearchOpen(false);
+                              }}
+                            >
+                              {company.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      )}
                     </Command>
                   </PopoverContent>
                 </Popover>
