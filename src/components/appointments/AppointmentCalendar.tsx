@@ -1,5 +1,4 @@
-
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +23,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import AppointmentForm from "./AppointmentForm";
 import AppointmentDetail from "./AppointmentDetail";
 import { format, addMonths, subMonths, addDays, isSameDay } from "date-fns";
+import { 
+  fetchAppointments,
+  fetchAppointmentsByUserId, 
+  fetchAppointmentsByTeam, 
+  fetchUpcomingAppointments,
+  updateAppointment
+} from "@/services/appointments";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // Mock data - replace with API calls to fetch appointments
 const MOCK_APPOINTMENTS: Partial<Appointment>[] = [
@@ -48,37 +56,63 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ filter = "all
   const [isViewingDetail, setIsViewingDetail] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const { isMobile } = useBreakpoints();
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Filter appointments based on the selected tab
-  const filteredAppointments = useMemo(() => {
-    let appointments = [...MOCK_APPOINTMENTS] as Appointment[];
-    
-    switch (filter) {
-      case "my":
-        // In a real app, filter by current user ID
-        appointments = appointments.filter(appointment => appointment.owner_id === "1");
-        break;
-      case "team":
-        // In a real app, filter by team IDs
-        appointments = appointments.filter(appointment => 
-          ["1", "2", "3"].includes(appointment.owner_id || ""));
-        break;
-      case "upcoming":
-        // Filter for upcoming appointments (today and future)
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        appointments = appointments.filter(appointment => {
-          const appDate = new Date(appointment.start_time);
-          return appDate >= today;
-        });
-        break;
-      default:
-        // All appointments
-        break;
-    }
-    
-    return appointments;
-  }, [filter]);
+  // Get current user
+  useEffect(() => {
+    const getUserId = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setCurrentUserId(user.id);
+        }
+      } catch (error) {
+        console.error("Error getting current user:", error);
+      }
+    };
+
+    getUserId();
+  }, []);
+
+  // Load appointments from real API
+  useEffect(() => {
+    const loadAppointments = async () => {
+      setIsLoading(true);
+      try {
+        let appointmentsData: Appointment[] = [];
+
+        switch (filter) {
+          case "my":
+            if (currentUserId) {
+              appointmentsData = await fetchAppointmentsByUserId(currentUserId);
+            }
+            break;
+          case "team":
+            appointmentsData = await fetchAppointmentsByTeam("1"); // Mock team ID
+            break;
+          case "upcoming":
+            appointmentsData = await fetchUpcomingAppointments();
+            break;
+          case "all":
+          default:
+            appointmentsData = await fetchAppointments();
+            break;
+        }
+
+        setAppointments(appointmentsData || []);
+      } catch (error) {
+        console.error(`Error loading ${filter} appointments:`, error);
+        toast.error(`فشل في تحميل المواعيد`);
+        setAppointments([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadAppointments();
+  }, [filter, currentUserId]);
 
   // Navigate to today
   const goToToday = () => {
@@ -109,19 +143,35 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ filter = "all
 
   // Function to check if a date has appointments
   const hasAppointment = (day: Date) => {
-    return filteredAppointments.some(
+    if (!appointments || !Array.isArray(appointments)) return false;
+    
+    return appointments.some(
       appointment => {
-        const appointmentDate = new Date(appointment.start_time);
-        return isSameDay(appointmentDate, day);
+        if (!appointment || !appointment.start_time) return false;
+        try {
+          const appointmentDate = new Date(appointment.start_time);
+          return isSameDay(appointmentDate, day);
+        } catch (error) {
+          console.error("Error comparing dates:", error);
+          return false;
+        }
       }
     );
   };
 
   // Function to get appointments for a specific day
   const getAppointmentsForDay = (day: Date) => {
-    return filteredAppointments.filter(appointment => {
-      const appointmentDate = new Date(appointment.start_time);
-      return isSameDay(appointmentDate, day);
+    if (!appointments || !Array.isArray(appointments)) return [];
+    
+    return appointments.filter(appointment => {
+      if (!appointment || !appointment.start_time) return false;
+      try {
+        const appointmentDate = new Date(appointment.start_time);
+        return isSameDay(appointmentDate, day);
+      } catch (error) {
+        console.error("Error filtering appointments for day:", error);
+        return false;
+      }
     });
   };
 
@@ -175,11 +225,25 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ filter = "all
   };
 
   // Handle save appointment changes
-  const handleSaveAppointment = async () => {
-    // In a real app, save changes to the API
-    setIsEditing(false);
-    setSelectedAppointment(null);
-    return Promise.resolve();
+  const handleSaveAppointment = async (appointmentData: any) => {
+    try {
+      if (selectedAppointment) {
+        const updatedAppointment = await updateAppointment(selectedAppointment.id, appointmentData);
+        if (updatedAppointment) {
+          setAppointments(appointments.map(a => 
+            a.id === selectedAppointment.id ? updatedAppointment : a
+          ));
+          toast.success("تم تحديث الموعد بنجاح");
+        }
+      }
+      setIsEditing(false);
+      setSelectedAppointment(null);
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Error saving appointment:", error);
+      toast.error("فشل في حفظ الموعد");
+      return Promise.reject(error);
+    }
   };
 
   // Handle close appointment detail/edit dialog
@@ -188,6 +252,14 @@ const AppointmentCalendar: React.FC<AppointmentCalendarProps> = ({ filter = "all
     setIsEditing(false);
     setSelectedAppointment(null);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

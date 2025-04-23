@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import {
   Table,
@@ -37,7 +38,7 @@ import {
   updateAppointment, 
   deleteAppointment, 
   markAppointmentAsCompleted 
-} from '@/services/appointments/appointmentsService';
+} from '@/services/appointments';
 import { supabase } from '@/integrations/supabase/client';
 
 // Define status mapping for display
@@ -67,9 +68,13 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ filter = "all" }) =
 
   useEffect(() => {
     const getUserId = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setCurrentUserId(user.id);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setCurrentUserId(user.id);
+        }
+      } catch (error) {
+        console.error("Error getting current user:", error);
       }
     };
 
@@ -103,10 +108,13 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ filter = "all" }) =
             break;
         }
 
-        setAppointments(appointmentsData);
+        // Ensure we always have an array, even if the API returned undefined
+        setAppointments(appointmentsData || []);
       } catch (error) {
         console.error(`Error loading ${filter} appointments:`, error);
         toast.error(`فشل في تحميل المواعيد`);
+        // Set empty array in case of error
+        setAppointments([]);
       } finally {
         setIsLoading(false);
       }
@@ -116,13 +124,23 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ filter = "all" }) =
   }, [filter, currentUserId]);
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return format(date, "yyyy-MM-dd");
+    try {
+      const date = new Date(dateString);
+      return format(date, "yyyy-MM-dd");
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "Invalid date";
+    }
   };
 
   const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return format(date, "HH:mm");
+    try {
+      const date = new Date(dateString);
+      return format(date, "HH:mm");
+    } catch (error) {
+      console.error("Error formatting time:", error);
+      return "Invalid time";
+    }
   };
 
   const handleViewDetail = (appointmentId: string) => {
@@ -175,7 +193,9 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ filter = "all" }) =
       } else {
         // Add new appointment
         const newAppointment = await createAppointment(appointmentData);
-        setAppointments([newAppointment, ...appointments]);
+        if (newAppointment) {
+          setAppointments([newAppointment, ...appointments]);
+        }
       }
       
       setIsEditing(false);
