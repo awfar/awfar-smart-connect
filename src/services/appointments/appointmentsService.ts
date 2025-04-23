@@ -10,6 +10,36 @@ import {
 } from "./types";
 import { toast } from "sonner";
 
+// Helper function to convert database record to our app model
+const mapDbToAppointment = (dbRecord: any): Appointment => {
+  return {
+    id: dbRecord.id,
+    title: dbRecord.title,
+    description: dbRecord.description,
+    start_time: dbRecord.start_time,
+    end_time: dbRecord.end_time,
+    location: dbRecord.location,
+    location_details: dbRecord.location_details,
+    status: dbRecord.status as AppointmentStatus,
+    lead_id: dbRecord.lead_id || null,
+    company_id: dbRecord.company_id || null,
+    client_id: dbRecord.client_id,
+    owner_id: dbRecord.owner_id,
+    participants: dbRecord.participants,
+    created_by: dbRecord.created_by,
+    created_at: dbRecord.created_at,
+    updated_at: dbRecord.updated_at,
+    type: dbRecord.type,
+    related_deal_id: dbRecord.related_deal_id,
+    related_ticket_id: dbRecord.related_ticket_id,
+    notes: dbRecord.notes,
+    is_all_day: dbRecord.is_all_day,
+    color: dbRecord.color,
+    reminder_time: dbRecord.reminder_time,
+    notification_sent: dbRecord.notification_sent
+  };
+};
+
 export const fetchAppointments = async (filters?: { 
   lead_id?: string; 
   status?: AppointmentStatus; 
@@ -59,36 +89,6 @@ export const fetchAppointments = async (filters?: {
     toast.error("فشل في تحميل المواعيد");
     return [];
   }
-};
-
-// Helper function to convert database record to our app model
-const mapDbToAppointment = (dbRecord: any): Appointment => {
-  return {
-    id: dbRecord.id,
-    title: dbRecord.title,
-    description: dbRecord.description,
-    start_time: dbRecord.start_time,
-    end_time: dbRecord.end_time,
-    location: dbRecord.location,
-    location_details: dbRecord.location_details,
-    status: dbRecord.status as AppointmentStatus,
-    lead_id: dbRecord.lead_id || null,
-    company_id: dbRecord.company_id || null,
-    client_id: dbRecord.client_id,
-    owner_id: dbRecord.owner_id,
-    participants: dbRecord.participants,
-    created_by: dbRecord.created_by,
-    created_at: dbRecord.created_at,
-    updated_at: dbRecord.updated_at,
-    type: dbRecord.type,
-    related_deal_id: dbRecord.related_deal_id,
-    related_ticket_id: dbRecord.related_ticket_id,
-    notes: dbRecord.notes,
-    is_all_day: dbRecord.is_all_day,
-    color: dbRecord.color,
-    reminder_time: dbRecord.reminder_time,
-    notification_sent: dbRecord.notification_sent
-  };
 };
 
 export const fetchAppointmentsByLeadId = async (leadId: string): Promise<Appointment[]> => {
@@ -351,126 +351,32 @@ export const markAppointmentAsCompleted = async (id: string): Promise<Appointmen
   }
 };
 
+// Stub implementation that returns empty data until the database is updated
 export const fetchUserAvailability = async (userId: string): Promise<UserAvailability[]> => {
-  try {
-    const { data, error } = await supabase
-      .from('user_availability')
-      .select('*')
-      .eq('user_id', userId)
-      .order('day_of_week', { ascending: true });
-
-    if (error) throw error;
-
-    return data || [];
-  } catch (error) {
-    console.error("Error fetching user availability:", error);
-    toast.error("فشل في تحميل أوقات التوافر");
-    return [];
-  }
+  console.log("Fetching user availability for:", userId);
+  // Return empty array for now until the user_availability table is created
+  return [];
 };
 
+// Stub implementation for updating availability
 export const updateUserAvailability = async (availability: UserAvailability): Promise<UserAvailability | null> => {
-  try {
-    const { id, ...availabilityData } = availability;
-    const isNew = !id;
-
-    let result;
-    if (isNew) {
-      // Create new availability entry
-      result = await supabase
-        .from('user_availability')
-        .insert({
-          ...availabilityData,
-          created_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-    } else {
-      // Update existing availability entry
-      result = await supabase
-        .from('user_availability')
-        .update({
-          ...availabilityData,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id)
-        .select()
-        .single();
-    }
-
-    if (result.error) throw result.error;
-    
-    toast.success("تم تحديث أوقات التوافر بنجاح");
-    return result.data;
-  } catch (error) {
-    console.error("Error updating user availability:", error);
-    toast.error("فشل في تحديث أوقات التوافر");
-    return null;
-  }
+  console.log("Availability update request:", availability);
+  toast.info("أوقات التوافر سيتم تفعيلها قريبًا");
+  return null;
 };
 
+// Stub implementation for fetching booking settings
 export const fetchBookingSettings = async (userId: string): Promise<BookingSettings | null> => {
-  try {
-    const { data, error } = await supabase
-      .from('booking_settings')
-      .select('*')
-      .eq('user_id', userId)
-      .single();
-
-    if (error) {
-      // If no settings exist yet, this isn't an error
-      if (error.code === 'PGRST116') {
-        return null;
-      }
-      throw error;
-    }
-
-    return data;
-  } catch (error) {
-    console.error("Error fetching booking settings:", error);
-    toast.error("فشل في تحميل إعدادات الحجز");
-    return null;
-  }
+  console.log("Fetching booking settings for:", userId);
+  // Return null until the booking_settings table is created
+  return null;
 };
 
+// Stub implementation for updating booking settings
 export const updateBookingSettings = async (settings: Partial<BookingSettings>): Promise<BookingSettings | null> => {
-  try {
-    const { id, ...settingsData } = settings;
-    const isNew = !id;
-
-    let result;
-    if (isNew) {
-      // Create new settings
-      result = await supabase
-        .from('booking_settings')
-        .insert({
-          ...settingsData,
-          created_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-    } else {
-      // Update existing settings
-      result = await supabase
-        .from('booking_settings')
-        .update({
-          ...settingsData,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', id)
-        .select()
-        .single();
-    }
-
-    if (result.error) throw result.error;
-    
-    toast.success("تم تحديث إعدادات الحجز بنجاح");
-    return result.data;
-  } catch (error) {
-    console.error("Error updating booking settings:", error);
-    toast.error("فشل في تحديث إعدادات الحجز");
-    return null;
-  }
+  console.log("Booking settings update request:", settings);
+  toast.info("إعدادات الحجز سيتم تفعيلها قريبًا");
+  return null;
 };
 
 export const createBookingFromPublic = async (bookingData: any): Promise<Appointment | null> => {

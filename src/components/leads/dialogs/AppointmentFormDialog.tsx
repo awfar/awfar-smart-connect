@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
 import { DatePicker } from '@/components/ui/date-picker';
+import { createAppointment } from '@/services/appointments/appointmentsService';
+import { toast } from 'sonner';
 
 interface AppointmentFormDialogProps {
   open: boolean;
@@ -43,7 +45,7 @@ const AppointmentFormDialog: React.FC<AppointmentFormDialogProps> = ({
       setIsSubmitting(true);
       
       if (!startDate) {
-        alert('يرجى تحديد تاريخ الموعد');
+        toast.error('يرجى تحديد تاريخ الموعد');
         setIsSubmitting(false);
         return;
       }
@@ -57,8 +59,8 @@ const AppointmentFormDialog: React.FC<AppointmentFormDialogProps> = ({
       const [endHours, endMinutes] = endTime.split(':').map(Number);
       endDateTime.setHours(endHours, endMinutes, 0, 0);
       
-      // Mock API call - in production this would call a real API
-      console.log('Creating appointment:', {
+      // Create appointment in Supabase
+      await createAppointment({
         lead_id: leadId,
         title: data.title,
         description: data.description,
@@ -67,13 +69,11 @@ const AppointmentFormDialog: React.FC<AppointmentFormDialogProps> = ({
         end_time: endDateTime.toISOString(),
       });
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
       onSuccess?.();
       onClose();
     } catch (error) {
       console.error('Error adding appointment:', error);
+      toast.error('حدث خطأ أثناء إنشاء الموعد');
     } finally {
       setIsSubmitting(false);
     }
