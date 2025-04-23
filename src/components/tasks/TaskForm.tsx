@@ -229,7 +229,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
               <SelectValue placeholder="ربط عميل" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">بدون</SelectItem>
+              <SelectItem key="no-lead" value="none">بدون</SelectItem>
               {leads.map(l => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -241,7 +241,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
               <SelectValue placeholder="ربط شركة" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">بدون</SelectItem>
+              <SelectItem key="no-company" value="none">بدون</SelectItem>
               {companies.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -253,7 +253,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
               <SelectValue placeholder="ربط صفقة" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">بدون</SelectItem>
+              <SelectItem key="no-deal" value="none">بدون</SelectItem>
               {deals.map(d => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -265,7 +265,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
               <SelectValue placeholder="ربط موعد" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">بدون</SelectItem>
+              <SelectItem key="no-appointment" value="none">بدون</SelectItem>
               {appointments.map(a => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}
             </SelectContent>
           </Select>
