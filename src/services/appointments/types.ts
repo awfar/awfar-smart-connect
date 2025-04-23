@@ -3,6 +3,35 @@ export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled';
 export type AppointmentType = 'meeting' | 'call' | 'virtual' | 'in-person' | 'other';
 export type AppointmentLocation = 'zoom' | 'google-meet' | 'microsoft-teams' | 'office' | 'other' | string;
 
+// This interface represents the appointment as stored in the database
+export interface AppointmentDB {
+  id: string;
+  title: string;
+  description?: string;
+  start_time: string;
+  end_time: string;
+  location?: string;
+  location_details?: string;
+  status: string;
+  lead_id?: string | null;
+  company_id?: string | null;
+  client_id?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+  participants?: string[];
+  owner_id?: string;
+  type?: string;
+  related_deal_id?: string | null;
+  related_ticket_id?: string | null;
+  notes?: string;
+  is_all_day?: boolean;
+  color?: string;
+  notification_sent?: boolean;
+  reminder_time?: number; // Minutes before appointment
+}
+
+// This interface represents our application model with proper typing
 export interface Appointment {
   id: string;
   title: string;

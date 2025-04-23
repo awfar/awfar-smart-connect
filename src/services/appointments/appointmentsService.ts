@@ -1,9 +1,22 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Appointment, AppointmentCreateInput, AppointmentStatus, UserAvailability, BookingSettings } from "./types";
+import { 
+  Appointment, 
+  AppointmentCreateInput, 
+  AppointmentStatus, 
+  UserAvailability, 
+  BookingSettings,
+  AppointmentDB
+} from "./types";
 import { toast } from "sonner";
 
-export const fetchAppointments = async (filters?: { lead_id?: string; status?: AppointmentStatus; user_id?: string; team_id?: string; upcoming?: boolean }): Promise<Appointment[]> => {
+export const fetchAppointments = async (filters?: { 
+  lead_id?: string; 
+  status?: AppointmentStatus; 
+  user_id?: string; 
+  team_id?: string; 
+  upcoming?: boolean 
+}): Promise<Appointment[]> => {
   try {
     let query = supabase
       .from('appointments')
@@ -40,36 +53,42 @@ export const fetchAppointments = async (filters?: { lead_id?: string; status?: A
     }
 
     // Map database response to Appointment interface
-    return (data || []).map(item => ({
-      id: item.id,
-      title: item.title,
-      description: item.description,
-      start_time: item.start_time,
-      end_time: item.end_time,
-      location: item.location,
-      location_details: item.location_details,
-      status: item.status as AppointmentStatus,
-      lead_id: item.lead_id || null,
-      company_id: item.company_id || null,
-      client_id: item.client_id,
-      owner_id: item.owner_id,
-      participants: item.participants,
-      created_by: item.created_by,
-      created_at: item.created_at,
-      updated_at: item.updated_at,
-      type: item.type,
-      related_deal_id: item.related_deal_id,
-      related_ticket_id: item.related_ticket_id,
-      notes: item.notes,
-      is_all_day: item.is_all_day,
-      color: item.color,
-      reminder_time: item.reminder_time
-    }));
+    return (data || []).map(item => mapDbToAppointment(item));
   } catch (error) {
     console.error("Error in fetchAppointments:", error);
     toast.error("فشل في تحميل المواعيد");
     return [];
   }
+};
+
+// Helper function to convert database record to our app model
+const mapDbToAppointment = (dbRecord: any): Appointment => {
+  return {
+    id: dbRecord.id,
+    title: dbRecord.title,
+    description: dbRecord.description,
+    start_time: dbRecord.start_time,
+    end_time: dbRecord.end_time,
+    location: dbRecord.location,
+    location_details: dbRecord.location_details,
+    status: dbRecord.status as AppointmentStatus,
+    lead_id: dbRecord.lead_id || null,
+    company_id: dbRecord.company_id || null,
+    client_id: dbRecord.client_id,
+    owner_id: dbRecord.owner_id,
+    participants: dbRecord.participants,
+    created_by: dbRecord.created_by,
+    created_at: dbRecord.created_at,
+    updated_at: dbRecord.updated_at,
+    type: dbRecord.type,
+    related_deal_id: dbRecord.related_deal_id,
+    related_ticket_id: dbRecord.related_ticket_id,
+    notes: dbRecord.notes,
+    is_all_day: dbRecord.is_all_day,
+    color: dbRecord.color,
+    reminder_time: dbRecord.reminder_time,
+    notification_sent: dbRecord.notification_sent
+  };
 };
 
 export const fetchAppointmentsByLeadId = async (leadId: string): Promise<Appointment[]> => {
@@ -102,31 +121,7 @@ export const getAppointment = async (id: string): Promise<Appointment | null> =>
 
     if (error) throw error;
     
-    return {
-      id: data.id,
-      title: data.title,
-      description: data.description,
-      start_time: data.start_time,
-      end_time: data.end_time,
-      location: data.location,
-      location_details: data.location_details,
-      status: data.status as AppointmentStatus,
-      lead_id: data.lead_id || null,
-      company_id: data.company_id || null,
-      client_id: data.client_id,
-      owner_id: data.owner_id,
-      participants: data.participants,
-      created_by: data.created_by,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-      type: data.type,
-      related_deal_id: data.related_deal_id,
-      related_ticket_id: data.related_ticket_id,
-      notes: data.notes,
-      is_all_day: data.is_all_day,
-      color: data.color,
-      reminder_time: data.reminder_time
-    };
+    return data ? mapDbToAppointment(data) : null;
   } catch (error) {
     console.error("Error fetching appointment:", error);
     return null;
@@ -155,31 +150,34 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
       }
     }
 
+    // Prepare data for insertion
+    const appointmentData = {
+      title: appointment.title,
+      description: appointment.description,
+      start_time: appointment.start_time,
+      end_time: appointment.end_time,
+      location: appointment.location,
+      location_details: appointment.location_details,
+      status: appointment.status || 'scheduled',
+      client_id: appointment.client_id,
+      lead_id: appointment.lead_id,
+      company_id: appointment.company_id,
+      owner_id: appointment.owner_id || created_by,
+      participants: appointment.participants,
+      created_by: created_by,
+      type: appointment.type,
+      related_deal_id: appointment.related_deal_id,
+      related_ticket_id: appointment.related_ticket_id,
+      notes: appointment.notes,
+      is_all_day: appointment.is_all_day,
+      color: appointment.color,
+      reminder_time: appointment.reminder_time
+    };
+
     // Ensure we're inserting a single object with required fields
     const { data, error } = await supabase
       .from('appointments')
-      .insert({
-        title: appointment.title,
-        description: appointment.description,
-        start_time: appointment.start_time,
-        end_time: appointment.end_time,
-        location: appointment.location,
-        location_details: appointment.location_details,
-        status: appointment.status || 'scheduled',
-        client_id: appointment.client_id,
-        lead_id: appointment.lead_id,
-        company_id: appointment.company_id,
-        owner_id: appointment.owner_id || created_by,
-        participants: appointment.participants,
-        created_by: created_by,
-        type: appointment.type,
-        related_deal_id: appointment.related_deal_id,
-        related_ticket_id: appointment.related_ticket_id,
-        notes: appointment.notes,
-        is_all_day: appointment.is_all_day,
-        color: appointment.color,
-        reminder_time: appointment.reminder_time
-      })
+      .insert(appointmentData)
       .select()
       .single();
 
@@ -202,31 +200,7 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
     }
 
     toast.success("تم إنشاء الموعد بنجاح");
-    return {
-      id: data.id,
-      title: data.title,
-      description: data.description,
-      start_time: data.start_time,
-      end_time: data.end_time,
-      location: data.location,
-      location_details: data.location_details,
-      status: data.status as AppointmentStatus,
-      lead_id: data.lead_id || null,
-      company_id: data.company_id || null,
-      client_id: data.client_id,
-      owner_id: data.owner_id,
-      participants: data.participants,
-      created_by: data.created_by,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-      type: data.type,
-      related_deal_id: data.related_deal_id,
-      related_ticket_id: data.related_ticket_id,
-      notes: data.notes,
-      is_all_day: data.is_all_day,
-      color: data.color,
-      reminder_time: data.reminder_time
-    };
+    return mapDbToAppointment(data);
   } catch (error) {
     console.error("Error creating appointment:", error);
     toast.error("فشل في إنشاء الموعد");
@@ -288,31 +262,7 @@ export const updateAppointment = async (id: string, updates: Partial<Appointment
     }
 
     toast.success("تم تحديث الموعد بنجاح");
-    return {
-      id: data.id,
-      title: data.title,
-      description: data.description,
-      start_time: data.start_time,
-      end_time: data.end_time,
-      location: data.location,
-      location_details: data.location_details,
-      status: data.status as AppointmentStatus,
-      lead_id: data.lead_id || null,
-      company_id: data.company_id || null,
-      client_id: data.client_id,
-      owner_id: data.owner_id,
-      participants: data.participants,
-      created_by: data.created_by,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-      type: data.type,
-      related_deal_id: data.related_deal_id,
-      related_ticket_id: data.related_ticket_id,
-      notes: data.notes,
-      is_all_day: data.is_all_day,
-      color: data.color,
-      reminder_time: data.reminder_time
-    };
+    return mapDbToAppointment(data);
   } catch (error) {
     console.error("Error updating appointment:", error);
     toast.error("فشل في تحديث الموعد");
@@ -393,31 +343,7 @@ export const markAppointmentAsCompleted = async (id: string): Promise<Appointmen
 
     toast.success("تم تحديث حالة الموعد إلى مكتمل");
     
-    return data ? {
-      id: data.id,
-      title: data.title,
-      description: data.description,
-      start_time: data.start_time,
-      end_time: data.end_time,
-      location: data.location,
-      location_details: data.location_details,
-      status: data.status as AppointmentStatus,
-      lead_id: data.lead_id || null,
-      company_id: data.company_id || null,
-      client_id: data.client_id,
-      owner_id: data.owner_id,
-      participants: data.participants,
-      created_by: data.created_by,
-      created_at: data.created_at,
-      updated_at: data.updated_at,
-      type: data.type,
-      related_deal_id: data.related_deal_id,
-      related_ticket_id: data.related_ticket_id,
-      notes: data.notes,
-      is_all_day: data.is_all_day,
-      color: data.color,
-      reminder_time: data.reminder_time
-    } : null;
+    return data ? mapDbToAppointment(data) : null;
   } catch (error) {
     console.error("Error marking appointment as completed:", error);
     toast.error("فشل في تحديث حالة الموعد");
@@ -625,7 +551,7 @@ export const createBookingFromPublic = async (bookingData: any): Promise<Appoint
       lead_id: leadId,
       owner_id: user_id,
       notes: notes,
-      type: type as AppointmentType,
+      type: type,
       created_by: user_id
     };
 
