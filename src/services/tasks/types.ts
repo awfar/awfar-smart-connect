@@ -1,4 +1,10 @@
 
+export interface RelatedEntity {
+  type: 'lead' | 'deal' | 'company' | 'contact' | 'appointment';
+  id: string;
+  name: string;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -17,12 +23,11 @@ export interface Task {
   company_id?: string;
   contact_id?: string;
   appointment_id?: string;
-  related_to?: {
-    type: 'lead' | 'deal' | 'company' | 'contact' | 'appointment';
-    id: string;
-    name: string;
-  }[];
+  related_to?: RelatedEntity[];
   type?: string;
+  // Added to allow for database fields joined from other tables
+  profiles?: any;
+  leads?: any;
 }
 
 export interface TaskCreateInput {
@@ -39,10 +44,6 @@ export interface TaskCreateInput {
   company_id?: string;
   contact_id?: string;
   appointment_id?: string;
-  related_to?: {
-    type: 'lead' | 'deal' | 'company' | 'contact' | 'appointment';
-    id: string;
-    name: string;
-  }[];
+  related_to?: RelatedEntity[];
   type?: string;
 }

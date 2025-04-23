@@ -1,5 +1,4 @@
-
-import { Task, TaskCreateInput } from './types';
+import { Task, TaskCreateInput, RelatedEntity } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -17,6 +16,35 @@ const validateTaskPriority = (priority: string): 'low' | 'medium' | 'high' => {
   return validPriorities.includes(priority)
     ? priority as 'low' | 'medium' | 'high'
     : 'medium';
+};
+
+// Parse related_to JSON from database to proper typed structure
+const parseRelatedTo = (relatedTo: any): RelatedEntity[] | undefined => {
+  if (!relatedTo) return undefined;
+  
+  try {
+    // If it's already an array of the correct type, return it
+    if (Array.isArray(relatedTo) && 
+        relatedTo.every(item => 
+          typeof item === 'object' && 
+          'type' in item && 
+          'id' in item && 
+          'name' in item)) {
+      return relatedTo as RelatedEntity[];
+    }
+    
+    // If it's a JSON string, parse it
+    if (typeof relatedTo === 'string') {
+      const parsed = JSON.parse(relatedTo);
+      return Array.isArray(parsed) ? parsed as RelatedEntity[] : undefined;
+    }
+    
+    // Otherwise, try to convert it if it has the right shape
+    return undefined;
+  } catch (error) {
+    console.error('Error parsing related_to:', error);
+    return undefined;
+  }
 };
 
 // Get all tasks
@@ -45,14 +73,15 @@ export const getTasks = async (filters?: Record<string, any>): Promise<Task[]> =
       throw error;
     }
     
-    // Ensure each task has valid status and priority
+    // Convert the DB response to our Task type with proper parsing
     const typedTasks = (data || []).map(item => ({
       ...item,
       status: validateTaskStatus(item.status),
-      priority: validateTaskPriority(item.priority)
-    }));
+      priority: validateTaskPriority(item.priority),
+      related_to: parseRelatedTo(item.related_to)
+    })) as unknown as Task[];
     
-    return typedTasks as Task[];
+    return typedTasks;
   } catch (error) {
     console.error('Error in getTasks:', error);
     return [];
@@ -78,14 +107,15 @@ export const getTasksByLeadId = async (leadId: string): Promise<Task[]> => {
       throw error;
     }
     
-    // Ensure each task has valid status and priority
+    // Convert the DB response to our Task type with proper parsing
     const typedTasks = (data || []).map(item => ({
       ...item,
       status: validateTaskStatus(item.status),
-      priority: validateTaskPriority(item.priority)
-    }));
+      priority: validateTaskPriority(item.priority),
+      related_to: parseRelatedTo(item.related_to)
+    })) as unknown as Task[];
     
-    return typedTasks as Task[];
+    return typedTasks;
   } catch (error) {
     console.error('Error in getTasksByLeadId:', error);
     return [];
@@ -107,16 +137,18 @@ export const createTask = async (task: TaskCreateInput): Promise<Task | null> =>
       }
     }
     
-    // Ensure status is valid
-    const validatedTask = {
+    // Prepare the task data for insertion
+    const taskData = {
       ...task,
       status: validateTaskStatus(task.status || 'pending'),
-      priority: validateTaskPriority(task.priority || 'medium')
+      priority: validateTaskPriority(task.priority || 'medium'),
+      // Ensure related_to is properly serialized if it exists
+      related_to: task.related_to ? JSON.stringify(task.related_to) : null
     };
     
     const { data, error } = await supabase
       .from('tasks')
-      .insert(validatedTask)
+      .insert(taskData)
       .select('*')
       .single();
     
@@ -134,10 +166,12 @@ export const createTask = async (task: TaskCreateInput): Promise<Task | null> =>
       }
     }
     
+    // Convert the response to our Task type
     return {
       ...data,
       status: validateTaskStatus(data.status),
-      priority: validateTaskPriority(data.priority)
+      priority: validateTaskPriority(data.priority),
+      related_to: parseRelatedTo(data.related_to)
     } as Task;
   } catch (error) {
     console.error('Error in createTask:', error);
@@ -159,19 +193,27 @@ export const updateTask = async (id: string, task: Partial<Task>): Promise<Task 
       .eq('id', id)
       .single();
     
+    // Prepare the task data for update
+    const updateData: any = { ...task };
+    
     // Ensure task status is valid if provided
-    if (task.status) {
-      task.status = validateTaskStatus(task.status);
+    if (updateData.status) {
+      updateData.status = validateTaskStatus(updateData.status);
     }
     
     // Ensure task priority is valid if provided
-    if (task.priority) {
-      task.priority = validateTaskPriority(task.priority);
+    if (updateData.priority) {
+      updateData.priority = validateTaskPriority(updateData.priority);
+    }
+    
+    // Handle related_to serialization if it exists
+    if (updateData.related_to) {
+      updateData.related_to = JSON.stringify(updateData.related_to);
     }
     
     const { data, error } = await supabase
       .from('tasks')
-      .update(task)
+      .update(updateData)
       .eq('id', id)
       .select('*')
       .single();
@@ -190,10 +232,12 @@ export const updateTask = async (id: string, task: Partial<Task>): Promise<Task 
       }
     }
     
+    // Convert the response to our Task type
     return {
       ...data,
       status: validateTaskStatus(data.status),
-      priority: validateTaskPriority(data.priority)
+      priority: validateTaskPriority(data.priority),
+      related_to: parseRelatedTo(data.related_to)
     } as Task;
   } catch (error) {
     console.error('Error in updateTask:', error);
@@ -290,10 +334,12 @@ export const completeTask = async (id: string): Promise<Task | null> => {
       }
     }
     
+    // Convert the response to our Task type
     return {
       ...data,
       status: validateTaskStatus(data.status),
-      priority: validateTaskPriority(data.priority)
+      priority: validateTaskPriority(data.priority),
+      related_to: parseRelatedTo(data.related_to)
     } as Task;
   } catch (error) {
     console.error('Error in completeTask:', error);
