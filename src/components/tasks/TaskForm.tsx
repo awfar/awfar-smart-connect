@@ -1,6 +1,3 @@
-
-// Enhanced TaskForm: full task type support, dynamic entity selectors, live assignees/leads/companies/deals from Supabase
-
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -14,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 interface TaskFormProps {
   onSubmit: (data: any) => Promise<void>;
   onCancel?: () => void;
-  onClose?: () => void; // Added this property
+  onClose?: () => void;
   task?: Task;
   leadId?: string;
   isSubmitting?: boolean;
@@ -57,8 +54,8 @@ const TaskForm: React.FC<TaskFormProps> = ({
     defaultValues: {
       title: task?.title || '',
       description: task?.description || '',
-      priority: task?.priority || 'medium',
-      status: task?.status || 'pending',
+      priority: (task?.priority || 'medium') as 'low' | 'medium' | 'high',
+      status: (task?.status || 'pending') as 'pending' | 'in_progress' | 'completed' | 'cancelled',
       due_date: task?.due_date ? new Date(task.due_date).toISOString().slice(0, 16) : '',
       start_time: task?.start_time ? new Date(task.start_time).toISOString().slice(0, 16) : '',
       assigned_to: task?.assigned_to || '',
@@ -71,7 +68,6 @@ const TaskForm: React.FC<TaskFormProps> = ({
     }
   });
 
-  // Dynamic entity state
   const [users, setUsers] = useState<EntityOption[]>([]);
   const [leads, setLeads] = useState<EntityOption[]>([]);
   const [companies, setCompanies] = useState<EntityOption[]>([]);
@@ -82,7 +78,6 @@ const TaskForm: React.FC<TaskFormProps> = ({
   useEffect(() => {
     const fetchEntities = async () => {
       setLoadingEntities(true);
-      // Fetch users (from profiles table)
       const { data: usersData } = await supabase
         .from('profiles')
         .select('id, first_name, last_name');
@@ -93,7 +88,6 @@ const TaskForm: React.FC<TaskFormProps> = ({
         })) ?? []
       );
 
-      // Fetch leads
       const { data: leadsData } = await supabase
         .from('leads')
         .select('id, first_name, last_name, email');
@@ -104,15 +98,12 @@ const TaskForm: React.FC<TaskFormProps> = ({
         })) ?? []
       );
 
-      // Companies
       const { data: comps } = await supabase.from('companies').select('id, name');
       setCompanies(comps ? comps.map((c)=>({value:c.id,label:c.name})) : []);
 
-      // Deals
       const { data: dealsData } = await supabase.from('deals').select('id, name');
       setDeals(dealsData ? dealsData.map((d)=>({value:d.id,label:d.name})) : []);
       
-      // Appointments
       const { data: appointmentsData } = await supabase.from('appointments').select('id, title');
       setAppointments(appointmentsData ? appointmentsData.map((a)=>({value:a.id,label:a.title})) : []);
 
@@ -122,16 +113,18 @@ const TaskForm: React.FC<TaskFormProps> = ({
     fetchEntities();
   }, []);
 
-  // Either onCancel or onClose
   const handleCancel = () => onCancel ? onCancel() : onClose?.();
 
-  // Form submit wiring
   const handleFormSubmit = async (data: any) => {
-    await onSubmit({
+    const safeData: TaskCreateInput = {
       ...data,
+      priority: data.priority as 'low' | 'medium' | 'high',
+      status: data.status as 'pending' | 'in_progress' | 'completed' | 'cancelled',
       due_date: data.due_date ? new Date(data.due_date).toISOString() : null,
       start_time: data.start_time ? new Date(data.start_time).toISOString() : null,
-    });
+    };
+
+    await onSubmit(safeData);
   };
 
   return (
@@ -278,4 +271,3 @@ const TaskForm: React.FC<TaskFormProps> = ({
 };
 
 export default TaskForm;
-
