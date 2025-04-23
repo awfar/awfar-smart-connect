@@ -39,40 +39,46 @@ export const fetchAppointments = async (filters?: {
   upcoming?: boolean 
 }): Promise<Appointment[]> => {
   try {
-    // Start with the base query without any filters
-    const baseQuery = supabase.from('appointments').select('*');
-    
-    // Apply filters individually without excessive chaining
-    let finalQuery = baseQuery;
+    // Build the filter object for the query
+    const filterObject: Record<string, any> = {};
     
     if (filters) {
       if (filters.lead_id) {
-        finalQuery = finalQuery.eq('lead_id', filters.lead_id);
+        filterObject['lead_id'] = filters.lead_id;
       }
       
       if (filters.status) {
-        finalQuery = finalQuery.eq('status', filters.status);
+        filterObject['status'] = filters.status;
       }
       
       if (filters.user_id) {
-        finalQuery = finalQuery.eq('owner_id', filters.user_id);
+        filterObject['owner_id'] = filters.user_id;
       }
       
       if (filters.team_id) {
-        finalQuery = finalQuery.eq('team_id', filters.team_id);
-      }
-      
-      if (filters.upcoming) {
-        const now = new Date().toISOString();
-        finalQuery = finalQuery.gte('start_time', now);
+        filterObject['team_id'] = filters.team_id;
       }
     }
     
-    // Apply ordering as the final step
-    finalQuery = finalQuery.order('start_time', { ascending: true });
+    // Create the base query
+    let query = supabase.from('appointments').select('*');
+    
+    // Apply the filter object (if not empty)
+    if (Object.keys(filterObject).length > 0) {
+      query = query.match(filterObject);
+    }
+    
+    // Handle the upcoming filter separately since it's not a simple equality
+    if (filters?.upcoming) {
+      const now = new Date().toISOString();
+      query = query.gte('start_time', now);
+    }
+    
+    // Apply ordering
+    query = query.order('start_time', { ascending: true });
     
     // Execute query
-    const { data, error } = await finalQuery;
+    const { data, error } = await query;
     
     if (error) {
       console.error("Error fetching appointments:", error);
