@@ -60,6 +60,7 @@ export const createTask = async (taskData: TaskCreateInput): Promise<Task | null
     // Add created_by if available 
     const dataToInsert = {
       ...cleanedData,
+      title: cleanedData.title, // Ensure title is included (it's required)
       status: cleanedData.status || 'pending',
       created_by: user?.id || null
     };

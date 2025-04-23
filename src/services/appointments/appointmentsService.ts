@@ -50,6 +50,78 @@ export const getAppointments = async (options?: {
 };
 
 /**
+ * Alias for getAppointments with no filters (for compatibility)
+ */
+export const fetchAppointments = async (): Promise<Appointment[]> => {
+  return getAppointments();
+};
+
+/**
+ * Fetches appointments for a specific user
+ */
+export const fetchAppointmentsByUserId = async (userId: string): Promise<Appointment[]> => {
+  if (!userId) {
+    console.error("No user ID provided for fetchAppointmentsByUserId");
+    return [];
+  }
+  return getAppointments({ userId });
+};
+
+/**
+ * Fetches appointments for a specific team
+ */
+export const fetchAppointmentsByTeam = async (teamId: string): Promise<Appointment[]> => {
+  try {
+    // In a real implementation, we would filter by team_id
+    // For now, we'll just return all appointments since team functionality isn't fully implemented
+    console.log("Fetching team appointments for team:", teamId);
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('*')
+      .eq('team_id', teamId)
+      .order('start_time', { ascending: true });
+    
+    if (error) {
+      console.error("Error fetching team appointments:", error);
+      throw error;
+    }
+    
+    return data as Appointment[] || [];
+  } catch (error) {
+    console.error("Error in fetchAppointmentsByTeam:", error);
+    toast.error("فشل في تحميل مواعيد الفريق");
+    return [];
+  }
+};
+
+/**
+ * Fetches upcoming appointments (future dates)
+ */
+export const fetchUpcomingAppointments = async (): Promise<Appointment[]> => {
+  try {
+    const now = new Date();
+    console.log("Fetching upcoming appointments from:", now.toISOString());
+    
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('*')
+      .gte('start_time', now.toISOString())
+      .order('start_time', { ascending: true });
+    
+    if (error) {
+      console.error("Error fetching upcoming appointments:", error);
+      throw error;
+    }
+    
+    return data as Appointment[] || [];
+  } catch (error) {
+    console.error("Error in fetchUpcomingAppointments:", error);
+    toast.error("فشل في تحميل المواعيد القادمة");
+    return [];
+  }
+};
+
+/**
  * Creates a new appointment
  */
 export const createAppointment = async (appointment: AppointmentCreateInput): Promise<Appointment | null> => {
@@ -191,6 +263,39 @@ export const getAppointment = async (id: string): Promise<Appointment | null> =>
     return data as Appointment;
   } catch (error) {
     console.error("Error in getAppointment:", error);
+    return null;
+  }
+};
+
+/**
+ * Mark an appointment as completed
+ */
+export const markAppointmentAsCompleted = async (id: string): Promise<Appointment | null> => {
+  try {
+    console.log("Marking appointment as completed, ID:", id);
+    
+    const { data, error } = await supabase
+      .from('appointments')
+      .update({
+        status: 'completed',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error("Error marking appointment as completed:", error);
+      toast.error("فشل في تحديث حالة الموعد");
+      throw error;
+    }
+    
+    console.log("Appointment marked as completed:", data);
+    toast.success("تم تعيين الموعد كمكتمل");
+    return data as Appointment;
+  } catch (error) {
+    console.error("Error in markAppointmentAsCompleted:", error);
+    toast.error("فشل في تعيين الموعد كمكتمل");
     return null;
   }
 };

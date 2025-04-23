@@ -21,20 +21,22 @@ export const createDeal = async (deal: Partial<Deal>): Promise<Deal | null> => {
       Object.entries(deal).filter(([_, v]) => v !== null && v !== 'none' && v !== undefined)
     );
 
+    // Insert the deal with proper type handling for required fields
+    const dealToInsert = {
+      name: cleanedDeal.name,
+      description: cleanedDeal.description,
+      company_id: cleanedDeal.company_id,
+      contact_id: cleanedDeal.contact_id,
+      value: cleanedDeal.value,
+      stage: cleanedDeal.stage || 'discovery',
+      status: cleanedDeal.status || 'active',
+      expected_close_date: cleanedDeal.expected_close_date,
+      owner_id: cleanedDeal.owner_id || userData.user.id
+    };
+
     const { data, error } = await supabase
       .from('deals')
-      .insert({
-        name: cleanedDeal.name,
-        description: cleanedDeal.description,
-        company_id: cleanedDeal.company_id,
-        // Handle lead_id with careful validation, convert 'none' to null
-        contact_id: cleanedDeal.contact_id,
-        value: cleanedDeal.value,
-        stage: cleanedDeal.stage || 'discovery',
-        status: cleanedDeal.status || 'active',
-        expected_close_date: cleanedDeal.expected_close_date,
-        owner_id: cleanedDeal.owner_id || userData.user.id
-      })
+      .insert(dealToInsert)
       .select()
       .single();
 
