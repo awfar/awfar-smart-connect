@@ -47,28 +47,35 @@ export const fetchAppointments = async (filters?: {
   upcoming?: boolean 
 }): Promise<Appointment[]> => {
   try {
-    let query = supabase.from('appointments').select('*');
+    const query = supabase.from('appointments');
+    const selectQuery = query.select('*');
+    
+    let filteredQuery = selectQuery;
     
     if (filters) {
       if (filters.lead_id) {
-        query = query.eq('lead_id', filters.lead_id);
+        filteredQuery = filteredQuery.eq('lead_id', filters.lead_id);
       }
+      
       if (filters.status) {
-        query = query.eq('status', filters.status);
+        filteredQuery = filteredQuery.eq('status', filters.status);
       }
+      
       if (filters.user_id) {
-        query = query.eq('owner_id', filters.user_id);
+        filteredQuery = filteredQuery.eq('owner_id', filters.user_id);
       }
+      
       if (filters.team_id) {
-        query = query.eq('team_id', filters.team_id);
+        filteredQuery = filteredQuery.eq('team_id', filters.team_id);
       }
+      
       if (filters.upcoming) {
         const now = new Date().toISOString();
-        query = query.gte('start_time', now);
+        filteredQuery = filteredQuery.gte('start_time', now);
       }
     }
-
-    const { data, error } = await query.order('start_time', { ascending: true });
+    
+    const { data, error } = await filteredQuery.order('start_time', { ascending: true });
 
     if (error) {
       console.error("Error fetching appointments:", error);
