@@ -1,173 +1,243 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { Task, TaskCreateInput, castToTask } from "./types";
-import { toast } from "sonner";
+import { Task, TaskCreateInput } from './types';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
-export const getTasks = async (filterOptions?: {
-  status?: string;
-  assigned_to?: string;
-  lead_id?: string;
-}): Promise<Task[]> => {
+// Get all tasks
+export const getTasks = async (filters?: Record<string, any>): Promise<Task[]> => {
   try {
     let query = supabase
       .from('tasks')
-      .select('*')
-      .order('due_date', { ascending: true });
+      .select(`
+        *,
+        profiles:assigned_to(first_name, last_name),
+        leads:lead_id(first_name, last_name, email)
+      `);
     
-    if (filterOptions) {
-      if (filterOptions.status && filterOptions.status !== 'all') {
-        query = query.eq('status', filterOptions.status);
-      }
-      if (filterOptions.assigned_to && filterOptions.assigned_to !== 'none') {
-        query = query.eq('assigned_to', filterOptions.assigned_to);
-      }
-      if (filterOptions.lead_id && filterOptions.lead_id !== 'none') {
-        query = query.eq('lead_id', filterOptions.lead_id);
-      }
+    // Apply filters if provided
+    if (filters) {
+      if (filters.status) query = query.eq('status', filters.status);
+      if (filters.priority) query = query.eq('priority', filters.priority);
+      if (filters.lead_id) query = query.eq('lead_id', filters.lead_id);
+      if (filters.assigned_to) query = query.eq('assigned_to', filters.assigned_to);
     }
-
-    const { data, error } = await query;
+    
+    const { data, error } = await query.order('created_at', { ascending: false });
+    
     if (error) {
-      console.error("Error fetching tasks:", error);
+      console.error('Error fetching tasks:', error);
       throw error;
     }
     
-    return Array.isArray(data) ? data.map(castToTask) : [];
+    return data || [];
   } catch (error) {
-    console.error("Error fetching tasks:", error);
-    toast.error("حدث خطأ أثناء تحميل المهام");
+    console.error('Error in getTasks:', error);
     return [];
   }
 };
 
+// Get tasks by lead ID
 export const getTasksByLeadId = async (leadId: string): Promise<Task[]> => {
-  if (!leadId || leadId === 'none') {
+  try {
+    if (!leadId) {
+      console.warn('No lead ID provided to getTasksByLeadId');
+      return [];
+    }
+    
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('lead_id', leadId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error fetching tasks for lead:', error);
+      throw error;
+    }
+    
+    return data || [];
+  } catch (error) {
+    console.error('Error in getTasksByLeadId:', error);
     return [];
   }
-  return getTasks({ lead_id: leadId });
 };
 
-export const createTask = async (taskData: TaskCreateInput): Promise<Task | null> => {
+// Create a new task
+export const createTask = async (task: TaskCreateInput): Promise<Task | null> => {
   try {
-    // Filter out any 'none' values to prevent foreign key errors
-    const cleanedData = Object.fromEntries(
-      Object.entries(taskData).filter(([_, value]) => value !== 'none')
-    );
-
-    // Get current user for activity logging
-    const { data: { user } } = await supabase.auth.getUser();
-
-    // Ensure required fields are present
-    if (!cleanedData.title) {
-      toast.error("عنوان المهمة مطلوب");
-      throw new Error("Task title is required");
+    if (!task.title) {
+      throw new Error('Task title is required');
     }
-
-    // Add created_by if available 
-    const dataToInsert = {
-      ...cleanedData,
-      title: cleanedData.title,
-      status: cleanedData.status || 'pending',
-      created_by: user?.id || null
-    };
-
-    // Log what we're about to insert for debugging
-    console.log("Creating task with data:", dataToInsert);
-
+    
+    // Get current user for created_by field if not provided
+    if (!task.created_by) {
+      const { data: authData } = await supabase.auth.getSession();
+      if (authData?.session?.user) {
+        task.created_by = authData.session.user.id;
+      }
+    }
+    
     const { data, error } = await supabase
       .from('tasks')
-      .insert(dataToInsert)
-      .select()
+      .insert(task)
+      .select('*')
       .single();
-
+    
     if (error) {
-      console.error("Error creating task:", error);
-      toast.error("حدث خطأ أثناء إنشاء المهمة");
+      console.error('Error creating task:', error);
       throw error;
     }
-
-    console.log("Task created successfully:", data);
-    toast.success("تم إنشاء المهمة بنجاح");
-    return castToTask(data);
+    
+    // Log activity if lead_id is provided
+    if (task.lead_id) {
+      try {
+        await logTaskActivity(data.id, 'created', task.lead_id);
+      } catch (logError) {
+        console.error('Error logging task activity:', logError);
+      }
+    }
+    
+    return data;
   } catch (error) {
-    console.error("Error creating task:", error);
-    toast.error("حدث خطأ أثناء إنشاء المهمة");
-    return null;
+    console.error('Error in createTask:', error);
+    throw error;
   }
 };
 
-export const updateTask = async (taskId: string, taskData: Partial<Task>): Promise<Task | null> => {
+// Update an existing task
+export const updateTask = async (id: string, task: Partial<Task>): Promise<Task | null> => {
   try {
-    // Filter out any 'none' values to prevent foreign key errors
-    const cleanedData = Object.fromEntries(
-      Object.entries(taskData).filter(([_, value]) => value !== 'none')
-    );
-
-    console.log("Updating task with ID:", taskId, "Data:", cleanedData);
-
+    if (!id) {
+      throw new Error('Task ID is required for update');
+    }
+    
+    // Get the current task data to log the activity properly
+    const { data: currentTask } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
     const { data, error } = await supabase
       .from('tasks')
-      .update(cleanedData)
-      .eq('id', taskId)
-      .select()
+      .update(task)
+      .eq('id', id)
+      .select('*')
       .single();
-
+    
     if (error) {
-      console.error("Error updating task:", error);
-      toast.error("حدث خطأ أثناء تحديث المهمة");
+      console.error('Error updating task:', error);
       throw error;
     }
-
-    console.log("Task updated successfully:", data);
-    toast.success("تم تحديث المهمة بنجاح");
-    return castToTask(data);
+    
+    // Log activity if lead_id is available
+    if (currentTask?.lead_id) {
+      try {
+        await logTaskActivity(id, 'updated', currentTask.lead_id);
+      } catch (logError) {
+        console.error('Error logging task activity:', logError);
+      }
+    }
+    
+    return data;
   } catch (error) {
-    console.error("Error updating task:", error);
-    toast.error("حدث خطأ أثناء تحديث المهمة");
-    return null;
+    console.error('Error in updateTask:', error);
+    throw error;
   }
 };
 
-export const deleteTask = async (taskId: string): Promise<boolean> => {
+// Delete a task
+export const deleteTask = async (id: string): Promise<boolean> => {
   try {
+    // Get task data before deletion to use in activity log
+    const { data: taskData } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
     const { error } = await supabase
       .from('tasks')
       .delete()
-      .eq('id', taskId);
-
+      .eq('id', id);
+    
     if (error) {
-      console.error("Error deleting task:", error);
-      toast.error("حدث خطأ أثناء حذف المهمة");
+      console.error('Error deleting task:', error);
       throw error;
     }
-
-    toast.success("تم حذف المهمة بنجاح");
+    
+    // Log activity if lead_id was available
+    if (taskData?.lead_id) {
+      try {
+        await logTaskActivity(id, 'deleted', taskData.lead_id);
+      } catch (logError) {
+        console.error('Error logging task activity:', logError);
+      }
+    }
+    
     return true;
   } catch (error) {
-    console.error("Error deleting task:", error);
-    toast.error("حدث خطأ أثناء حذف المهمة");
-    return false;
+    console.error('Error in deleteTask:', error);
+    throw error;
   }
 };
 
-export const completeTask = async (taskId: string): Promise<boolean> => {
+// Helper function to log task activities
+const logTaskActivity = async (taskId: string, action: 'created' | 'updated' | 'deleted', leadId: string) => {
   try {
-    const { error } = await supabase
+    // Get current user
+    const { data: authData } = await supabase.auth.getSession();
+    if (!authData?.session?.user) return;
+    
+    const userId = authData.session.user.id;
+    
+    // Create activity record
+    await supabase.from('lead_activities').insert({
+      lead_id: leadId,
+      type: 'task',
+      description: `تم ${action === 'created' ? 'إنشاء' : action === 'updated' ? 'تحديث' : 'حذف'} مهمة`,
+      created_by: userId,
+      created_at: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Error logging task activity:', error);
+  }
+};
+
+// Mark a task as complete
+export const completeTask = async (id: string): Promise<Task | null> => {
+  try {
+    const { data, error } = await supabase
       .from('tasks')
       .update({ status: 'completed' })
-      .eq('id', taskId);
-
+      .eq('id', id)
+      .select('*')
+      .single();
+    
     if (error) {
-      console.error("Error completing task:", error);
-      toast.error("حدث خطأ أثناء إكمال المهمة");
+      console.error('Error completing task:', error);
       throw error;
     }
-
-    toast.success("تم إكمال المهمة بنجاح");
-    return true;
+    
+    // Log the completion activity
+    if (data.lead_id) {
+      try {
+        await supabase.from('lead_activities').insert({
+          lead_id: data.lead_id,
+          type: 'task',
+          description: 'تم إكمال المهمة',
+          created_by: data.assigned_to || data.created_by,
+          created_at: new Date().toISOString(),
+          completed_at: new Date().toISOString(),
+        });
+      } catch (logError) {
+        console.error('Error logging task completion:', logError);
+      }
+    }
+    
+    return data;
   } catch (error) {
-    console.error("Error completing task:", error);
-    toast.error("حدث خطأ أثناء إكمال المهمة");
-    return false;
+    console.error('Error in completeTask:', error);
+    throw error;
   }
 };

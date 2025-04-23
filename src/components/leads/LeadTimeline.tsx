@@ -45,7 +45,7 @@ const LeadTimeline: React.FC<LeadTimelineProps> = ({
     }
 
     return safeActivities.map((activity, index) => (
-      <div key={activity?.id || index} className="border-b pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+      <div key={activity?.id || `activity-${index}`} className="border-b pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
         <div className="flex justify-between items-start">
           <div className="flex items-start gap-2">
             <MessageSquare className="h-5 w-5 text-blue-500 mt-1" />
@@ -73,7 +73,7 @@ const LeadTimeline: React.FC<LeadTimelineProps> = ({
     }
 
     return safeTasks.map((task, index) => (
-      <div key={task?.id || index} className="border-b pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+      <div key={task?.id || `task-${index}`} className="border-b pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
         <div className="flex justify-between items-start">
           <div className="flex items-start gap-2">
             <Clock className={`h-5 w-5 ${task?.status === 'completed' ? 'text-green-500' : 'text-amber-500'} mt-1`} />
@@ -122,7 +122,7 @@ const LeadTimeline: React.FC<LeadTimelineProps> = ({
     }
 
     return safeAppointments.map((appointment, index) => (
-      <div key={appointment?.id || index} className="border-b pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+      <div key={appointment?.id || `appointment-${index}`} className="border-b pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
         <div className="flex justify-between items-start">
           <div className="flex items-start gap-2">
             <Calendar className="h-5 w-5 text-indigo-500 mt-1" />
@@ -153,6 +153,15 @@ const LeadTimeline: React.FC<LeadTimelineProps> = ({
     ));
   };
 
+  const renderLoadingState = () => (
+    <div className="py-8 text-center">
+      <div className="flex justify-center mb-2">
+        <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary border-t-transparent"></div>
+      </div>
+      <p>جاري التحميل...</p>
+    </div>
+  );
+
   return (
     <Card>
       <CardHeader>
@@ -160,10 +169,7 @@ const LeadTimeline: React.FC<LeadTimelineProps> = ({
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="py-8 text-center">
-            <Clock className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
-            <p>جاري التحميل...</p>
-          </div>
+          renderLoadingState()
         ) : (
           <Tabs defaultValue="activities">
             <TabsList className="grid grid-cols-3 mb-4">

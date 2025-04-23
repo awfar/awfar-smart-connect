@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -53,6 +54,54 @@ export const useLeadManagement = () => {
     checkConnection();
   }, []);
 
+  // Fetch leads with filters
+  const fetchFilteredLeads = async () => {
+    console.log("Fetching leads with filters:", filters);
+    try {
+      // Create a query that applies all filters
+      let query = supabase.from('leads').select(`
+        *,
+        profiles:assigned_to(first_name, last_name)
+      `);
+      
+      // Apply status/stage filter
+      if (filters.status) {
+        query = query.eq('status', filters.status);
+      }
+      
+      // Apply view-specific filters
+      if (selectedView === "my") {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          query = query.eq('assigned_to', user.id);
+        }
+      } else if (selectedView === "new") {
+        query = query.eq('status', 'new');
+      } else if (selectedView === "qualified") {
+        query = query.eq('status', 'qualified');
+      }
+      
+      // Apply search filter
+      if (searchTerm) {
+        query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
+      }
+      
+      // Execute the query
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error("Error fetching leads from Supabase:", error);
+        throw error;
+      }
+      
+      // Transform the data if needed
+      return data || [];
+    } catch (error) {
+      console.error("Error in fetchFilteredLeads:", error);
+      return [];
+    }
+  };
+
   // Use react-query to fetch leads with a shorter staleTime for more frequent refreshes
   const { 
     data: leads = [], 
@@ -61,34 +110,7 @@ export const useLeadManagement = () => {
     refetch 
   } = useQuery({
     queryKey: ['leads', selectedView, filters, searchTerm, forceRefresh],
-    queryFn: async () => {
-      // Combine view filter with other filters
-      const combinedFilters = { ...filters };
-      
-      if (selectedView === "my") {
-        combinedFilters.assigned_to = "current-user-id"; // In a real app, this would be the current user's ID
-      } else if (selectedView === "new") {
-        combinedFilters.stage = "جديد";
-      } else if (selectedView === "qualified") {
-        combinedFilters.stage = "مؤهل";
-      }
-      
-      if (searchTerm) {
-        combinedFilters.search = searchTerm;
-      }
-      
-      console.log("Fetching leads with filters:", combinedFilters);
-      try {
-        // Fix: Don't pass args to getLeads if it doesn't accept them
-        const fetchedLeads = await getLeads();
-        console.log("Fetched leads:", fetchedLeads.length);
-        return fetchedLeads;
-      } catch (error) {
-        console.error("Error fetching leads:", error);
-        toast.error("فشل في تحميل العملاء المحتملين");
-        return [];
-      }
-    },
+    queryFn: fetchFilteredLeads,
     staleTime: 2000,
     refetchOnMount: true,
     refetchOnWindowFocus: true,
@@ -158,6 +180,8 @@ export const useLeadManagement = () => {
     
     try {
       await deleteLead(leadToDelete);
+      toast.success("تم حذف العميل المحتمل بنجاح");
+      
       if (selectedLead === leadToDelete) {
         setSelectedLead(null);
       }
@@ -192,6 +216,8 @@ export const useLeadManagement = () => {
     leadToEdit,
     leadToDelete,
     supabaseStatus,
+    filters,
+    searchTerm,
     
     // Actions
     setSelectedView,

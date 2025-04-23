@@ -36,6 +36,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
   const [loading, setLoading] = useState(false);
   const [leadsOptions, setLeadsOptions] = useState<AutocompleteOption[]>([]);
   const [loadingLeads, setLoadingLeads] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   
   // Initialize form with default values
   const form = useForm({
@@ -49,42 +50,52 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
     }
   });
   
-  // Fetch leads for autocomplete
-  useEffect(() => {
-    const fetchLeads = async () => {
-      setLoadingLeads(true);
-      try {
-        const { data, error } = await supabase
-          .from('leads')
-          .select('id, first_name, last_name, email')
-          .limit(50);
-        
-        if (error) {
-          console.error("Error fetching leads:", error);
-          toast.error("فشل في تحميل بيانات العملاء المحتملين");
-          return;
-        }
-        
-        if (data && Array.isArray(data)) {
-          const options = data.map(lead => ({
-            value: lead.id,
-            label: `${lead.first_name || ''} ${lead.last_name || ''} ${lead.email ? `(${lead.email})` : ''}`.trim()
-          }));
-          setLeadsOptions(options);
-        } else {
-          console.log("No leads data returned or data is not an array", data);
-          setLeadsOptions([]);
-        }
-      } catch (error) {
-        console.error("Error in fetchLeads:", error);
-        setLeadsOptions([]);
-      } finally {
-        setLoadingLeads(false);
+  // Fetch leads for autocomplete with search and pagination
+  const fetchLeads = async (search = '') => {
+    setLoadingLeads(true);
+    try {
+      let query = supabase
+        .from('leads')
+        .select('id, first_name, last_name, email')
+        .limit(50);
+      
+      if (search) {
+        query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%`);
       }
-    };
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error("Error fetching leads:", error);
+        toast.error("فشل في تحميل بيانات العملاء المحتملين");
+        setLeadsOptions([]);
+        return;
+      }
+      
+      if (data && Array.isArray(data)) {
+        const options = data.map(lead => ({
+          value: lead.id,
+          label: `${lead.first_name || ''} ${lead.last_name || ''} ${lead.email ? `(${lead.email})` : ''}`.trim()
+        }));
+        setLeadsOptions(options);
+      } else {
+        console.log("No leads data returned or data is not an array", data);
+        setLeadsOptions([]);
+      }
+    } catch (error) {
+      console.error("Error in fetchLeads:", error);
+      setLeadsOptions([]);
+    } finally {
+      setLoadingLeads(false);
+    }
+  };
 
-    fetchLeads();
-  }, []);
+  // Initial load of leads
+  useEffect(() => {
+    if (!leadId) {
+      fetchLeads();
+    }
+  }, [leadId]);
   
   // Fetch lead information if leadId is provided
   useEffect(() => {
@@ -107,7 +118,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
     };
 
     fetchLeadInfo();
-  }, [form]);
+  }, [form.watch('lead_id')]);
   
   const onFormSubmit = async (data: any) => {
     setLoading(true);
@@ -143,27 +154,32 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
       
       console.log("Submitting appointment data:", appointmentData);
       
-      if (externalSubmit) {
-        // Use provided onSubmit function if available
-        await externalSubmit(appointmentData);
-      } else {
-        // Use default create/update logic if no onSubmit provided
-        if (appointment) {
-          // Editing existing appointment
-          await updateAppointment(appointment.id, appointmentData);
-          toast.success("تم تحديث الموعد بنجاح");
+      try {
+        if (externalSubmit) {
+          // Use provided onSubmit function if available
+          await externalSubmit(appointmentData);
         } else {
-          // Creating a new appointment
-          await createAppointment(appointmentData);
-          toast.success("تم إنشاء موعد جديد بنجاح");
+          // Use default create/update logic if no onSubmit provided
+          if (appointment) {
+            // Editing existing appointment
+            await updateAppointment(appointment.id, appointmentData);
+            toast.success("تم تحديث الموعد بنجاح");
+          } else {
+            // Creating a new appointment
+            await createAppointment(appointmentData);
+            toast.success("تم إنشاء موعد جديد بنجاح");
+          }
         }
+        
+        onSuccess?.();
+        onClose?.();
+      } catch (error: any) {
+        console.error("Error creating/updating appointment:", error);
+        toast.error(`فشل في حفظ الموعد: ${error.message || 'خطأ غير معروف'}`);
       }
-      
-      onSuccess?.();
-      onClose?.();
-    } catch (error) {
-      console.error("Error creating/updating appointment:", error);
-      toast.error("فشل في حفظ الموعد");
+    } catch (error: any) {
+      console.error("Error in form submission:", error);
+      toast.error(`فشل في حفظ الموعد: ${error.message || 'خطأ غير معروف'}`);
     } finally {
       setLoading(false);
     }
@@ -176,6 +192,12 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
     } else if (onClose) {
       onClose();
     }
+  };
+
+  // Handle search in the autocomplete
+  const handleSearchLeads = (term: string) => {
+    setSearchTerm(term);
+    fetchLeads(term);
   };
 
   return (
@@ -221,6 +243,8 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
                   placeholder="اختر عميل محتمل"
                   emptyMessage="لا يوجد عملاء محتملين"
                   isLoading={loadingLeads}
+                  onSearch={handleSearchLeads}
+                  onOpen={() => fetchLeads()}
                 />
               )}
             />

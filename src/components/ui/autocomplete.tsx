@@ -35,6 +35,8 @@ export interface AutocompleteProps {
   onCreateNew?: () => void;
   createNewLabel?: string;
   isLoading?: boolean;
+  onSearch?: (term: string) => void;
+  onOpen?: () => void;
 }
 
 export function Autocomplete({
@@ -50,11 +52,13 @@ export function Autocomplete({
   onCreateNew,
   createNewLabel = "إضافة جديد",
   isLoading = false,
+  onSearch,
+  onOpen,
 }: AutocompleteProps) {
   const [open, setOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
 
-  // Create a safe copy of options that's always an array, never undefined
+  // Create a safe copy of options that's always an array
   const safeOptions = React.useMemo(() => {
     return Array.isArray(options) ? options : [];
   }, [options]);
@@ -84,8 +88,23 @@ export function Autocomplete({
     );
   }, [safeOptions, searchTerm]);
 
+  // Handle popover open
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (newOpen) {
+      setSearchTerm("");
+      if (onOpen) onOpen();
+    }
+  };
+
+  // Handle search input change
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    if (onSearch) onSearch(value);
+  };
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -97,7 +116,6 @@ export function Autocomplete({
             className
           )}
           disabled={disabled || isLoading}
-          onClick={() => setSearchTerm("")}
           data-name={name}
         >
           {isLoading ? "جاري التحميل..." : displayLabel || placeholder}
@@ -109,10 +127,15 @@ export function Autocomplete({
           <CommandInput 
             placeholder="بحث..." 
             value={searchTerm}
-            onValueChange={setSearchTerm}
+            onValueChange={handleSearchChange}
           />
           <CommandEmpty>
-            {isLoading ? "جاري التحميل..." : emptyMessage}
+            {isLoading ? (
+              <div className="py-6 text-center">
+                <div className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                <p className="mt-2 text-sm text-muted-foreground">جاري التحميل...</p>
+              </div>
+            ) : emptyMessage}
             {!disableCreate && searchTerm && !isLoading && (
               <Button 
                 variant="ghost" 

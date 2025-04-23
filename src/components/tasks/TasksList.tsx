@@ -1,206 +1,253 @@
 
-// LIVE TasksList: Always fetch from Supabase, support filter/sort/status/type
-
-import React, { useState, useEffect } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import React, { useEffect, useState } from 'react';
+import { getTasks, completeTask } from '@/services/tasks/api';
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Edit, Trash2, Calendar, User, FileText } from "lucide-react";
-import { format } from "date-fns";
-import { ar } from "date-fns/locale";
-import { supabase } from "@/integrations/supabase/client";
-import { Task, castToTask } from "@/services/tasks/types";
-import { toast } from "sonner";
-
-const STATUS_LOOKUP: { [key: string]: string } = {
-  pending: "قيد الانتظار",
-  in_progress: "قيد التنفيذ",
-  completed: "مكتملة",
-  cancelled: "ملغاة",
-};
-const PRIORITY_LOOKUP: { [key: string]: string } = {
-  low: "منخفضة",
-  medium: "متوسطة",
-  high: "عالية",
-};
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
+import { Check, Clock, Edit, Trash2, CalendarClock, User } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface TasksListProps {
-  view: "all" | "myTasks" | "team";
+  view: 'myTasks' | 'all' | 'team';
   filterStatus?: string;
   filterPriority?: string;
-  filterType?: string;
-  onEdit?: (task: Task) => void;
+  onEdit?: (task: any) => void;
   onDelete?: (taskId: string) => void;
-  onShowDetails?: (task: Task) => void;
+  onShowDetails?: (task: any) => void;
+  leadId?: string;
+  limit?: number;
 }
 
-const TasksList = ({
-  view,
-  filterStatus = "all",
-  filterPriority = "all",
-  filterType = "all",
+const TasksList: React.FC<TasksListProps> = ({
+  view = 'all',
+  filterStatus = 'all',
+  filterPriority = 'all',
   onEdit,
   onDelete,
   onShowDetails,
-}: TasksListProps) => {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
+  leadId,
+  limit,
+}) => {
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Get my user id from Supabase
-  const [userId, setUserId] = useState<string | null>(null);
+  // Fetch tasks when component mounts or filters change
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data?.user?.id) setUserId(data.user.id);
-    });
-  }, []);
-
-  useEffect(() => {
-    const loadTasks = async () => {
-      setLoading(true);
-      let query = supabase.from("tasks").select("*").order("due_date", { ascending: true });
-
-      if (view === "myTasks" && userId) {
-        query = query.eq("assigned_to", userId);
+    const fetchTasksData = async () => {
+      setIsLoading(true);
+      try {
+        // Build filter object
+        const filters: Record<string, any> = {};
+        
+        if (filterStatus !== 'all') {
+          filters.status = filterStatus;
+        }
+        
+        if (filterPriority !== 'all') {
+          filters.priority = filterPriority;
+        }
+        
+        if (leadId) {
+          filters.lead_id = leadId;
+        }
+        
+        if (view === 'myTasks') {
+          // Get current user
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            filters.assigned_to = user.id;
+          }
+        }
+        
+        const fetchedTasks = await getTasks(filters);
+        
+        // Apply limit if provided
+        const limitedTasks = limit ? fetchedTasks.slice(0, limit) : fetchedTasks;
+        setTasks(limitedTasks);
+      } catch (err) {
+        console.error('Error fetching tasks:', err);
+        setError('فشل في تحميل المهام');
+        toast.error('فشل في تحميل المهام');
+      } finally {
+        setIsLoading(false);
       }
-      if (view === "team" && userId) {
-        // Can be refined to team ID in profile
-        query = query.neq("assigned_to", userId);
-      }
-      if (filterStatus !== "all") {
-        query = query.eq("status", filterStatus);
-      }
-      if (filterPriority !== "all") {
-        query = query.eq("priority", filterPriority);
-      }
-      if (filterType !== "all") {
-        query = query.eq("type", filterType);
-      }
-      const { data, error } = await query;
-      if (error) {
-        toast.error("فشل في تحميل المهام");
-        setTasks([]);
-        setLoading(false);
-        return;
-      }
-      
-      // Convert the data to Task[] using the castToTask function
-      const typedTasks: Task[] = data ? data.map(castToTask) : [];
-      setTasks(typedTasks);
-      setLoading(false);
     };
-    if (userId) loadTasks();
-  }, [view, userId, filterStatus, filterPriority, filterType]);
 
-  const handleCheck = (task: Task, checked: boolean) => {
-    // Mark complete/incomplete
-    supabase.from('tasks').update({ status: checked ? "completed" : "pending" }).eq('id', task.id).then(({ error }) => {
-      if (error) toast.error("فشل في تحديث المهمة");
-      else toast.success('تم تحديث حالة المهمة');
-      // Reload after update
-      setTasks(tasks =>
-        tasks.map(t => (t.id === task.id ? { ...t, status: checked ? "completed" : "pending" } : t))
-      );
-    });
-  };
+    fetchTasksData();
+  }, [view, filterStatus, filterPriority, leadId, limit]);
 
-  const formatDate = (s: string | null) => {
-    if (!s) return "-";
+  const handleCompleteTask = async (taskId: string) => {
     try {
-      return format(new Date(s), "d MMMM yyyy, HH:mm", { locale: ar });
-    } catch {
-      return s;
+      await completeTask(taskId);
+      
+      // Update local state
+      setTasks(prevTasks => 
+        prevTasks.map(task => 
+          task.id === taskId ? { ...task, status: 'completed' } : task
+        )
+      );
+      
+      toast.success('تم إكمال المهمة بنجاح');
+    } catch (error) {
+      console.error('Error completing task:', error);
+      toast.error('فشل في إكمال المهمة');
     }
   };
 
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'غير محدد';
+    try {
+      return format(new Date(dateString), 'PPp', { locale: ar });
+    } catch (error) {
+      return dateString;
+    }
+  };
+
+  const getPriorityBadge = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return <Badge className="bg-red-500">عالية</Badge>;
+      case 'medium':
+        return <Badge className="bg-amber-500">متوسطة</Badge>;
+      case 'low':
+        return <Badge className="bg-green-500">منخفضة</Badge>;
+      default:
+        return <Badge>غير محدد</Badge>;
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Badge variant="outline" className="text-amber-500 border-amber-500">قيد الانتظار</Badge>;
+      case 'in_progress':
+        return <Badge variant="outline" className="text-blue-500 border-blue-500">قيد التنفيذ</Badge>;
+      case 'completed':
+        return <Badge variant="outline" className="text-green-500 border-green-500">مكتمل</Badge>;
+      case 'cancelled':
+        return <Badge variant="outline" className="text-gray-500 border-gray-500">ملغي</Badge>;
+      default:
+        return <Badge variant="outline">غير محدد</Badge>;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-red-500">{error}</p>
+        <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
+          إعادة المحاولة
+        </Button>
+      </div>
+    );
+  }
+
+  if (tasks.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <Clock className="mx-auto h-12 w-12 text-muted-foreground" />
+        <p className="mt-4 text-lg font-medium">لا توجد مهام</p>
+        <p className="text-muted-foreground">لم يتم العثور على أي مهام تطابق المعايير المحددة</p>
+      </div>
+    );
+  }
+
   return (
-    <div className='w-full overflow-auto min-h-[180px]'>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead></TableHead>
-            <TableHead>المهمة</TableHead>
-            <TableHead>النوع</TableHead>
-            <TableHead>الحالة</TableHead>
-            <TableHead>الأولوية</TableHead>
-            <TableHead>مكلف بها</TableHead>
-            <TableHead>تاريخ الاستحقاق</TableHead>
-            <TableHead className="text-center">الإجراءات</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {loading ? (
-            <TableRow>
-              <TableCell colSpan={8} className="text-center py-10">
-                جاري التحميل...
-              </TableCell>
-            </TableRow>
-          ) : tasks.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={8} className="text-center py-10">
-                لا توجد مهام لعرضها
-              </TableCell>
-            </TableRow>
-          ) : (
-            tasks.map((task) => (
-              <TableRow
-                key={task.id}
-                className={task.status === "completed" ? "bg-muted/40" : ""}
-                onClick={() => onShowDetails?.(task)}
-                style={{ cursor: "pointer" }}
-              >
-                <TableCell>
-                  <Checkbox
-                    checked={task.status === "completed"}
-                    onCheckedChange={(checked) => handleCheck(task, checked as boolean)}
-                  />
-                </TableCell>
-                <TableCell>
-                  <span className={task.status === "completed" ? "line-through text-muted-foreground" : ""}>
-                    {task.title}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <Badge>{task.type || 'مهمة'}</Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge>{STATUS_LOOKUP[task.status] ?? task.status}</Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge>{PRIORITY_LOOKUP[task.priority] ?? task.priority}</Badge>
-                </TableCell>
-                <TableCell>
-                  <span className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    {task.assigned_to_name || '-'}
-                  </span>
-                </TableCell>
-                <TableCell>
-                  <Calendar className="h-4 w-4 mr-1" />
-                  {formatDate(task.due_date || null)}
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-2 justify-center">
-                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onEdit?.(task); }}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onDelete?.(task.id); }}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+    <div className="space-y-4">
+      {tasks.map(task => (
+        <Card key={task.id} className="p-4 hover:shadow-md transition-shadow">
+          <div className="flex justify-between items-start">
+            <div className="flex-1 space-y-2">
+              <div className="flex items-start justify-between">
+                <h3 
+                  className="font-medium text-lg cursor-pointer hover:text-primary"
+                  onClick={() => onShowDetails && onShowDetails(task)}
+                >
+                  {task.title}
+                </h3>
+                <div className="flex items-center space-x-2 space-x-reverse">
+                  {getPriorityBadge(task.priority)}
+                  {getStatusBadge(task.status)}
+                </div>
+              </div>
+              
+              {task.description && (
+                <p className="text-muted-foreground">{task.description}</p>
+              )}
+              
+              <div className="flex flex-wrap gap-y-1 gap-x-4 text-sm text-muted-foreground">
+                <div className="flex items-center">
+                  <CalendarClock className="h-4 w-4 ml-1" />
+                  <span>{formatDate(task.due_date)}</span>
+                </div>
+                
+                {task.leads && (
+                  <div className="flex items-center">
+                    <User className="h-4 w-4 ml-1" />
+                    <span>
+                      {`${task.leads.first_name || ''} ${task.leads.last_name || ''}`.trim() || 'لا يوجد عميل'}
+                    </span>
                   </div>
-                </TableCell>
-              </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+                )}
+                
+                {task.profiles && (
+                  <div className="flex items-center">
+                    <User className="h-4 w-4 ml-1" />
+                    <span>
+                      {`${task.profiles.first_name || ''} ${task.profiles.last_name || ''}`.trim() || 'غير معين'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="flex space-x-2 space-x-reverse">
+              {task.status !== 'completed' && (
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="text-green-600"
+                  onClick={() => handleCompleteTask(task.id)}
+                >
+                  <Check className="h-4 w-4" />
+                </Button>
+              )}
+              
+              {onEdit && (
+                <Button 
+                  size="sm" 
+                  variant="ghost"
+                  onClick={() => onEdit(task)}
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+              )}
+              
+              {onDelete && (
+                <Button 
+                  size="sm" 
+                  variant="ghost"
+                  className="text-red-600"
+                  onClick={() => onDelete(task.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </Card>
+      ))}
     </div>
   );
 };
