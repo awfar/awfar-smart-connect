@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment, AppointmentStatus, AppointmentCreateInput } from "./types";
 import { toast } from "sonner";
@@ -126,9 +125,6 @@ export const fetchUpcomingAppointments = async (): Promise<Appointment[]> => {
  */
 export const createAppointment = async (appointment: AppointmentCreateInput): Promise<Appointment | null> => {
   try {
-    console.log("Creating appointment with data:", appointment);
-    
-    // Perform input validation
     if (!appointment.title) {
       toast.error("عنوان الموعد مطلوب");
       throw new Error("Appointment title is required");
@@ -139,39 +135,56 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
       throw new Error("Start and end times are required");
     }
     
+    console.log("Creating appointment with data:", appointment);
+    
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();
     
-    // Clean data - remove 'none' values to prevent foreign key errors
-    const cleanedData: Record<string, any> = {};
-    
-    // Add required fields
-    cleanedData.title = appointment.title;
-    cleanedData.start_time = appointment.start_time;
-    cleanedData.end_time = appointment.end_time;
-    cleanedData.status = (appointment.status || 'scheduled') as AppointmentStatus;
+    // Define properly typed insert data with required fields
+    const appointmentData: {
+      title: string;
+      start_time: string;
+      end_time: string;
+      status: AppointmentStatus;
+      created_by?: string;
+      description?: string;
+      location?: string;
+      location_details?: string;
+      client_id?: string;
+      lead_id?: string;
+      company_id?: string;
+      owner_id?: string;
+      participants?: string[];
+      type?: string;
+      is_all_day?: boolean;
+    } = {
+      title: appointment.title,
+      start_time: appointment.start_time,
+      end_time: appointment.end_time,
+      status: (appointment.status || 'scheduled') as AppointmentStatus,
+    };
     
     // Add optional fields if they exist and are not 'none'
-    if (appointment.description && appointment.description !== 'none') cleanedData.description = appointment.description;
-    if (appointment.location && appointment.location !== 'none') cleanedData.location = appointment.location;
-    if (appointment.location_details && appointment.location_details !== 'none') cleanedData.location_details = appointment.location_details;
-    if (appointment.lead_id && appointment.lead_id !== 'none') cleanedData.lead_id = appointment.lead_id;
-    if (appointment.company_id && appointment.company_id !== 'none') cleanedData.company_id = appointment.company_id;
-    if (appointment.client_id && appointment.client_id !== 'none') cleanedData.client_id = appointment.client_id;
-    if (appointment.owner_id && appointment.owner_id !== 'none') cleanedData.owner_id = appointment.owner_id;
-    if (appointment.type && appointment.type !== 'none') cleanedData.type = appointment.type;
-    if (appointment.is_all_day !== undefined) cleanedData.is_all_day = appointment.is_all_day;
+    if (appointment.description && appointment.description !== 'none') appointmentData.description = appointment.description;
+    if (appointment.location && appointment.location !== 'none') appointmentData.location = appointment.location;
+    if (appointment.location_details && appointment.location_details !== 'none') appointmentData.location_details = appointment.location_details;
+    if (appointment.lead_id && appointment.lead_id !== 'none') appointmentData.lead_id = appointment.lead_id;
+    if (appointment.company_id && appointment.company_id !== 'none') appointmentData.company_id = appointment.company_id;
+    if (appointment.client_id && appointment.client_id !== 'none') appointmentData.client_id = appointment.client_id;
+    if (appointment.owner_id && appointment.owner_id !== 'none') appointmentData.owner_id = appointment.owner_id;
+    if (appointment.type && appointment.type !== 'none') appointmentData.type = appointment.type;
+    if (appointment.is_all_day !== undefined) appointmentData.is_all_day = appointment.is_all_day;
     
     // Set created_by to current user if available
-    cleanedData.created_by = appointment.created_by || (user ? user.id : null);
-    cleanedData.owner_id = appointment.owner_id || (user ? user.id : null);
+    appointmentData.created_by = appointment.created_by || (user ? user.id : undefined);
+    appointmentData.owner_id = appointment.owner_id || (user ? user.id : undefined);
     
-    console.log("Inserting appointment with processed data:", cleanedData);
+    console.log("Inserting appointment with processed data:", appointmentData);
     
     // Insert into database
     const { data, error } = await supabase
       .from('appointments')
-      .insert(cleanedData)
+      .insert(appointmentData)
       .select()
       .single();
     

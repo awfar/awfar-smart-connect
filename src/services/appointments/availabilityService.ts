@@ -1,7 +1,7 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Appointment } from "./types";
-import { UserAvailability, BookingSettings } from "./types";
+import { Appointment, UserAvailability, BookingSettings } from "./types";
 
 export const fetchUserAvailability = async (userId: string): Promise<UserAvailability[]> => {
   console.log("Fetching user availability for:", userId);

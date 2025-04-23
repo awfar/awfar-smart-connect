@@ -32,7 +32,7 @@ export interface Appointment {
   };
 }
 
-// Define database specific type (represents the raw DB record)
+// Define database specific type
 export type AppointmentDB = Appointment;
 
 // Define type for appointment creation

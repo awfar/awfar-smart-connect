@@ -140,26 +140,28 @@ export const createTask = async (task: TaskCreateInput): Promise<Task | null> =>
     }
     
     // Ensure all fields have the correct types before insertion
-    const taskData: Partial<Task> = {
+    const taskData: Record<string, any> = {
       title: task.title,
-      description: task.description,
       status: task.status || 'pending',
       priority: task.priority || 'medium',
-      created_by: task.created_by,
-      due_date: task.due_date,
-      start_time: task.start_time,
-      assigned_to: task.assigned_to,
-      type: task.type,
-      lead_id: task.lead_id,
-      deal_id: task.deal_id,
-      company_id: task.company_id,
-      contact_id: task.contact_id,
-      appointment_id: task.appointment_id
     };
+    
+    // Add optional fields only if they exist
+    if (task.description !== undefined) taskData.description = task.description;
+    if (task.created_by !== undefined) taskData.created_by = task.created_by;
+    if (task.due_date !== undefined) taskData.due_date = task.due_date;
+    if (task.start_time !== undefined) taskData.start_time = task.start_time;
+    if (task.assigned_to !== undefined) taskData.assigned_to = task.assigned_to;
+    if (task.type !== undefined) taskData.type = task.type;
+    if (task.lead_id !== undefined) taskData.lead_id = task.lead_id;
+    if (task.deal_id !== undefined) taskData.deal_id = task.deal_id;
+    if (task.company_id !== undefined) taskData.company_id = task.company_id;
+    if (task.contact_id !== undefined) taskData.contact_id = task.contact_id;
+    if (task.appointment_id !== undefined) taskData.appointment_id = task.appointment_id;
     
     // Ensure related_to is properly serialized if it exists
     if (task.related_to) {
-      taskData.related_to = task.related_to;
+      taskData.related_to = JSON.stringify(task.related_to);
     }
     
     console.log("Inserting task with processed data:", taskData);
@@ -205,7 +207,7 @@ export const createTask = async (task: TaskCreateInput): Promise<Task | null> =>
   }
 };
 
-// Update an existing task
+// Update a task
 export const updateTask = async (id: string, task: Partial<Task>): Promise<Task | null> => {
   try {
     if (!id) {
@@ -220,21 +222,33 @@ export const updateTask = async (id: string, task: Partial<Task>): Promise<Task 
       .single();
     
     // Prepare the task data for update
-    const updateData: any = { ...task };
+    const updateData: Record<string, any> = {};
     
-    // Ensure task status is valid if provided
-    if (updateData.status) {
-      updateData.status = validateTaskStatus(updateData.status);
+    // Copy over fields that don't need transformation
+    if (task.title !== undefined) updateData.title = task.title;
+    if (task.description !== undefined) updateData.description = task.description;
+    if (task.due_date !== undefined) updateData.due_date = task.due_date;
+    if (task.start_time !== undefined) updateData.start_time = task.start_time;
+    if (task.assigned_to !== undefined) updateData.assigned_to = task.assigned_to;
+    if (task.lead_id !== undefined) updateData.lead_id = task.lead_id;
+    if (task.deal_id !== undefined) updateData.deal_id = task.deal_id;
+    if (task.company_id !== undefined) updateData.company_id = task.company_id;
+    if (task.contact_id !== undefined) updateData.contact_id = task.contact_id;
+    if (task.type !== undefined) updateData.type = task.type;
+    
+    // Special handling for status
+    if (task.status !== undefined) {
+      updateData.status = validateTaskStatus(task.status);
     }
     
-    // Ensure task priority is valid if provided
-    if (updateData.priority) {
-      updateData.priority = validateTaskPriority(updateData.priority);
+    // Special handling for priority
+    if (task.priority !== undefined) {
+      updateData.priority = validateTaskPriority(task.priority);
     }
     
-    // Handle related_to serialization if it exists
-    if (updateData.related_to) {
-      updateData.related_to = JSON.stringify(updateData.related_to);
+    // Special handling for related_to - convert to JSON string
+    if (task.related_to !== undefined) {
+      updateData.related_to = JSON.stringify(task.related_to);
     }
     
     const { data, error } = await supabase

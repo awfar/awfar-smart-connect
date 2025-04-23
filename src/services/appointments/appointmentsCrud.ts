@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment, AppointmentStatus, AppointmentCreateInput } from "./types";
 import { toast } from "sonner";
@@ -124,10 +125,30 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
       if (user) created_by = user.id;
     }
     
-    // Define properly typed insert data
-    const appointmentData: Record<string, any> = {
+    // Define properly typed insert data with required fields
+    const appointmentData: {
+      title: string;
+      start_time: string;
+      end_time: string;
+      status: AppointmentStatus;
+      created_by?: string;
+      description?: string;
+      location?: string;
+      location_details?: string;
+      client_id?: string;
+      lead_id?: string;
+      company_id?: string;
+      owner_id?: string;
+      participants?: string[];
+      type?: string;
+      related_deal_id?: string;
+      related_ticket_id?: string;
+      notes?: string;
+      is_all_day?: boolean;
+      color?: string;
+      reminder_time?: number;
+    } = {
       title: appointment.title,
-      description: appointment.description,
       start_time: appointment.start_time,
       end_time: appointment.end_time,
       status: appointment.status || 'scheduled',
@@ -135,6 +156,7 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
     };
     
     // Add optional fields only if they exist
+    if (appointment.description) appointmentData.description = appointment.description;
     if (appointment.location) appointmentData.location = appointment.location;
     if (appointment.location_details) appointmentData.location_details = appointment.location_details;
     if (appointment.client_id) appointmentData.client_id = appointment.client_id;
