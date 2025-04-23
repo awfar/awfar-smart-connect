@@ -147,11 +147,22 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
       throw new Error("Start and end times are required");
     }
     
-    // Prepare data for insertion
+    // Prepare data for insertion - ensure all required fields are present
     const appointmentData = {
-      ...cleanedData,
+      title: cleanedData.title,
+      start_time: cleanedData.start_time,
+      end_time: cleanedData.end_time,
+      description: cleanedData.description || null,
+      location: cleanedData.location || null,
+      location_details: cleanedData.location_details || null,
+      status: cleanedData.status || 'scheduled',
+      lead_id: cleanedData.lead_id || null,
+      company_id: cleanedData.company_id || null,
+      client_id: cleanedData.client_id || null,
       created_by: user?.id || null,
-      owner_id: cleanedData.owner_id || user?.id || null
+      owner_id: cleanedData.owner_id || user?.id || null,
+      type: cleanedData.type || null,
+      is_all_day: cleanedData.is_all_day || false
     };
     
     // Insert into database
