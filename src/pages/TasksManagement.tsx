@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import TaskForm from "@/components/tasks/TaskForm";
 import TasksList from "@/components/tasks/TasksList";
 import { toast } from "sonner";
 import { createTask, updateTask, deleteTask } from "@/services/tasks/api";
-import { TaskCreateInput } from "@/services/tasks/types";
+import { TaskCreateInput, Task } from "@/services/tasks/types";
 import TaskDetailModal from "@/components/tasks/TaskDetailModal";
 
 type ViewTab = "myTasks" | "all" | "team";
@@ -17,8 +18,8 @@ const TABS: { value: ViewTab; label: string }[] = [
 
 const TasksManagement = () => {
   const [isCreating, setIsCreating] = useState(false);
-  const [editTask, setEditTask] = useState<any>(null);
-  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [editTask, setEditTask] = useState<Task | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [viewTab, setViewTab] = useState<ViewTab>("myTasks");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPriority, setFilterPriority] = useState("all");
@@ -35,20 +36,21 @@ const TasksManagement = () => {
       toast.success("تم حفظ المهمة بنجاح");
       setIsCreating(false);
       setRefreshKey(prev => prev + 1);
-    } catch {
+    } catch (error) {
       toast.error("لم يتم حفظ المهمة");
     }
   };
 
-  const handleEdit = (task: any) => setEditTask(task);
+  const handleEdit = (task: Task) => setEditTask(task);
 
   const handleUpdateTask = async (data: TaskCreateInput) => {
     try {
+      if (!editTask) return;
       await updateTask(editTask.id, data);
       toast.success("تم تحديث المهمة");
       setEditTask(null);
       setRefreshKey(prev => prev + 1);
-    } catch {
+    } catch (error) {
       toast.error("لم يتم تحديث المهمة");
     }
   };
@@ -59,7 +61,7 @@ const TasksManagement = () => {
       await deleteTask(taskId);
       toast.success("تم حذف المهمة");
       setRefreshKey(prev => prev + 1);
-    } catch {
+    } catch (error) {
       toast.error("لم يتم حذف المهمة");
     }
   };
@@ -111,7 +113,11 @@ const TasksManagement = () => {
             <CardTitle>مهمة جديدة</CardTitle>
           </CardHeader>
           <CardContent>
-            <TaskForm onSubmit={handleSaveTask} isSubmitting={false} onCancel={handleCancelCreate} />
+            <TaskForm 
+              onSubmit={handleSaveTask} 
+              isSubmitting={false} 
+              onCancel={handleCancelCreate} 
+            />
           </CardContent>
         </Card>
       )}

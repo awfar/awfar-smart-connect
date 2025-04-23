@@ -1,5 +1,5 @@
 
-import { Task } from './types';
+import { Task, RelatedEntity } from './types';
 
 // Mock data for tasks
 export const mockTasks: Task[] = [

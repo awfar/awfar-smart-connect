@@ -1,12 +1,19 @@
 
-import { Appointment } from "./types";
+import { Appointment, AppointmentStatus } from "./types";
 import { fetchAppointmentsByLeadId } from "./appointmentsCrud";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+// Helper function to validate appointment status
+const validateAppointmentStatus = (status: string): AppointmentStatus => {
+  const validStatuses = ['scheduled', 'completed', 'cancelled', 'rescheduled'];
+  return validStatuses.includes(status) 
+    ? status as AppointmentStatus
+    : 'scheduled';
+};
+
 // This file serves as an intermediate layer for appointment-related API calls
 // Allows for easier mocking in tests and additional processing if needed
-
 export const getAppointmentsByLeadId = async (leadId: string): Promise<Appointment[]> => {
   try {
     if (!leadId || leadId === 'none') {
@@ -50,7 +57,7 @@ export const createAppointment = async (appointmentData: Partial<Appointment>): 
         lead_id: appointmentData.lead_id,
         location: appointmentData.location,
         created_by: appointmentData.created_by,
-        status: appointmentData.status || 'scheduled',
+        status: validateAppointmentStatus(appointmentData.status || 'scheduled'),
       })
       .select('*')
       .single();
@@ -61,10 +68,17 @@ export const createAppointment = async (appointmentData: Partial<Appointment>): 
     }
 
     // Log the activity
-    await logAppointmentActivity(data.id, 'created', appointmentData.lead_id);
+    if (appointmentData.lead_id) {
+      await logAppointmentActivity(data.id, 'created', appointmentData.lead_id);
+    }
     
     // Cast the data to our Appointment type
-    return data as unknown as Appointment;
+    const result: Appointment = {
+      ...data,
+      status: validateAppointmentStatus(data.status)
+    };
+    
+    return result;
   } catch (error) {
     console.error("Error in createAppointment:", error);
     throw error;
@@ -76,6 +90,11 @@ export const updateAppointment = async (id: string, appointmentData: Partial<App
     // Ensure ID is present
     if (!id) {
       throw new Error("No appointment ID provided for update");
+    }
+    
+    // Validate status if provided
+    if (appointmentData.status) {
+      appointmentData.status = validateAppointmentStatus(appointmentData.status);
     }
     
     // Update appointment in Supabase
@@ -101,10 +120,17 @@ export const updateAppointment = async (id: string, appointmentData: Partial<App
     }
     
     // Log the activity
-    await logAppointmentActivity(id, 'updated', appointmentData.lead_id);
+    if (appointmentData.lead_id) {
+      await logAppointmentActivity(id, 'updated', appointmentData.lead_id);
+    }
     
     // Cast the data to our Appointment type
-    return data as unknown as Appointment;
+    const result: Appointment = {
+      ...data,
+      status: validateAppointmentStatus(data.status)
+    };
+    
+    return result;
   } catch (error) {
     console.error("Error in updateAppointment:", error);
     throw error;

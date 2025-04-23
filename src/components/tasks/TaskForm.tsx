@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Task, TaskCreateInput } from '@/services/tasks/types';
-import { createTask, updateTask } from '@/services/tasks/api';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AutocompleteOption, Autocomplete } from '@/components/ui/autocomplete';
-import { supabase } from '@/integrations/supabase/client';
 
 export interface TaskFormProps {
   leadId?: string;
@@ -36,7 +34,6 @@ const TaskForm: React.FC<TaskFormProps> = ({
   const [loadingLeads, setLoadingLeads] = useState(false);
   const [selectedLeadId, setSelectedLeadId] = useState<string | undefined>(leadId || task?.lead_id);
   
-  // Initialize form with the task data if it exists
   const { register, handleSubmit, formState, setValue, watch, control } = useForm({
     defaultValues: {
       title: task?.title || '',
@@ -47,7 +44,6 @@ const TaskForm: React.FC<TaskFormProps> = ({
     }
   });
 
-  // Fetch leads for autocomplete
   const fetchLeads = async (search = '') => {
     if (leadId) return; // Don't fetch if leadId is provided
     
@@ -88,28 +84,24 @@ const TaskForm: React.FC<TaskFormProps> = ({
     }
   };
 
-  // Load leads on component mount
   useEffect(() => {
     if (!leadId) {
       fetchLeads();
     }
   }, [leadId]);
   
-  const onFormSubmit = async (data: any) => {
+  const onFormSubmit = async (data: TaskCreateInput) => {
     try {
       setIsSubmitting(true);
       
-      // Validate required fields
       if (!data.title) {
         toast.error("عنوان المهمة مطلوب");
         setIsSubmitting(false);
         return;
       }
       
-      // Format due date
       const dueDate = data.due_date ? new Date(data.due_date).toISOString() : undefined;
       
-      // Prepare task data
       const taskData = {
         ...data,
         due_date: dueDate,
@@ -119,16 +111,12 @@ const TaskForm: React.FC<TaskFormProps> = ({
       console.log("Submitting task data:", taskData);
 
       if (externalOnSubmit) {
-        // Use external onSubmit if provided
-        await externalOnSubmit(taskData);
+        await externalOnSubmit(data);
       } else {
-        // Default submit behavior
         if (task) {
-          // Editing existing task
           await updateTask(task.id, taskData);
           toast.success("تم تحديث المهمة بنجاح");
         } else {
-          // Creating a new task
           await createTask(taskData);
           toast.success("تم إنشاء المهمة بنجاح");
         }

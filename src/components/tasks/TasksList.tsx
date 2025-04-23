@@ -1,23 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import { getTasks, completeTask } from '@/services/tasks/api';
-import { Button } from "@/components/ui/button";
-import { Card } from '@/components/ui/card';
+
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
+import { Edit, Trash2, CheckCircle, Info } from 'lucide-react';
+import { Task } from '@/services/tasks/types';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from "@/integrations/supabase/client";
+import { getTasks, completeTask } from '@/services/tasks/api';
+import { toast } from "sonner";
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
-import { Check, Clock, Edit, Trash2, CalendarClock, User } from 'lucide-react';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 
 interface TasksListProps {
-  view: 'myTasks' | 'all' | 'team';
+  view?: 'myTasks' | 'all' | 'team';
   filterStatus?: string;
   filterPriority?: string;
-  onEdit?: (task: any) => void;
+  filterType?: string;
+  onEdit?: (task: Task) => void;
   onDelete?: (taskId: string) => void;
-  onShowDetails?: (task: any) => void;
-  leadId?: string;
-  limit?: number;
+  onShowDetails?: (task: Task) => void;
 }
 
 const TasksList: React.FC<TasksListProps> = ({

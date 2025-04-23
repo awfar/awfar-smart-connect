@@ -74,12 +74,12 @@ export const getTasks = async (filters?: Record<string, any>): Promise<Task[]> =
     }
     
     // Convert the DB response to our Task type with proper parsing
-    const typedTasks = (data || []).map(item => ({
+    const typedTasks = data.map(item => ({
       ...item,
       status: validateTaskStatus(item.status),
       priority: validateTaskPriority(item.priority),
       related_to: parseRelatedTo(item.related_to)
-    })) as unknown as Task[];
+    })) as Task[];
     
     return typedTasks;
   } catch (error) {
@@ -108,12 +108,12 @@ export const getTasksByLeadId = async (leadId: string): Promise<Task[]> => {
     }
     
     // Convert the DB response to our Task type with proper parsing
-    const typedTasks = (data || []).map(item => ({
+    const typedTasks = data.map(item => ({
       ...item,
       status: validateTaskStatus(item.status),
       priority: validateTaskPriority(item.priority),
       related_to: parseRelatedTo(item.related_to)
-    })) as unknown as Task[];
+    })) as Task[];
     
     return typedTasks;
   } catch (error) {
@@ -167,12 +167,14 @@ export const createTask = async (task: TaskCreateInput): Promise<Task | null> =>
     }
     
     // Convert the response to our Task type
-    return {
+    const result: Task = {
       ...data,
       status: validateTaskStatus(data.status),
       priority: validateTaskPriority(data.priority),
       related_to: parseRelatedTo(data.related_to)
-    } as Task;
+    };
+    
+    return result;
   } catch (error) {
     console.error('Error in createTask:', error);
     throw error;
@@ -233,12 +235,14 @@ export const updateTask = async (id: string, task: Partial<Task>): Promise<Task 
     }
     
     // Convert the response to our Task type
-    return {
+    const result: Task = {
       ...data,
       status: validateTaskStatus(data.status),
       priority: validateTaskPriority(data.priority),
       related_to: parseRelatedTo(data.related_to)
-    } as Task;
+    };
+    
+    return result;
   } catch (error) {
     console.error('Error in updateTask:', error);
     throw error;
@@ -335,12 +339,14 @@ export const completeTask = async (id: string): Promise<Task | null> => {
     }
     
     // Convert the response to our Task type
-    return {
+    const result: Task = {
       ...data,
       status: validateTaskStatus(data.status),
       priority: validateTaskPriority(data.priority),
       related_to: parseRelatedTo(data.related_to)
-    } as Task;
+    };
+    
+    return result;
   } catch (error) {
     console.error('Error in completeTask:', error);
     throw error;
