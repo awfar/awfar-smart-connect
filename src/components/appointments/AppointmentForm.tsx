@@ -65,15 +65,19 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
           return;
         }
         
-        if (data) {
+        if (data && Array.isArray(data)) {
           const options = data.map(lead => ({
             value: lead.id,
             label: `${lead.first_name || ''} ${lead.last_name || ''} ${lead.email ? `(${lead.email})` : ''}`.trim()
           }));
           setLeadsOptions(options);
+        } else {
+          console.log("No leads data returned or data is not an array", data);
+          setLeadsOptions([]);
         }
       } catch (error) {
         console.error("Error in fetchLeads:", error);
+        setLeadsOptions([]);
       } finally {
         setLoadingLeads(false);
       }
@@ -103,7 +107,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
     };
 
     fetchLeadInfo();
-  }, [form.getValues('lead_id')]);
+  }, [form]);
   
   const onFormSubmit = async (data: any) => {
     setLoading(true);
@@ -211,7 +215,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
               name="lead_id"
               render={({ field }) => (
                 <Autocomplete
-                  options={leadsOptions}
+                  options={leadsOptions || []}
                   value={field.value}
                   onValueChange={field.onChange}
                   placeholder="اختر عميل محتمل"
