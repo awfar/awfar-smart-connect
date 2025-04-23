@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment, AppointmentCreateInput, AppointmentStatus, AppointmentDB } from "./types";
 import { toast } from "sonner";
@@ -38,35 +39,46 @@ export const fetchAppointments = async (filters?: {
   upcoming?: boolean 
 }): Promise<Appointment[]> => {
   try {
-    let query = supabase.from('appointments').select('*');
+    // Start with the base query without any filters
+    const baseQuery = supabase.from('appointments').select('*');
+    
+    // Apply filters individually without excessive chaining
+    let finalQuery = baseQuery;
+    
     if (filters) {
       if (filters.lead_id) {
-        query = query.eq('lead_id', filters.lead_id);
+        finalQuery = finalQuery.eq('lead_id', filters.lead_id);
       }
       
       if (filters.status) {
-        query = query.eq('status', filters.status);
+        finalQuery = finalQuery.eq('status', filters.status);
       }
       
       if (filters.user_id) {
-        query = query.eq('owner_id', filters.user_id);
+        finalQuery = finalQuery.eq('owner_id', filters.user_id);
       }
       
       if (filters.team_id) {
-        query = query.eq('team_id', filters.team_id);
+        finalQuery = finalQuery.eq('team_id', filters.team_id);
       }
       
       if (filters.upcoming) {
         const now = new Date().toISOString();
-        query = query.gte('start_time', now);
+        finalQuery = finalQuery.gte('start_time', now);
       }
     }
-    query = query.order('start_time', { ascending: true });
-    const { data, error } = await query;
+    
+    // Apply ordering as the final step
+    finalQuery = finalQuery.order('start_time', { ascending: true });
+    
+    // Execute query
+    const { data, error } = await finalQuery;
+    
     if (error) {
       console.error("Error fetching appointments:", error);
       throw error;
     }
+    
     return (data || []).map(item => mapDbToAppointment(item as AppointmentDB));
   } catch (error) {
     console.error("Error in fetchAppointments:", error);
