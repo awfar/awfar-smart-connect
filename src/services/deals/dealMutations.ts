@@ -23,15 +23,15 @@ export const createDeal = async (deal: Partial<Deal>): Promise<Deal | null> => {
 
     // Insert the deal with proper type handling for required fields
     const dealToInsert = {
-      name: cleanedDeal.name,
-      description: cleanedDeal.description,
-      company_id: cleanedDeal.company_id,
-      contact_id: cleanedDeal.contact_id,
-      value: cleanedDeal.value,
-      stage: cleanedDeal.stage || 'discovery',
-      status: cleanedDeal.status || 'active',
-      expected_close_date: cleanedDeal.expected_close_date,
-      owner_id: cleanedDeal.owner_id || userData.user.id
+      name: String(cleanedDeal.name || ''),
+      description: cleanedDeal.description ? String(cleanedDeal.description) : undefined,
+      company_id: cleanedDeal.company_id ? String(cleanedDeal.company_id) : undefined,
+      contact_id: cleanedDeal.contact_id ? String(cleanedDeal.contact_id) : undefined,
+      value: typeof cleanedDeal.value === 'number' ? cleanedDeal.value : undefined,
+      stage: String(cleanedDeal.stage || 'discovery'),
+      status: String(cleanedDeal.status || 'active'),
+      expected_close_date: cleanedDeal.expected_close_date ? String(cleanedDeal.expected_close_date) : undefined,
+      owner_id: cleanedDeal.owner_id ? String(cleanedDeal.owner_id) : userData.user.id
     };
 
     const { data, error } = await supabase
@@ -56,7 +56,7 @@ export const createDeal = async (deal: Partial<Deal>): Promise<Deal | null> => {
           entity_type: 'deal',
           entity_id: data.id,
           action: 'create_deal',
-          details: `تم إنشاء صفقة جديدة: ${deal.name}`,
+          details: `تم إنشاء صفقة جديدة: ${dealToInsert.name}`,
           user_id: userData.user.id
         });
     } catch (activityError) {
@@ -90,9 +90,22 @@ export const updateDeal = async (id: string, deal: Partial<Deal>): Promise<Deal 
       Object.entries(deal).filter(([_, v]) => v !== null && v !== 'none' && v !== undefined)
     );
 
+    // Ensure all fields are of the correct type for the database
+    const dealToUpdate: Record<string, any> = {};
+    
+    if ('name' in cleanedDeal) dealToUpdate.name = String(cleanedDeal.name);
+    if ('description' in cleanedDeal) dealToUpdate.description = cleanedDeal.description ? String(cleanedDeal.description) : null;
+    if ('company_id' in cleanedDeal) dealToUpdate.company_id = cleanedDeal.company_id ? String(cleanedDeal.company_id) : null;
+    if ('contact_id' in cleanedDeal) dealToUpdate.contact_id = cleanedDeal.contact_id ? String(cleanedDeal.contact_id) : null;
+    if ('value' in cleanedDeal && cleanedDeal.value !== undefined) dealToUpdate.value = Number(cleanedDeal.value);
+    if ('stage' in cleanedDeal) dealToUpdate.stage = String(cleanedDeal.stage);
+    if ('status' in cleanedDeal) dealToUpdate.status = String(cleanedDeal.status);
+    if ('expected_close_date' in cleanedDeal) dealToUpdate.expected_close_date = cleanedDeal.expected_close_date ? String(cleanedDeal.expected_close_date) : null;
+    if ('owner_id' in cleanedDeal) dealToUpdate.owner_id = cleanedDeal.owner_id ? String(cleanedDeal.owner_id) : null;
+    
     const { data, error } = await supabase
       .from('deals')
-      .update(cleanedDeal)
+      .update(dealToUpdate)
       .eq('id', id)
       .select()
       .single();
@@ -113,7 +126,7 @@ export const updateDeal = async (id: string, deal: Partial<Deal>): Promise<Deal 
           entity_type: 'deal',
           entity_id: id,
           action: 'update_deal',
-          details: `تم تحديث بيانات الصفقة: ${deal.name || data.name}`,
+          details: `تم تحديث بيانات الصفقة: ${dealToUpdate.name || data.name}`,
           user_id: userData.user.id
         });
     } catch (activityError) {

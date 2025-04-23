@@ -57,10 +57,16 @@ export const createTask = async (taskData: TaskCreateInput): Promise<Task | null
     // Get current user for activity logging
     const { data: { user } } = await supabase.auth.getUser();
 
+    // Ensure required fields are present
+    if (!cleanedData.title) {
+      toast.error("عنوان المهمة مطلوب");
+      throw new Error("Task title is required");
+    }
+
     // Add created_by if available 
     const dataToInsert = {
       ...cleanedData,
-      title: cleanedData.title, // Ensure title is included (it's required)
+      title: cleanedData.title,
       status: cleanedData.status || 'pending',
       created_by: user?.id || null
     };
