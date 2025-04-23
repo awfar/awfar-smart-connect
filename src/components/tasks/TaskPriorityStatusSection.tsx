@@ -30,7 +30,7 @@ const TaskPriorityStatusSection: React.FC<Props> = ({
       <label className="text-sm font-medium">الأولوية</label>
       <Select
         value={priority}
-        onValueChange={v => setPriority(v as "low" | "medium" | "high")}
+        onValueChange={(v) => setPriority(v as "low" | "medium" | "high")}
       >
         <SelectTrigger>
           <SelectValue placeholder="اختر الأولوية" />
@@ -46,7 +46,7 @@ const TaskPriorityStatusSection: React.FC<Props> = ({
       <label className="text-sm font-medium">الحالة</label>
       <Select
         value={status}
-        onValueChange={v => setStatus(v as "pending" | "in_progress" | "completed" | "cancelled")}
+        onValueChange={(v) => setStatus(v as "pending" | "in_progress" | "completed" | "cancelled")}
       >
         <SelectTrigger>
           <SelectValue placeholder="اختر الحالة" />
