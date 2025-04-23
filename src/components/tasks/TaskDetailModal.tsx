@@ -59,7 +59,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({ open, onClose, task }
         </DialogHeader>
         <div>
           <div className="flex items-center gap-2">
-            <Badge>{task.type}</Badge>
+            <Badge>{task.type || 'مهمة'}</Badge>
             <Badge>{task.status}</Badge>
             <Badge>{task.priority}</Badge>
           </div>

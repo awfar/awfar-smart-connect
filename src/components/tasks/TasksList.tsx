@@ -17,7 +17,7 @@ import { Edit, Trash2, Calendar, User, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
-import { Task } from "@/services/tasks/types";
+import { Task, castToTask } from "@/services/tasks/types";
 import { toast } from "sonner";
 
 const STATUS_LOOKUP: { [key: string]: string } = {
@@ -90,7 +90,10 @@ const TasksList = ({
         setLoading(false);
         return;
       }
-      setTasks(data ?? []);
+      
+      // Convert the data to Task[] using the castToTask function
+      const typedTasks: Task[] = data ? data.map(castToTask) : [];
+      setTasks(typedTasks);
       setLoading(false);
     };
     if (userId) loadTasks();
@@ -165,7 +168,7 @@ const TasksList = ({
                   </span>
                 </TableCell>
                 <TableCell>
-                  <Badge>{task.type}</Badge>
+                  <Badge>{task.type || 'مهمة'}</Badge>
                 </TableCell>
                 <TableCell>
                   <Badge>{STATUS_LOOKUP[task.status] ?? task.status}</Badge>
@@ -203,4 +206,3 @@ const TasksList = ({
 };
 
 export default TasksList;
-

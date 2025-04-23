@@ -6,7 +6,13 @@ export interface Task {
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
   priority: 'low' | 'medium' | 'high';
   due_date?: string | null;
+  start_time?: string | null;
+  type?: string;
   lead_id?: string | null;
+  contact_id?: string | null;
+  company_id?: string | null;
+  deal_id?: string | null;
+  appointment_id?: string | null;
   assigned_to?: string | null;
   assigned_to_name?: string;
   created_by?: string | null;
@@ -25,7 +31,13 @@ export interface TaskCreateInput {
   status?: Task['status'];
   priority?: Task['priority'];
   due_date?: string | null;
+  start_time?: string | null;
+  type?: string;
   lead_id?: string | null;
+  contact_id?: string | null;
+  company_id?: string | null;
+  deal_id?: string | null;
+  appointment_id?: string | null;
   assigned_to?: string | null;
   assigned_to_name?: string;
   created_by?: string | null;
@@ -63,14 +75,26 @@ export function castToTask(data: Record<string, any>): Task {
     }
   }
 
+  // Ensure status is one of the allowed values
+  let status = data.status;
+  if (!['pending', 'in_progress', 'completed', 'cancelled'].includes(status)) {
+    status = 'pending';
+  }
+
   return {
     id: data.id,
     title: data.title,
     description: data.description,
-    status: data.status as Task['status'],
+    status: status as Task['status'],
     priority: data.priority as Task['priority'],
     due_date: data.due_date,
+    start_time: data.start_time,
+    type: data.type,
     lead_id: data.lead_id,
+    contact_id: data.contact_id,
+    company_id: data.company_id,
+    deal_id: data.deal_id,
+    appointment_id: data.appointment_id,
     assigned_to: data.assigned_to,
     assigned_to_name: data.assigned_to_name,
     created_by: data.created_by,
