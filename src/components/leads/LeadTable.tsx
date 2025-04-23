@@ -66,8 +66,15 @@ const LeadTable: React.FC<LeadTableProps> = ({
     if (isMobile) {
       navigate(`/dashboard/leads/${lead.id}`);
     } else {
+      // On desktop first select the lead in sidebar, then user can click to navigate
       onLeadSelect(lead.id);
     }
+  };
+
+  // Function to navigate to lead profile page
+  const handleViewLead = (leadId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the row click event
+    navigate(`/dashboard/leads/${leadId}`);
   };
 
   if (isMobile) {
@@ -146,6 +153,10 @@ const LeadTable: React.FC<LeadTableProps> = ({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleViewLead(lead.id, e); }}>
+                        <Calendar className="h-4 w-4 ml-2" />
+                        <span>عرض الصفحة</span>
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(lead); }}>
                         <Edit className="h-4 w-4 ml-2" />
                         <span>تحرير</span>
@@ -189,13 +200,19 @@ const LeadTable: React.FC<LeadTableProps> = ({
             <tr
               key={lead.id}
               className={cn(
-                "hover:bg-muted/50",
+                "hover:bg-muted/50 cursor-pointer", 
                 selectedLead === lead.id ? "bg-primary/5" : ""
               )}
               onClick={() => onLeadSelect(lead.id)}
             >
               <td className="py-2 px-3 text-right font-medium">
-                {lead.first_name} {lead.last_name}
+                <Button
+                  variant="link"
+                  className="p-0 h-auto font-medium text-primary hover:no-underline"
+                  onClick={(e) => handleViewLead(lead.id, e)}
+                >
+                  {lead.first_name} {lead.last_name}
+                </Button>
               </td>
               <td className="py-2 px-3 text-right">{lead.company}</td>
               <td className="py-2 px-3 text-right hidden md:table-cell">{lead.email}</td>
@@ -226,16 +243,20 @@ const LeadTable: React.FC<LeadTableProps> = ({
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
                       <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Open menu</span>
+                      <span className="sr-only">خيارات</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => onEdit(lead)}>
+                    <DropdownMenuItem onClick={(e) => handleViewLead(lead.id, e)}>
+                      <Calendar className="h-4 w-4 ml-2" />
+                      <span>عرض الصفحة</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(lead); }}>
                       <Edit className="h-4 w-4 ml-2" />
                       <span>تحرير</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
-                      onClick={() => onDelete(lead.id)}
+                      onClick={(e) => { e.stopPropagation(); onDelete(lead.id); }}
                       className="text-red-600 focus:text-red-600"
                     >
                       <Trash2 className="h-4 w-4 ml-2" />

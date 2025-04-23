@@ -8,6 +8,7 @@ import LeadSearchBar from "@/components/leads/LeadSearchBar";
 import LeadFilters from "@/components/leads/LeadFilters";
 import LeadTable from "@/components/leads/LeadTable";
 import { useBreakpoints } from '@/hooks/use-mobile';
+import { Spinner } from '@/components/ui/spinner';
 
 interface LeadListSectionProps {
   leads: Lead[];
@@ -72,7 +73,7 @@ const LeadListSection: React.FC<LeadListSectionProps> = ({
       <CardContent className={isMobile ? 'px-2 py-3' : ''}>
         {isLoading ? (
           <div className="flex justify-center items-center py-8">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <Spinner size="lg" className="text-primary" />
             <span className="mr-2 text-muted-foreground">جاري تحميل البيانات...</span>
           </div>
         ) : isError ? (
