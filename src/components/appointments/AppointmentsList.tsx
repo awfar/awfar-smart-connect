@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarClock, Edit, Trash2, PlusCircle } from "lucide-react";
+import { Edit, Trash2, Eye, CheckCircle } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import AppointmentForm from "./AppointmentForm";
 import { useBreakpoints } from "@/hooks/use-mobile";
@@ -27,95 +27,145 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import { format } from "date-fns";
+import AppointmentDetail from "./AppointmentDetail";
 
-// Define new status mapping for display
+// Define status mapping for display
 const statusDisplay = {
-  scheduled: "مؤكد",
+  scheduled: "مجدول",
   completed: "مكتمل",
   cancelled: "ملغي"
 };
 
-// Sample initial appointments data
-const INITIAL_APPOINTMENTS: Partial<Appointment>[] = [
+// Sample initial appointments data - replace with API call
+const MOCK_APPOINTMENTS: Partial<Appointment>[] = [
   { 
     id: "1", 
     title: "اجتماع مع عميل جديد", 
-    start_time: new Date(2025, 3, 14).toISOString(), 
+    start_time: new Date(2025, 3, 14, 10, 0).toISOString(), 
     end_time: new Date(2025, 3, 14, 11, 0).toISOString(), 
     status: "scheduled", 
     description: "اجتماع",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
+    location: "office",
+    owner_id: "1"
   },
   { 
     id: "2", 
     title: "متابعة عرض المنتج", 
-    start_time: new Date(2025, 3, 15).toISOString(), 
+    start_time: new Date(2025, 3, 15, 14, 30).toISOString(), 
     end_time: new Date(2025, 3, 15, 15, 30).toISOString(), 
     status: "scheduled", 
     description: "عرض",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
+    location: "zoom",
+    owner_id: "1"
   },
   { 
     id: "3", 
     title: "مراجعة مشروع", 
-    start_time: new Date(2025, 3, 15).toISOString(), 
-    end_time: new Date(2025, 3, 15, 16, 0).toISOString(), 
+    start_time: new Date(2025, 3, 15, 16, 0).toISOString(), 
+    end_time: new Date(2025, 3, 15, 17, 0).toISOString(), 
     status: "scheduled", 
     description: "مراجعة",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
+    location: "google-meet",
+    owner_id: "2"
   },
   { 
     id: "4", 
     title: "مكالمة مع فريق التطوير", 
-    start_time: new Date(2025, 3, 20).toISOString(), 
+    start_time: new Date(2025, 3, 20, 11, 0).toISOString(), 
     end_time: new Date(2025, 3, 20, 12, 0).toISOString(), 
     status: "cancelled", 
     description: "مكالمة",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
+    location: "microsoft-teams",
+    owner_id: "1"
   },
   { 
     id: "5", 
     title: "اجتماع استراتيجي", 
-    start_time: new Date(2025, 3, 25).toISOString(), 
+    start_time: new Date(2025, 3, 25, 13, 0).toISOString(), 
     end_time: new Date(2025, 3, 25, 14, 0).toISOString(), 
     status: "scheduled", 
     description: "اجتماع",
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
+    updated_at: new Date().toISOString(),
+    location: "office",
+    owner_id: "3"
   },
 ];
 
-const AppointmentsList = () => {
-  const [appointments, setAppointments] = useState<Appointment[]>(INITIAL_APPOINTMENTS.map(app => ({
+interface AppointmentsListProps {
+  filter?: "all" | "my" | "team" | "upcoming";
+}
+
+const AppointmentsList: React.FC<AppointmentsListProps> = ({ filter = "all" }) => {
+  const [appointments, setAppointments] = useState<Appointment[]>(MOCK_APPOINTMENTS.map(app => ({
     ...app,
     created_at: app.created_at || new Date().toISOString(),
     updated_at: app.updated_at || new Date().toISOString()
   })) as Appointment[]);
-  const [showForm, setShowForm] = useState<boolean>(false);
-  const [editingAppointment, setEditingAppointment] = useState<Appointment | undefined>(undefined);
+  
+  const [isViewingDetail, setIsViewingDetail] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | undefined>(undefined);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState<boolean>(false);
   const [appointmentToDelete, setAppointmentToDelete] = useState<string | null>(null);
   const { isMobile } = useBreakpoints();
 
+  // Filter appointments based on the selected tab
+  const filteredAppointments = React.useMemo(() => {
+    switch (filter) {
+      case "my":
+        // In a real app, filter by current user ID
+        return appointments.filter(app => app.owner_id === "1");
+      case "team":
+        // In a real app, filter by team IDs
+        return appointments.filter(app => 
+          ["1", "2", "3"].includes(app.owner_id || ""));
+      case "upcoming":
+        // Filter for upcoming appointments (today and future)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return appointments.filter(app => {
+          const appDate = new Date(app.start_time);
+          return appDate >= today;
+        });
+      default:
+        // All appointments
+        return appointments;
+    }
+  }, [appointments, filter]);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('ar-SA');
+    return format(date, "yyyy-MM-dd");
   };
 
-  const handleNewAppointment = () => {
-    setEditingAppointment(undefined);
-    setShowForm(true);
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return format(date, "HH:mm");
+  };
+
+  const handleViewDetail = (appointmentId: string) => {
+    const appointment = appointments.find(a => a.id === appointmentId);
+    if (appointment) {
+      setSelectedAppointment(appointment);
+      setIsViewingDetail(true);
+    }
   };
 
   const handleEdit = (appointmentId: string) => {
     const appointment = appointments.find(a => a.id === appointmentId);
     if (appointment) {
-      setEditingAppointment(appointment);
-      setShowForm(true);
+      setSelectedAppointment(appointment);
+      setIsEditing(true);
     }
   };
 
@@ -134,10 +184,10 @@ const AppointmentsList = () => {
   };
 
   const handleFormSubmit = async (appointmentData: any) => {
-    if (editingAppointment) {
+    if (selectedAppointment) {
       // Edit existing appointment
       setAppointments(appointments.map(a => 
-        a.id === editingAppointment.id ? { ...a, ...appointmentData } : a
+        a.id === selectedAppointment.id ? { ...a, ...appointmentData } : a
       ));
       toast.success("تم تحديث الموعد بنجاح");
     } else {
@@ -157,8 +207,16 @@ const AppointmentsList = () => {
       setAppointments([newAppointment, ...appointments]);
       toast.success("تم إضافة الموعد بنجاح");
     }
-    setShowForm(false);
+    setIsEditing(false);
+    setSelectedAppointment(undefined);
     return Promise.resolve();
+  };
+
+  const handleMarkAsComplete = (appointmentId: string) => {
+    setAppointments(appointments.map(a => 
+      a.id === appointmentId ? { ...a, status: "completed" } : a
+    ));
+    toast.success("تم تحديث حالة الموعد إلى مكتمل");
   };
 
   // Map status to display text
@@ -170,22 +228,34 @@ const AppointmentsList = () => {
   const getStatusVariant = (status: AppointmentStatus) => {
     if (status === "scheduled") return "default";
     if (status === "completed") return "success";
-    return "outline";
+    return "destructive";
+  };
+
+  // Get location display
+  const getLocationDisplay = (location?: string) => {
+    if (!location) return "-";
+    
+    switch(location) {
+      case "zoom": return "Zoom";
+      case "google-meet": return "Google Meet";
+      case "microsoft-teams": return "Microsoft Teams";
+      case "office": return "مكتب";
+      default: return location;
+    }
+  };
+
+  // Handle close detail/edit dialog
+  const handleCloseDialog = () => {
+    setIsViewingDetail(false);
+    setIsEditing(false);
+    setSelectedAppointment(undefined);
   };
 
   return (
     <div className="w-full">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">المواعيد</h2>
-        <Button onClick={handleNewAppointment} size="sm" className="gap-1">
-          <PlusCircle className="h-4 w-4" />
-          إضافة موعد
-        </Button>
-      </div>
-
       {isMobile ? (
         <div className="space-y-4">
-          {appointments.map((appointment) => (
+          {filteredAppointments.map((appointment) => (
             <Card key={appointment.id}>
               <CardContent className="p-4">
                 <div className="flex justify-between">
@@ -194,24 +264,68 @@ const AppointmentsList = () => {
                     {getStatusDisplay(appointment.status)}
                   </Badge>
                 </div>
-                <div className="text-sm text-muted-foreground mt-1">
-                  {appointment.client_id || "-"}
+                
+                <div className="mt-2 text-sm">
+                  <div className="text-muted-foreground mb-1">
+                    {formatDate(appointment.start_time)} - {formatTime(appointment.start_time)} إلى {formatTime(appointment.end_time)}
+                  </div>
+                  <div className="text-muted-foreground mb-1">
+                    {getLocationDisplay(appointment.location)}
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 mt-2 text-sm">
-                  <CalendarClock className="h-4 w-4 text-muted-foreground" />
-                  <span>{formatDate(appointment.start_time)} - {appointment.end_time ? new Date(appointment.end_time).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }) : ''}</span>
-                </div>
+                
                 <div className="flex justify-end space-x-2 rtl:space-x-reverse mt-3">
-                  <Button variant="ghost" size="sm" onClick={() => handleEdit(appointment.id)}>
-                    <Edit className="h-4 w-4" />
+                  {appointment.status !== "completed" && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleMarkAsComplete(appointment.id)}
+                      className="gap-1"
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                      اكتمل
+                    </Button>
+                  )}
+                  
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleViewDetail(appointment.id)}
+                    className="gap-1"
+                  >
+                    <Eye className="h-4 w-4" />
+                    عرض
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleDelete(appointment.id)}>
+                  
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleEdit(appointment.id)}
+                    className="gap-1"
+                  >
+                    <Edit className="h-4 w-4" />
+                    تعديل
+                  </Button>
+                  
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => handleDelete(appointment.id)}
+                    className="gap-1 text-destructive"
+                  >
                     <Trash2 className="h-4 w-4" />
+                    حذف
                   </Button>
                 </div>
               </CardContent>
             </Card>
           ))}
+          
+          {filteredAppointments.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              لا توجد مواعيد متاحة
+            </div>
+          )}
         </div>
       ) : (
         <div className="overflow-auto">
@@ -219,26 +333,23 @@ const AppointmentsList = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>العنوان</TableHead>
-                <TableHead>العميل</TableHead>
                 <TableHead>التاريخ</TableHead>
                 <TableHead>الوقت</TableHead>
-                <TableHead>النوع</TableHead>
+                <TableHead>الموقع</TableHead>
                 <TableHead>الحالة</TableHead>
                 <TableHead className="text-left">الإجراءات</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {appointments.map((appointment) => (
+              {filteredAppointments.map((appointment) => (
                 <TableRow key={appointment.id}>
                   <TableCell className="font-medium">{appointment.title}</TableCell>
-                  <TableCell>{appointment.client_id || "-"}</TableCell>
                   <TableCell>{formatDate(appointment.start_time)}</TableCell>
-                  <TableCell>{new Date(appointment.start_time).toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}</TableCell>
                   <TableCell>
-                    <div className="flex items-center">
-                      <CalendarClock className="ml-2 h-4 w-4 text-muted-foreground" />
-                      <span>{appointment.description || "موعد"}</span>
-                    </div>
+                    {formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}
+                  </TableCell>
+                  <TableCell>
+                    {getLocationDisplay(appointment.location)}
                   </TableCell>
                   <TableCell>
                     <Badge variant={getStatusVariant(appointment.status)}>
@@ -247,34 +358,104 @@ const AppointmentsList = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex space-x-2 rtl:space-x-reverse">
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(appointment.id)}>
+                      {appointment.status !== "completed" && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleMarkAsComplete(appointment.id)}
+                          title="تعيين كمكتمل"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                        </Button>
+                      )}
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleViewDetail(appointment.id)}
+                        title="عرض التفاصيل"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleEdit(appointment.id)}
+                        title="تعديل"
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(appointment.id)}>
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        onClick={() => handleDelete(appointment.id)}
+                        title="حذف"
+                        className="text-destructive"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>
                 </TableRow>
               ))}
+
+              {filteredAppointments.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    لا توجد مواعيد متاحة
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </div>
       )}
 
-      <Dialog open={showForm} onOpenChange={setShowForm}>
+      {/* Appointment Detail Dialog */}
+      <Dialog 
+        open={isViewingDetail} 
+        onOpenChange={(open) => {
+          if (!open) handleCloseDialog();
+        }}
+      >
+        <DialogContent className="sm:max-w-[600px]">
+          {selectedAppointment && (
+            <AppointmentDetail
+              appointment={selectedAppointment}
+              onEdit={() => {
+                setIsViewingDetail(false);
+                setIsEditing(true);
+              }}
+              onClose={handleCloseDialog}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Appointment Dialog */}
+      <Dialog 
+        open={isEditing} 
+        onOpenChange={(open) => {
+          if (!open) handleCloseDialog();
+        }}
+      >
         <DialogContent className="sm:max-w-[600px]">
           <AppointmentForm 
-            leadId=""
-            onCancel={() => setShowForm(false)} 
-            onClose={() => setShowForm(false)}
-            onSubmit={handleFormSubmit} 
-            appointment={editingAppointment}
+            appointment={selectedAppointment}
+            onCancel={handleCloseDialog}
+            onClose={handleCloseDialog}
+            onSubmit={handleFormSubmit}
           />
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog 
+        open={deleteConfirmOpen} 
+        onOpenChange={setDeleteConfirmOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>هل أنت متأكد من حذف هذا الموعد؟</AlertDialogTitle>

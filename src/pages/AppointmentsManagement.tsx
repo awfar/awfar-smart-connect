@@ -6,10 +6,15 @@ import AppointmentCalendar from "@/components/appointments/AppointmentCalendar";
 import AppointmentsList from "@/components/appointments/AppointmentsList";
 import AppointmentForm from "@/components/appointments/AppointmentForm";
 import { toast } from "sonner";
+import { CalendarDays, List, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useBreakpoints } from "@/hooks/use-mobile";
 
 const AppointmentsManagement = () => {
   const [view, setView] = useState<"calendar" | "list">("calendar");
   const [isCreating, setIsCreating] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
+  const { isMobile } = useBreakpoints();
   
   const handleCreateAppointment = () => {
     setIsCreating(true);
@@ -27,16 +32,17 @@ const AppointmentsManagement = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <h1 className="text-2xl md:text-3xl font-bold tracking-tight">إدارة المواعيد</h1>
         
         {!isCreating && (
-          <button 
+          <Button 
             onClick={handleCreateAppointment}
-            className="px-4 py-2 bg-primary text-white rounded-md text-sm font-medium"
+            className="gap-2"
           >
+            <Plus className="h-4 w-4" />
             إضافة موعد جديد
-          </button>
+          </Button>
         )}
       </div>
 
@@ -55,30 +61,113 @@ const AppointmentsManagement = () => {
         </Card>
       ) : (
         <>
-          <Tabs defaultValue="calendar" value={view} onValueChange={(v) => setView(v as "calendar" | "list")}>
-            <TabsList className="mb-4">
-              <TabsTrigger value="calendar">التقويم</TabsTrigger>
-              <TabsTrigger value="list">قائمة المواعيد</TabsTrigger>
-            </TabsList>
+          <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <div className="flex items-center justify-between flex-wrap gap-4 mb-6">
+              <TabsList>
+                <TabsTrigger value="all">كل المواعيد</TabsTrigger>
+                <TabsTrigger value="my">مواعيدي</TabsTrigger>
+                <TabsTrigger value="team">مواعيد الفريق</TabsTrigger>
+                <TabsTrigger value="upcoming">القادمة والسابقة</TabsTrigger>
+              </TabsList>
+              
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant={view === "calendar" ? "default" : "outline"} 
+                  size="sm"
+                  onClick={() => setView("calendar")}
+                  className="gap-2"
+                >
+                  <CalendarDays className="h-4 w-4" />
+                  {!isMobile && "التقويم"}
+                </Button>
+                <Button 
+                  variant={view === "list" ? "default" : "outline"} 
+                  size="sm"
+                  onClick={() => setView("list")}
+                  className="gap-2"
+                >
+                  <List className="h-4 w-4" />
+                  {!isMobile && "القائمة"}
+                </Button>
+              </div>
+            </div>
             
-            <TabsContent value="calendar">
+            <TabsContent value="all">
               <Card>
                 <CardHeader>
-                  <CardTitle>تقويم المواعيد</CardTitle>
+                  <CardTitle>
+                    {view === "calendar" ? "تقويم المواعيد" : "قائمة المواعيد"}
+                  </CardTitle>
+                  <CardDescription>
+                    جميع المواعيد في النظام
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <AppointmentCalendar />
+                  {view === "calendar" ? (
+                    <AppointmentCalendar filter="all" />
+                  ) : (
+                    <AppointmentsList filter="all" />
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
             
-            <TabsContent value="list">
+            <TabsContent value="my">
               <Card>
                 <CardHeader>
-                  <CardTitle>قائمة المواعيد</CardTitle>
+                  <CardTitle>
+                    {view === "calendar" ? "تقويم المواعيد" : "قائمة المواعيد"}
+                  </CardTitle>
+                  <CardDescription>
+                    المواعيد المخصصة لك
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <AppointmentsList />
+                  {view === "calendar" ? (
+                    <AppointmentCalendar filter="my" />
+                  ) : (
+                    <AppointmentsList filter="my" />
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="team">
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    {view === "calendar" ? "تقويم المواعيد" : "قائمة المواعيد"}
+                  </CardTitle>
+                  <CardDescription>
+                    مواعيد فريق العمل
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {view === "calendar" ? (
+                    <AppointmentCalendar filter="team" />
+                  ) : (
+                    <AppointmentsList filter="team" />
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="upcoming">
+              <Card>
+                <CardHeader>
+                  <CardTitle>
+                    {view === "calendar" ? "تقويم المواعيد" : "قائمة المواعيد"}
+                  </CardTitle>
+                  <CardDescription>
+                    المواعيد القادمة والسابقة
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {view === "calendar" ? (
+                    <AppointmentCalendar filter="upcoming" />
+                  ) : (
+                    <AppointmentsList filter="upcoming" />
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

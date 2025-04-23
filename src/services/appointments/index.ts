@@ -6,10 +6,27 @@ export {
   deleteAppointment,
   getAppointment,
   fetchAppointments,
-  fetchAppointmentsByLeadId
+  fetchAppointmentsByLeadId,
+  fetchAppointmentsByUserId,
+  fetchAppointmentsByTeam,
+  fetchUpcomingAppointments,
+  markAppointmentAsCompleted,
+  fetchUserAvailability,
+  updateUserAvailability,
+  fetchBookingSettings,
+  updateBookingSettings,
+  createBookingFromPublic
 } from './appointmentsService';
 
-export type { Appointment, AppointmentCreateInput, AppointmentStatus } from './types';
+export type { 
+  Appointment, 
+  AppointmentCreateInput, 
+  AppointmentStatus,
+  AppointmentType,
+  AppointmentLocation,
+  UserAvailability,
+  BookingSettings
+} from './types';
 
 // Export functions from api.ts
 export { 

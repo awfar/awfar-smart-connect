@@ -15,6 +15,7 @@ import Settings from './pages/Settings';
 import LeadManagement from './pages/LeadManagement';
 import TasksManagement from './pages/TasksManagement';
 import AppointmentsManagement from './pages/AppointmentsManagement';
+import AppointmentSettings from './pages/AppointmentSettings';
 import DealProfilePage from './pages/DealProfilePage';
 import DepartmentsManagement from './pages/DepartmentsManagement';
 import TeamsManagement from './pages/TeamsManagement';
@@ -56,6 +57,7 @@ function App() {
             <Route path="/dashboard/leads/:id" element={<LeadProfilePage />} />
             <Route path="/dashboard/tasks" element={<TasksManagement />} />
             <Route path="/dashboard/appointments" element={<AppointmentsManagement />} />
+            <Route path="/dashboard/appointment-settings" element={<AppointmentSettings />} />
             <Route path="/dashboard/deals" element={<DealsManagement />} />
             <Route path="/dashboard/deals/:id" element={<DealProfilePage />} />
             <Route path="/dashboard/companies" element={<CompaniesManagement />} />
