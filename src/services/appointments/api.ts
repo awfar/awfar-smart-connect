@@ -1,9 +1,8 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Appointment } from './types';
+import { Appointment, AppointmentStatus, AppointmentCreateInput } from './types';
 
-export const createAppointment = async (appointmentData: Partial<Appointment>): Promise<Appointment | null> => {
+export const createAppointment = async (appointmentData: AppointmentCreateInput): Promise<Appointment | null> => {
   try {
     if (!appointmentData.title) {
       throw new Error('Appointment title is required');
@@ -23,32 +22,25 @@ export const createAppointment = async (appointmentData: Partial<Appointment>): 
       }
     }
     
-    // Ensure all fields have the correct types before insertion
-    const dataToInsert: Record<string, any> = {
+    // Ensure the status is of the correct type
+    const status: AppointmentStatus = appointmentData.status || 'scheduled';
+    
+    // Prepare data for insertion with proper types
+    const dataToInsert = {
       title: appointmentData.title,
       start_time: appointmentData.start_time,
       end_time: appointmentData.end_time,
       created_by: appointmentData.created_by,
-      status: appointmentData.status || 'scheduled'
+      status: status,
+      description: appointmentData.description || null,
+      location: appointmentData.location || null,
+      location_details: appointmentData.location_details || null,
+      is_all_day: appointmentData.is_all_day || false,
+      lead_id: appointmentData.lead_id || null,
+      company_id: appointmentData.company_id || null,
+      client_id: appointmentData.client_id || null,
+      owner_id: appointmentData.owner_id || null
     };
-    
-    // Add optional fields only if they exist
-    if (appointmentData.description) dataToInsert.description = appointmentData.description;
-    if (appointmentData.location) dataToInsert.location = appointmentData.location;
-    if (appointmentData.is_all_day !== undefined) dataToInsert.is_all_day = appointmentData.is_all_day;
-    
-    // Handle relationship fields
-    if (appointmentData.lead_id) dataToInsert.lead_id = appointmentData.lead_id;
-    if (appointmentData.company_id) dataToInsert.company_id = appointmentData.company_id;
-    if (appointmentData.client_id) dataToInsert.client_id = appointmentData.client_id;
-    if (appointmentData.owner_id) dataToInsert.owner_id = appointmentData.owner_id;
-    
-    // Make sure no invalid fields are being submitted
-    Object.keys(dataToInsert).forEach(key => {
-      if (dataToInsert[key] === undefined || dataToInsert[key] === null) {
-        delete dataToInsert[key];
-      }
-    });
     
     console.log("Inserting appointment with processed data:", dataToInsert);
     
@@ -82,7 +74,7 @@ export const createAppointment = async (appointmentData: Partial<Appointment>): 
     }
     
     toast.success("تم إنشاء الموعد بنجاح");
-    return data;
+    return data as Appointment;
   } catch (error: any) {
     console.error('Error in createAppointment:', error);
     toast.error(`فشل في حفظ الموعد: ${error.message || 'خطأ غير معروف'}`);
@@ -98,15 +90,15 @@ export const updateAppointment = async (id: string, appointmentData: Partial<App
     
     console.log("Updating appointment with ID:", id, "Data:", appointmentData);
     
-    // Ensure all fields have the correct types before update
-    const dataToUpdate: Record<string, any> = {};
+    // Convert status to AppointmentStatus if provided
+    let dataToUpdate: Record<string, any> = {};
     
     if (appointmentData.title !== undefined) dataToUpdate.title = appointmentData.title;
     if (appointmentData.description !== undefined) dataToUpdate.description = appointmentData.description;
     if (appointmentData.start_time !== undefined) dataToUpdate.start_time = appointmentData.start_time;
     if (appointmentData.end_time !== undefined) dataToUpdate.end_time = appointmentData.end_time;
     if (appointmentData.location !== undefined) dataToUpdate.location = appointmentData.location;
-    if (appointmentData.status !== undefined) dataToUpdate.status = appointmentData.status;
+    if (appointmentData.status !== undefined) dataToUpdate.status = appointmentData.status as AppointmentStatus;
     if (appointmentData.is_all_day !== undefined) dataToUpdate.is_all_day = appointmentData.is_all_day;
     if (appointmentData.lead_id !== undefined) dataToUpdate.lead_id = appointmentData.lead_id;
     if (appointmentData.company_id !== undefined) dataToUpdate.company_id = appointmentData.company_id;
@@ -133,7 +125,7 @@ export const updateAppointment = async (id: string, appointmentData: Partial<App
     
     console.log("Appointment updated successfully:", data);
     toast.success("تم تحديث الموعد بنجاح");
-    return data;
+    return data as Appointment;
   } catch (error: any) {
     console.error('Error in updateAppointment:', error);
     toast.error(`فشل في تحديث الموعد: ${error.message || 'خطأ غير معروف'}`);

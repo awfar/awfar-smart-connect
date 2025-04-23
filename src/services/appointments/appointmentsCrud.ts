@@ -1,15 +1,15 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Appointment, AppointmentCreateInput, AppointmentStatus, AppointmentDB } from "./types";
+import { Appointment, AppointmentStatus, AppointmentCreateInput } from "./types";
 import { toast } from "sonner";
 
 // Helper to map DB record to model
-const mapDbToAppointment = (dbRecord: AppointmentDB): Appointment => ({
+const mapDbToAppointment = (dbRecord: any): Appointment => ({
   id: dbRecord.id,
   title: dbRecord.title,
   description: dbRecord.description,
   start_time: dbRecord.start_time,
   end_time: dbRecord.end_time,
-  location: dbRecord.location as any,
+  location: dbRecord.location,
   location_details: dbRecord.location_details,
   status: dbRecord.status as AppointmentStatus,
   lead_id: dbRecord.lead_id || null,
@@ -20,7 +20,7 @@ const mapDbToAppointment = (dbRecord: AppointmentDB): Appointment => ({
   created_by: dbRecord.created_by,
   created_at: dbRecord.created_at,
   updated_at: dbRecord.updated_at,
-  type: dbRecord.type as any,
+  type: dbRecord.type,
   related_deal_id: dbRecord.related_deal_id,
   related_ticket_id: dbRecord.related_ticket_id,
   notes: dbRecord.notes,
@@ -84,7 +84,7 @@ export const fetchAppointments = async (filters?: {
       throw error;
     }
     
-    return (data || []).map(item => mapDbToAppointment(item as AppointmentDB));
+    return (data || []).map(item => mapDbToAppointment(item as any));
   } catch (error) {
     console.error("Error in fetchAppointments:", error);
     toast.error("فشل في تحميل المواعيد");
@@ -105,7 +105,7 @@ export const getAppointment = async (id: string): Promise<Appointment | null> =>
   try {
     const { data, error } = await supabase.from('appointments').select('*').eq('id', id).single();
     if (error) throw error;
-    return data ? mapDbToAppointment(data as AppointmentDB) : null;
+    return data ? mapDbToAppointment(data as any) : null;
   } catch (error) {
     console.error("Error fetching appointment:", error);
     return null;
@@ -117,36 +117,45 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
     if (!appointment.title) throw new Error("Title is required");
     if (!appointment.start_time) throw new Error("Start time is required");
     if (!appointment.end_time) throw new Error("End time is required");
+    
     let created_by = appointment.created_by;
     if (!created_by) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) created_by = user.id;
     }
-    // All these fields are now properly defined in the AppointmentCreateInput interface
-    const appointmentData = {
+    
+    // Define properly typed insert data
+    const appointmentData: Record<string, any> = {
       title: appointment.title,
       description: appointment.description,
       start_time: appointment.start_time,
       end_time: appointment.end_time,
-      location: appointment.location,
-      location_details: appointment.location_details,
       status: appointment.status || 'scheduled',
-      client_id: appointment.client_id,
-      lead_id: appointment.lead_id,
-      company_id: appointment.company_id,
-      owner_id: appointment.owner_id || created_by,
-      participants: appointment.participants,
-      created_by,
-      type: appointment.type,
-      related_deal_id: appointment.related_deal_id,
-      related_ticket_id: appointment.related_ticket_id,
-      notes: appointment.notes,
-      is_all_day: appointment.is_all_day,
-      color: appointment.color,
-      reminder_time: appointment.reminder_time
+      created_by
     };
+    
+    // Add optional fields only if they exist
+    if (appointment.location) appointmentData.location = appointment.location;
+    if (appointment.location_details) appointmentData.location_details = appointment.location_details;
+    if (appointment.client_id) appointmentData.client_id = appointment.client_id;
+    if (appointment.lead_id) appointmentData.lead_id = appointment.lead_id;
+    if (appointment.company_id) appointmentData.company_id = appointment.company_id;
+    if (appointment.owner_id) appointmentData.owner_id = appointment.owner_id;
+    if (appointment.participants) appointmentData.participants = appointment.participants;
+    if (appointment.type) appointmentData.type = appointment.type;
+    if (appointment.related_deal_id) appointmentData.related_deal_id = appointment.related_deal_id;
+    if (appointment.related_ticket_id) appointmentData.related_ticket_id = appointment.related_ticket_id;
+    if (appointment.notes) appointmentData.notes = appointment.notes;
+    if (appointment.is_all_day !== undefined) appointmentData.is_all_day = appointment.is_all_day;
+    if (appointment.color) appointmentData.color = appointment.color;
+    if (appointment.reminder_time) appointmentData.reminder_time = appointment.reminder_time;
 
-    const { data, error } = await supabase.from('appointments').insert(appointmentData).select().single();
+    const { data, error } = await supabase
+      .from('appointments')
+      .insert(appointmentData)
+      .select()
+      .single();
+    
     if (error) throw error;
 
     try {
@@ -162,7 +171,7 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
     }
 
     toast.success("تم إنشاء الموعد بنجاح");
-    return mapDbToAppointment(data as AppointmentDB);
+    return mapDbToAppointment(data as any);
   } catch (error) {
     console.error("Error creating appointment:", error);
     toast.error("فشل في إنشاء الموعد");
@@ -218,7 +227,7 @@ export const updateAppointment = async (id: string, updates: Partial<Appointment
     }
 
     toast.success("تم تحديث الموعد بنجاح");
-    return mapDbToAppointment(data);
+    return mapDbToAppointment(data as any);
   } catch (error) {
     console.error("Error updating appointment:", error);
     toast.error("فشل في تحديث الموعد");
@@ -295,7 +304,7 @@ export const markAppointmentAsCompleted = async (id: string): Promise<Appointmen
     }
 
     toast.success("تم تحديث حالة الموعد إلى مكتمل");
-    return data ? mapDbToAppointment(data) : null;
+    return data ? mapDbToAppointment(data as any) : null;
   } catch (error) {
     console.error("Error marking appointment as completed:", error);
     toast.error("فشل في تحديث حالة الموعد");

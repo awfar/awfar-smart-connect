@@ -1,4 +1,3 @@
-
 import { Task, TaskCreateInput, RelatedEntity } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -141,30 +140,26 @@ export const createTask = async (task: TaskCreateInput): Promise<Task | null> =>
     }
     
     // Ensure all fields have the correct types before insertion
-    const taskData: Record<string, any> = {
+    const taskData: Partial<Task> = {
       title: task.title,
       description: task.description,
-      status: validateTaskStatus(task.status || 'pending'),
-      priority: validateTaskPriority(task.priority || 'medium'),
-      created_by: task.created_by
+      status: task.status || 'pending',
+      priority: task.priority || 'medium',
+      created_by: task.created_by,
+      due_date: task.due_date,
+      start_time: task.start_time,
+      assigned_to: task.assigned_to,
+      type: task.type,
+      lead_id: task.lead_id,
+      deal_id: task.deal_id,
+      company_id: task.company_id,
+      contact_id: task.contact_id,
+      appointment_id: task.appointment_id
     };
-    
-    // Add optional fields only if they exist
-    if (task.due_date) taskData.due_date = task.due_date;
-    if (task.start_time) taskData.start_time = task.start_time;
-    if (task.assigned_to) taskData.assigned_to = task.assigned_to;
-    if (task.type) taskData.type = task.type;
-    
-    // Handle relationship fields
-    if (task.lead_id) taskData.lead_id = task.lead_id;
-    if (task.deal_id) taskData.deal_id = task.deal_id;
-    if (task.company_id) taskData.company_id = task.company_id;
-    if (task.contact_id) taskData.contact_id = task.contact_id;
-    if (task.appointment_id) taskData.appointment_id = task.appointment_id;
     
     // Ensure related_to is properly serialized if it exists
     if (task.related_to) {
-      taskData.related_to = JSON.stringify(task.related_to);
+      taskData.related_to = task.related_to;
     }
     
     console.log("Inserting task with processed data:", taskData);
