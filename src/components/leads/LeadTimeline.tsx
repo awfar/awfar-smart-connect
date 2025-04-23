@@ -19,9 +19,9 @@ export interface LeadTimelineProps {
 }
 
 const LeadTimeline: React.FC<LeadTimelineProps> = ({
-  activities,
-  tasks,
-  appointments,
+  activities = [],
+  tasks = [],
+  appointments = [],
   isLoading,
   onEdit,
   onDelete,
@@ -32,27 +32,30 @@ const LeadTimeline: React.FC<LeadTimelineProps> = ({
     try {
       return format(new Date(dateString), 'PPpp', { locale: ar });
     } catch (error) {
+      console.error("Error formatting date:", dateString, error);
       return dateString;
     }
   };
 
   const renderActivities = () => {
-    if (activities.length === 0) {
+    const safeActivities = Array.isArray(activities) ? activities : [];
+    
+    if (safeActivities.length === 0) {
       return <p className="text-center text-muted-foreground py-4">لا توجد أنشطة بعد</p>;
     }
 
-    return activities.map((activity, index) => (
-      <div key={activity.id || index} className="border-b pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+    return safeActivities.map((activity, index) => (
+      <div key={activity?.id || index} className="border-b pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
         <div className="flex justify-between items-start">
           <div className="flex items-start gap-2">
             <MessageSquare className="h-5 w-5 text-blue-500 mt-1" />
             <div>
-              <p className="font-medium">{activity.type === 'note' ? 'ملاحظة' : activity.type}</p>
-              <p className="text-sm text-muted-foreground">{activity.description}</p>
-              <p className="text-xs text-muted-foreground mt-1">{formatDate(activity.created_at)}</p>
+              <p className="font-medium">{activity?.type === 'note' ? 'ملاحظة' : activity?.type || 'نشاط'}</p>
+              <p className="text-sm text-muted-foreground">{activity?.description || ''}</p>
+              <p className="text-xs text-muted-foreground mt-1">{activity?.created_at ? formatDate(activity.created_at) : ''}</p>
             </div>
           </div>
-          {onDelete && (
+          {onDelete && activity?.id && (
             <Button variant="ghost" size="sm" onClick={() => onDelete('activity', activity.id)}>
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -63,42 +66,44 @@ const LeadTimeline: React.FC<LeadTimelineProps> = ({
   };
 
   const renderTasks = () => {
-    if (tasks.length === 0) {
+    const safeTasks = Array.isArray(tasks) ? tasks : [];
+    
+    if (safeTasks.length === 0) {
       return <p className="text-center text-muted-foreground py-4">لا توجد مهام بعد</p>;
     }
 
-    return tasks.map((task) => (
-      <div key={task.id} className="border-b pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+    return safeTasks.map((task, index) => (
+      <div key={task?.id || index} className="border-b pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
         <div className="flex justify-between items-start">
           <div className="flex items-start gap-2">
-            <Clock className={`h-5 w-5 ${task.status === 'completed' ? 'text-green-500' : 'text-amber-500'} mt-1`} />
+            <Clock className={`h-5 w-5 ${task?.status === 'completed' ? 'text-green-500' : 'text-amber-500'} mt-1`} />
             <div>
               <div className="flex items-center gap-2">
-                <p className="font-medium">{task.title}</p>
-                <Badge variant={task.status === 'completed' ? 'outline' : 'default'} className="ml-2">
-                  {task.status === 'pending' ? 'قيد الانتظار' : 
-                   task.status === 'in_progress' ? 'قيد التنفيذ' : 
-                   task.status === 'completed' ? 'مكتمل' : 'ملغي'}
+                <p className="font-medium">{task?.title || 'مهمة'}</p>
+                <Badge variant={task?.status === 'completed' ? 'outline' : 'default'} className="ml-2">
+                  {task?.status === 'pending' ? 'قيد الانتظار' : 
+                   task?.status === 'in_progress' ? 'قيد التنفيذ' : 
+                   task?.status === 'completed' ? 'مكتمل' : 'ملغي'}
                 </Badge>
               </div>
-              {task.description && <p className="text-sm text-muted-foreground">{task.description}</p>}
+              {task?.description && <p className="text-sm text-muted-foreground">{task.description}</p>}
               <p className="text-xs text-muted-foreground mt-1">
-                تاريخ الاستحقاق: {task.due_date ? formatDate(task.due_date) : 'غير محدد'}
+                تاريخ الاستحقاق: {task?.due_date ? formatDate(task.due_date) : 'غير محدد'}
               </p>
             </div>
           </div>
           <div className="flex gap-1">
-            {task.status !== 'completed' && onComplete && (
+            {task?.status !== 'completed' && onComplete && task?.id && (
               <Button variant="ghost" size="sm" onClick={() => onComplete('task', task.id)}>
                 <Check className="h-4 w-4 text-green-500" />
               </Button>
             )}
-            {onEdit && (
+            {onEdit && task?.id && (
               <Button variant="ghost" size="sm" onClick={() => onEdit('task', task)}>
                 <Edit className="h-4 w-4" />
               </Button>
             )}
-            {onDelete && (
+            {onDelete && task?.id && (
               <Button variant="ghost" size="sm" onClick={() => onDelete('task', task.id)}>
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -110,32 +115,34 @@ const LeadTimeline: React.FC<LeadTimelineProps> = ({
   };
 
   const renderAppointments = () => {
-    if (appointments.length === 0) {
+    const safeAppointments = Array.isArray(appointments) ? appointments : [];
+    
+    if (safeAppointments.length === 0) {
       return <p className="text-center text-muted-foreground py-4">لا توجد مواعيد بعد</p>;
     }
 
-    return appointments.map((appointment) => (
-      <div key={appointment.id} className="border-b pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
+    return safeAppointments.map((appointment, index) => (
+      <div key={appointment?.id || index} className="border-b pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
         <div className="flex justify-between items-start">
           <div className="flex items-start gap-2">
             <Calendar className="h-5 w-5 text-indigo-500 mt-1" />
             <div>
-              <p className="font-medium">{appointment.title}</p>
-              {appointment.description && <p className="text-sm text-muted-foreground">{appointment.description}</p>}
+              <p className="font-medium">{appointment?.title || 'موعد'}</p>
+              {appointment?.description && <p className="text-sm text-muted-foreground">{appointment.description}</p>}
               <div className="text-xs text-muted-foreground mt-1">
-                <p>من: {formatDate(appointment.start_time)}</p>
-                <p>إلى: {formatDate(appointment.end_time)}</p>
-                {appointment.location && <p>المكان: {appointment.location}</p>}
+                {appointment?.start_time && <p>من: {formatDate(appointment.start_time)}</p>}
+                {appointment?.end_time && <p>إلى: {formatDate(appointment.end_time)}</p>}
+                {appointment?.location && <p>المكان: {appointment.location}</p>}
               </div>
             </div>
           </div>
           <div className="flex gap-1">
-            {onEdit && (
+            {onEdit && appointment?.id && (
               <Button variant="ghost" size="sm" onClick={() => onEdit('appointment', appointment)}>
                 <Edit className="h-4 w-4" />
               </Button>
             )}
-            {onDelete && (
+            {onDelete && appointment?.id && (
               <Button variant="ghost" size="sm" onClick={() => onDelete('appointment', appointment.id)}>
                 <Trash2 className="h-4 w-4" />
               </Button>

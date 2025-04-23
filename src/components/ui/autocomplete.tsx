@@ -54,7 +54,7 @@ export function Autocomplete({
   const [open, setOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
 
-  // Ensure options is always a valid array even if undefined or null is passed
+  // Create a safe copy of options that's always an array, never undefined
   const safeOptions = React.useMemo(() => {
     return Array.isArray(options) ? options : [];
   }, [options]);

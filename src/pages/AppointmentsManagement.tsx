@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import AppointmentCalendar from "@/components/appointments/AppointmentCalendar";
@@ -16,6 +16,7 @@ const AppointmentsManagement = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const { isMobile } = useBreakpoints();
   
   const handleCreateAppointment = () => {
@@ -42,10 +43,18 @@ const AppointmentsManagement = () => {
         return Promise.reject(new Error("Start and end times are required"));
       }
       
-      await createAppointment(appointmentData);
-      toast.success("تم حفظ الموعد بنجاح");
-      setIsCreating(false);
-      return Promise.resolve();
+      console.log("Creating appointment with data:", appointmentData);
+      
+      const result = await createAppointment(appointmentData);
+      
+      if (result) {
+        toast.success("تم حفظ الموعد بنجاح");
+        setIsCreating(false);
+        setRefreshKey(prev => prev + 1);
+        return Promise.resolve();
+      } else {
+        throw new Error("Failed to create appointment");
+      }
     } catch (error) {
       console.error("Error saving appointment:", error);
       toast.error("فشل في حفظ الموعد");
@@ -130,9 +139,9 @@ const AppointmentsManagement = () => {
                 </CardHeader>
                 <CardContent>
                   {view === "calendar" ? (
-                    <AppointmentCalendar filter="all" />
+                    <AppointmentCalendar filter="all" key={refreshKey} />
                   ) : (
-                    <AppointmentsList filter="all" />
+                    <AppointmentsList filter="all" key={refreshKey} />
                   )}
                 </CardContent>
               </Card>
@@ -150,9 +159,9 @@ const AppointmentsManagement = () => {
                 </CardHeader>
                 <CardContent>
                   {view === "calendar" ? (
-                    <AppointmentCalendar filter="my" />
+                    <AppointmentCalendar filter="my" key={refreshKey} />
                   ) : (
-                    <AppointmentsList filter="my" />
+                    <AppointmentsList filter="my" key={refreshKey} />
                   )}
                 </CardContent>
               </Card>
@@ -170,9 +179,9 @@ const AppointmentsManagement = () => {
                 </CardHeader>
                 <CardContent>
                   {view === "calendar" ? (
-                    <AppointmentCalendar filter="team" />
+                    <AppointmentCalendar filter="team" key={refreshKey} />
                   ) : (
-                    <AppointmentsList filter="team" />
+                    <AppointmentsList filter="team" key={refreshKey} />
                   )}
                 </CardContent>
               </Card>
@@ -190,9 +199,9 @@ const AppointmentsManagement = () => {
                 </CardHeader>
                 <CardContent>
                   {view === "calendar" ? (
-                    <AppointmentCalendar filter="upcoming" />
+                    <AppointmentCalendar filter="upcoming" key={refreshKey} />
                   ) : (
-                    <AppointmentsList filter="upcoming" />
+                    <AppointmentsList filter="upcoming" key={refreshKey} />
                   )}
                 </CardContent>
               </Card>
