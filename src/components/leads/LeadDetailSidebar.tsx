@@ -2,7 +2,6 @@
 import React from 'react';
 import { Lead } from "@/services/leads";
 import LeadDetails from "@/components/leads/LeadDetails";
-import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ExternalLink } from 'lucide-react';
 
@@ -12,6 +11,7 @@ interface LeadDetailSidebarProps {
   onEdit: (lead: Lead) => void;
   onDelete: (leadId: string) => void;
   onRefresh: () => void;
+  onViewFullProfile: () => void;
 }
 
 const LeadDetailSidebar: React.FC<LeadDetailSidebarProps> = ({
@@ -19,21 +19,14 @@ const LeadDetailSidebar: React.FC<LeadDetailSidebarProps> = ({
   onClose,
   onEdit,
   onDelete,
-  onRefresh
+  onRefresh,
+  onViewFullProfile
 }) => {
-  const navigate = useNavigate();
-
-  const handleViewFullProfile = () => {
-    if (lead && lead.id) {
-      navigate(`/dashboard/leads/${lead.id}`);
-    }
-  };
-
   return (
     <div className="w-full h-full lg:w-[400px] flex flex-col">
       <div className="mb-4 px-4 pt-4">
         <Button 
-          onClick={handleViewFullProfile}
+          onClick={onViewFullProfile}
           variant="outline" 
           size="sm"
           className="w-full"
@@ -49,6 +42,7 @@ const LeadDetailSidebar: React.FC<LeadDetailSidebarProps> = ({
           onEdit={onEdit}
           onDelete={onDelete}
           onRefresh={onRefresh}
+          onViewFullProfile={onViewFullProfile}
         />
       </div>
     </div>

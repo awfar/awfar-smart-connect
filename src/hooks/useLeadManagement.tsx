@@ -138,8 +138,8 @@ export const useLeadManagement = () => {
     }
   }, [leads, selectedLead]);
 
-  const handleLeadClick = (leadId: string) => {
-    setSelectedLead(leadId === selectedLead ? null : leadId);
+  const handleLeadClick = (leadId: string | null) => {
+    setSelectedLead(leadId);
   };
 
   const toggleFilters = () => {

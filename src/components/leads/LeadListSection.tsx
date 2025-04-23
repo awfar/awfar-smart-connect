@@ -18,12 +18,13 @@ interface LeadListSectionProps {
   isError: boolean;
   onViewChange: (view: string) => void;
   onSearch: (term: string) => void;
-  onLeadSelect: (leadId: string) => void;
+  onLeadSelect: (leadId: string | null) => void;
   onFilterChange: (filters: Record<string, any>) => void;
   onRefresh: () => void;
   onEdit: (lead: Lead) => void;
   onDelete: (leadId: string) => void;
   onAddLead: () => void;
+  onViewProfile: (leadId: string) => void;
 }
 
 const LeadListSection: React.FC<LeadListSectionProps> = ({
@@ -40,7 +41,8 @@ const LeadListSection: React.FC<LeadListSectionProps> = ({
   onRefresh,
   onEdit,
   onDelete,
-  onAddLead
+  onAddLead,
+  onViewProfile
 }) => {
   const { isMobile } = useBreakpoints();
 
@@ -48,7 +50,7 @@ const LeadListSection: React.FC<LeadListSectionProps> = ({
     <Card className="flex-1 overflow-hidden border rounded-lg shadow-sm">
       <CardHeader className={`pb-3 ${isMobile ? 'px-3' : ''}`}>
         <LeadCardHeader 
-          onToggleFilters={() => onFilterChange({})} 
+          onToggleFilters={toggleFilters} 
           onRefresh={onRefresh}
           onAddLead={onAddLead}
           onSearch={onSearch}
@@ -91,11 +93,16 @@ const LeadListSection: React.FC<LeadListSectionProps> = ({
             onLeadSelect={onLeadSelect}
             onEdit={onEdit}
             onDelete={onDelete}
+            onViewProfile={onViewProfile}
           />
         )}
       </CardContent>
     </Card>
   );
+
+  function toggleFilters() {
+    onFilterChange({});
+  }
 };
 
 export default LeadListSection;

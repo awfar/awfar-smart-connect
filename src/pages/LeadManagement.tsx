@@ -7,8 +7,11 @@ import AddLeadDialog from '@/components/leads/dialogs/AddLeadDialog';
 import EditLeadDialog from '@/components/leads/dialogs/EditLeadDialog';
 import DeleteLeadDialog from '@/components/leads/dialogs/DeleteLeadDialog';
 import { useBreakpoints } from '@/hooks/use-mobile';
+import { useNavigate } from 'react-router-dom';
 
 const LeadManagement = () => {
+  const navigate = useNavigate();
+  
   const {
     selectedView,
     showFilters,
@@ -42,6 +45,10 @@ const LeadManagement = () => {
 
   // Get the selected lead object
   const selectedLeadObject = getSelectedLeadObject();
+  
+  const handleViewLeadProfile = (leadId: string) => {
+    navigate(`/dashboard/leads/${leadId}`);
+  };
 
   return (
     <div className="h-full flex flex-col md:flex-row">
@@ -61,6 +68,7 @@ const LeadManagement = () => {
           onEdit={handleEditLead}
           onDelete={handleDeleteLead}
           onAddLead={handleAddLead}
+          onViewProfile={handleViewLeadProfile}
         />
       </div>
 
@@ -68,10 +76,11 @@ const LeadManagement = () => {
         <div className="w-[400px] border-l overflow-hidden">
           <LeadDetailSidebar 
             lead={selectedLeadObject}
-            onClose={() => handleLeadClick(selectedLead)}
+            onClose={() => handleLeadClick(null)}
             onEdit={handleEditLead}
             onDelete={handleDeleteLead}
             onRefresh={handleRefresh}
+            onViewFullProfile={() => handleViewLeadProfile(selectedLead)}
           />
         </div>
       )}

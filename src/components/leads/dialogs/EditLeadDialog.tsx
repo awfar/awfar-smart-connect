@@ -1,8 +1,12 @@
+
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Lead } from "@/services/leads/types";
 import { toast } from "sonner";
 import { useForm } from 'react-hook-form';
+import { updateLead } from "@/services/leads";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 
 interface EditLeadDialogProps {
   isOpen: boolean;
@@ -30,6 +34,7 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
       status: lead?.status || '',
       source: lead?.source || '',
       notes: lead?.notes || '',
+      assigned_to: lead?.assigned_to || ''
     }
   });
   
@@ -45,10 +50,10 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
         ...data
       };
       
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Call service to update the lead in Supabase
+      const result = await updateLead(updatedLead);
       
-      onSuccess(updatedLead);
+      onSuccess(result);
       toast.success("تم تحديث بيانات العميل المحتمل بنجاح");
       onOpenChange(false);
     } catch (error) {
@@ -163,6 +168,19 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
                 {...register('source')}
               />
             </div>
+            
+            <div>
+              <label className="text-sm font-medium">المسؤول</label>
+              <select
+                className="w-full border rounded-md px-3 py-2 mt-1"
+                {...register('assigned_to')}
+              >
+                <option value="">غير محدد</option>
+                <option value="user-1">أحمد محمد</option>
+                <option value="user-2">سارة خالد</option>
+                <option value="user-3">محمد عبدالله</option>
+              </select>
+            </div>
           </div>
           
           <div>
@@ -174,20 +192,21 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
           </div>
           
           <div className="flex justify-end gap-2">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => onOpenChange(false)}
-              className="px-4 py-2 border rounded-md text-gray-700"
+              className="px-4 py-2"
             >
               إلغاء
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 bg-primary text-white rounded-md"
+              className="px-4 py-2"
             >
-              {isSubmitting ? 'جار ا��حفظ...' : 'حفظ'}
-            </button>
+              {isSubmitting ? <><Spinner size="sm" className="mr-2" /> جار الحفظ...</> : 'حفظ'}
+            </Button>
           </div>
         </form>
       </DialogContent>

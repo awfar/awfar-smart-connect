@@ -1,24 +1,22 @@
 
-import LeadCardHeader from './LeadCardHeader';
-import LeadDetails from './LeadDetails';
-import LeadDetailSidebar from './LeadDetailSidebar';
-import LeadFilters from './LeadFilters';
 import LeadForm from './LeadForm';
-import LeadHeader from './LeadHeader';
-import LeadListSection from './LeadListSection';
-import LeadSearchBar from './LeadSearchBar';
 import LeadTable from './LeadTable';
-import LeadTimeline from './LeadTimeline';
+import LeadFilterBar from './LeadFilterBar';
+import LeadSearchBar from './LeadSearchBar';
+import LeadCardHeader from './LeadCardHeader';
+import LeadListSection from './LeadListSection';
+import LeadDetailSidebar from './LeadDetailSidebar';
+import LeadDetails from './LeadDetails';
+import LeadFilterItem from './LeadFilterItem';
 
 export {
-  LeadCardHeader,
-  LeadDetails,
-  LeadDetailSidebar,
-  LeadFilters,
   LeadForm,
-  LeadHeader,
-  LeadListSection,
-  LeadSearchBar,
   LeadTable,
-  LeadTimeline
+  LeadFilterBar,
+  LeadSearchBar,
+  LeadCardHeader,
+  LeadListSection,
+  LeadDetailSidebar,
+  LeadDetails,
+  LeadFilterItem
 };

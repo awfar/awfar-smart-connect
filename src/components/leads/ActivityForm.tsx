@@ -1,58 +1,64 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useForm } from 'react-hook-form';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { addLeadActivity } from '@/services/leads/api';
-import { toast } from 'sonner';
-import { LeadActivityType } from '@/services/leads/types';
+import { addLeadActivity } from "@/services/leads";
+import { LeadActivity } from "@/types/leads";
+import { toast } from "sonner";
 
 interface ActivityFormProps {
   leadId: string;
-  activityType?: LeadActivityType;
-  onSuccess?: () => void;
+  onSuccess?: (activity?: LeadActivity) => void;
   onClose?: () => void;
-  title?: string;
+  initialType?: 'note' | 'call' | 'meeting' | 'email' | 'whatsapp';
 }
 
-const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, activityType = 'note', onSuccess, onClose, title }) => {
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm({
-    defaultValues: {
-      type: activityType,
-      description: '',
-      scheduled_at: ''
-    }
-  });
-  
+const ActivityForm: React.FC<ActivityFormProps> = ({
+  leadId,
+  onSuccess,
+  onClose,
+  initialType = 'note'
+}) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const formActivityType = watch('type');
-
-  // Set the activity type when the activityType prop changes
-  useEffect(() => {
-    if (activityType) {
-      setValue('type', activityType);
-    }
-  }, [activityType, setValue]);
+  const [activityType, setActivityType] = useState<string>(initialType);
+  const { register, handleSubmit, formState: { errors } } = useForm();
+  const [scheduledDate, setScheduledDate] = useState<string>('');
 
   const onSubmit = async (data: any) => {
     try {
       setIsSubmitting(true);
-      const activity = {
+
+      // Prepare the activity data
+      const activityData = {
         lead_id: leadId,
-        type: data.type as LeadActivityType,
+        type: activityType,
         description: data.description,
-        scheduled_at: data.scheduled_at ? new Date(data.scheduled_at).toISOString() : undefined
+        scheduled_at: scheduledDate ? new Date(scheduledDate).toISOString() : undefined
       };
 
-      await addLeadActivity(activity);
-      toast.success('تمت إضافة النشاط بنجاح');
-      onSuccess?.();
-      onClose?.();
+      // Call the API to add the activity
+      const newActivity = await addLeadActivity(activityData);
+
+      if (onSuccess) {
+        onSuccess(newActivity);
+      }
+
+      toast.success("تم إضافة النشاط بنجاح");
+      
+      if (onClose) {
+        onClose();
+      }
     } catch (error) {
-      console.error('Error adding activity:', error);
-      toast.error('حدث خطأ أثناء إضافة النشاط');
+      console.error("Error adding activity:", error);
+      toast.error("فشل في إضافة النشاط");
     } finally {
       setIsSubmitting(false);
     }
@@ -60,55 +66,70 @@ const ActivityForm: React.FC<ActivityFormProps> = ({ leadId, activityType = 'not
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {title && <h3 className="text-lg font-medium">{title}</h3>}
-      
       <div>
-        <label className="text-sm font-medium">نوع النشاط</label>
-        <Select 
-          defaultValue={activityType}
-          onValueChange={(value) => setValue('type', value as LeadActivityType)}
-        >
+        <label className="block text-sm font-medium mb-1">نوع النشاط</label>
+        <Select value={activityType} onValueChange={setActivityType}>
           <SelectTrigger>
             <SelectValue placeholder="اختر نوع النشاط" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="note">ملاحظة</SelectItem>
-            <SelectItem value="call">مكالمة هاتفية</SelectItem>
+            <SelectItem value="call">مكالمة</SelectItem>
             <SelectItem value="meeting">اجتماع</SelectItem>
             <SelectItem value="email">بريد إلكتروني</SelectItem>
-            <SelectItem value="task">مهمة</SelectItem>
             <SelectItem value="whatsapp">واتساب</SelectItem>
           </SelectContent>
         </Select>
       </div>
-      
+
       <div>
-        <label className="text-sm font-medium">التفاصيل</label>
-        <Textarea
-          placeholder="أدخل تفاصيل النشاط"
-          {...register('description', { required: 'التفاصيل مطلوبة' })}
+        <label className="block text-sm font-medium mb-1">الوصف</label>
+        <textarea
+          className="w-full border rounded-md px-3 py-2 min-h-[100px]"
+          {...register('description', { required: "الوصف مطلوب" })}
         />
         {errors.description && (
-          <p className="text-red-500 text-sm">{errors.description.message?.toString()}</p>
+          <p className="text-red-500 text-sm mt-1">
+            {errors.description.message as string}
+          </p>
         )}
       </div>
-      
-      {formActivityType !== 'note' && (
+
+      {(activityType === 'call' || activityType === 'meeting') && (
         <div>
-          <label className="text-sm font-medium">الموعد المجدول</label>
-          <Input 
-            type="datetime-local" 
-            {...register('scheduled_at')}
+          <label className="block text-sm font-medium mb-1">موعد مجدول</label>
+          <input
+            type="datetime-local"
+            className="w-full border rounded-md px-3 py-2"
+            value={scheduledDate}
+            onChange={(e) => setScheduledDate(e.target.value)}
           />
         </div>
       )}
-      
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onClose}>
-          إلغاء
-        </Button>
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'جار الحفظ...' : 'حفظ'}
+
+      <div className="flex justify-end space-x-2">
+        {onClose && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            className="ml-2"
+          >
+            إلغاء
+          </Button>
+        )}
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <>
+              <Spinner size="sm" className="ml-2" />
+              جار الحفظ...
+            </>
+          ) : (
+            'حفظ'
+          )}
         </Button>
       </div>
     </form>
