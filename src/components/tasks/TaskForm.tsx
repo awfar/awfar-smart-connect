@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -116,6 +117,7 @@ const TaskForm: React.FC<TaskFormProps> = ({
   const handleCancel = () => onCancel ? onCancel() : onClose?.();
 
   const handleFormSubmit = async (data: any) => {
+    // Create a type-safe version of the submitted data
     const safeData: TaskCreateInput = {
       ...data,
       priority: data.priority as 'low' | 'medium' | 'high',
@@ -158,7 +160,13 @@ const TaskForm: React.FC<TaskFormProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="text-sm font-medium">الأولوية</label>
-          <Select value={watch('priority')} onValueChange={v => setValue('priority', v)}>
+          <Select 
+            value={watch('priority')} 
+            onValueChange={(value: string) => {
+              // Explicitly cast the value to the specific string literal type
+              setValue('priority', value as 'low' | 'medium' | 'high');
+            }}
+          >
             <SelectTrigger>
               <SelectValue placeholder="اختر الأولوية" />
             </SelectTrigger>
@@ -169,7 +177,13 @@ const TaskForm: React.FC<TaskFormProps> = ({
         </div>
         <div>
           <label className="text-sm font-medium">الحالة</label>
-          <Select value={watch('status')} onValueChange={v => setValue('status', v)}>
+          <Select 
+            value={watch('status')} 
+            onValueChange={(value: string) => {
+              // Explicitly cast the value to the specific string literal type
+              setValue('status', value as 'pending' | 'in_progress' | 'completed' | 'cancelled');
+            }}
+          >
             <SelectTrigger>
               <SelectValue placeholder="اختر الحالة" />
             </SelectTrigger>
