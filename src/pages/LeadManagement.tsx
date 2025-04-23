@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import LeadHeader from "@/components/leads/LeadHeader";
 import LeadListSection from "@/components/leads/LeadListSection";
@@ -13,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import LeadPermissionAlert from "@/components/leads/LeadPermissionAlert";
 import { useAuth } from '@/contexts/AuthContext';
 import { useBreakpoints } from '@/hooks/use-mobile';
-import { Lead } from "@/types/leads"; // Using the centralized Lead type
+import { Lead } from "@/services/leads/types"; // Using the Lead type from services
 import { useNavigate } from 'react-router-dom';
 
 const LeadManagement = () => {
@@ -70,7 +69,6 @@ const LeadManagement = () => {
     refetch
   } = useLeadManagement();
 
-  // Transform leads to ensure consistent structure with proper owner fields
   const leads: Lead[] = serviceLeads.map(lead => ({
     id: lead.id,
     first_name: lead.first_name,
@@ -81,26 +79,24 @@ const LeadManagement = () => {
     position: lead.position,
     country: lead.country,
     industry: lead.industry,
-    stage: lead.stage || lead.status,
-    status: lead.status || lead.stage,
+    status: lead.status || '',
     source: lead.source,
     notes: lead.notes,
     created_at: lead.created_at,
     updated_at: lead.updated_at,
-    assignedTo: lead.assigned_to,
     assigned_to: lead.assigned_to,
-    avatar_url: lead.avatar_url,
-    owner: lead.owner ? {
-      id: lead.owner.id || '',  // Ensure id is never undefined
-      name: lead.owner.name || (lead.owner.first_name && lead.owner.last_name ? `${lead.owner.first_name} ${lead.owner.last_name}`.trim() : ''),
-      avatar: lead.owner.avatar || '',
-      initials: lead.owner.initials || (lead.owner.first_name?.charAt(0) || '') + (lead.owner.last_name?.charAt(0) || ''),
-      first_name: lead.owner.first_name,
-      last_name: lead.owner.last_name
-    } : undefined
+    ...(lead.profiles ? {
+      owner: {
+        id: lead.assigned_to || '',
+        name: lead.profiles.first_name && lead.profiles.last_name ? 
+          `${lead.profiles.first_name} ${lead.profiles.last_name}`.trim() : '',
+        initials: lead.profiles.first_name?.charAt(0) || '' + lead.profiles.last_name?.charAt(0) || '',
+        first_name: lead.profiles.first_name,
+        last_name: lead.profiles.last_name
+      }
+    } : {})
   }));
 
-  // Enhanced lead click handler for mobile view
   const handleMobileLeadClick = (leadId: string) => {
     if (isMobile) {
       navigate(`/dashboard/leads/${leadId}`);
@@ -110,7 +106,6 @@ const LeadManagement = () => {
   };
 
   const selectedLeadObject = getSelectedLeadObject();
-  // Get the name of the lead to be deleted
   const leadToDeleteName = serviceLeads.find(lead => lead.id === leadToDelete)?.first_name + ' ' + 
                            serviceLeads.find(lead => lead.id === leadToDelete)?.last_name || 'العميل المحتمل';
 

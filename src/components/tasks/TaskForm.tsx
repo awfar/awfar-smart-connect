@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { Task } from '@/services/tasks/types';
+import { Task, TaskCreateInput } from '@/services/tasks/types';
 import { createTask, updateTask } from '@/services/tasks/api';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ export interface TaskFormProps {
   onCancel?: () => void;
   task?: Task;
   isSubmitting?: boolean;
+  onSubmit?: (data: TaskCreateInput) => Promise<void>;
 }
 
 const TaskForm: React.FC<TaskFormProps> = ({ 
@@ -27,7 +28,8 @@ const TaskForm: React.FC<TaskFormProps> = ({
   onClose,
   onCancel,
   task,
-  isSubmitting: externalIsSubmitting = false
+  isSubmitting: externalIsSubmitting = false,
+  onSubmit: externalOnSubmit
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [leadsOptions, setLeadsOptions] = useState<AutocompleteOption[]>([]);
@@ -116,19 +118,24 @@ const TaskForm: React.FC<TaskFormProps> = ({
       
       console.log("Submitting task data:", taskData);
 
-      // Create or update task
-      if (task) {
-        // Editing existing task
-        await updateTask(task.id, taskData);
-        toast.success("تم تحديث المهمة بنجاح");
+      if (externalOnSubmit) {
+        // Use external onSubmit if provided
+        await externalOnSubmit(taskData);
       } else {
-        // Creating a new task
-        await createTask(taskData);
-        toast.success("تم إنشاء المهمة بنجاح");
+        // Default submit behavior
+        if (task) {
+          // Editing existing task
+          await updateTask(task.id, taskData);
+          toast.success("تم تحديث المهمة بنجاح");
+        } else {
+          // Creating a new task
+          await createTask(taskData);
+          toast.success("تم إنشاء المهمة بنجاح");
+        }
+        
+        onSuccess?.();
+        onClose?.();
       }
-      
-      onSuccess?.();
-      onClose?.();
     } catch (error) {
       console.error("Error creating/updating task:", error);
       toast.error("فشل في إنشاء/تحديث المهمة");

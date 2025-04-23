@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { getTasks, completeTask } from '@/services/tasks/api';
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { Check, Clock, Edit, Trash2, CalendarClock, User } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TasksListProps {
   view: 'myTasks' | 'all' | 'team';
@@ -34,12 +34,10 @@ const TasksList: React.FC<TasksListProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch tasks when component mounts or filters change
   useEffect(() => {
     const fetchTasksData = async () => {
       setIsLoading(true);
       try {
-        // Build filter object
         const filters: Record<string, any> = {};
         
         if (filterStatus !== 'all') {
@@ -55,7 +53,6 @@ const TasksList: React.FC<TasksListProps> = ({
         }
         
         if (view === 'myTasks') {
-          // Get current user
           const { data: { user } } = await supabase.auth.getUser();
           if (user) {
             filters.assigned_to = user.id;
@@ -64,7 +61,6 @@ const TasksList: React.FC<TasksListProps> = ({
         
         const fetchedTasks = await getTasks(filters);
         
-        // Apply limit if provided
         const limitedTasks = limit ? fetchedTasks.slice(0, limit) : fetchedTasks;
         setTasks(limitedTasks);
       } catch (err) {
@@ -83,7 +79,6 @@ const TasksList: React.FC<TasksListProps> = ({
     try {
       await completeTask(taskId);
       
-      // Update local state
       setTasks(prevTasks => 
         prevTasks.map(task => 
           task.id === taskId ? { ...task, status: 'completed' } : task
@@ -205,7 +200,7 @@ const TasksList: React.FC<TasksListProps> = ({
                   <div className="flex items-center">
                     <User className="h-4 w-4 ml-1" />
                     <span>
-                      {`${task.profiles.first_name || ''} ${task.profiles.last_name || ''}`.trim() || 'غير معين'}
+                      {`${task.profiles.first_name || ''} ${task.profiles.last_name || ''}`.trim() || 'غير مع��ن'}
                     </span>
                   </div>
                 )}

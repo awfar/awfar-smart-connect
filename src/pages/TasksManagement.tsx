@@ -1,6 +1,3 @@
-
-// Enhanced TasksManagement: live data, modal, new/edit, filtering
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +5,7 @@ import TaskForm from "@/components/tasks/TaskForm";
 import TasksList from "@/components/tasks/TasksList";
 import { toast } from "sonner";
 import { createTask, updateTask, deleteTask } from "@/services/tasks/api";
+import { TaskCreateInput } from "@/services/tasks/types";
 import TaskDetailModal from "@/components/tasks/TaskDetailModal";
 
 type ViewTab = "myTasks" | "all" | "team";
@@ -31,7 +29,7 @@ const TasksManagement = () => {
 
   const handleCancelCreate = () => setIsCreating(false);
 
-  const handleSaveTask = async (data: any) => {
+  const handleSaveTask = async (data: TaskCreateInput) => {
     try {
       await createTask(data);
       toast.success("تم حفظ المهمة بنجاح");
@@ -44,7 +42,7 @@ const TasksManagement = () => {
 
   const handleEdit = (task: any) => setEditTask(task);
 
-  const handleUpdateTask = async (data: any) => {
+  const handleUpdateTask = async (data: TaskCreateInput) => {
     try {
       await updateTask(editTask.id, data);
       toast.success("تم تحديث المهمة");
@@ -151,4 +149,3 @@ const TasksManagement = () => {
 };
 
 export default TasksManagement;
-

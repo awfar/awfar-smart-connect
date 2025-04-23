@@ -39,10 +39,18 @@ export const createAppointment = async (appointmentData: Partial<Appointment>): 
       }
     }
     
-    // Create appointment in Supabase
+    // Create appointment in Supabase - ensure end_time is non-optional
     const { data, error } = await supabase
       .from('appointments')
-      .insert(appointmentData)
+      .insert({
+        title: appointmentData.title,
+        start_time: appointmentData.start_time,
+        end_time: appointmentData.end_time,
+        description: appointmentData.description,
+        lead_id: appointmentData.lead_id,
+        location: appointmentData.location,
+        created_by: appointmentData.created_by,
+      })
       .select('*')
       .single();
     
