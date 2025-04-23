@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { CalendarDays, List, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBreakpoints } from "@/hooks/use-mobile";
-import { createAppointment } from "@/services/appointments/appointmentsService";
+import { createAppointment } from "@/services/appointments/appointmentsCrud";
 
 const AppointmentsManagement = () => {
   const [view, setView] = useState<"calendar" | "list">("calendar");
@@ -29,6 +29,19 @@ const AppointmentsManagement = () => {
   const handleSaveAppointment = async (appointmentData: any) => {
     setIsSubmitting(true);
     try {
+      // Validate required fields
+      if (!appointmentData.title) {
+        toast.error("عنوان الموعد مطلوب");
+        setIsSubmitting(false);
+        return Promise.reject(new Error("Title is required"));
+      }
+      
+      if (!appointmentData.start_time || !appointmentData.end_time) {
+        toast.error("تاريخ البداية والنهاية مطلوبان");
+        setIsSubmitting(false);
+        return Promise.reject(new Error("Start and end times are required"));
+      }
+      
       await createAppointment(appointmentData);
       toast.success("تم حفظ الموعد بنجاح");
       setIsCreating(false);

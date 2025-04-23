@@ -13,7 +13,8 @@ export const getAppointmentsByLeadId = async (leadId: string): Promise<Appointme
     }
     
     // Pass through to the implementation in appointmentsCrud
-    return await fetchAppointmentsByLeadId(leadId);
+    const appointments = await fetchAppointmentsByLeadId(leadId);
+    return Array.isArray(appointments) ? appointments : [];
   } catch (error) {
     console.error("Error in getAppointmentsByLeadId:", error);
     return [];

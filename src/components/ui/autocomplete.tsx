@@ -111,26 +111,25 @@ export function Autocomplete({
             value={searchTerm}
             onValueChange={setSearchTerm}
           />
-          {filteredOptions.length === 0 ? (
-            <CommandEmpty>
-              {isLoading ? "جاري التحميل..." : emptyMessage}
-              {!disableCreate && searchTerm && !isLoading && (
-                <Button 
-                  variant="ghost" 
-                  className="flex w-full items-center justify-start mt-2"
-                  onClick={() => {
-                    if (onCreateNew) {
-                      onCreateNew();
-                    }
-                    setOpen(false);
-                  }}
-                >
-                  <PlusCircle className="ml-2 h-4 w-4" />
-                  {createNewLabel} &quot;{searchTerm}&quot;
-                </Button>
-              )}
-            </CommandEmpty>
-          ) : (
+          <CommandEmpty>
+            {isLoading ? "جاري التحميل..." : emptyMessage}
+            {!disableCreate && searchTerm && !isLoading && (
+              <Button 
+                variant="ghost" 
+                className="flex w-full items-center justify-start mt-2"
+                onClick={() => {
+                  if (onCreateNew) {
+                    onCreateNew();
+                  }
+                  setOpen(false);
+                }}
+              >
+                <PlusCircle className="ml-2 h-4 w-4" />
+                {createNewLabel} &quot;{searchTerm}&quot;
+              </Button>
+            )}
+          </CommandEmpty>
+          {filteredOptions.length > 0 && (
             <CommandGroup className="max-h-60 overflow-auto">
               {filteredOptions.map((option) => (
                 <CommandItem

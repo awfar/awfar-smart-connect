@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export interface AppointmentFormProps {
   leadId: string;
@@ -31,7 +32,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   
   // Initialize form with the appointment data if it exists
-  const { register, handleSubmit, formState } = useForm({
+  const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: {
       title: appointment?.title || '',
       description: appointment?.description || '',
@@ -45,6 +46,11 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
   useEffect(() => {
     const fetchLeadInfo = async () => {
       try {
+        if (!leadId || leadId === 'none') {
+          console.log("No valid lead ID provided");
+          return;
+        }
+        
         const { data, error } = await supabase
           .from('leads')
           .select('first_name, last_name, email')
@@ -66,6 +72,19 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
   const onFormSubmit = async (data: any) => {
     setIsLoading(true);
     try {
+      // Validate required fields
+      if (!data.title) {
+        toast.error("عنوان الموعد مطلوب");
+        setIsLoading(false);
+        return;
+      }
+      
+      if (!data.start_time || !data.end_time) {
+        toast.error("تاريخ البداية والنهاية مطلوبان");
+        setIsLoading(false);
+        return;
+      }
+      
       const startTime = new Date(data.start_time).toISOString();
       const endTime = new Date(data.end_time).toISOString();
       
@@ -84,18 +103,21 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({
         if (appointment) {
           // Editing existing appointment
           await updateAppointment(appointment.id, appointmentData);
+          toast.success("تم تحديث الموعد بنجاح");
         } else {
           // Creating a new appointment
           await createAppointment(appointmentData);
+          toast.success("تم إنشاء موعد جديد بنجاح");
         }
       }
       
       onSuccess?.();
+      onClose?.();
     } catch (error) {
       console.error("Error creating/updating appointment:", error);
+      toast.error("فشل في حفظ الموعد");
     } finally {
       setIsLoading(false);
-      onClose?.();
     }
   };
 
