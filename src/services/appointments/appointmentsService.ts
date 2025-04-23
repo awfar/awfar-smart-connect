@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Appointment, 
@@ -47,32 +48,43 @@ export const fetchAppointments = async (filters?: {
   upcoming?: boolean 
 }): Promise<Appointment[]> => {
   try {
-    let queryBuilder = supabase.from('appointments').select('*');
+    // Start with a basic query
+    const query = supabase.from('appointments').select('*');
     
+    // Apply filters if provided
     if (filters) {
+      // Apply lead_id filter
       if (filters.lead_id) {
-        queryBuilder = queryBuilder.eq('lead_id', filters.lead_id);
+        query.eq('lead_id', filters.lead_id);
       }
       
+      // Apply status filter
       if (filters.status) {
-        queryBuilder = queryBuilder.eq('status', filters.status);
+        query.eq('status', filters.status);
       }
       
+      // Apply user_id filter
       if (filters.user_id) {
-        queryBuilder = queryBuilder.eq('owner_id', filters.user_id);
+        query.eq('owner_id', filters.user_id);
       }
       
+      // Apply team_id filter
       if (filters.team_id) {
-        queryBuilder = queryBuilder.eq('team_id', filters.team_id);
+        query.eq('team_id', filters.team_id);
       }
       
+      // Apply upcoming filter
       if (filters.upcoming) {
         const now = new Date().toISOString();
-        queryBuilder = queryBuilder.gte('start_time', now);
+        query.gte('start_time', now);
       }
     }
     
-    const { data, error } = await queryBuilder.order('start_time', { ascending: true });
+    // Add ordering
+    query.order('start_time', { ascending: true });
+    
+    // Execute the query
+    const { data, error } = await query;
 
     if (error) {
       console.error("Error fetching appointments:", error);
