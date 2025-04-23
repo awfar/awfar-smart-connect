@@ -3,6 +3,22 @@ import { Task, TaskCreateInput } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+// Helper function to ensure task status is valid
+const validateTaskStatus = (status: string): 'pending' | 'in_progress' | 'completed' | 'cancelled' => {
+  const validStatuses = ['pending', 'in_progress', 'completed', 'cancelled'];
+  return validStatuses.includes(status) 
+    ? status as 'pending' | 'in_progress' | 'completed' | 'cancelled'
+    : 'pending';
+};
+
+// Helper function to ensure task priority is valid
+const validateTaskPriority = (priority: string): 'low' | 'medium' | 'high' => {
+  const validPriorities = ['low', 'medium', 'high'];
+  return validPriorities.includes(priority)
+    ? priority as 'low' | 'medium' | 'high'
+    : 'medium';
+};
+
 // Get all tasks
 export const getTasks = async (filters?: Record<string, any>): Promise<Task[]> => {
   try {
@@ -29,7 +45,14 @@ export const getTasks = async (filters?: Record<string, any>): Promise<Task[]> =
       throw error;
     }
     
-    return data || [];
+    // Ensure each task has valid status and priority
+    const typedTasks = (data || []).map(item => ({
+      ...item,
+      status: validateTaskStatus(item.status),
+      priority: validateTaskPriority(item.priority)
+    }));
+    
+    return typedTasks as Task[];
   } catch (error) {
     console.error('Error in getTasks:', error);
     return [];
@@ -55,7 +78,14 @@ export const getTasksByLeadId = async (leadId: string): Promise<Task[]> => {
       throw error;
     }
     
-    return data || [];
+    // Ensure each task has valid status and priority
+    const typedTasks = (data || []).map(item => ({
+      ...item,
+      status: validateTaskStatus(item.status),
+      priority: validateTaskPriority(item.priority)
+    }));
+    
+    return typedTasks as Task[];
   } catch (error) {
     console.error('Error in getTasksByLeadId:', error);
     return [];
@@ -77,9 +107,16 @@ export const createTask = async (task: TaskCreateInput): Promise<Task | null> =>
       }
     }
     
+    // Ensure status is valid
+    const validatedTask = {
+      ...task,
+      status: validateTaskStatus(task.status || 'pending'),
+      priority: validateTaskPriority(task.priority || 'medium')
+    };
+    
     const { data, error } = await supabase
       .from('tasks')
-      .insert(task)
+      .insert(validatedTask)
       .select('*')
       .single();
     
@@ -97,7 +134,11 @@ export const createTask = async (task: TaskCreateInput): Promise<Task | null> =>
       }
     }
     
-    return data;
+    return {
+      ...data,
+      status: validateTaskStatus(data.status),
+      priority: validateTaskPriority(data.priority)
+    } as Task;
   } catch (error) {
     console.error('Error in createTask:', error);
     throw error;
@@ -117,6 +158,16 @@ export const updateTask = async (id: string, task: Partial<Task>): Promise<Task 
       .select('*')
       .eq('id', id)
       .single();
+    
+    // Ensure task status is valid if provided
+    if (task.status) {
+      task.status = validateTaskStatus(task.status);
+    }
+    
+    // Ensure task priority is valid if provided
+    if (task.priority) {
+      task.priority = validateTaskPriority(task.priority);
+    }
     
     const { data, error } = await supabase
       .from('tasks')
@@ -139,7 +190,11 @@ export const updateTask = async (id: string, task: Partial<Task>): Promise<Task 
       }
     }
     
-    return data;
+    return {
+      ...data,
+      status: validateTaskStatus(data.status),
+      priority: validateTaskPriority(data.priority)
+    } as Task;
   } catch (error) {
     console.error('Error in updateTask:', error);
     throw error;
@@ -235,7 +290,11 @@ export const completeTask = async (id: string): Promise<Task | null> => {
       }
     }
     
-    return data;
+    return {
+      ...data,
+      status: validateTaskStatus(data.status),
+      priority: validateTaskPriority(data.priority)
+    } as Task;
   } catch (error) {
     console.error('Error in completeTask:', error);
     throw error;

@@ -16,11 +16,11 @@ export const mockTasks: Task[] = [
     created_at: "2025-04-15T08:30:00",
     updated_at: "2025-04-15T08:30:00",
     assigned_to_name: "أحمد محمد",
-    related_to: {
+    related_to: [{
       type: "lead",
       id: "lead-1",
       name: "شركة التقنية العربية"
-    }
+    }]
   },
   {
     id: "2",
@@ -35,11 +35,11 @@ export const mockTasks: Task[] = [
     created_at: "2025-04-14T09:15:00",
     updated_at: "2025-04-16T11:30:00",
     assigned_to_name: "أحمد محمد",
-    related_to: {
+    related_to: [{
       type: "lead",
       id: "lead-2",
       name: "مؤسسة النور للتجارة"
-    }
+    }]
   },
   {
     id: "3",
@@ -54,17 +54,19 @@ export const mockTasks: Task[] = [
     created_at: "2025-04-16T13:45:00",
     updated_at: "2025-04-16T13:45:00",
     assigned_to_name: "سارة خالد",
-    related_to: {
+    related_to: [{
       type: "lead",
       id: "lead-3",
       name: "شركة الأفق للتكنولوجيا"
-    }
+    }]
   }
 ];
 
 // Function to get tasks by related entity
 export const getTasksByRelatedEntity = (entityType: string, entityId: string): Task[] => {
   return mockTasks.filter(task => 
-    task.related_to && task.related_to.type === entityType && task.related_to.id === entityId
+    task.related_to && task.related_to.some(related => 
+      related.type === entityType && related.id === entityId
+    )
   );
 };

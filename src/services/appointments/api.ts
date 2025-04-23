@@ -50,6 +50,7 @@ export const createAppointment = async (appointmentData: Partial<Appointment>): 
         lead_id: appointmentData.lead_id,
         location: appointmentData.location,
         created_by: appointmentData.created_by,
+        status: appointmentData.status || 'scheduled',
       })
       .select('*')
       .single();
@@ -62,7 +63,8 @@ export const createAppointment = async (appointmentData: Partial<Appointment>): 
     // Log the activity
     await logAppointmentActivity(data.id, 'created', appointmentData.lead_id);
     
-    return data;
+    // Cast the data to our Appointment type
+    return data as unknown as Appointment;
   } catch (error) {
     console.error("Error in createAppointment:", error);
     throw error;
@@ -79,7 +81,16 @@ export const updateAppointment = async (id: string, appointmentData: Partial<App
     // Update appointment in Supabase
     const { data, error } = await supabase
       .from('appointments')
-      .update(appointmentData)
+      .update({
+        title: appointmentData.title,
+        start_time: appointmentData.start_time,
+        end_time: appointmentData.end_time,
+        description: appointmentData.description,
+        lead_id: appointmentData.lead_id,
+        location: appointmentData.location,
+        status: appointmentData.status || undefined,
+        // Add other fields as needed
+      })
       .eq('id', id)
       .select('*')
       .single();
@@ -92,7 +103,8 @@ export const updateAppointment = async (id: string, appointmentData: Partial<App
     // Log the activity
     await logAppointmentActivity(id, 'updated', appointmentData.lead_id);
     
-    return data;
+    // Cast the data to our Appointment type
+    return data as unknown as Appointment;
   } catch (error) {
     console.error("Error in updateAppointment:", error);
     throw error;
