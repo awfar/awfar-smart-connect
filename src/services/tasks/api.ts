@@ -139,11 +139,27 @@ export const createTask = async (task: TaskCreateInput): Promise<Task | null> =>
       }
     }
     
-    // Ensure all fields have the correct types before insertion
-    const taskData: Record<string, any> = {
+    // Create a typed object with required fields
+    const taskData: {
+      title: string;
+      status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+      priority: 'low' | 'medium' | 'high';
+      description?: string;
+      created_by?: string;
+      due_date?: string;
+      start_time?: string;
+      assigned_to?: string;
+      type?: string;
+      lead_id?: string;
+      deal_id?: string;
+      company_id?: string;
+      contact_id?: string;
+      appointment_id?: string;
+      related_to?: any;
+    } = {
       title: task.title,
-      status: task.status || 'pending',
-      priority: task.priority || 'medium',
+      status: validateTaskStatus(task.status || 'pending'),
+      priority: validateTaskPriority(task.priority || 'medium'),
     };
     
     // Add optional fields only if they exist
