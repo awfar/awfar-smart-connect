@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import { Edit, Trash2, CheckCircle, Info } from 'lucide-react';
+import { Edit, Trash2, CheckCircle, Info, Clock, User, Check, CalendarClock } from 'lucide-react';
 import { Task } from '@/services/tasks/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +19,8 @@ interface TasksListProps {
   onEdit?: (task: Task) => void;
   onDelete?: (taskId: string) => void;
   onShowDetails?: (task: Task) => void;
+  leadId?: string;
+  limit?: number;
 }
 
 const TasksList: React.FC<TasksListProps> = ({

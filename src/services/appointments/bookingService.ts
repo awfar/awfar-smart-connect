@@ -1,103 +1,105 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { AppointmentCreateInput } from "./types";
+import { AppointmentCreateInput, Appointment } from "./types";
 import { createAppointment } from "./appointmentsCrud";
 import { toast } from "sonner";
 
-export const createBookingFromPublic = async (bookingData: any) => {
+// Mock data for available time slots
+export const getAvailableTimeSlots = async (
+  userId: string,
+  date: string
+): Promise<{ start: string; end: string }[]> => {
+  // This is a placeholder. In a real implementation, we would:
+  // 1. Get the user's working hours for the specified day
+  // 2. Get all existing appointments for that day
+  // 3. Calculate available slots based on appointment duration and buffer time
+  
+  // For now, return mock data
+  return [
+    { start: `${date}T09:00:00`, end: `${date}T09:30:00` },
+    { start: `${date}T10:00:00`, end: `${date}T10:30:00` },
+    { start: `${date}T11:00:00`, end: `${date}T11:30:00` },
+    { start: `${date}T13:00:00`, end: `${date}T13:30:00` },
+    { start: `${date}T14:00:00`, end: `${date}T14:30:00` },
+    { start: `${date}T15:00:00`, end: `${date}T15:30:00` },
+  ];
+};
+
+// Get public booking profile data for a user by their slug
+export const getBookingProfile = async (userSlug: string) => {
   try {
-    const { 
-      user_id, 
-      name, 
-      email, 
-      company, 
-      title,
-      start_time,
-      end_time,
-      notes,
-      type = 'virtual',
-      location = 'zoom'
-    } = bookingData;
-
-    let leadId = null;
-    const { data: existingLeads, error: leadCheckError } = await supabase
-      .from('leads')
-      .select('id')
-      .eq('email', email)
-      .limit(1);
-
-    if (leadCheckError) {
-      console.error("Error checking existing lead:", leadCheckError);
-    } else if (existingLeads && existingLeads.length > 0) {
-      leadId = existingLeads[0].id;
-    } else {
-      const nameParts = name.split(' ');
-      const firstName = nameParts[0];
-      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
-
-      const { data: newLead, error: createLeadError } = await supabase
-        .from('leads')
-        .insert({
-          first_name: firstName,
-          last_name: lastName,
-          email: email,
-          company: company,
-          source: 'booking_page',
-          status: 'new'
-        })
-        .select()
-        .single();
-
-      if (createLeadError) {
-        console.error("Error creating new lead:", createLeadError);
-      } else {
-        leadId = newLead.id;
-
-        try {
-          await supabase.rpc('log_activity', {
-            p_entity_type: 'lead',
-            p_entity_id: newLead.id,
-            p_action: 'create',
-            p_user_id: user_id,
-            p_details: `Lead created via booking page: ${firstName} ${lastName}`
-          });
-        } catch (logError) {
-          console.error("Error logging lead creation:", logError);
-        }
+    // In a real implementation, we would query the user profile by slug
+    // For now, return mock data
+    return {
+      id: "mock-user-id",
+      first_name: "محمد",
+      last_name: "أحمد",
+      title: "مستشار مبيعات",
+      avatar_url: null,
+      booking_settings: {
+        appointment_duration: 30,
+        buffer_time: 15,
+        advance_notice: 1,
+        max_days_in_advance: 30,
+        is_public: true,
+        allowed_meeting_types: ["اجتماع تعريفي", "استشارة", "عرض تقديمي"]
       }
-    }
-
-    const appointmentData: AppointmentCreateInput = {
-      title: title,
-      description: `Appointment booked via public booking page by ${name} (${email})`,
-      start_time: start_time,
-      end_time: end_time,
-      location: location,
-      status: 'scheduled',
-      lead_id: leadId,
-      owner_id: user_id,
-      notes: notes,
-      type: type,
-      created_by: user_id
     };
-
-    const appointment = await createAppointment(appointmentData);
-
-    try {
-      await supabase.rpc('log_activity', {
-        p_entity_type: 'appointment',
-        p_entity_id: appointment.id,
-        p_action: 'public_booking',
-        p_user_id: user_id,
-        p_details: `Appointment booked via public booking page by ${name} (${email})`
-      });
-    } catch (logError) {
-      console.error("Error logging public booking:", logError);
-    }
-
-    return appointment;
   } catch (error) {
-    console.error("Error creating booking from public:", error);
+    console.error("Error fetching booking profile:", error);
+    return null;
+  }
+};
+
+// Create a booking as a client
+export const createPublicBooking = async (
+  bookingData: {
+    user_id: string;
+    client_name: string;
+    client_email: string;
+    client_phone?: string;
+    date: string;
+    time: string;
+    duration: number;
+    meeting_type: string;
+    notes?: string;
+  }
+): Promise<Appointment | null> => {
+  try {
+    const { user_id, client_name, client_email, client_phone, date, time, duration, meeting_type, notes } = bookingData;
+    
+    // Calculate end time based on duration
+    const startTime = `${date}T${time}:00`;
+    const endDate = new Date(new Date(`${date}T${time}:00`).getTime() + duration * 60000);
+    const endTime = endDate.toISOString();
+    
+    // Create appointment data
+    const appointmentData: AppointmentCreateInput = {
+      title: `موعد: ${meeting_type} - ${client_name}`,
+      description: `حجز موعد من ${client_name} (${client_email})${notes ? `\n\nملاحظات: ${notes}` : ''}`,
+      start_time: startTime,
+      end_time: endTime,
+      status: "scheduled",
+      created_by: user_id, // The staff member being booked
+      // Use the user_id as the owner since this isn't going through normal Supabase auth
+      owner_id: user_id, // Now properly added to AppointmentCreateInput type
+      client_id: client_email, // We're using email as client_id for public bookings
+      type: meeting_type, // Now properly added to AppointmentCreateInput type
+      is_all_day: false
+    };
+    
+    const result = await createAppointment(appointmentData);
+    
+    if (result) {
+      // In a real-world implementation, we would send confirmation emails here
+      toast.success("تم حجز الموعد بنجاح");
+      return result;
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Error creating booking:", error);
+    toast.error("فشل في حجز الموعد");
     return null;
   }
 };

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Task, TaskCreateInput } from '@/services/tasks/types';
@@ -9,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AutocompleteOption, Autocomplete } from '@/components/ui/autocomplete';
+import { createTask, updateTask } from '@/services/tasks/api'; // Import the functions properly
 
 export interface TaskFormProps {
   leadId?: string;

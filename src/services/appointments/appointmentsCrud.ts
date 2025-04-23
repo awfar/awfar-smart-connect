@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Appointment, AppointmentCreateInput, AppointmentStatus, AppointmentDB } from "./types";
 import { toast } from "sonner";
@@ -123,6 +122,7 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
       const { data: { user } } = await supabase.auth.getUser();
       if (user) created_by = user.id;
     }
+    // All these fields are now properly defined in the AppointmentCreateInput interface
     const appointmentData = {
       title: appointment.title,
       description: appointment.description,
