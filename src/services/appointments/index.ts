@@ -1,32 +1,15 @@
 
-// Export all appointment-related functions and types
-export { 
-  createAppointment,
-  updateAppointment,
-  deleteAppointment,
-  getAppointment,
-  fetchAppointments,
-  fetchAppointmentsByLeadId,
-  fetchAppointmentsByUserId,
-  fetchAppointmentsByTeam,
-  fetchUpcomingAppointments,
-  markAppointmentAsCompleted,
-  fetchUserAvailability,
-  updateUserAvailability,
-  fetchBookingSettings,
-  updateBookingSettings,
-  createBookingFromPublic
-} from './appointmentsService';
+// Export main appointment CRUD
+export * from './appointmentsCrud';
 
-export type { 
-  Appointment, 
-  AppointmentCreateInput, 
-  AppointmentStatus,
-  AppointmentType,
-  AppointmentLocation,
-  UserAvailability,
-  BookingSettings
-} from './types';
+// Export user availability and booking settings
+export * from './availabilityService';
+
+// Export public booking logic
+export * from './bookingService';
+
+// Export types
+export * from './types';
 
 // Export functions from api.ts
 export { 
