@@ -1,8 +1,8 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { LeadActivity, LeadActivityType } from "@/types/leads";
+import { LeadActivity, LeadActivityType } from "@/services/leads/types"; // Corrected import
 import { LeadActivityInput } from "@/services/leads/types";
+import { Task } from "@/services/tasks/types";
 
 export const fetchLeadActivities = async (leadId: string): Promise<LeadActivity[]> => {
   try {
