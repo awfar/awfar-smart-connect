@@ -103,7 +103,9 @@ const AppointmentFormDialog: React.FC<AppointmentFormDialogProps> = ({
         end_time: endDateTime.toISOString(),
         created_by: user?.id,
         owner_id: user?.id,
-        status: 'scheduled'
+        status: 'scheduled',
+        is_all_day: false,
+        type: 'meeting'
       });
       
       toast.success('تم إنشاء الموعد بنجاح');
