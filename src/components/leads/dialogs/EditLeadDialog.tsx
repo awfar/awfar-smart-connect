@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Lead } from "@/services/leads/types";
@@ -187,7 +186,7 @@ const EditLeadDialog: React.FC<EditLeadDialogProps> = ({
               disabled={isSubmitting}
               className="px-4 py-2 bg-primary text-white rounded-md"
             >
-              {isSubmitting ? 'جار الحفظ...' : 'حفظ'}
+              {isSubmitting ? 'جار ا��حفظ...' : 'حفظ'}
             </button>
           </div>
         </form>

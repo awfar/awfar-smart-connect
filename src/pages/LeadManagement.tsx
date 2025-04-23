@@ -80,7 +80,7 @@ const LeadManagement = () => {
       {isAddLeadOpen && (
         <AddLeadDialog 
           isOpen={isAddLeadOpen} 
-          onClose={() => setIsAddLeadOpen(false)} 
+          onOpenChange={setIsAddLeadOpen} 
           onSuccess={handleLeadSuccess}
         />
       )}
@@ -89,7 +89,7 @@ const LeadManagement = () => {
       {isEditLeadOpen && leadToEdit && (
         <EditLeadDialog 
           isOpen={isEditLeadOpen} 
-          onClose={() => setIsEditLeadOpen(false)} 
+          onOpenChange={setIsEditLeadOpen} 
           lead={leadToEdit}
           onSuccess={handleLeadSuccess}
         />

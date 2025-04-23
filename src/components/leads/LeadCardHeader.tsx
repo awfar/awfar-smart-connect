@@ -2,9 +2,21 @@
 import React from 'react';
 import { CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DownloadCloud, UserPlus } from "lucide-react";
+import { DownloadCloud, UserPlus, Filter, RefreshCw } from "lucide-react";
 
-const LeadCardHeader: React.FC = () => {
+interface LeadCardHeaderProps {
+  onToggleFilters: () => void;
+  onRefresh: () => void;
+  onAddLead?: () => void;
+  onSearch?: (term: string) => void;
+}
+
+const LeadCardHeader: React.FC<LeadCardHeaderProps> = ({
+  onToggleFilters,
+  onRefresh,
+  onAddLead,
+  onSearch
+}) => {
   return (
     <div className="flex items-center justify-between">
       <div>
@@ -14,13 +26,21 @@ const LeadCardHeader: React.FC = () => {
         </CardDescription>
       </div>
       <div className="flex items-center gap-2">
+        <Button variant="ghost" size="sm" onClick={onToggleFilters}>
+          <Filter className="h-4 w-4 ml-1" />
+          تصفية
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onRefresh}>
+          <RefreshCw className="h-4 w-4 ml-1" />
+          تحديث
+        </Button>
+        <Button variant="ghost" size="sm" onClick={onAddLead}>
+          <UserPlus className="h-4 w-4 ml-1" />
+          إضافة عميل
+        </Button>
         <Button variant="ghost" size="sm">
           <DownloadCloud className="h-4 w-4 ml-1" />
           تصدير
-        </Button>
-        <Button variant="ghost" size="sm">
-          <UserPlus className="h-4 w-4 ml-1" />
-          استيراد
         </Button>
       </div>
     </div>

@@ -10,7 +10,7 @@ import { useBreakpoints } from '@/hooks/use-mobile';
 interface AddLeadDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  onSuccess: (lead?: Lead) => void;
 }
 
 const AddLeadDialog: React.FC<AddLeadDialogProps> = ({
@@ -32,7 +32,7 @@ const AddLeadDialog: React.FC<AddLeadDialogProps> = ({
         title: "تم إضافة العميل المحتمل بنجاح",
       });
     }
-    onSuccess();
+    onSuccess(lead);
   };
 
   return (
