@@ -11,14 +11,14 @@ import {
 import { toast } from "sonner";
 
 // Helper function to convert database record to our app model
-const mapDbToAppointment = (dbRecord: any): Appointment => {
+const mapDbToAppointment = (dbRecord: AppointmentDB): Appointment => {
   return {
     id: dbRecord.id,
     title: dbRecord.title,
     description: dbRecord.description,
     start_time: dbRecord.start_time,
     end_time: dbRecord.end_time,
-    location: dbRecord.location,
+    location: dbRecord.location as any,
     location_details: dbRecord.location_details,
     status: dbRecord.status as AppointmentStatus,
     lead_id: dbRecord.lead_id || null,
@@ -29,7 +29,7 @@ const mapDbToAppointment = (dbRecord: any): Appointment => {
     created_by: dbRecord.created_by,
     created_at: dbRecord.created_at,
     updated_at: dbRecord.updated_at,
-    type: dbRecord.type,
+    type: dbRecord.type as any,
     related_deal_id: dbRecord.related_deal_id,
     related_ticket_id: dbRecord.related_ticket_id,
     notes: dbRecord.notes,
@@ -83,7 +83,7 @@ export const fetchAppointments = async (filters?: {
     }
 
     // Map database response to Appointment interface
-    return (data || []).map(item => mapDbToAppointment(item));
+    return (data || []).map(item => mapDbToAppointment(item as AppointmentDB));
   } catch (error) {
     console.error("Error in fetchAppointments:", error);
     toast.error("فشل في تحميل المواعيد");
@@ -121,7 +121,7 @@ export const getAppointment = async (id: string): Promise<Appointment | null> =>
 
     if (error) throw error;
     
-    return data ? mapDbToAppointment(data) : null;
+    return data ? mapDbToAppointment(data as AppointmentDB) : null;
   } catch (error) {
     console.error("Error fetching appointment:", error);
     return null;
@@ -200,7 +200,7 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
     }
 
     toast.success("تم إنشاء الموعد بنجاح");
-    return mapDbToAppointment(data);
+    return mapDbToAppointment(data as AppointmentDB);
   } catch (error) {
     console.error("Error creating appointment:", error);
     toast.error("فشل في إنشاء الموعد");
@@ -354,7 +354,7 @@ export const markAppointmentAsCompleted = async (id: string): Promise<Appointmen
 // Stub implementation that returns empty data until the database is updated
 export const fetchUserAvailability = async (userId: string): Promise<UserAvailability[]> => {
   console.log("Fetching user availability for:", userId);
-  // Return empty array for now until the user_availability table is created
+  // Return empty array for now until the user_availability table is populated
   return [];
 };
 
@@ -368,7 +368,7 @@ export const updateUserAvailability = async (availability: UserAvailability): Pr
 // Stub implementation for fetching booking settings
 export const fetchBookingSettings = async (userId: string): Promise<BookingSettings | null> => {
   console.log("Fetching booking settings for:", userId);
-  // Return null until the booking_settings table is created
+  // Return null until the booking_settings table is populated
   return null;
 };
 
