@@ -1,8 +1,9 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import { Appointment, AppointmentCreateInput, AppointmentStatus } from "./types";
+import { Appointment, AppointmentCreateInput, AppointmentStatus, UserAvailability, BookingSettings } from "./types";
 import { toast } from "sonner";
 
-export const fetchAppointments = async (filters?: { lead_id?: string; status?: AppointmentStatus }): Promise<Appointment[]> => {
+export const fetchAppointments = async (filters?: { lead_id?: string; status?: AppointmentStatus; user_id?: string; team_id?: string; upcoming?: boolean }): Promise<Appointment[]> => {
   try {
     let query = supabase
       .from('appointments')
@@ -16,6 +17,18 @@ export const fetchAppointments = async (filters?: { lead_id?: string; status?: A
       }
       if (filters.status) {
         query = query.eq('status', filters.status);
+      }
+      if (filters.user_id) {
+        query = query.eq('owner_id', filters.user_id);
+      }
+      if (filters.team_id) {
+        // For team filter, we'd typically need to join with a user table to get team members
+        // This is a simplified approach - in a real app, you might fetch team members first
+        query = query.eq('team_id', filters.team_id);
+      }
+      if (filters.upcoming) {
+        const now = new Date().toISOString();
+        query = query.gte('start_time', now);
       }
     }
 
@@ -34,13 +47,23 @@ export const fetchAppointments = async (filters?: { lead_id?: string; status?: A
       start_time: item.start_time,
       end_time: item.end_time,
       location: item.location,
+      location_details: item.location_details,
       status: item.status as AppointmentStatus,
       lead_id: item.lead_id || null,
+      company_id: item.company_id || null,
       client_id: item.client_id,
+      owner_id: item.owner_id,
       participants: item.participants,
       created_by: item.created_by,
       created_at: item.created_at,
-      updated_at: item.updated_at
+      updated_at: item.updated_at,
+      type: item.type,
+      related_deal_id: item.related_deal_id,
+      related_ticket_id: item.related_ticket_id,
+      notes: item.notes,
+      is_all_day: item.is_all_day,
+      color: item.color,
+      reminder_time: item.reminder_time
     }));
   } catch (error) {
     console.error("Error in fetchAppointments:", error);
@@ -51,6 +74,22 @@ export const fetchAppointments = async (filters?: { lead_id?: string; status?: A
 
 export const fetchAppointmentsByLeadId = async (leadId: string): Promise<Appointment[]> => {
   return fetchAppointments({ lead_id: leadId });
+};
+
+export const fetchAppointmentsByUserId = async (userId: string): Promise<Appointment[]> => {
+  return fetchAppointments({ user_id: userId });
+};
+
+export const fetchAppointmentsByTeam = async (teamId: string): Promise<Appointment[]> => {
+  return fetchAppointments({ team_id: teamId });
+};
+
+export const fetchUpcomingAppointments = async (userId?: string): Promise<Appointment[]> => {
+  const filters: { upcoming: boolean; user_id?: string } = { upcoming: true };
+  if (userId) {
+    filters.user_id = userId;
+  }
+  return fetchAppointments(filters);
 };
 
 export const getAppointment = async (id: string): Promise<Appointment | null> => {
@@ -70,13 +109,23 @@ export const getAppointment = async (id: string): Promise<Appointment | null> =>
       start_time: data.start_time,
       end_time: data.end_time,
       location: data.location,
+      location_details: data.location_details,
       status: data.status as AppointmentStatus,
       lead_id: data.lead_id || null,
+      company_id: data.company_id || null,
       client_id: data.client_id,
+      owner_id: data.owner_id,
       participants: data.participants,
       created_by: data.created_by,
       created_at: data.created_at,
-      updated_at: data.updated_at
+      updated_at: data.updated_at,
+      type: data.type,
+      related_deal_id: data.related_deal_id,
+      related_ticket_id: data.related_ticket_id,
+      notes: data.notes,
+      is_all_day: data.is_all_day,
+      color: data.color,
+      reminder_time: data.reminder_time
     };
   } catch (error) {
     console.error("Error fetching appointment:", error);
@@ -97,6 +146,15 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
       throw new Error("End time is required");
     }
 
+    // Get current user id for created_by if not provided
+    let created_by = appointment.created_by;
+    if (!created_by) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        created_by = user.id;
+      }
+    }
+
     // Ensure we're inserting a single object with required fields
     const { data, error } = await supabase
       .from('appointments')
@@ -106,17 +164,41 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
         start_time: appointment.start_time,
         end_time: appointment.end_time,
         location: appointment.location,
+        location_details: appointment.location_details,
         status: appointment.status || 'scheduled',
         client_id: appointment.client_id,
         lead_id: appointment.lead_id,
+        company_id: appointment.company_id,
+        owner_id: appointment.owner_id || created_by,
         participants: appointment.participants,
-        created_by: appointment.created_by
+        created_by: created_by,
+        type: appointment.type,
+        related_deal_id: appointment.related_deal_id,
+        related_ticket_id: appointment.related_ticket_id,
+        notes: appointment.notes,
+        is_all_day: appointment.is_all_day,
+        color: appointment.color,
+        reminder_time: appointment.reminder_time
       })
       .select()
       .single();
 
     if (error) {
       throw error;
+    }
+
+    // Log activity
+    try {
+      await supabase.rpc('log_activity', {
+        p_entity_type: 'appointment',
+        p_entity_id: data.id,
+        p_action: 'create',
+        p_user_id: created_by,
+        p_details: `Created appointment: ${appointment.title}`
+      });
+    } catch (logError) {
+      console.error("Error logging activity:", logError);
+      // Don't fail the overall operation if logging fails
     }
 
     toast.success("تم إنشاء الموعد بنجاح");
@@ -127,13 +209,23 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
       start_time: data.start_time,
       end_time: data.end_time,
       location: data.location,
+      location_details: data.location_details,
       status: data.status as AppointmentStatus,
       lead_id: data.lead_id || null,
+      company_id: data.company_id || null,
       client_id: data.client_id,
+      owner_id: data.owner_id,
       participants: data.participants,
       created_by: data.created_by,
       created_at: data.created_at,
-      updated_at: data.updated_at
+      updated_at: data.updated_at,
+      type: data.type,
+      related_deal_id: data.related_deal_id,
+      related_ticket_id: data.related_ticket_id,
+      notes: data.notes,
+      is_all_day: data.is_all_day,
+      color: data.color,
+      reminder_time: data.reminder_time
     };
   } catch (error) {
     console.error("Error creating appointment:", error);
@@ -154,10 +246,20 @@ export const updateAppointment = async (id: string, updates: Partial<Appointment
     if (updates.start_time !== undefined) updateData.start_time = updates.start_time;
     if (updates.end_time !== undefined) updateData.end_time = updates.end_time;
     if (updates.location !== undefined) updateData.location = updates.location;
+    if (updates.location_details !== undefined) updateData.location_details = updates.location_details;
     if (updates.status !== undefined) updateData.status = updates.status;
     if (updates.client_id !== undefined) updateData.client_id = updates.client_id;
     if (updates.lead_id !== undefined) updateData.lead_id = updates.lead_id;
+    if (updates.company_id !== undefined) updateData.company_id = updates.company_id;
+    if (updates.owner_id !== undefined) updateData.owner_id = updates.owner_id;
     if (updates.participants !== undefined) updateData.participants = updates.participants;
+    if (updates.type !== undefined) updateData.type = updates.type;
+    if (updates.related_deal_id !== undefined) updateData.related_deal_id = updates.related_deal_id;
+    if (updates.related_ticket_id !== undefined) updateData.related_ticket_id = updates.related_ticket_id;
+    if (updates.notes !== undefined) updateData.notes = updates.notes;
+    if (updates.is_all_day !== undefined) updateData.is_all_day = updates.is_all_day;
+    if (updates.color !== undefined) updateData.color = updates.color;
+    if (updates.reminder_time !== undefined) updateData.reminder_time = updates.reminder_time;
 
     const { data, error } = await supabase
       .from('appointments')
@@ -168,6 +270,23 @@ export const updateAppointment = async (id: string, updates: Partial<Appointment
 
     if (error) throw error;
 
+    // Log activity
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.rpc('log_activity', {
+          p_entity_type: 'appointment',
+          p_entity_id: id,
+          p_action: 'update',
+          p_user_id: user.id,
+          p_details: `Updated appointment: ${data.title}`
+        });
+      }
+    } catch (logError) {
+      console.error("Error logging activity:", logError);
+      // Don't fail the overall operation if logging fails
+    }
+
     toast.success("تم تحديث الموعد بنجاح");
     return {
       id: data.id,
@@ -176,13 +295,23 @@ export const updateAppointment = async (id: string, updates: Partial<Appointment
       start_time: data.start_time,
       end_time: data.end_time,
       location: data.location,
+      location_details: data.location_details,
       status: data.status as AppointmentStatus,
       lead_id: data.lead_id || null,
+      company_id: data.company_id || null,
       client_id: data.client_id,
+      owner_id: data.owner_id,
       participants: data.participants,
       created_by: data.created_by,
       created_at: data.created_at,
-      updated_at: data.updated_at
+      updated_at: data.updated_at,
+      type: data.type,
+      related_deal_id: data.related_deal_id,
+      related_ticket_id: data.related_ticket_id,
+      notes: data.notes,
+      is_all_day: data.is_all_day,
+      color: data.color,
+      reminder_time: data.reminder_time
     };
   } catch (error) {
     console.error("Error updating appointment:", error);
@@ -193,6 +322,29 @@ export const updateAppointment = async (id: string, updates: Partial<Appointment
 
 export const deleteAppointment = async (id: string): Promise<boolean> => {
   try {
+    // Log activity before deletion
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: appointment } = await supabase
+        .from('appointments')
+        .select('title')
+        .eq('id', id)
+        .single();
+      
+      if (user && appointment) {
+        await supabase.rpc('log_activity', {
+          p_entity_type: 'appointment',
+          p_entity_id: id,
+          p_action: 'delete',
+          p_user_id: user.id,
+          p_details: `Deleted appointment: ${appointment.title}`
+        });
+      }
+    } catch (logError) {
+      console.error("Error logging deletion activity:", logError);
+      // Continue with deletion even if logging fails
+    }
+
     const { error } = await supabase
       .from('appointments')
       .delete()
@@ -206,5 +358,295 @@ export const deleteAppointment = async (id: string): Promise<boolean> => {
     console.error("Error deleting appointment:", error);
     toast.error("فشل في حذف الموعد");
     return false;
+  }
+};
+
+export const markAppointmentAsCompleted = async (id: string): Promise<Appointment | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('appointments')
+      .update({ 
+        status: 'completed',
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Log activity
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.rpc('log_activity', {
+          p_entity_type: 'appointment',
+          p_entity_id: id,
+          p_action: 'complete',
+          p_user_id: user.id,
+          p_details: `Marked appointment as completed: ${data.title}`
+        });
+      }
+    } catch (logError) {
+      console.error("Error logging activity:", logError);
+    }
+
+    toast.success("تم تحديث حالة الموعد إلى مكتمل");
+    
+    return data ? {
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      start_time: data.start_time,
+      end_time: data.end_time,
+      location: data.location,
+      location_details: data.location_details,
+      status: data.status as AppointmentStatus,
+      lead_id: data.lead_id || null,
+      company_id: data.company_id || null,
+      client_id: data.client_id,
+      owner_id: data.owner_id,
+      participants: data.participants,
+      created_by: data.created_by,
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      type: data.type,
+      related_deal_id: data.related_deal_id,
+      related_ticket_id: data.related_ticket_id,
+      notes: data.notes,
+      is_all_day: data.is_all_day,
+      color: data.color,
+      reminder_time: data.reminder_time
+    } : null;
+  } catch (error) {
+    console.error("Error marking appointment as completed:", error);
+    toast.error("فشل في تحديث حالة الموعد");
+    return null;
+  }
+};
+
+export const fetchUserAvailability = async (userId: string): Promise<UserAvailability[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_availability')
+      .select('*')
+      .eq('user_id', userId)
+      .order('day_of_week', { ascending: true });
+
+    if (error) throw error;
+
+    return data || [];
+  } catch (error) {
+    console.error("Error fetching user availability:", error);
+    toast.error("فشل في تحميل أوقات التوافر");
+    return [];
+  }
+};
+
+export const updateUserAvailability = async (availability: UserAvailability): Promise<UserAvailability | null> => {
+  try {
+    const { id, ...availabilityData } = availability;
+    const isNew = !id;
+
+    let result;
+    if (isNew) {
+      // Create new availability entry
+      result = await supabase
+        .from('user_availability')
+        .insert({
+          ...availabilityData,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+    } else {
+      // Update existing availability entry
+      result = await supabase
+        .from('user_availability')
+        .update({
+          ...availabilityData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+    }
+
+    if (result.error) throw result.error;
+    
+    toast.success("تم تحديث أوقات التوافر بنجاح");
+    return result.data;
+  } catch (error) {
+    console.error("Error updating user availability:", error);
+    toast.error("فشل في تحديث أوقات التوافر");
+    return null;
+  }
+};
+
+export const fetchBookingSettings = async (userId: string): Promise<BookingSettings | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('booking_settings')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      // If no settings exist yet, this isn't an error
+      if (error.code === 'PGRST116') {
+        return null;
+      }
+      throw error;
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error fetching booking settings:", error);
+    toast.error("فشل في تحميل إعدادات الحجز");
+    return null;
+  }
+};
+
+export const updateBookingSettings = async (settings: Partial<BookingSettings>): Promise<BookingSettings | null> => {
+  try {
+    const { id, ...settingsData } = settings;
+    const isNew = !id;
+
+    let result;
+    if (isNew) {
+      // Create new settings
+      result = await supabase
+        .from('booking_settings')
+        .insert({
+          ...settingsData,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+    } else {
+      // Update existing settings
+      result = await supabase
+        .from('booking_settings')
+        .update({
+          ...settingsData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+        .single();
+    }
+
+    if (result.error) throw result.error;
+    
+    toast.success("تم تحديث إعدادات الحجز بنجاح");
+    return result.data;
+  } catch (error) {
+    console.error("Error updating booking settings:", error);
+    toast.error("فشل في تحديث إعدادات الحجز");
+    return null;
+  }
+};
+
+export const createBookingFromPublic = async (bookingData: any): Promise<Appointment | null> => {
+  try {
+    // Extract data from booking form
+    const { 
+      user_id, 
+      name, 
+      email, 
+      company, 
+      title,
+      start_time,
+      end_time,
+      notes,
+      type = 'virtual',
+      location = 'zoom'
+    } = bookingData;
+
+    // First check if this is a new lead or existing one
+    let leadId = null;
+    const { data: existingLeads, error: leadCheckError } = await supabase
+      .from('leads')
+      .select('id')
+      .eq('email', email)
+      .limit(1);
+
+    if (leadCheckError) {
+      console.error("Error checking existing lead:", leadCheckError);
+    } else if (existingLeads && existingLeads.length > 0) {
+      leadId = existingLeads[0].id;
+    } else {
+      // Create a new lead
+      const nameParts = name.split(' ');
+      const firstName = nameParts[0];
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+
+      const { data: newLead, error: createLeadError } = await supabase
+        .from('leads')
+        .insert({
+          first_name: firstName,
+          last_name: lastName,
+          email: email,
+          company: company,
+          source: 'booking_page',
+          status: 'new'
+        })
+        .select()
+        .single();
+
+      if (createLeadError) {
+        console.error("Error creating new lead:", createLeadError);
+      } else {
+        leadId = newLead.id;
+
+        // Log lead creation activity
+        try {
+          await supabase.rpc('log_activity', {
+            p_entity_type: 'lead',
+            p_entity_id: newLead.id,
+            p_action: 'create',
+            p_user_id: user_id,
+            p_details: `Lead created via booking page: ${firstName} ${lastName}`
+          });
+        } catch (logError) {
+          console.error("Error logging lead creation:", logError);
+        }
+      }
+    }
+
+    // Create the appointment
+    const appointmentData: AppointmentCreateInput = {
+      title: title,
+      description: `Appointment booked via public booking page by ${name} (${email})`,
+      start_time: start_time,
+      end_time: end_time,
+      location: location,
+      status: 'scheduled',
+      lead_id: leadId,
+      owner_id: user_id,
+      notes: notes,
+      type: type as AppointmentType,
+      created_by: user_id
+    };
+
+    const appointment = await createAppointment(appointmentData);
+    
+    // Extra logging for public booking
+    try {
+      await supabase.rpc('log_activity', {
+        p_entity_type: 'appointment',
+        p_entity_id: appointment.id,
+        p_action: 'public_booking',
+        p_user_id: user_id,
+        p_details: `Appointment booked via public booking page by ${name} (${email})`
+      });
+    } catch (logError) {
+      console.error("Error logging public booking:", logError);
+    }
+    
+    return appointment;
+  } catch (error) {
+    console.error("Error creating booking from public:", error);
+    return null;
   }
 };

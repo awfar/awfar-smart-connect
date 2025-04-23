@@ -17,6 +17,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { markAppointmentAsCompleted, deleteAppointment } from '@/services/appointments/appointmentsService';
 
 interface AppointmentDetailProps {
   appointment: Appointment;
@@ -41,17 +42,29 @@ const AppointmentDetail: React.FC<AppointmentDetailProps> = ({
   };
 
   // Handle delete appointment
-  const handleDeleteAppointment = () => {
-    // In a real app, call API to delete the appointment
-    toast.success("تم حذف الموعد بنجاح");
-    onClose();
+  const handleDeleteAppointment = async () => {
+    try {
+      const success = await deleteAppointment(appointment.id);
+      if (success) {
+        toast.success("تم حذف الموعد بنجاح");
+        onClose();
+      }
+    } catch (error) {
+      console.error("Error deleting appointment:", error);
+      toast.error("فشل في حذف الموعد");
+    }
   };
 
   // Handle mark as completed
-  const handleMarkAsCompleted = () => {
-    // In a real app, call API to update the status
-    toast.success("تم تحديث حالة الموعد");
-    onClose();
+  const handleMarkAsCompleted = async () => {
+    try {
+      await markAppointmentAsCompleted(appointment.id);
+      toast.success("تم تحديث حالة الموعد");
+      onClose();
+    } catch (error) {
+      console.error("Error marking appointment as completed:", error);
+      toast.error("فشل في تحديث حالة الموعد");
+    }
   };
 
   // Get location display name

@@ -76,4 +76,3 @@ export interface BookingSettings {
   created_at: string;
   updated_at: string;
 }
-

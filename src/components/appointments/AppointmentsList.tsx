@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -29,6 +29,17 @@ import {
 } from "@/components/ui/alert-dialog";
 import { format } from "date-fns";
 import AppointmentDetail from "./AppointmentDetail";
+import { 
+  fetchAppointments,
+  fetchAppointmentsByUserId, 
+  fetchAppointmentsByTeam, 
+  fetchUpcomingAppointments,
+  createAppointment, 
+  updateAppointment, 
+  deleteAppointment, 
+  markAppointmentAsCompleted 
+} from '@/services/appointments/appointmentsService';
+import { supabase } from '@/integrations/supabase/client';
 
 // Define status mapping for display
 const statusDisplay = {
@@ -37,80 +48,13 @@ const statusDisplay = {
   cancelled: "ملغي"
 };
 
-// Sample initial appointments data - replace with API call
-const MOCK_APPOINTMENTS: Partial<Appointment>[] = [
-  { 
-    id: "1", 
-    title: "اجتماع مع عميل جديد", 
-    start_time: new Date(2025, 3, 14, 10, 0).toISOString(), 
-    end_time: new Date(2025, 3, 14, 11, 0).toISOString(), 
-    status: "scheduled", 
-    description: "اجتماع",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    location: "office",
-    owner_id: "1"
-  },
-  { 
-    id: "2", 
-    title: "متابعة عرض المنتج", 
-    start_time: new Date(2025, 3, 15, 14, 30).toISOString(), 
-    end_time: new Date(2025, 3, 15, 15, 30).toISOString(), 
-    status: "scheduled", 
-    description: "عرض",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    location: "zoom",
-    owner_id: "1"
-  },
-  { 
-    id: "3", 
-    title: "مراجعة مشروع", 
-    start_time: new Date(2025, 3, 15, 16, 0).toISOString(), 
-    end_time: new Date(2025, 3, 15, 17, 0).toISOString(), 
-    status: "scheduled", 
-    description: "مراجعة",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    location: "google-meet",
-    owner_id: "2"
-  },
-  { 
-    id: "4", 
-    title: "مكالمة مع فريق التطوير", 
-    start_time: new Date(2025, 3, 20, 11, 0).toISOString(), 
-    end_time: new Date(2025, 3, 20, 12, 0).toISOString(), 
-    status: "cancelled", 
-    description: "مكالمة",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    location: "microsoft-teams",
-    owner_id: "1"
-  },
-  { 
-    id: "5", 
-    title: "اجتماع استراتيجي", 
-    start_time: new Date(2025, 3, 25, 13, 0).toISOString(), 
-    end_time: new Date(2025, 3, 25, 14, 0).toISOString(), 
-    status: "scheduled", 
-    description: "اجتماع",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    location: "office",
-    owner_id: "3"
-  },
-];
-
 interface AppointmentsListProps {
   filter?: "all" | "my" | "team" | "upcoming";
 }
 
 const AppointmentsList: React.FC<AppointmentsListProps> = ({ filter = "all" }) => {
-  const [appointments, setAppointments] = useState<Appointment[]>(MOCK_APPOINTMENTS.map(app => ({
-    ...app,
-    created_at: app.created_at || new Date().toISOString(),
-    updated_at: app.updated_at || new Date().toISOString()
-  })) as Appointment[]);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   
   const [isViewingDetail, setIsViewingDetail] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -119,29 +63,58 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ filter = "all" }) =
   const [appointmentToDelete, setAppointmentToDelete] = useState<string | null>(null);
   const { isMobile } = useBreakpoints();
 
-  // Filter appointments based on the selected tab
-  const filteredAppointments = React.useMemo(() => {
-    switch (filter) {
-      case "my":
-        // In a real app, filter by current user ID
-        return appointments.filter(app => app.owner_id === "1");
-      case "team":
-        // In a real app, filter by team IDs
-        return appointments.filter(app => 
-          ["1", "2", "3"].includes(app.owner_id || ""));
-      case "upcoming":
-        // Filter for upcoming appointments (today and future)
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        return appointments.filter(app => {
-          const appDate = new Date(app.start_time);
-          return appDate >= today;
-        });
-      default:
-        // All appointments
-        return appointments;
-    }
-  }, [appointments, filter]);
+  // Get current user
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getUserId = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUserId(user.id);
+      }
+    };
+
+    getUserId();
+  }, []);
+
+  // Load appointments based on filter
+  useEffect(() => {
+    const loadAppointments = async () => {
+      setIsLoading(true);
+      try {
+        let appointmentsData: Appointment[] = [];
+
+        switch (filter) {
+          case "my":
+            if (currentUserId) {
+              appointmentsData = await fetchAppointmentsByUserId(currentUserId);
+            }
+            break;
+          case "team":
+            // In a real app, you would get the user's team ID and pass it
+            // For now, we'll use a mock team ID or just show all appointments
+            appointmentsData = await fetchAppointmentsByTeam("1");
+            break;
+          case "upcoming":
+            appointmentsData = await fetchUpcomingAppointments();
+            break;
+          case "all":
+          default:
+            appointmentsData = await fetchAppointments();
+            break;
+        }
+
+        setAppointments(appointmentsData);
+      } catch (error) {
+        console.error(`Error loading ${filter} appointments:`, error);
+        toast.error(`فشل في تحميل المواعيد`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadAppointments();
+  }, [filter, currentUserId]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -174,49 +147,60 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ filter = "all" }) =
     setDeleteConfirmOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (appointmentToDelete !== null) {
-      setAppointments(appointments.filter(a => a.id !== appointmentToDelete));
-      toast.success("تم حذف الموعد بنجاح");
-      setDeleteConfirmOpen(false);
-      setAppointmentToDelete(null);
+      try {
+        const success = await deleteAppointment(appointmentToDelete);
+        if (success) {
+          setAppointments(appointments.filter(a => a.id !== appointmentToDelete));
+          setDeleteConfirmOpen(false);
+          setAppointmentToDelete(null);
+        }
+      } catch (error) {
+        console.error("Error deleting appointment:", error);
+        toast.error("فشل في حذف الموعد");
+      }
     }
   };
 
   const handleFormSubmit = async (appointmentData: any) => {
-    if (selectedAppointment) {
-      // Edit existing appointment
-      setAppointments(appointments.map(a => 
-        a.id === selectedAppointment.id ? { ...a, ...appointmentData } : a
-      ));
-      toast.success("تم تحديث الموعد بنجاح");
-    } else {
-      // Add new appointment
-      const newId = Math.max(...appointments.map(a => parseInt(a.id)), 0) + 1;
-      const newAppointment: Appointment = {
-        id: newId.toString(),
-        title: appointmentData.title || "",
-        start_time: appointmentData.start_time || new Date().toISOString(),
-        end_time: appointmentData.end_time || new Date().toISOString(),
-        location: appointmentData.location || "",
-        status: (appointmentData.status || "scheduled") as AppointmentStatus,
-        description: appointmentData.description,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setAppointments([newAppointment, ...appointments]);
-      toast.success("تم إضافة الموعد بنجاح");
+    try {
+      if (selectedAppointment) {
+        // Edit existing appointment
+        const updatedAppointment = await updateAppointment(selectedAppointment.id, appointmentData);
+        if (updatedAppointment) {
+          setAppointments(appointments.map(a => 
+            a.id === selectedAppointment.id ? updatedAppointment : a
+          ));
+        }
+      } else {
+        // Add new appointment
+        const newAppointment = await createAppointment(appointmentData);
+        setAppointments([newAppointment, ...appointments]);
+      }
+      
+      setIsEditing(false);
+      setSelectedAppointment(undefined);
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Error submitting appointment form:", error);
+      toast.error("فشل في حفظ الموعد");
+      return Promise.reject(error);
     }
-    setIsEditing(false);
-    setSelectedAppointment(undefined);
-    return Promise.resolve();
   };
 
-  const handleMarkAsComplete = (appointmentId: string) => {
-    setAppointments(appointments.map(a => 
-      a.id === appointmentId ? { ...a, status: "completed" } : a
-    ));
-    toast.success("تم تحديث حالة الموعد إلى مكتمل");
+  const handleMarkAsComplete = async (appointmentId: string) => {
+    try {
+      const updatedAppointment = await markAppointmentAsCompleted(appointmentId);
+      if (updatedAppointment) {
+        setAppointments(appointments.map(a => 
+          a.id === appointmentId ? updatedAppointment : a
+        ));
+      }
+    } catch (error) {
+      console.error("Error marking appointment as complete:", error);
+      toast.error("فشل في تحديث حالة الموعد");
+    }
   };
 
   // Map status to display text
@@ -251,11 +235,19 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ filter = "all" }) =
     setSelectedAppointment(undefined);
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
       {isMobile ? (
         <div className="space-y-4">
-          {filteredAppointments.map((appointment) => (
+          {appointments.map((appointment) => (
             <Card key={appointment.id}>
               <CardContent className="p-4">
                 <div className="flex justify-between">
@@ -321,7 +313,7 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ filter = "all" }) =
             </Card>
           ))}
           
-          {filteredAppointments.length === 0 && (
+          {appointments.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
               لا توجد مواعيد متاحة
             </div>
@@ -341,7 +333,7 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ filter = "all" }) =
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredAppointments.map((appointment) => (
+              {appointments.map((appointment) => (
                 <TableRow key={appointment.id}>
                   <TableCell className="font-medium">{appointment.title}</TableCell>
                   <TableCell>{formatDate(appointment.start_time)}</TableCell>
@@ -401,7 +393,7 @@ const AppointmentsList: React.FC<AppointmentsListProps> = ({ filter = "all" }) =
                 </TableRow>
               ))}
 
-              {filteredAppointments.length === 0 && (
+              {appointments.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     لا توجد مواعيد متاحة

@@ -9,11 +9,13 @@ import { toast } from "sonner";
 import { CalendarDays, List, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBreakpoints } from "@/hooks/use-mobile";
+import { createAppointment } from "@/services/appointments/appointmentsService";
 
 const AppointmentsManagement = () => {
   const [view, setView] = useState<"calendar" | "list">("calendar");
   const [isCreating, setIsCreating] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { isMobile } = useBreakpoints();
   
   const handleCreateAppointment = () => {
@@ -24,10 +26,20 @@ const AppointmentsManagement = () => {
     setIsCreating(false);
   };
 
-  const handleSaveAppointment = async () => {
-    toast.success("تم حفظ الموعد بنجاح");
-    setIsCreating(false);
-    return Promise.resolve();
+  const handleSaveAppointment = async (appointmentData: any) => {
+    setIsSubmitting(true);
+    try {
+      await createAppointment(appointmentData);
+      toast.success("تم حفظ الموعد بنجاح");
+      setIsCreating(false);
+      return Promise.resolve();
+    } catch (error) {
+      console.error("Error saving appointment:", error);
+      toast.error("فشل في حفظ الموعد");
+      return Promise.reject(error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -56,6 +68,7 @@ const AppointmentsManagement = () => {
             <AppointmentForm 
               onCancel={handleCancelCreate}
               onSubmit={handleSaveAppointment}
+              isSubmitting={isSubmitting}
             />
           </CardContent>
         </Card>
