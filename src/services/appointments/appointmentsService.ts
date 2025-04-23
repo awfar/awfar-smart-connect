@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { 
   Appointment, 
@@ -48,12 +47,10 @@ export const fetchAppointments = async (filters?: {
   upcoming?: boolean 
 }): Promise<Appointment[]> => {
   try {
-    let query = supabase
-      .from('appointments')
-      .select('*')
-      .order('start_time', { ascending: true });
+    let query = supabase.from('appointments');
+    
+    query = query.select('*').order('start_time', { ascending: true });
 
-    // Apply filters if provided
     if (filters) {
       if (filters.lead_id) {
         query = query.eq('lead_id', filters.lead_id);
@@ -65,8 +62,6 @@ export const fetchAppointments = async (filters?: {
         query = query.eq('owner_id', filters.user_id);
       }
       if (filters.team_id) {
-        // For team filter, we'd typically need to join with a user table to get team members
-        // This is a simplified approach - in a real app, you might fetch team members first
         query = query.eq('team_id', filters.team_id);
       }
       if (filters.upcoming) {
@@ -82,7 +77,6 @@ export const fetchAppointments = async (filters?: {
       throw error;
     }
 
-    // Map database response to Appointment interface
     return (data || []).map(item => mapDbToAppointment(item as AppointmentDB));
   } catch (error) {
     console.error("Error in fetchAppointments:", error);
@@ -130,7 +124,6 @@ export const getAppointment = async (id: string): Promise<Appointment | null> =>
 
 export const createAppointment = async (appointment: AppointmentCreateInput): Promise<Appointment> => {
   try {
-    // Validate required fields
     if (!appointment.title) {
       throw new Error("Title is required");
     }
@@ -141,7 +134,6 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
       throw new Error("End time is required");
     }
 
-    // Get current user id for created_by if not provided
     let created_by = appointment.created_by;
     if (!created_by) {
       const { data: { user } } = await supabase.auth.getUser();
@@ -150,7 +142,6 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
       }
     }
 
-    // Prepare data for insertion
     const appointmentData = {
       title: appointment.title,
       description: appointment.description,
@@ -174,7 +165,6 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
       reminder_time: appointment.reminder_time
     };
 
-    // Ensure we're inserting a single object with required fields
     const { data, error } = await supabase
       .from('appointments')
       .insert(appointmentData)
@@ -185,7 +175,6 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
       throw error;
     }
 
-    // Log activity
     try {
       await supabase.rpc('log_activity', {
         p_entity_type: 'appointment',
@@ -196,7 +185,6 @@ export const createAppointment = async (appointment: AppointmentCreateInput): Pr
       });
     } catch (logError) {
       console.error("Error logging activity:", logError);
-      // Don't fail the overall operation if logging fails
     }
 
     toast.success("تم إنشاء الموعد بنجاح");
@@ -214,7 +202,6 @@ export const updateAppointment = async (id: string, updates: Partial<Appointment
       updated_at: new Date().toISOString()
     };
     
-    // Only add fields that are present in the updates
     if (updates.title !== undefined) updateData.title = updates.title;
     if (updates.description !== undefined) updateData.description = updates.description;
     if (updates.start_time !== undefined) updateData.start_time = updates.start_time;
@@ -244,7 +231,6 @@ export const updateAppointment = async (id: string, updates: Partial<Appointment
 
     if (error) throw error;
 
-    // Log activity
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -258,7 +244,6 @@ export const updateAppointment = async (id: string, updates: Partial<Appointment
       }
     } catch (logError) {
       console.error("Error logging activity:", logError);
-      // Don't fail the overall operation if logging fails
     }
 
     toast.success("تم تحديث الموعد بنجاح");
@@ -272,7 +257,6 @@ export const updateAppointment = async (id: string, updates: Partial<Appointment
 
 export const deleteAppointment = async (id: string): Promise<boolean> => {
   try {
-    // Log activity before deletion
     try {
       const { data: { user } } = await supabase.auth.getUser();
       const { data: appointment } = await supabase
@@ -292,7 +276,6 @@ export const deleteAppointment = async (id: string): Promise<boolean> => {
       }
     } catch (logError) {
       console.error("Error logging deletion activity:", logError);
-      // Continue with deletion even if logging fails
     }
 
     const { error } = await supabase
@@ -325,7 +308,6 @@ export const markAppointmentAsCompleted = async (id: string): Promise<Appointmen
 
     if (error) throw error;
 
-    // Log activity
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -351,28 +333,22 @@ export const markAppointmentAsCompleted = async (id: string): Promise<Appointmen
   }
 };
 
-// Stub implementation that returns empty data until the database is updated
 export const fetchUserAvailability = async (userId: string): Promise<UserAvailability[]> => {
   console.log("Fetching user availability for:", userId);
-  // Return empty array for now until the user_availability table is populated
   return [];
 };
 
-// Stub implementation for updating availability
 export const updateUserAvailability = async (availability: UserAvailability): Promise<UserAvailability | null> => {
   console.log("Availability update request:", availability);
   toast.info("أوقات التوافر سيتم تفعيلها قريبًا");
   return null;
 };
 
-// Stub implementation for fetching booking settings
 export const fetchBookingSettings = async (userId: string): Promise<BookingSettings | null> => {
   console.log("Fetching booking settings for:", userId);
-  // Return null until the booking_settings table is populated
   return null;
 };
 
-// Stub implementation for updating booking settings
 export const updateBookingSettings = async (settings: Partial<BookingSettings>): Promise<BookingSettings | null> => {
   console.log("Booking settings update request:", settings);
   toast.info("إعدادات الحجز سيتم تفعيلها قريبًا");
@@ -381,7 +357,6 @@ export const updateBookingSettings = async (settings: Partial<BookingSettings>):
 
 export const createBookingFromPublic = async (bookingData: any): Promise<Appointment | null> => {
   try {
-    // Extract data from booking form
     const { 
       user_id, 
       name, 
@@ -395,7 +370,6 @@ export const createBookingFromPublic = async (bookingData: any): Promise<Appoint
       location = 'zoom'
     } = bookingData;
 
-    // First check if this is a new lead or existing one
     let leadId = null;
     const { data: existingLeads, error: leadCheckError } = await supabase
       .from('leads')
@@ -408,7 +382,6 @@ export const createBookingFromPublic = async (bookingData: any): Promise<Appoint
     } else if (existingLeads && existingLeads.length > 0) {
       leadId = existingLeads[0].id;
     } else {
-      // Create a new lead
       const nameParts = name.split(' ');
       const firstName = nameParts[0];
       const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
@@ -431,7 +404,6 @@ export const createBookingFromPublic = async (bookingData: any): Promise<Appoint
       } else {
         leadId = newLead.id;
 
-        // Log lead creation activity
         try {
           await supabase.rpc('log_activity', {
             p_entity_type: 'lead',
@@ -446,7 +418,6 @@ export const createBookingFromPublic = async (bookingData: any): Promise<Appoint
       }
     }
 
-    // Create the appointment
     const appointmentData: AppointmentCreateInput = {
       title: title,
       description: `Appointment booked via public booking page by ${name} (${email})`,
@@ -463,7 +434,6 @@ export const createBookingFromPublic = async (bookingData: any): Promise<Appoint
 
     const appointment = await createAppointment(appointmentData);
     
-    // Extra logging for public booking
     try {
       await supabase.rpc('log_activity', {
         p_entity_type: 'appointment',
