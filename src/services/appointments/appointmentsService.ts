@@ -299,3 +299,32 @@ export const markAppointmentAsCompleted = async (id: string): Promise<Appointmen
     return null;
   }
 };
+
+/**
+ * Fetches appointments for a specific lead
+ */
+export const fetchAppointmentsByLeadId = async (leadId: string): Promise<Appointment[]> => {
+  try {
+    if (!leadId || leadId === 'none') {
+      console.log("No lead ID provided for fetchAppointmentsByLeadId");
+      return [];
+    }
+    
+    console.log("Fetching appointments for lead:", leadId);
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('*')
+      .eq('lead_id', leadId)
+      .order('start_time', { ascending: true });
+    
+    if (error) {
+      console.error("Error fetching appointments for lead:", error);
+      throw error;
+    }
+    
+    return data as Appointment[] || [];
+  } catch (error) {
+    console.error("Error in fetchAppointmentsByLeadId:", error);
+    return [];
+  }
+};
