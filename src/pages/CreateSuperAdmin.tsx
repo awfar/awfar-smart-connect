@@ -9,7 +9,7 @@ const CreateSuperAdmin = () => {
 
   // بعد إنشاء المستخدم بنجاح، يمكن للمستخدم النقر على هذا الزر للانتقال إلى صفحة المستخدمين
   const handleGoToUsers = () => {
-    navigate('/users');
+    navigate('/dashboard/users');
   };
 
   return (

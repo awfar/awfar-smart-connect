@@ -9,14 +9,16 @@ import { toast } from "sonner";
 
 const CreateSuperAdminTool = () => {
   const [firstName, setFirstName] = useState("lion");
-  const [lastName, setLastName] = useState("");
+  const [lastName, setLastName] = useState("mansour");
   const [email, setEmail] = useState("phplaith@gmail.com");
   const [password, setPassword] = useState("awfar1234@@@");
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleCreateSuperAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setErrorMessage(null);
 
     try {
       const success = await createSuperAdmin(email, password, firstName, lastName);
@@ -30,6 +32,14 @@ const CreateSuperAdminTool = () => {
       }
     } catch (error: any) {
       console.error("خطأ في إنشاء مستخدم Super Admin:", error);
+      
+      // Special handling for rate limiting errors
+      if (error.code === 'over_email_send_rate_limit') {
+        setErrorMessage("لأسباب أمنية، يجب الانتظار قليلاً قبل محاولة إنشاء مستخدم آخر. يرجى المحاولة بعد بضع دقائق.");
+      } else {
+        setErrorMessage(error.message || "حدث خطأ أثناء إنشاء المستخدم");
+      }
+      
       toast.error(error.message || "حدث خطأ أثناء إنشاء المستخدم");
       setLoading(false);
     }
@@ -45,6 +55,12 @@ const CreateSuperAdminTool = () => {
       </CardHeader>
       <form onSubmit={handleCreateSuperAdmin}>
         <CardContent className="space-y-4">
+          {errorMessage && (
+            <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded-md text-sm">
+              {errorMessage}
+            </div>
+          )}
+          
           <div className="space-y-2">
             <Label htmlFor="first_name">الاسم الأول</Label>
             <Input
