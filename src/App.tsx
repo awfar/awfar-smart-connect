@@ -1,4 +1,3 @@
-
 import { ThemeProvider } from './components/ui/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -37,6 +36,7 @@ import SubscriptionManagement from './pages/SubscriptionManagement';
 import PackageManagement from './pages/PackageManagement';
 import PropertiesManagement from './pages/PropertiesManagement';
 import FormBuilderManagement from './pages/FormBuilderManagement';
+import CreateSuperAdmin from './pages/CreateSuperAdmin';
 
 function App() {
   return (
@@ -86,6 +86,7 @@ function App() {
           {/* Fallback routes */}
           <Route path="/dashboard/*" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<NotFound />} />
+          <Route path="/create-super-admin" element={<CreateSuperAdmin />} />
         </Routes>
       </Router>
       <Toaster richColors />

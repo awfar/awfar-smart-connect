@@ -425,6 +425,30 @@ export type Database = {
           },
         ]
       }
+      countries: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       deals: {
         Row: {
           company_id: string | null
@@ -508,6 +532,144 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      employee_skills: {
+        Row: {
+          created_at: string
+          employee_id: string
+          id: string
+          proficiency_level: string | null
+          skill_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          id?: string
+          proficiency_level?: string | null
+          skill_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          id?: string
+          proficiency_level?: string | null
+          skill_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_skills_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          bio: string | null
+          country_id: string | null
+          created_at: string
+          department_id: string
+          email: string | null
+          full_name: string
+          grade_level_id: string | null
+          id: string
+          job_description: string
+          job_title: string
+          location: string | null
+          phone: string | null
+          photo_url: string
+          reports_to_id: string | null
+          start_date: string | null
+          team_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          country_id?: string | null
+          created_at?: string
+          department_id: string
+          email?: string | null
+          full_name: string
+          grade_level_id?: string | null
+          id?: string
+          job_description: string
+          job_title: string
+          location?: string | null
+          phone?: string | null
+          photo_url: string
+          reports_to_id?: string | null
+          start_date?: string | null
+          team_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          country_id?: string | null
+          created_at?: string
+          department_id?: string
+          email?: string | null
+          full_name?: string
+          grade_level_id?: string | null
+          id?: string
+          job_description?: string
+          job_title?: string
+          location?: string | null
+          phone?: string | null
+          photo_url?: string
+          reports_to_id?: string | null
+          start_date?: string | null
+          team_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_grade_level_id_fkey"
+            columns: ["grade_level_id"]
+            isOneToOne: false
+            referencedRelation: "grade_levels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_reports_to_id_fkey"
+            columns: ["reports_to_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       form_fields: {
         Row: {
@@ -593,6 +755,65 @@ export type Database = {
           successmessage?: string | null
           type?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      functions: {
+        Row: {
+          created_at: string
+          department_id: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department_id: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department_id?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "functions_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grade_levels: {
+        Row: {
+          created_at: string
+          id: string
+          level: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level?: number
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1153,6 +1374,30 @@ export type Database = {
         }
         Relationships: []
       }
+      skills: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           billing_cycle: string
@@ -1359,10 +1604,47 @@ export type Database = {
           },
         ]
       }
+      team_countries: {
+        Row: {
+          country_id: string
+          created_at: string
+          id: string
+          team_id: string
+        }
+        Insert: {
+          country_id: string
+          created_at?: string
+          id?: string
+          team_id: string
+        }
+        Update: {
+          country_id?: string
+          created_at?: string
+          id?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_countries_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_countries_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       teams: {
         Row: {
           created_at: string | null
           department_id: string | null
+          function_id: string | null
           id: string
           manager_id: string | null
           name: string
@@ -1371,6 +1653,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           department_id?: string | null
+          function_id?: string | null
           id?: string
           manager_id?: string | null
           name: string
@@ -1379,6 +1662,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           department_id?: string | null
+          function_id?: string | null
           id?: string
           manager_id?: string | null
           name?: string
@@ -1390,6 +1674,13 @@ export type Database = {
             columns: ["department_id"]
             isOneToOne: false
             referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teams_function_id_fkey"
+            columns: ["function_id"]
+            isOneToOne: false
+            referencedRelation: "functions"
             referencedColumns: ["id"]
           },
         ]

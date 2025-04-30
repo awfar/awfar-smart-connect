@@ -4,14 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
+import { createSuperAdmin } from "@/services/users/createAdmin";
 import { toast } from "sonner";
 
 const CreateSuperAdminTool = () => {
-  const [firstName, setFirstName] = useState("");
+  const [firstName, setFirstName] = useState("lion");
   const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("phplaith@gmail.com");
+  const [password, setPassword] = useState("awfar1234@@@");
   const [loading, setLoading] = useState(false);
 
   const handleCreateSuperAdmin = async (e: React.FormEvent) => {
@@ -19,48 +19,18 @@ const CreateSuperAdminTool = () => {
     setLoading(true);
 
     try {
-      // Step 1: Create user in auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName,
-            role: 'super_admin'
-          }
-        }
-      });
-
-      if (authError) throw authError;
-      if (!authData.user) throw new Error("لم يتم إنشاء المستخدم");
-      
-      // Step 2: Update profile with additional info
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({
-          first_name: firstName,
-          last_name: lastName,
-          role: 'super_admin',
-          is_active: true,
-          email: email // Store the email in the profiles table as well
-        })
-        .eq('id', authData.user.id);
-      
-      if (profileError) throw profileError;
-      
-      toast.success("تم إنشاء مستخدم Super Admin بنجاح");
-      
-      // Optional: Clear form
-      setFirstName("");
-      setLastName("");
-      setEmail("");
-      setPassword("");
-      
+      const success = await createSuperAdmin(email, password, firstName, lastName);
+      if (success) {
+        toast.success("تم إنشاء مستخدم Super Admin بنجاح");
+        
+        // Leave form values as is to show what was submitted
+        setLoading(false);
+      } else {
+        throw new Error("فشل في إنشاء المستخدم");
+      }
     } catch (error: any) {
       console.error("خطأ في إنشاء مستخدم Super Admin:", error);
       toast.error(error.message || "حدث خطأ أثناء إنشاء المستخدم");
-    } finally {
       setLoading(false);
     }
   };
